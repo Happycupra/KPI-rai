@@ -5,7 +5,7 @@ namespace Produktionsplanung.App.Services;
 
 public sealed class AppSettings
 {
-    public string CompanyName { get; set; } = "KPI-rai";
+    public string CompanyName { get; set; } = "OpsCompact";
     public string SiteName { get; set; } = string.Empty;
     public string DefaultBackupDirectory { get; set; } = AppPaths.BackupsDirectory;
     public string DefaultExportDirectory { get; set; } = AppPaths.ExportsDirectory;
@@ -51,7 +51,7 @@ public static class AppSettingsService
 
     private static void Normalize(AppSettings settings)
     {
-        settings.CompanyName = string.IsNullOrWhiteSpace(settings.CompanyName) ? "KPI-rai" : settings.CompanyName.Trim();
+        settings.CompanyName = string.IsNullOrWhiteSpace(settings.CompanyName) ? "OpsCompact" : settings.CompanyName.Trim();
         settings.SiteName = settings.SiteName?.Trim() ?? string.Empty;
         settings.DefaultBackupDirectory = string.IsNullOrWhiteSpace(settings.DefaultBackupDirectory)
             ? AppPaths.BackupsDirectory
