@@ -38,6 +38,9 @@ public class Workstation
     public int MinimumStaff { get; set; }
     public int OptimalStaff { get; set; }
     public int MaximumStaff { get; set; }
+    public int? RequiredQualificationId { get; set; }
+    public Qualification? RequiredQualification { get; set; }
+    public int RequiredQualificationLevel { get; set; }
     public bool IsActive { get; set; } = true;
 }
 
