@@ -41,6 +41,17 @@ jobs:
           $version = "${{ steps.version.outputs.version }}"
           dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false -p:Version=$version --output artifacts/win-x64
 
+      - name: Publish portable single-file Windows x64
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:Version=$version --output artifacts/single-file
+          $source = Join-Path $PWD "artifacts/single-file/Produktionsplanung.exe"
+          $target = Join-Path $PWD "artifacts/KPI-rai-$version-win-x64-portable.exe"
+          if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
+          if (Test-Path $target) { Remove-Item $target -Force }
+          Move-Item $source $target
+
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
@@ -65,5 +76,6 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.version }}"
           $installer = Get-ChildItem artifacts/installer/*.exe | Select-Object -First 1
-          $portable = "artifacts/KPI-rai-$version-win-x64-portable.zip"
-          gh release create "${{ github.ref_name }}" $installer.FullName $portable --generate-notes --title "KPI-rai ${{ github.ref_name }}"
+          $portableZip = "artifacts/KPI-rai-$version-win-x64-portable.zip"
+          $portableExe = "artifacts/KPI-rai-$version-win-x64-portable.exe"
+          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe --generate-notes --title "KPI-rai ${{ github.ref_name }}"
