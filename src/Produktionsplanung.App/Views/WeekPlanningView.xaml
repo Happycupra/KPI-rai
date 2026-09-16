@@ -21,12 +21,10 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
             <StackPanel>
                 <TextBlock Text="Wochenplanung" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
                 <TextBlock Text="{Binding WeekRangeText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,0" />
             </StackPanel>
-
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" />
                 <Button Content="Diese Woche" Height="34" Padding="14,0" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" />
@@ -40,10 +38,7 @@
             <StackPanel>
                 <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="Wochenaktionen" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
                             <TextBlock Text="Die Vorwoche kann nur in eine noch leere Zielwoche kopiert werden. Abwesende Mitarbeiter werden dabei übersprungen."
@@ -53,6 +48,28 @@
                         <Button Grid.Column="1" Content="Vorwoche kopieren" Padding="18,8" Margin="18,0,0,0"
                                 VerticalAlignment="Center" Command="{Binding CopyPreviousWeekCommand}" />
                     </Grid>
+                </Border>
+
+                <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Auftragsabdeckung der Woche" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                        <TextBlock Text="Personalbedarf aus Produktionsaufträgen im Vergleich zur tatsächlich eingeplanten Mannschaft je Linie und Schicht."
+                                   Foreground="#64748B" Margin="0,4,0,10" />
+                        <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="170" MaxHeight="300">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.}" Width="70" />
+                                <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
+                                <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.2*" />
+                                <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.1*" />
+                                <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="105" />
+                                <DataGridTextColumn Header="Bedarf" Binding="{Binding RequiredStaff}" Width="60" />
+                                <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="65" />
+                                <DataGridTextColumn Header="Diff." Binding="{Binding DifferenceText}" Width="55" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding CoverageStatus}" Width="105" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
                 </Border>
 
                 <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
@@ -79,11 +96,7 @@
                 </Border>
 
                 <Grid Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.25*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="1.25*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,16,0">
                         <StackPanel>
                             <TextBlock Text="Besetzung je Tag, Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
