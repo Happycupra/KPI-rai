@@ -16,6 +16,9 @@ public partial class MainWindow : Window
     private void ShowDayPlanning_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new DayPlanningView();
 
+    private void ShowWeekPlanning_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new WeekPlanningView();
+
     private void ShowEmployees_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new EmployeesView();
 
