@@ -36,7 +36,7 @@ Voraussetzungen:
 - .NET 8 SDK
 - Visual Studio 2022 mit Workload **.NET-Desktopentwicklung** oder `dotnet` CLI
 
-Das Windows-Icon wird beim Build automatisch aus der versionierten Icon-Quelle erzeugt.
+Das Windows-Icon liegt als versioniertes Multi-Resolution-ICO direkt im Projekt und wird sowohl für `OpsCompact.exe` als auch für den Installer verwendet.
 
 ```powershell
 dotnet restore
