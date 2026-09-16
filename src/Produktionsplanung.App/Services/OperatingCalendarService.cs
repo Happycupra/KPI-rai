@@ -10,6 +10,37 @@ public static class OperatingCalendarService
     {
         var day = date.Date;
         var exception = db.OperatingCalendarDays.AsNoTracking().FirstOrDefault(x => x.Date.Date == day);
+        return BuildDayInfo(day, exception);
+    }
+
+    public static double GetTargetHours(
+        Employee employee,
+        DateTime start,
+        DateTime end,
+        IReadOnlyDictionary<DateTime, OperatingCalendarDay> exceptions)
+    {
+        var dailyBase = employee.WeeklyTargetHours / 5d;
+        var total = 0d;
+        for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
+        {
+            exceptions.TryGetValue(day, out var exception);
+            var info = BuildDayInfo(day, exception);
+            if (info.IsWorkingDay)
+                total += dailyBase * info.TargetHoursFactor;
+        }
+        return total;
+    }
+
+    public static double CalculateNetHours(TimeSpan start, TimeSpan end, int breakMinutes)
+    {
+        var duration = end - start;
+        if (duration <= TimeSpan.Zero)
+            duration += TimeSpan.FromDays(1);
+        return Math.Max(0, duration.TotalHours - breakMinutes / 60d);
+    }
+
+    private static OperatingDayInfo BuildDayInfo(DateTime day, OperatingCalendarDay? exception)
+    {
         if (exception is not null)
         {
             return new OperatingDayInfo(
@@ -27,27 +58,6 @@ public static class OperatingCalendarService
             isWorkingDay ? 1 : 0,
             isWorkingDay ? "Regulärer Arbeitstag" : "Wochenende",
             false);
-    }
-
-    public static double GetTargetHours(AppDbContext db, Employee employee, DateTime start, DateTime end)
-    {
-        var dailyBase = employee.WeeklyTargetHours / 5d;
-        var total = 0d;
-        for (var day = start.Date; day <= end.Date; day = day.AddDays(1))
-        {
-            var info = GetDayInfo(db, day);
-            if (info.IsWorkingDay)
-                total += dailyBase * info.TargetHoursFactor;
-        }
-        return total;
-    }
-
-    public static double CalculateNetHours(TimeSpan start, TimeSpan end, int breakMinutes)
-    {
-        var duration = end - start;
-        if (duration <= TimeSpan.Zero)
-            duration += TimeSpan.FromDays(1);
-        return Math.Max(0, duration.TotalHours - breakMinutes / 60d);
     }
 }
 
