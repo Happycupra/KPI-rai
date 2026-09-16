@@ -6,8 +6,14 @@ public static class DemoDataSeeder
 {
     public static void Seed(AppDbContext db)
     {
-        if (db.Employees.Any()) return;
+        if (!db.Employees.Any())
+            SeedBaseData(db);
 
+        SeedProductionOrders(db);
+    }
+
+    private static void SeedBaseData(AppDbContext db)
+    {
         var line1 = new Qualification { Name = "Linie 1" };
         var line2 = new Qualification { Name = "Linie 2" };
         var packaging = new Qualification { Name = "Verpackung" };
@@ -48,6 +54,53 @@ public static class DemoDataSeeder
             new Shift { Name = "Spätschicht", StartTime = new TimeSpan(14, 0, 0), EndTime = new TimeSpan(22, 0, 0), BreakMinutes = 30 },
             new Shift { Name = "Nachtschicht", StartTime = new TimeSpan(22, 0, 0), EndTime = new TimeSpan(6, 0, 0), BreakMinutes = 30 }
         );
+
+        db.SaveChanges();
+    }
+
+    private static void SeedProductionOrders(AppDbContext db)
+    {
+        if (db.ProductionOrders.Any()) return;
+
+        var line1 = db.Workstations.FirstOrDefault(x => x.Name == "Linie 1");
+        var line2 = db.Workstations.FirstOrDefault(x => x.Name == "Linie 2");
+        var early = db.Shifts.FirstOrDefault(x => x.Name == "Frühschicht");
+        var late = db.Shifts.FirstOrDefault(x => x.Name == "Spätschicht");
+        if (line1 is null || line2 is null || early is null || late is null) return;
+
+        db.ProductionOrders.AddRange(
+            new ProductionOrder
+            {
+                OrderNumber = "PO-1042",
+                Product = "Produkt A",
+                Quantity = 5000,
+                Unit = "Stück",
+                Priority = "Hoch",
+                PlannedDate = DateTime.Today,
+                PlannedStart = early.StartTime,
+                PlannedEnd = early.EndTime,
+                WorkstationId = line1.Id,
+                ShiftId = early.Id,
+                RequiredStaff = 4,
+                Status = "Bereit",
+                Comment = "Demo-Auftrag für die Frühschicht"
+            },
+            new ProductionOrder
+            {
+                OrderNumber = "PO-1043",
+                Product = "Produkt B",
+                Quantity = 3200,
+                Unit = "Stück",
+                Priority = "Normal",
+                PlannedDate = DateTime.Today,
+                PlannedStart = late.StartTime,
+                PlannedEnd = late.EndTime,
+                WorkstationId = line2.Id,
+                ShiftId = late.Id,
+                RequiredStaff = 3,
+                Status = "Geplant",
+                Comment = "Demo-Auftrag für die Spätschicht"
+            });
 
         db.SaveChanges();
     }
