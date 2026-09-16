@@ -189,10 +189,68 @@
                 </StackPanel>
             </Border>
 
+            <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="OEE / Ist-Produktion" FontSize="21" FontWeight="SemiBold" Foreground="#0F172A" />
+                            <TextBlock Text="{Binding OeeDataState}" Foreground="#64748B" Margin="0,3,0,0" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding OeeRecords, StringFormat=Ist-Erfassungen: {0}}" Foreground="#64748B" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <UniformGrid Columns="4" Margin="0,0,0,14">
+                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Verfügbarkeit" Foreground="#64748B"/><TextBlock Text="{Binding OeeAvailabilityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Leistung" Foreground="#64748B"/><TextBlock Text="{Binding OeePerformanceText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Qualität" Foreground="#64748B"/><TextBlock Text="{Binding OeeQualityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        </Border>
+                        <Border Background="#ECFDF5" CornerRadius="10" Padding="14">
+                            <StackPanel><TextBlock Text="OEE" Foreground="#047857"/><TextBlock Text="{Binding OeeText}" FontSize="26" FontWeight="Bold" Foreground="#047857"/></StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <UniformGrid Columns="4" Margin="0,0,0,14">
+                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Gesamtmenge" Foreground="#64748B"/><TextBlock Text="{Binding OeeTotalQuantityText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        </Border>
+                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Gutmenge" Foreground="#64748B"/><TextBlock Text="{Binding OeeGoodQuantity, StringFormat={}{0:N0}}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        </Border>
+                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Ausschuss" Foreground="#64748B"/><TextBlock Text="{Binding OeeScrapQuantityText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        </Border>
+                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
+                            <StackPanel><TextBlock Text="Erfasster Stillstand" Foreground="#64748B"/><TextBlock Text="{Binding OeeDowntimeText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <DataGrid ItemsSource="{Binding OeeWorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" HeadersVisibility="Column" MinHeight="160" MaxHeight="280">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Linie / Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.5*" />
+                            <DataGridTextColumn Header="Erfassungen" Binding="{Binding Records}" Width="80" />
+                            <DataGridTextColumn Header="Menge" Binding="{Binding TotalQuantity, StringFormat={}{0:N0}}" Width="85" />
+                            <DataGridTextColumn Header="Ausschuss" Binding="{Binding ScrapQuantity, StringFormat={}{0:N0}}" Width="85" />
+                            <DataGridTextColumn Header="Stillstand" Binding="{Binding DowntimeMinutes, StringFormat={}{0:N0} min}" Width="90" />
+                            <DataGridTextColumn Header="Verfügbarkeit" Binding="{Binding AvailabilityText}" Width="95" />
+                            <DataGridTextColumn Header="Leistung" Binding="{Binding PerformanceText}" Width="85" />
+                            <DataGridTextColumn Header="Qualität" Binding="{Binding QualityText}" Width="85" />
+                            <DataGridTextColumn Header="OEE" Binding="{Binding OeeText}" Width="85" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+
             <Border Background="#EFF6FF" CornerRadius="10" Padding="14">
                 <StackPanel>
-                    <TextBlock Text="Hinweis zur Produktivität" FontWeight="SemiBold" Foreground="#1E3A8A" />
-                    <TextBlock Text="Eine echte Produktivitäts-, OEE- oder Soll/Ist-Output-Kennzahl wird bewusst noch nicht berechnet, weil KPI-rai bisher keine tatsächlichen Produktionsmengen, Laufzeiten oder Ausschusswerte erfasst. Diese Kennzahl kann im nächsten Ausbau sauber ergänzt werden."
+                    <TextBlock Text="OEE-Berechnung" FontWeight="SemiBold" Foreground="#1E3A8A" />
+                    <TextBlock Text="Verfügbarkeit = Laufzeit / geplante Produktionszeit · Leistung = Ist-Menge / theoretische Menge bei Sollrate · Qualität = Gutmenge / Gesamtmenge · OEE = Verfügbarkeit × Leistung × Qualität. Leistung wird für OEE auf maximal 100 % begrenzt; Werte über der hinterlegten Sollrate sollten als Stammdatenhinweis geprüft werden."
                                TextWrapping="Wrap" Foreground="#1E3A8A" Margin="0,3,0,0" />
                 </StackPanel>
             </Border>
