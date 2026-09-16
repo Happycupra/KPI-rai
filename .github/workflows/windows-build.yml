@@ -42,7 +42,30 @@ jobs:
           if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
           if (Test-Path $target) { Remove-Item $target -Force }
           Move-Item $source $target
-          Get-ChildItem artifacts/single-file
+
+      - name: Prepare USB portable package
+        shell: pwsh
+        run: |
+          $usb = Join-Path $PWD "artifacts/usb-portable"
+          New-Item -ItemType Directory -Path $usb -Force | Out-Null
+          Copy-Item "artifacts/single-file/KPI-rai.exe" (Join-Path $usb "KPI-rai.exe") -Force
+          Set-Content -Path (Join-Path $usb "portable.mode") -Value "KPI-rai USB portable mode" -Encoding UTF8
+          @"
+          KPI-rai USB / Portable
+          ======================
+
+          1. Diesen gesamten Ordner auf einen USB-Stick oder in einen beliebigen beschreibbaren Ordner kopieren.
+          2. KPI-rai.exe starten.
+          3. Die Datei portable.mode NICHT löschen. Sie aktiviert den USB-Modus.
+
+          Im USB-Modus bleiben die Daten beim Programm:
+          - produktionsplanung.db: direkt neben KPI-rai.exe
+          - settings.json: direkt neben KPI-rai.exe
+          - Backups: Unterordner Backups
+          - Exporte: Unterordner Exports
+
+          Wird portable.mode entfernt, verwendet KPI-rai wieder %LOCALAPPDATA%\Produktionsplanung.
+          "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
@@ -65,6 +88,12 @@ jobs:
         with:
           name: KPI-rai-Portable-0.1.0-win-x64
           path: artifacts/single-file/KPI-rai.exe
+
+      - name: Upload USB portable package
+        uses: actions/upload-artifact@v4
+        with:
+          name: KPI-rai-USB-Portable-0.1.0-win-x64
+          path: artifacts/usb-portable
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
