@@ -1,0 +1,65 @@
+<Window x:Class="Produktionsplanung.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Produktionsplanung" Height="800" Width="1400" MinHeight="700" MinWidth="1100"
+        Background="{StaticResource SurfaceBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#0F172A">
+            <StackPanel Margin="18">
+                <TextBlock Text="KPI-rai" Foreground="White" FontSize="24" FontWeight="SemiBold" Margin="0,10,0,4" />
+                <TextBlock Text="Produktionsplanung" Foreground="#94A3B8" FontSize="13" Margin="0,0,0,24" />
+                <Button Content="Dashboard" Height="42" Margin="0,0,0,8" />
+                <Button Content="Tagesplanung" Height="42" Margin="0,0,0,8" />
+                <Button Content="Wochenplanung" Height="42" Margin="0,0,0,8" />
+                <Button Content="Mitarbeiter" Height="42" Margin="0,0,0,8" />
+                <Button Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" />
+                <Button Content="Qualifikationen" Height="42" Margin="0,0,0,8" />
+                <Button Content="Abwesenheiten" Height="42" Margin="0,0,0,8" />
+                <Button Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" />
+                <Button Content="Auswertungen / KPIs" Height="42" Margin="0,0,0,8" />
+                <Button Content="Einstellungen" Height="42" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="32">
+                <TextBlock Text="Dashboard" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
+                <TextBlock Text="{Binding TodayText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,24" />
+
+                <UniformGrid Columns="4" Margin="0,0,0,24">
+                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Aktive Mitarbeiter" Foreground="#64748B"/><TextBlock Text="{Binding ActiveEmployees}" FontSize="28" FontWeight="Bold"/></StackPanel></Border>
+                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Heute geplant" Foreground="#64748B"/><TextBlock Text="{Binding PlannedEmployees}" FontSize="28" FontWeight="Bold"/></StackPanel></Border>
+                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,12,0"><StackPanel><TextBlock Text="Abwesend" Foreground="#64748B"/><TextBlock Text="{Binding AbsentEmployees}" FontSize="28" FontWeight="Bold"/></StackPanel></Border>
+                    <Border Background="White" CornerRadius="12" Padding="18"><StackPanel><TextBlock Text="Probleme" Foreground="#64748B"/><TextBlock Text="{Binding OpenProblems}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource DangerBrush}"/></StackPanel></Border>
+                </UniformGrid>
+
+                <TextBlock Text="Produktionsbereiche" FontSize="22" FontWeight="SemiBold" Margin="0,0,0,12" />
+                <ItemsControl ItemsSource="{Binding Workstations}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="White" CornerRadius="10" Padding="16" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Area}" Foreground="#64748B" />
+                                    <TextBlock Grid.Column="2" Text="{Binding MinimumStaff, StringFormat=Minimum: {0}}" />
+                                    <TextBlock Grid.Column="3" Text="{Binding OptimalStaff, StringFormat=Optimal: {0}}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
