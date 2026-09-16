@@ -5,14 +5,20 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>Produktionsplanung</AssemblyName>
+    <AssemblyName>OpsCompact</AssemblyName>
     <RootNamespace>Produktionsplanung.App</RootNamespace>
     <VersionPrefix>0.1.0</VersionPrefix>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
     <Product>OpsCompact</Product>
     <Company>OpsCompact</Company>
+    <Description>Planen · Produzieren · Verbessern</Description>
+    <ApplicationIcon>Assets\OpsCompact.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <Target Name="GenerateOpsCompactIcon" BeforeTargets="PrepareForBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\build\Generate-OpsCompactIcon.ps1&quot;" />
+  </Target>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Produktionsplanung.RegressionTests" />
