@@ -11,7 +11,18 @@ public partial class App : Application
         base.OnStartup(e);
 
         AppPaths.InitializeStorageMode(e.Args);
-        AppPaths.EnsureDirectories();
+        if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
+        {
+            MessageBox.Show(startupError, "KPI-rai – Startprüfung", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(startupWarning))
+        {
+            MessageBox.Show(startupWarning, "KPI-rai – Speicherhinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
         using (var db = new AppDbContext())
         {
             db.Database.EnsureCreated();
@@ -46,10 +57,14 @@ public partial class App : Application
         }
         catch
         {
-            // Ein Fehler beim Auto-Backup/Audit darf das Beenden nicht blockieren.
+            // Ein Fehler beim Auto-Backup/Audit darf das Beenden der Anwendung nicht blockieren.
+        }
+        finally
+        {
+            SessionService.SignOut();
+            StartupHealthService.Release();
         }
 
-        SessionService.SignOut();
         base.OnExit(e);
     }
 }
