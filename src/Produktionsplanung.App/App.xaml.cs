@@ -11,6 +11,7 @@ public partial class App : Application
 
         using var db = new AppDbContext();
         db.Database.EnsureCreated();
+        DatabaseSchemaUpdater.Apply(db);
         DemoDataSeeder.Seed(db);
     }
 }
