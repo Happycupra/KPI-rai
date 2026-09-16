@@ -32,6 +32,9 @@ jobs:
       - name: Restore
         run: dotnet restore Produktionsplanung.sln
 
+      - name: Regression tests (isolated SQLite and WPF)
+        run: dotnet run --project tests/Produktionsplanung.RegressionTests --configuration Release
+
       - name: Publish standalone Windows x64
         shell: pwsh
         run: |

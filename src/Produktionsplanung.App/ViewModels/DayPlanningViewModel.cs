@@ -218,7 +218,7 @@ public partial class DayPlanningViewModel : ObservableObject
         }
 
         Shifts.Clear();
-        foreach (var item in db.Shifts.AsNoTracking().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
+        foreach (var item in db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
         {
             Shifts.Add(new ShiftOption
             {
@@ -244,6 +244,7 @@ public partial class DayPlanningViewModel : ObservableObject
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
             .Where(x => x.Date.Date == SelectedDate.Date)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
             .OrderBy(x => x.Workstation.Name)
             .ThenBy(x => x.StartTime)
             .ThenBy(x => x.Employee.LastName)

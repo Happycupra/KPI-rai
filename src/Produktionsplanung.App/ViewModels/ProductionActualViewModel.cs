@@ -162,6 +162,14 @@ public partial class ProductionActualViewModel : ObservableObject
             entity = db.ProductionActuals.First(x => x.Id == SelectedActual.Id);
         }
 
+        var existingDowntime = db.DowntimeEntries
+            .Where(x => x.ProductionActualId == entity.Id).Sum(x => x.Minutes);
+        if (existingDowntime > PlannedProductionMinutes - RunMinutes + 0.01)
+        {
+            StatusMessage = "Die gespeicherten Stillstände überschreiten die neue Verlustzeit. Bitte zuerst die Stillstände korrigieren.";
+            return;
+        }
+
         entity.ProductionOrderId = SelectedOrder.Id;
         entity.Date = ActualDate.Date;
         entity.TotalQuantity = TotalQuantity;
@@ -217,15 +225,22 @@ public partial class ProductionActualViewModel : ObservableObject
             return;
         }
 
-        var availableLossMinutes = Math.Max(0, PlannedProductionMinutes - RunMinutes);
-        var existingDowntime = Downtimes.Sum(x => x.Minutes);
+        using var db = new AppDbContext();
+        var actual = db.ProductionActuals.FirstOrDefault(x => x.Id == SelectedActual.Id);
+        if (actual is null)
+        {
+            StatusMessage = "Die Ist-Erfassung wurde nicht mehr gefunden. Bitte aktualisieren.";
+            return;
+        }
+        var availableLossMinutes = Math.Max(0, actual.PlannedProductionMinutes - actual.RunMinutes);
+        var existingDowntime = db.DowntimeEntries
+            .Where(x => x.ProductionActualId == actual.Id).Sum(x => x.Minutes);
         if (existingDowntime + DowntimeMinutes > availableLossMinutes + 0.01)
         {
             StatusMessage = $"Stillstandszeiten überschreiten die verfügbare Verlustzeit von {availableLossMinutes:N0} Minuten.";
             return;
         }
 
-        using var db = new AppDbContext();
         db.DowntimeEntries.Add(new DowntimeEntry
         {
             ProductionActualId = SelectedActual.Id,

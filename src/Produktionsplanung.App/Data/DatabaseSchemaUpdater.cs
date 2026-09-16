@@ -62,6 +62,14 @@ public static class DatabaseSchemaUpdater
             );
             """);
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_DowntimeEntries_ProductionActualId ON DowntimeEntries (ProductionActualId);");
+        db.Database.ExecuteSqlRaw("""
+            CREATE TRIGGER IF NOT EXISTS PreventOrderHistoryDeletion
+            BEFORE DELETE ON ProductionOrders
+            WHEN EXISTS (SELECT 1 FROM ProductionActuals WHERE ProductionOrderId = OLD.Id)
+            BEGIN
+                SELECT RAISE(ABORT, 'Auftrag mit Ist-Produktion darf nicht gelöscht werden.');
+            END;
+            """);
 
         db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS UserAccounts (

@@ -101,6 +101,7 @@ public static class BackupService
             AppPaths.EnsureDirectories();
             SqliteConnection.ClearAllPools();
             File.Copy(databasePath, AppPaths.DatabasePath, overwrite: true);
+            SessionService.InvalidateAfterRestore();
 
             if (File.Exists(settingsPath))
                 File.Copy(settingsPath, AppPaths.SettingsPath, overwrite: true);

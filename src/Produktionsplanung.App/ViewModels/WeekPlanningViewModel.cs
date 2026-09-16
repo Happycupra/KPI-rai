@@ -101,6 +101,7 @@ public partial class WeekPlanningViewModel : ObservableObject
         var sourceEnd = targetEnd.AddDays(-7);
         var source = db.PlanningAssignments.AsNoTracking()
             .Where(x => x.Date.Date >= sourceStart && x.Date.Date <= sourceEnd)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();
@@ -122,7 +123,7 @@ public partial class WeekPlanningViewModel : ObservableObject
             .ToHashSet();
 
         var absences = db.Absences.AsNoTracking()
-            .Where(x => x.StartDate.Date <= targetEnd && x.EndDate.Date >= targetStart)
+            .Where(x => x.StartDate.Date <= targetEnd.AddDays(1) && x.EndDate.Date >= targetStart)
             .ToList();
 
         var copied = 0;
@@ -186,12 +187,13 @@ public partial class WeekPlanningViewModel : ObservableObject
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
             .Where(x => x.Date.Date >= WeekStart.Date && x.Date.Date <= weekEnd)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();
 
         var absences = db.Absences.AsNoTracking()
-            .Where(x => x.StartDate.Date <= weekEnd && x.EndDate.Date >= WeekStart.Date)
+            .Where(x => x.StartDate.Date <= weekEnd.AddDays(1) && x.EndDate.Date >= WeekStart.Date)
             .ToList();
 
         EmployeeRows.Clear();

@@ -92,9 +92,10 @@ public partial class WorkstationManagementViewModel : ObservableObject
         if (SelectedWorkstation is null) return;
         using var db = new AppDbContext();
         var id = SelectedWorkstation.Id;
-        if (db.PlanningAssignments.Any(x => x.WorkstationId == id))
+        if (db.PlanningAssignments.Any(x => x.WorkstationId == id) ||
+            db.ProductionOrders.Any(x => x.WorkstationId == id))
         {
-            StatusMessage = "Arbeitsplatz kann nicht gelöscht werden, da Planungen vorhanden sind. Bitte deaktivieren.";
+            StatusMessage = "Arbeitsplatz kann nicht gelöscht werden, da Planungen oder Produktionsaufträge vorhanden sind. Bitte deaktivieren.";
             return;
         }
 

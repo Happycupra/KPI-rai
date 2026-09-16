@@ -85,6 +85,7 @@ public static class CsvExportService
             .Include(x => x.Employee)
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();

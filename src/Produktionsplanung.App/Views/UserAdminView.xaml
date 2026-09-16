@@ -58,7 +58,7 @@
                         <CheckBox Grid.Column="1" Content="Aktiv" IsChecked="{Binding IsActive}" VerticalAlignment="Bottom" Margin="0,0,0,8" />
                     </Grid>
                     <TextBlock Text="Neues Passwort" FontWeight="SemiBold" />
-                    <TextBox Text="{Binding NewPassword, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,3" />
+                    <PasswordBox x:Name="NewPasswordBox" PasswordChanged="NewPasswordBox_PasswordChanged" Height="32" Margin="0,4,0,3" />
                     <TextBlock Text="Bei bestehenden Benutzern leer lassen, um das Passwort nicht zu ändern." Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10" />
                     <StackPanel Orientation="Horizontal">
                         <Button Content="Neu" Width="80" Height="34" Command="{Binding NewUserCommand}" Margin="0,0,8,0" />

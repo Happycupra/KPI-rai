@@ -141,6 +141,17 @@ public partial class SettingsViewModel : ObservableObject
         {
             StatusMessage = $"Wiederherstellung fehlgeschlagen: {ex.Message}";
         }
+        finally
+        {
+            if (SessionService.RequiresRestart)
+            {
+                // No further navigation or edits with accounts from the old database.
+                Application.Current.MainWindow.IsEnabled = false;
+                MessageBox.Show(StatusMessage + "\nDie Anwendung wird jetzt geschlossen. Bitte erneut starten und anmelden.",
+                    "KPI-rai wiederherstellen", MessageBoxButton.OK, MessageBoxImage.Information);
+                Application.Current.Shutdown();
+            }
+        }
     }
 
     [RelayCommand]

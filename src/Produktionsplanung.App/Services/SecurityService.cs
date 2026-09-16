@@ -8,6 +8,8 @@ namespace Produktionsplanung.App.Services;
 public static class SessionService
 {
     public static UserAccount? CurrentUser { get; private set; }
+    public static bool RequiresRestart { get; private set; }
+    public static void InvalidateAfterRestore() { SignOut(); RequiresRestart = true; }
     public static bool IsAuthenticated => CurrentUser is not null;
     public static bool IsAdministrator => CurrentUser?.Role == UserRoles.Administrator;
     public static bool IsPlannerOrAdmin => CurrentUser?.Role is UserRoles.Administrator or UserRoles.Planner;

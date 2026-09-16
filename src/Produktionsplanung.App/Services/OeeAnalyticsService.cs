@@ -53,6 +53,11 @@ public static class OeeAnalyticsService
             .ThenBy(x => x.ProductionOrder.OrderNumber)
             .ToList();
 
+        return Summarize(actuals);
+    }
+
+    public static OeePeriodSummary Summarize(IEnumerable<Produktionsplanung.App.Models.ProductionActual> actuals)
+    {
         var rows = actuals.Select(x =>
         {
             var metrics = Calculate(
@@ -68,7 +73,9 @@ public static class OeeAnalyticsService
                 Date = x.Date.Date,
                 OrderNumber = x.ProductionOrder.OrderNumber,
                 Product = x.ProductionOrder.Product,
+                WorkstationId = x.ProductionOrder.WorkstationId,
                 WorkstationName = x.ProductionOrder.Workstation.Name,
+                Unit = x.ProductionOrder.Unit,
                 ShiftName = x.ProductionOrder.Shift?.Name ?? "Individuell",
                 TotalQuantity = x.TotalQuantity,
                 GoodQuantity = x.GoodQuantity,
@@ -84,64 +91,77 @@ public static class OeeAnalyticsService
             };
         }).ToList();
 
-        var plannedMinutes = rows.Sum(x => x.PlannedProductionMinutes);
-        var runMinutes = rows.Sum(x => x.RunMinutes);
-        var totalQuantity = rows.Sum(x => x.TotalQuantity);
-        var goodQuantity = rows.Sum(x => x.GoodQuantity);
-        var scrapQuantity = rows.Sum(x => x.ScrapQuantity);
-        var theoreticalQuantity = actuals.Sum(x => x.IdealRatePerHour * Math.Max(0, x.RunMinutes) / 60.0);
-
-        var availability = plannedMinutes > 0 ? Math.Clamp(runMinutes / plannedMinutes, 0, 1) : 0;
-        var performance = theoreticalQuantity > 0 ? Math.Clamp(totalQuantity / theoreticalQuantity, 0, 1) : 0;
-        var quality = totalQuantity > 0 ? Math.Clamp(goodQuantity / totalQuantity, 0, 1) : 0;
-
+        var summaryMetrics = Aggregate(rows);
         var workstationRows = rows
-            .GroupBy(x => x.WorkstationName)
+            .GroupBy(x => x.WorkstationId)
             .Select(group =>
             {
-                var wsPlanned = group.Sum(x => x.PlannedProductionMinutes);
-                var wsRun = group.Sum(x => x.RunMinutes);
-                var wsTotal = group.Sum(x => x.TotalQuantity);
-                var wsGood = group.Sum(x => x.GoodQuantity);
-                var wsTheoretical = group.Sum(x => x.IdealRatePerHour * x.RunMinutes / 60.0);
-                var wsAvailability = wsPlanned > 0 ? Math.Clamp(wsRun / wsPlanned, 0, 1) : 0;
-                var wsPerformance = wsTheoretical > 0 ? Math.Clamp(wsTotal / wsTheoretical, 0, 1) : 0;
-                var wsQuality = wsTotal > 0 ? Math.Clamp(wsGood / wsTotal, 0, 1) : 0;
-
+                var wsMetrics = Aggregate(group);
                 return new OeeWorkstationRow
                 {
-                    WorkstationName = group.Key,
+                    WorkstationId = group.Key,
+                    WorkstationName = group.First().WorkstationName,
                     Records = group.Count(),
-                    TotalQuantity = wsTotal,
-                    GoodQuantity = wsGood,
-                    ScrapQuantity = group.Sum(x => x.ScrapQuantity),
+                    TotalQuantityText = FormatQuantities(group, x => x.TotalQuantity),
+                    GoodQuantityText = FormatQuantities(group, x => x.GoodQuantity),
+                    ScrapQuantityText = FormatQuantities(group, x => x.ScrapQuantity),
                     DowntimeMinutes = group.Sum(x => x.DowntimeMinutes),
-                    AvailabilityPercent = wsAvailability * 100,
-                    PerformancePercent = wsPerformance * 100,
-                    QualityPercent = wsQuality * 100,
-                    OeePercent = wsAvailability * wsPerformance * wsQuality * 100
+                    AvailabilityPercent = wsMetrics.AvailabilityPercent,
+                    PerformancePercent = wsMetrics.PerformancePercent,
+                    QualityPercent = wsMetrics.QualityPercent,
+                    OeePercent = wsMetrics.OeePercent
                 };
             })
             .OrderBy(x => x.WorkstationName)
+            .ThenBy(x => x.WorkstationId)
             .ToList();
 
         return new OeePeriodSummary
         {
             Records = rows.Count,
-            TotalQuantity = totalQuantity,
-            GoodQuantity = goodQuantity,
-            ScrapQuantity = scrapQuantity,
-            PlannedProductionMinutes = plannedMinutes,
-            RunMinutes = runMinutes,
+            TotalQuantityText = FormatQuantities(rows, x => x.TotalQuantity),
+            GoodQuantityText = FormatQuantities(rows, x => x.GoodQuantity),
+            ScrapQuantityText = FormatQuantities(rows, x => x.ScrapQuantity),
+            PlannedProductionMinutes = rows.Sum(x => x.PlannedProductionMinutes),
+            RunMinutes = rows.Sum(x => x.RunMinutes),
             DowntimeMinutes = rows.Sum(x => x.DowntimeMinutes),
-            AvailabilityPercent = availability * 100,
-            PerformancePercent = performance * 100,
-            QualityPercent = quality * 100,
-            OeePercent = availability * performance * quality * 100,
+            AvailabilityPercent = summaryMetrics.AvailabilityPercent,
+            PerformancePercent = summaryMetrics.PerformancePercent,
+            QualityPercent = summaryMetrics.QualityPercent,
+            OeePercent = summaryMetrics.OeePercent,
             ActualRows = rows,
             WorkstationRows = workstationRows
         };
     }
+
+    private static OeeMetrics Aggregate(IEnumerable<OeeActualMetricRow> source)
+    {
+        var rows = source.ToList();
+        var planned = rows.Sum(x => x.PlannedProductionMinutes);
+        var run = rows.Sum(x => x.RunMinutes);
+        // Convert each product's quantity to ideal production minutes before combining.
+        // This remains invariant when a quantity AND its rate change from e.g. kg to g.
+        var idealMinutes = rows.Sum(x => x.IdealRatePerHour > 0 ? x.TotalQuantity / x.IdealRatePerHour * 60 : 0);
+        var goodMinutes = rows.Sum(x => x.IdealRatePerHour > 0 ? x.GoodQuantity / x.IdealRatePerHour * 60 : 0);
+        var availability = planned > 0 ? Math.Clamp(run / planned, 0, 1) : 0;
+        var performance = run > 0 ? Math.Clamp(idealMinutes / run, 0, 1) : 0;
+        var quality = idealMinutes > 0 ? Math.Clamp(goodMinutes / idealMinutes, 0, 1) : 0;
+        return new OeeMetrics
+        {
+            AvailabilityPercent = availability * 100,
+            PerformancePercent = performance * 100,
+            QualityPercent = quality * 100,
+            OeePercent = availability * performance * quality * 100
+        };
+    }
+
+    private static string FormatQuantities(IEnumerable<OeeActualMetricRow> rows, Func<OeeActualMetricRow, double> selector)
+    {
+        var parts = rows.GroupBy(x => x.Unit).OrderBy(x => x.Key)
+            .Select(group => $"{group.Sum(selector):N2} {group.Key}").ToList();
+        return parts.Count == 0 ? "—" : string.Join(" · ", parts);
+    }
+
 }
 
 public class OeeMetrics
@@ -156,6 +176,8 @@ public class OeeMetrics
 
 public class OeeActualMetricRow
 {
+    public int WorkstationId { get; set; }
+    public string Unit { get; set; } = string.Empty;
     public int ActualId { get; set; }
     public DateTime Date { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
@@ -178,11 +200,12 @@ public class OeeActualMetricRow
 
 public class OeeWorkstationRow
 {
+    public int WorkstationId { get; set; }
     public string WorkstationName { get; set; } = string.Empty;
     public int Records { get; set; }
-    public double TotalQuantity { get; set; }
-    public double GoodQuantity { get; set; }
-    public double ScrapQuantity { get; set; }
+    public string TotalQuantityText { get; set; } = "—";
+    public string GoodQuantityText { get; set; } = "—";
+    public string ScrapQuantityText { get; set; } = "—";
     public double DowntimeMinutes { get; set; }
     public double AvailabilityPercent { get; set; }
     public double PerformancePercent { get; set; }
@@ -197,9 +220,9 @@ public class OeeWorkstationRow
 public class OeePeriodSummary
 {
     public int Records { get; set; }
-    public double TotalQuantity { get; set; }
-    public double GoodQuantity { get; set; }
-    public double ScrapQuantity { get; set; }
+    public string TotalQuantityText { get; set; } = "—";
+    public string GoodQuantityText { get; set; } = "—";
+    public string ScrapQuantityText { get; set; } = "—";
     public double PlannedProductionMinutes { get; set; }
     public double RunMinutes { get; set; }
     public double DowntimeMinutes { get; set; }
