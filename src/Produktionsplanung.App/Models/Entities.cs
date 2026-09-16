@@ -76,3 +76,24 @@ public class PlanningAssignment
     public int BreakMinutes { get; set; }
     public string? Comment { get; set; }
 }
+
+public class ProductionOrder
+{
+    public int Id { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string Product { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public double Quantity { get; set; }
+    public string Unit { get; set; } = "Stück";
+    public string Priority { get; set; } = "Normal";
+    public DateTime PlannedDate { get; set; }
+    public TimeSpan? PlannedStart { get; set; }
+    public TimeSpan? PlannedEnd { get; set; }
+    public int WorkstationId { get; set; }
+    public Workstation Workstation { get; set; } = null!;
+    public int? ShiftId { get; set; }
+    public Shift? Shift { get; set; }
+    public int RequiredStaff { get; set; }
+    public string Status { get; set; } = "Geplant";
+    public string? Comment { get; set; }
+}
