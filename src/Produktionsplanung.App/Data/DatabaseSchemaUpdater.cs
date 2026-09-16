@@ -29,7 +29,6 @@ public static class DatabaseSchemaUpdater
                     FOREIGN KEY (ShiftId) REFERENCES Shifts (Id) ON DELETE SET NULL
             );
             """);
-
         db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ProductionOrders_OrderNumber ON ProductionOrders (OrderNumber);");
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ProductionOrders_PlannedDate_WorkstationId_ShiftId ON ProductionOrders (PlannedDate, WorkstationId, ShiftId);");
 
@@ -49,7 +48,6 @@ public static class DatabaseSchemaUpdater
                     FOREIGN KEY (ProductionOrderId) REFERENCES ProductionOrders (Id) ON DELETE CASCADE
             );
             """);
-
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ProductionActuals_ProductionOrderId_Date ON ProductionActuals (ProductionOrderId, Date);");
 
         db.Database.ExecuteSqlRaw("""
@@ -63,7 +61,35 @@ public static class DatabaseSchemaUpdater
                     FOREIGN KEY (ProductionActualId) REFERENCES ProductionActuals (Id) ON DELETE CASCADE
             );
             """);
-
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_DowntimeEntries_ProductionActualId ON DowntimeEntries (ProductionActualId);");
+
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS UserAccounts (
+                Id INTEGER NOT NULL CONSTRAINT PK_UserAccounts PRIMARY KEY AUTOINCREMENT,
+                Username TEXT NOT NULL,
+                DisplayName TEXT NOT NULL,
+                PasswordHash TEXT NOT NULL,
+                PasswordSalt TEXT NOT NULL,
+                Role TEXT NOT NULL,
+                IsActive INTEGER NOT NULL,
+                CreatedAtUtc TEXT NOT NULL,
+                LastLoginAtUtc TEXT NULL
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_UserAccounts_Username ON UserAccounts (Username);");
+
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS AuditLogs (
+                Id INTEGER NOT NULL CONSTRAINT PK_AuditLogs PRIMARY KEY AUTOINCREMENT,
+                TimestampUtc TEXT NOT NULL,
+                Username TEXT NOT NULL,
+                Action TEXT NOT NULL,
+                EntityType TEXT NOT NULL,
+                EntityId TEXT NULL,
+                Details TEXT NULL
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_TimestampUtc ON AuditLogs (TimestampUtc);");
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_Username ON AuditLogs (Username);");
     }
 }
