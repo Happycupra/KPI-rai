@@ -16,22 +16,24 @@
                     <TextBlock Text="Produktionsplanung" Foreground="#94A3B8" FontSize="13" Margin="0,0,0,24" />
 
                     <Button Content="Dashboard" Height="42" Margin="0,0,0,8" Click="ShowDashboard_Click" />
-                    <Button Content="Tagesplanung" Height="42" Margin="0,0,0,8" Click="ShowDayPlanning_Click" />
-                    <Button Content="Wochenplanung" Height="42" Margin="0,0,0,8" Click="ShowWeekPlanning_Click" />
-                    <Button Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" Click="ShowProductionOrders_Click" />
-                    <Button Content="Ist-Produktion / OEE" Height="42" Margin="0,0,0,8" Click="ShowProductionActual_Click" />
+                    <Button x:Name="DayPlanningButton" Content="Tagesplanung" Height="42" Margin="0,0,0,8" Click="ShowDayPlanning_Click" />
+                    <Button x:Name="WeekPlanningButton" Content="Wochenplanung" Height="42" Margin="0,0,0,8" Click="ShowWeekPlanning_Click" />
+                    <Button x:Name="ProductionOrdersButton" Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" Click="ShowProductionOrders_Click" />
+                    <Button x:Name="ProductionActualButton" Content="Ist-Produktion / OEE" Height="42" Margin="0,0,0,8" Click="ShowProductionActual_Click" />
                     <Button Content="Auswertungen / KPIs" Height="42" Margin="0,0,0,8" Click="ShowAnalytics_Click" />
-                    <Button Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
-                    <Button Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
-                    <Button Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" Click="ShowWorkstations_Click" />
-                    <Button Content="Schichten" Height="42" Margin="0,0,0,8" Click="ShowShifts_Click" />
-                    <Button Content="Abwesenheiten" Height="42" Margin="0,0,0,8" Click="ShowAbsences_Click" />
-                    <Button Content="Einstellungen" Height="42" Margin="0,0,0,18" Click="ShowSettings_Click" />
+                    <Button x:Name="EmployeesButton" Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
+                    <Button x:Name="SkillsButton" Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
+                    <Button x:Name="WorkstationsButton" Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" Click="ShowWorkstations_Click" />
+                    <Button x:Name="ShiftsButton" Content="Schichten" Height="42" Margin="0,0,0,8" Click="ShowShifts_Click" />
+                    <Button x:Name="AbsencesButton" Content="Abwesenheiten" Height="42" Margin="0,0,0,8" Click="ShowAbsences_Click" />
+                    <Button x:Name="UserAdminButton" Content="Benutzer / Audit" Height="42" Margin="0,0,0,8" Click="ShowUserAdmin_Click" />
+                    <Button x:Name="SettingsButton" Content="Einstellungen" Height="42" Margin="0,0,0,18" Click="ShowSettings_Click" />
                 </StackPanel>
 
                 <Border DockPanel.Dock="Bottom" BorderBrush="#334155" BorderThickness="0,1,0,0" Padding="4,14,4,4">
                     <StackPanel>
-                        <TextBlock Text="MVP" Foreground="#94A3B8" FontSize="11" />
+                        <TextBlock x:Name="SessionInfoBlock" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" />
+                        <TextBlock x:Name="VersionBlock" Foreground="#64748B" FontSize="11" Margin="0,4,0,0" />
                         <TextBlock Text="Windows Desktop · SQLite" Foreground="#64748B" FontSize="11" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
