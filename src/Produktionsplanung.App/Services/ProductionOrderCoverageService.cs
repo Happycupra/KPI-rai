@@ -17,7 +17,7 @@ public static class ProductionOrderCoverageService
             .Where(x => x.PlannedDate.Date >= start &&
                         x.PlannedDate.Date <= end &&
                         x.Status != "Abgeschlossen")
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .AsEnumerable()
             .OrderBy(x => x.PlannedDate)
             .ThenBy(x => x.Shift?.StartTime)
             .ThenBy(x => x.Workstation.Name)
@@ -57,6 +57,7 @@ public static class ProductionOrderCoverageService
                 Date = order.PlannedDate.Date,
                 WorkstationId = order.WorkstationId,
                 WorkstationName = order.Workstation.Name,
+                ShiftId = order.ShiftId,
                 ShiftName = order.Shift?.Name ?? "Individuell",
                 RequiredStaff = order.RequiredStaff,
                 PlannedStaff = plannedStaff,
@@ -79,6 +80,7 @@ public class ProductionOrderCoverageRow
     public string Product { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public string WorkstationName { get; set; } = string.Empty;
+    public int? ShiftId { get; set; }
     public string ShiftName { get; set; } = string.Empty;
     public int RequiredStaff { get; set; }
     public int PlannedStaff { get; set; }
