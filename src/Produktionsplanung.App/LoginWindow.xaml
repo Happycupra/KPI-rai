@@ -1,0 +1,35 @@
+<Window x:Class="Produktionsplanung.App.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KPI-rai Anmeldung" Width="470" Height="520" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" Background="#F8FAFC">
+    <Grid Margin="34">
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="KPI-rai" FontSize="34" FontWeight="Bold" Foreground="#0F172A" />
+            <TextBlock x:Name="ModeTitle" Text="Anmeldung" FontSize="19" FontWeight="SemiBold" Foreground="#334155" Margin="0,4,0,4" />
+            <TextBlock x:Name="ModeDescription" Text="Mit deinem lokalen Benutzerkonto anmelden." Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,22" />
+
+            <StackPanel x:Name="DisplayNamePanel" Visibility="Collapsed">
+                <TextBlock Text="Anzeigename" FontWeight="SemiBold" Margin="0,0,0,5" />
+                <TextBox x:Name="DisplayNameBox" Height="36" Margin="0,0,0,14" />
+            </StackPanel>
+
+            <TextBlock Text="Benutzername" FontWeight="SemiBold" Margin="0,0,0,5" />
+            <TextBox x:Name="UsernameBox" Height="36" Margin="0,0,0,14" />
+
+            <TextBlock Text="Passwort" FontWeight="SemiBold" Margin="0,0,0,5" />
+            <PasswordBox x:Name="PasswordBox" Height="36" Margin="0,0,0,14" />
+
+            <StackPanel x:Name="ConfirmPasswordPanel" Visibility="Collapsed">
+                <TextBlock Text="Passwort bestätigen" FontWeight="SemiBold" Margin="0,0,0,5" />
+                <PasswordBox x:Name="ConfirmPasswordBox" Height="36" Margin="0,0,0,6" />
+                <TextBlock Text="Mindestens 10 Zeichen, Gross-/Kleinbuchstaben und eine Zahl." Foreground="#64748B" FontSize="12" Margin="0,0,0,12" />
+            </StackPanel>
+
+            <TextBlock x:Name="StatusBlock" Foreground="#DC2626" TextWrapping="Wrap" MinHeight="22" Margin="0,0,0,10" />
+
+            <Button x:Name="SubmitButton" Content="Anmelden" Height="40" Click="Submit_Click" IsDefault="True" />
+            <Button Content="Abbrechen" Height="34" Margin="0,8,0,0" Click="Cancel_Click" IsCancel="True" />
+        </StackPanel>
+    </Grid>
+</Window>
