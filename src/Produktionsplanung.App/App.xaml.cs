@@ -10,6 +10,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        AppPaths.InitializeStorageMode(e.Args);
         AppPaths.EnsureDirectories();
         using (var db = new AppDbContext())
         {
