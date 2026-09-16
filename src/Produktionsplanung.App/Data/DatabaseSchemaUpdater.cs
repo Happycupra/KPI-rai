@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Produktionsplanung.App.Data;
@@ -6,6 +7,10 @@ public static class DatabaseSchemaUpdater
 {
     public static void Apply(AppDbContext db)
     {
+        EnsureColumn(db, "Workstations", "RequiredQualificationId", "INTEGER NULL");
+        EnsureColumn(db, "Workstations", "RequiredQualificationLevel", "INTEGER NOT NULL DEFAULT 0");
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Workstations_RequiredQualificationId ON Workstations (RequiredQualificationId);");
+
         db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS ProductionOrders (
                 Id INTEGER NOT NULL CONSTRAINT PK_ProductionOrders PRIMARY KEY AUTOINCREMENT,
@@ -99,5 +104,42 @@ public static class DatabaseSchemaUpdater
             """);
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_TimestampUtc ON AuditLogs (TimestampUtc);");
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_Username ON AuditLogs (Username);");
+    }
+
+    private static void EnsureColumn(AppDbContext db, string tableName, string columnName, string definition)
+    {
+        var connection = db.Database.GetDbConnection();
+        var closeAfter = connection.State != ConnectionState.Open;
+        if (closeAfter)
+            connection.Open();
+
+        try
+        {
+            using var check = connection.CreateCommand();
+            check.CommandText = $"PRAGMA table_info(\"{tableName}\");";
+            using var reader = check.ExecuteReader();
+            var exists = false;
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    exists = true;
+                    break;
+                }
+            }
+            reader.Close();
+
+            if (exists)
+                return;
+
+            using var alter = connection.CreateCommand();
+            alter.CommandText = $"ALTER TABLE \"{tableName}\" ADD COLUMN \"{columnName}\" {definition};";
+            alter.ExecuteNonQuery();
+        }
+        finally
+        {
+            if (closeAfter)
+                connection.Close();
+        }
     }
 }
