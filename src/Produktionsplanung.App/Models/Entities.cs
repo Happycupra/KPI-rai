@@ -96,4 +96,31 @@ public class ProductionOrder
     public int RequiredStaff { get; set; }
     public string Status { get; set; } = "Geplant";
     public string? Comment { get; set; }
+    public ICollection<ProductionActual> Actuals { get; set; } = new List<ProductionActual>();
+}
+
+public class ProductionActual
+{
+    public int Id { get; set; }
+    public int ProductionOrderId { get; set; }
+    public ProductionOrder ProductionOrder { get; set; } = null!;
+    public DateTime Date { get; set; }
+    public double TotalQuantity { get; set; }
+    public double GoodQuantity { get; set; }
+    public double ScrapQuantity { get; set; }
+    public double PlannedProductionMinutes { get; set; }
+    public double RunMinutes { get; set; }
+    public double IdealRatePerHour { get; set; }
+    public string? Comment { get; set; }
+    public ICollection<DowntimeEntry> Downtimes { get; set; } = new List<DowntimeEntry>();
+}
+
+public class DowntimeEntry
+{
+    public int Id { get; set; }
+    public int ProductionActualId { get; set; }
+    public ProductionActual ProductionActual { get; set; } = null!;
+    public string Reason { get; set; } = string.Empty;
+    public double Minutes { get; set; }
+    public string? Comment { get; set; }
 }
