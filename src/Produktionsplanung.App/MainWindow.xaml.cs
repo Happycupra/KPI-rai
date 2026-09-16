@@ -43,6 +43,9 @@ public partial class MainWindow : Window
     private void ShowAbsences_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new AbsencesView();
 
+    private void ShowSettings_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new SettingsView();
+
     private void ShowDashboard() =>
         ContentHost.Content = new DashboardView();
 }
