@@ -1,0 +1,112 @@
+<UserControl x:Class="Produktionsplanung.App.Views.ProductionOrdersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Produktionsaufträge" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
+                <TextBlock Text="Aufträge planen und Personalbedarf mit Linie und Schicht verknüpfen." Foreground="#64748B" Margin="0,4,0,0" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="+ Neuer Auftrag" Height="34" Padding="14,0" Command="{Binding NewOrderCommand}" Margin="0,0,8,0" />
+                <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="410" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="18" Margin="0,0,18,0">
+                <DataGrid ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+                          AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="105" />
+                        <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.4*" />
+                        <DataGridTextColumn Header="Datum" Binding="{Binding PlannedDate, StringFormat=dd.MM.yyyy}" Width="100" />
+                        <DataGridTextColumn Header="Linie / Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.3*" />
+                        <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="115" />
+                        <DataGridTextColumn Header="Menge" Binding="{Binding QuantityText}" Width="100" />
+                        <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70" />
+                        <DataGridTextColumn Header="Priorität" Binding="{Binding Priority}" Width="90" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="105" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Auftrag bearbeiten" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
+                        <TextBlock Text="Personalbedarf wird in Tages- und Wochenplanung übernommen." Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,18" />
+
+                        <TextBlock Text="Auftragsnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding OrderNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Produkt" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Menge" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Einheit" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit, Mode=TwoWay}" Height="34" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Priorität" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority, Mode=TwoWay}" Height="34" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Status" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status, Mode=TwoWay}" Height="34" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Geplantes Datum" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Height="34" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Arbeitsplatz / Linie" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Personalbedarf" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding RequiredStaff, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Beschreibung" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14" />
+
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,10" />
+                        <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" />
+                        <Button Content="Neuer Auftrag" Height="38" Command="{Binding NewOrderCommand}" Margin="0,0,0,8" />
+                        <Button Content="Ausgewählten Auftrag löschen" Height="38" Command="{Binding DeleteCommand}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
