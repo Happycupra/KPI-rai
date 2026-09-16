@@ -29,5 +29,8 @@ public partial class DayPlanningViewModel
                 Message = $"{OrderAlertPrefix}{row.OrderNumber} · {row.Product}: {row.WorkstationName} / {row.ShiftName} benötigt {row.RequiredStaff}, eingeplant sind {row.PlannedStaff}."
             });
         }
+
+        RefreshSkillAlerts();
+        RefreshEmployeeSuggestions();
     }
 }
