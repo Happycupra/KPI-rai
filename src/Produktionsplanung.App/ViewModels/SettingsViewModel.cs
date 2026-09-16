@@ -10,7 +10,7 @@ namespace Produktionsplanung.App.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
-    [ObservableProperty] private string companyName = "KPI-rai";
+    [ObservableProperty] private string companyName = "OpsCompact";
     [ObservableProperty] private string siteName = string.Empty;
     [ObservableProperty] private string defaultBackupDirectory = AppPaths.BackupsDirectory;
     [ObservableProperty] private string defaultExportDirectory = AppPaths.ExportsDirectory;
@@ -49,7 +49,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Standardordner für KPI-rai-Backups auswählen",
+            Title = "Standardordner für OpsCompact-Backups auswählen",
             InitialDirectory = Directory.Exists(DefaultBackupDirectory) ? DefaultBackupDirectory : AppPaths.BackupsDirectory
         };
 
@@ -62,7 +62,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Standardordner für KPI-rai-Exporte auswählen",
+            Title = "Standardordner für OpsCompact-Exporte auswählen",
             InitialDirectory = Directory.Exists(DefaultExportDirectory) ? DefaultExportDirectory : AppPaths.ExportsDirectory
         };
 
@@ -81,12 +81,12 @@ public partial class SettingsViewModel : ObservableObject
 
             var dialog = new SaveFileDialog
             {
-                Title = "KPI-rai-Backup speichern",
-                Filter = "KPI-rai Backup (*.kpibackup)|*.kpibackup",
+                Title = "OpsCompact-Backup speichern",
+                Filter = "OpsCompact Backup (*.kpibackup)|*.kpibackup",
                 DefaultExt = ".kpibackup",
                 AddExtension = true,
                 InitialDirectory = settings.DefaultBackupDirectory,
-                FileName = $"KPI-rai-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup"
+                FileName = $"OpsCompact-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup"
             };
 
             if (dialog.ShowDialog() != true)
@@ -106,8 +106,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Title = "KPI-rai-Backup wiederherstellen",
-            Filter = "KPI-rai Backup (*.kpibackup)|*.kpibackup|Alle Dateien (*.*)|*.*",
+            Title = "OpsCompact-Backup wiederherstellen",
+            Filter = "OpsCompact Backup (*.kpibackup)|*.kpibackup|Alle Dateien (*.*)|*.*",
             InitialDirectory = Directory.Exists(DefaultBackupDirectory) ? DefaultBackupDirectory : AppPaths.BackupsDirectory
         };
 
@@ -115,7 +115,7 @@ public partial class SettingsViewModel : ObservableObject
             return;
 
         var confirmation = MessageBox.Show(
-            "Beim Wiederherstellen wird die aktuelle lokale Datenbank ersetzt. KPI-rai erstellt davor automatisch ein Sicherheitsbackup. Fortfahren?",
+            "Beim Wiederherstellen wird die aktuelle lokale Datenbank ersetzt. OpsCompact erstellt davor automatisch ein Sicherheitsbackup. Fortfahren?",
             "Backup wiederherstellen",
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
@@ -131,11 +131,11 @@ public partial class SettingsViewModel : ObservableObject
 
             var safetyPath = Path.Combine(
                 settings.DefaultBackupDirectory,
-                $"KPI-rai-vor-Restore-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup");
+                $"OpsCompact-vor-Restore-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup");
             BackupService.CreateBackup(safetyPath, settings);
 
             BackupService.RestoreBackup(dialog.FileName);
-            StatusMessage = $"Backup wiederhergestellt. Sicherheitsbackup: {safetyPath}. Bitte KPI-rai jetzt neu starten.";
+            StatusMessage = $"Backup wiederhergestellt. Sicherheitsbackup: {safetyPath}. Bitte OpsCompact jetzt neu starten.";
         }
         catch (Exception ex)
         {
@@ -148,7 +148,7 @@ public partial class SettingsViewModel : ObservableObject
                 // No further navigation or edits with accounts from the old database.
                 Application.Current.MainWindow.IsEnabled = false;
                 MessageBox.Show(StatusMessage + "\nDie Anwendung wird jetzt geschlossen. Bitte erneut starten und anmelden.",
-                    "KPI-rai wiederherstellen", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "OpsCompact wiederherstellen", MessageBoxButton.OK, MessageBoxImage.Information);
                 Application.Current.Shutdown();
             }
         }
@@ -162,7 +162,7 @@ public partial class SettingsViewModel : ObservableObject
             var executable = Environment.ProcessPath;
             if (string.IsNullOrWhiteSpace(executable))
             {
-                StatusMessage = "Der Anwendungspfad konnte nicht ermittelt werden. Bitte KPI-rai manuell neu starten.";
+                StatusMessage = "Der Anwendungspfad konnte nicht ermittelt werden. Bitte OpsCompact manuell neu starten.";
                 return;
             }
 
@@ -186,7 +186,7 @@ public partial class SettingsViewModel : ObservableObject
 
             var dialog = new OpenFolderDialog
             {
-                Title = "Zielordner für KPI-rai-CSV-Export auswählen",
+                Title = "Zielordner für OpsCompact-CSV-Export auswählen",
                 InitialDirectory = settings.DefaultExportDirectory
             };
 
