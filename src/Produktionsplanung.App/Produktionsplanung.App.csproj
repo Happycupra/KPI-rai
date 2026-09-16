@@ -10,8 +10,8 @@
     <VersionPrefix>0.1.0</VersionPrefix>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
-    <Product>KPI-rai</Product>
-    <Company>KPI-rai</Company>
+    <Product>OpsCompact</Product>
+    <Company>OpsCompact</Company>
   </PropertyGroup>
 
   <ItemGroup>
