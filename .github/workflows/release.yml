@@ -46,11 +46,10 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.version }}"
           dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:Version=$version --output artifacts/single-file
-          $source = Join-Path $PWD "artifacts/single-file/Produktionsplanung.exe"
-          $target = Join-Path $PWD "artifacts/KPI-rai-$version-win-x64-portable.exe"
+          $source = Join-Path $PWD "artifacts/single-file/OpsCompact.exe"
+          $target = Join-Path $PWD "artifacts/OpsCompact-$version-win-x64-portable.exe"
           if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
-          if (Test-Path $target) { Remove-Item $target -Force }
-          Move-Item $source $target
+          Copy-Item $source $target -Force
 
       - name: Prepare USB portable package
         shell: pwsh
@@ -58,22 +57,24 @@ jobs:
           $version = "${{ steps.version.outputs.version }}"
           $usb = Join-Path $PWD "artifacts/usb-portable"
           New-Item -ItemType Directory -Path $usb -Force | Out-Null
-          Copy-Item "artifacts/KPI-rai-$version-win-x64-portable.exe" (Join-Path $usb "KPI-rai.exe") -Force
-          Set-Content -Path (Join-Path $usb "portable.mode") -Value "KPI-rai USB portable mode" -Encoding UTF8
+          Copy-Item "artifacts/OpsCompact-$version-win-x64-portable.exe" (Join-Path $usb "OpsCompact.exe") -Force
+          Set-Content -Path (Join-Path $usb "portable.mode") -Value "OpsCompact USB portable mode" -Encoding UTF8
           @"
-          KPI-rai USB / Portable
-          ======================
+          OpsCompact USB / Portable
+          =========================
 
-          Gesamten Ordner auf einen USB-Stick oder in einen beschreibbaren Ordner kopieren und KPI-rai.exe starten.
+          Gesamten Ordner auf einen USB-Stick oder in einen beschreibbaren Ordner kopieren und OpsCompact.exe starten.
           Die Datei portable.mode aktiviert den USB-Modus und darf nicht gelöscht werden.
 
           Im USB-Modus bleiben die Daten beim Programm:
-          - produktionsplanung.db direkt neben KPI-rai.exe
-          - settings.json direkt neben KPI-rai.exe
+          - produktionsplanung.db direkt neben OpsCompact.exe
+          - settings.json direkt neben OpsCompact.exe
           - Backups im Unterordner Backups
           - Exporte im Unterordner Exports
+
+          Der bestehende Datenpfad %LOCALAPPDATA%\Produktionsplanung bleibt aus Kompatibilitätsgründen erhalten.
           "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
-          Compress-Archive -Path "$usb/*" -DestinationPath "artifacts/KPI-rai-$version-win-x64-USB-portable.zip" -Force
+          Compress-Archive -Path "$usb/*" -DestinationPath "artifacts/OpsCompact-$version-win-x64-USB-portable.zip" -Force
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
@@ -84,13 +85,13 @@ jobs:
           $version = "${{ steps.version.outputs.version }}"
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "/DMyAppVersion=$version" "installer\KPI-rai.iss"
+          & $iscc "/DMyAppVersion=$version" "installer\OpsCompact.iss"
 
       - name: Create portable zip
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/KPI-rai-$version-win-x64-portable.zip" -Force
+          Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/OpsCompact-$version-win-x64-portable.zip" -Force
 
       - name: Publish GitHub Release
         shell: pwsh
@@ -98,8 +99,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $installer = Get-ChildItem artifacts/installer/*.exe | Select-Object -First 1
-          $portableZip = "artifacts/KPI-rai-$version-win-x64-portable.zip"
-          $portableExe = "artifacts/KPI-rai-$version-win-x64-portable.exe"
-          $usbPortable = "artifacts/KPI-rai-$version-win-x64-USB-portable.zip"
-          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe $usbPortable --generate-notes --title "KPI-rai ${{ github.ref_name }}"
+          $installer = Get-ChildItem artifacts/installer/OpsCompact-Setup-*.exe | Select-Object -First 1
+          $portableZip = "artifacts/OpsCompact-$version-win-x64-portable.zip"
+          $portableExe = "artifacts/OpsCompact-$version-win-x64-portable.exe"
+          $usbPortable = "artifacts/OpsCompact-$version-win-x64-USB-portable.zip"
+          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe $usbPortable --generate-notes --title "OpsCompact ${{ github.ref_name }}"
