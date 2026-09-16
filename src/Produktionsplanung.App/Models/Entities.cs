@@ -124,3 +124,35 @@ public class DowntimeEntry
     public double Minutes { get; set; }
     public string? Comment { get; set; }
 }
+
+public class UserAccount
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public string PasswordSalt { get; set; } = string.Empty;
+    public string Role { get; set; } = UserRoles.Observer;
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+    public DateTime? LastLoginAtUtc { get; set; }
+}
+
+public static class UserRoles
+{
+    public const string Administrator = "Administrator";
+    public const string Planner = "Planer";
+    public const string Observer = "Beobachter";
+    public static readonly string[] All = { Administrator, Planner, Observer };
+}
+
+public class AuditLog
+{
+    public long Id { get; set; }
+    public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
+    public string Username { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string EntityType { get; set; } = string.Empty;
+    public string? EntityId { get; set; }
+    public string? Details { get; set; }
+}
