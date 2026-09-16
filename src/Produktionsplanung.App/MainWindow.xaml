@@ -1,34 +1,20 @@
 <Window x:Class="Produktionsplanung.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KPI-rai – Produktionsplanung" Height="820" Width="1450" MinHeight="700" MinWidth="1150"
+        xmlns:views="clr-namespace:Produktionsplanung.App.Views"
+        Title="OpsCompact – Produktions- & Personalplanung" Height="820" Width="1450" MinHeight="700" MinWidth="1150"
         Background="{StaticResource SurfaceBrush}">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="245" />
+            <ColumnDefinition Width="255" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0" Background="#0F172A">
             <DockPanel Margin="18">
-                <StackPanel DockPanel.Dock="Top">
-                    <TextBlock Text="KPI-rai" Foreground="White" FontSize="24" FontWeight="SemiBold" Margin="0,10,0,4" />
-                    <TextBlock Text="Produktionsplanung" Foreground="#94A3B8" FontSize="13" Margin="0,0,0,24" />
-
-                    <Button Content="Dashboard" Height="42" Margin="0,0,0,8" Click="ShowDashboard_Click" />
-                    <Button x:Name="DayPlanningButton" Content="Tagesplanung" Height="42" Margin="0,0,0,8" Click="ShowDayPlanning_Click" />
-                    <Button x:Name="WeekPlanningButton" Content="Wochenplanung" Height="42" Margin="0,0,0,8" Click="ShowWeekPlanning_Click" />
-                    <Button x:Name="ProductionOrdersButton" Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" Click="ShowProductionOrders_Click" />
-                    <Button x:Name="ProductionActualButton" Content="Ist-Produktion / OEE" Height="42" Margin="0,0,0,8" Click="ShowProductionActual_Click" />
-                    <Button Content="Auswertungen / KPIs" Height="42" Margin="0,0,0,8" Click="ShowAnalytics_Click" />
-                    <Button x:Name="EmployeesButton" Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
-                    <Button x:Name="SkillsButton" Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
-                    <Button x:Name="WorkstationsButton" Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" Click="ShowWorkstations_Click" />
-                    <Button x:Name="ShiftsButton" Content="Schichten" Height="42" Margin="0,0,0,8" Click="ShowShifts_Click" />
-                    <Button x:Name="AbsencesButton" Content="Abwesenheiten" Height="42" Margin="0,0,0,8" Click="ShowAbsences_Click" />
-                    <Button x:Name="UserAdminButton" Content="Benutzer / Audit" Height="42" Margin="0,0,0,8" Click="ShowUserAdmin_Click" />
-                    <Button x:Name="SettingsButton" Content="Einstellungen" Height="42" Margin="0,0,0,18" Click="ShowSettings_Click" />
-                </StackPanel>
+                <Border DockPanel.Dock="Top" Background="White" CornerRadius="12" Padding="7" Margin="0,6,0,16">
+                    <views:BrandLogo HorizontalAlignment="Left"/>
+                </Border>
 
                 <Border DockPanel.Dock="Bottom" BorderBrush="#334155" BorderThickness="0,1,0,0" Padding="4,14,4,4">
                     <StackPanel>
@@ -38,6 +24,25 @@
                         <TextBlock Text="Windows Desktop · SQLite" Foreground="#64748B" FontSize="11" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <Button Content="Dashboard" Height="42" Margin="0,0,0,8" Click="ShowDashboard_Click" />
+                        <Button x:Name="PlanningCalendarButton" Content="Planungskalender" Height="42" Margin="0,0,0,8" Click="ShowPlanningCalendar_Click" />
+                        <Button x:Name="DayPlanningButton" Content="Tagesplanung" Height="42" Margin="0,0,0,8" Click="ShowDayPlanning_Click" />
+                        <Button x:Name="WeekPlanningButton" Content="Wochenplanung" Height="42" Margin="0,0,0,8" Click="ShowWeekPlanning_Click" />
+                        <Button x:Name="ProductionOrdersButton" Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" Click="ShowProductionOrders_Click" />
+                        <Button x:Name="ProductionActualButton" Content="Ist-Produktion / OEE" Height="42" Margin="0,0,0,8" Click="ShowProductionActual_Click" />
+                        <Button Content="Auswertungen / KPIs" Height="42" Margin="0,0,0,8" Click="ShowAnalytics_Click" />
+                        <Button x:Name="EmployeesButton" Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
+                        <Button x:Name="SkillsButton" Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
+                        <Button x:Name="WorkstationsButton" Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" Click="ShowWorkstations_Click" />
+                        <Button x:Name="ShiftsButton" Content="Schichten" Height="42" Margin="0,0,0,8" Click="ShowShifts_Click" />
+                        <Button x:Name="AbsencesButton" Content="Abwesenheiten" Height="42" Margin="0,0,0,8" Click="ShowAbsences_Click" />
+                        <Button x:Name="UserAdminButton" Content="Benutzer / Audit" Height="42" Margin="0,0,0,8" Click="ShowUserAdmin_Click" />
+                        <Button x:Name="SettingsButton" Content="Einstellungen" Height="42" Margin="0,0,0,18" Click="ShowSettings_Click" />
+                    </StackPanel>
+                </ScrollViewer>
             </DockPanel>
         </Border>
 
