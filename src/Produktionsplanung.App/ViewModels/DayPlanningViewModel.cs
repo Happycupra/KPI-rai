@@ -281,18 +281,22 @@ public partial class DayPlanningViewModel : ObservableObject
     private void BuildStaffing(List<PlanningAssignment> dayAssignments, AppDbContext db)
     {
         Staffing.Clear();
-        var workstations = db.Workstations.AsNoTracking()
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.Name)
-            .ToList();
 
-        foreach (var workstation in workstations)
+        var workstationMap = db.Workstations.AsNoTracking()
+            .Where(x => x.IsActive)
+            .ToDictionary(x => x.Id);
+
+        var groups = dayAssignments
+            .Where(x => workstationMap.ContainsKey(x.WorkstationId))
+            .GroupBy(x => new { x.WorkstationId, x.ShiftId, x.StartTime, x.EndTime })
+            .OrderBy(x => workstationMap[x.Key.WorkstationId].Name)
+            .ThenBy(x => x.Key.StartTime);
+
+        foreach (var group in groups)
         {
-            var planned = dayAssignments
-                .Where(x => x.WorkstationId == workstation.Id)
-                .Select(x => x.EmployeeId)
-                .Distinct()
-                .Count();
+            var workstation = workstationMap[group.Key.WorkstationId];
+            var first = group.First();
+            var planned = group.Select(x => x.EmployeeId).Distinct().Count();
 
             var status = planned < workstation.MinimumStaff
                 ? "Unterbesetzt"
@@ -306,6 +310,8 @@ public partial class DayPlanningViewModel : ObservableObject
             {
                 WorkstationId = workstation.Id,
                 WorkstationName = workstation.Name,
+                ShiftName = first.Shift?.Name ?? "Individuell",
+                TimeText = $"{group.Key.StartTime:hh\\:mm}–{group.Key.EndTime:hh\\:mm}",
                 PlannedStaff = planned,
                 MinimumStaff = workstation.MinimumStaff,
                 OptimalStaff = workstation.OptimalStaff,
@@ -326,7 +332,7 @@ public partial class DayPlanningViewModel : ObservableObject
                 Alerts.Add(new PlanningAlert
                 {
                     Severity = "Rot",
-                    Message = $"{row.WorkstationName} ist unterbesetzt: {row.PlannedStaff}/{row.MinimumStaff} Mindestbesetzung."
+                    Message = $"{row.WorkstationName} / {row.ShiftName} ist unterbesetzt: {row.PlannedStaff}/{row.MinimumStaff} Mindestbesetzung."
                 });
             }
             else if (row.PlannedStaff > row.MaximumStaff)
@@ -334,7 +340,7 @@ public partial class DayPlanningViewModel : ObservableObject
                 Alerts.Add(new PlanningAlert
                 {
                     Severity = "Gelb",
-                    Message = $"{row.WorkstationName} ist überbesetzt: {row.PlannedStaff}/{row.MaximumStaff} maximal vorgesehen."
+                    Message = $"{row.WorkstationName} / {row.ShiftName} ist überbesetzt: {row.PlannedStaff}/{row.MaximumStaff} maximal vorgesehen."
                 });
             }
         }
@@ -465,6 +471,8 @@ public class StaffingRow
 {
     public int WorkstationId { get; set; }
     public string WorkstationName { get; set; } = string.Empty;
+    public string ShiftName { get; set; } = string.Empty;
+    public string TimeText { get; set; } = string.Empty;
     public int PlannedStaff { get; set; }
     public int MinimumStaff { get; set; }
     public int OptimalStaff { get; set; }
