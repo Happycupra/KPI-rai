@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
+using Produktionsplanung.App.Models;
 
 namespace Produktionsplanung.App.Services;
 
@@ -110,7 +111,7 @@ public static class QualificationPlanningService
             .ToList();
     }
 
-    private static double CalculateNetHours(Models.PlanningAssignment assignment)
+    private static double CalculateNetHours(PlanningAssignment assignment)
     {
         var duration = assignment.EndTime - assignment.StartTime;
         if (duration <= TimeSpan.Zero) duration += TimeSpan.FromDays(1);
