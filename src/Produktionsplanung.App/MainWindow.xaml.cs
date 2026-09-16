@@ -7,6 +7,8 @@ namespace Produktionsplanung.App;
 
 public partial class MainWindow : Window
 {
+    private EmployeeQuickCardWindow? employeeQuickCardWindow;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -57,6 +59,31 @@ public partial class MainWindow : Window
     {
         if (SessionService.IsPlannerOrAdmin)
             ContentHost.Content = new DayPlanningView(date);
+    }
+
+    public void OpenEmployee(int employeeId)
+    {
+        if (SessionService.IsPlannerOrAdmin)
+            ContentHost.Content = new EmployeesView(employeeId);
+    }
+
+    public void OpenEmployeeQuickCard(int employeeId, DateTime? contextDate = null)
+    {
+        if (!SessionService.IsPlannerOrAdmin)
+            return;
+
+        if (employeeQuickCardWindow is not null)
+        {
+            employeeQuickCardWindow.Close();
+            employeeQuickCardWindow = null;
+        }
+
+        employeeQuickCardWindow = new EmployeeQuickCardWindow(employeeId, contextDate)
+        {
+            Owner = this
+        };
+        employeeQuickCardWindow.Closed += (_, _) => employeeQuickCardWindow = null;
+        employeeQuickCardWindow.Show();
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
