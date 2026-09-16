@@ -12,7 +12,7 @@ public static class CsvExportService
 
     public static string ExportAll(string baseDirectory, AppSettings settings)
     {
-        var exportDirectory = Path.Combine(baseDirectory, $"KPI-rai-Export-{DateTime.Now:yyyyMMdd-HHmmss}");
+        var exportDirectory = Path.Combine(baseDirectory, $"OpsCompact-Export-{DateTime.Now:yyyyMMdd-HHmmss}");
         Directory.CreateDirectory(exportDirectory);
 
         var delimiter = string.IsNullOrEmpty(settings.CsvDelimiter) ? ';' : settings.CsvDelimiter[0];
