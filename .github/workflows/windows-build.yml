@@ -33,6 +33,17 @@ jobs:
       - name: Publish standalone Windows x64
         run: dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/win-x64
 
+      - name: Publish portable single-file Windows x64
+        shell: pwsh
+        run: |
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false --output artifacts/single-file
+          $source = Join-Path $PWD "artifacts/single-file/Produktionsplanung.exe"
+          $target = Join-Path $PWD "artifacts/single-file/KPI-rai.exe"
+          if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
+          if (Test-Path $target) { Remove-Item $target -Force }
+          Move-Item $source $target
+          Get-ChildItem artifacts/single-file
+
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
@@ -48,6 +59,12 @@ jobs:
         with:
           name: produktionsplanung-win-x64
           path: artifacts/win-x64
+
+      - name: Upload portable single EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: KPI-rai-Portable-0.1.0-win-x64
+          path: artifacts/single-file/KPI-rai.exe
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
