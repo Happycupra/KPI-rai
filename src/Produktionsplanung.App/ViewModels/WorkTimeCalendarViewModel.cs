@@ -52,6 +52,14 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
         Load();
     }
 
+    partial void OnCalendarIsWorkingDayChanged(bool value)
+    {
+        if (value && CalendarTargetHoursFactor <= 0)
+            CalendarTargetHoursFactor = 1;
+        else if (!value)
+            CalendarTargetHoursFactor = 0;
+    }
+
     partial void OnSelectedEntryChanged(WorkTimeEntryRow? value)
     {
         if (value is null) return;
@@ -75,14 +83,9 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
         StatusMessage = string.Empty;
     }
 
-    [RelayCommand]
-    private void PreviousMonth() => Month = Month.AddMonths(-1);
-
-    [RelayCommand]
-    private void CurrentMonth() => Month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-
-    [RelayCommand]
-    private void NextMonth() => Month = Month.AddMonths(1);
+    [RelayCommand] private void PreviousMonth() => Month = Month.AddMonths(-1);
+    [RelayCommand] private void CurrentMonth() => Month = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    [RelayCommand] private void NextMonth() => Month = Month.AddMonths(1);
 
     [RelayCommand]
     private void Refresh()
@@ -299,11 +302,16 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
         var planned = db.PlanningAssignments.AsNoTracking()
             .Where(x => x.Date.Date >= start && x.Date.Date <= end)
             .ToList();
+        var calendar = db.OperatingCalendarDays.AsNoTracking()
+            .Where(x => x.Date.Date >= start && x.Date.Date <= end)
+            .OrderBy(x => x.Date)
+            .ToList();
+        var calendarMap = calendar.ToDictionary(x => x.Date.Date);
 
         Balances.Clear();
         foreach (var employee in employees)
         {
-            var target = OperatingCalendarService.GetTargetHours(db, employee, start, end);
+            var target = OperatingCalendarService.GetTargetHours(employee, start, end, calendarMap);
             var actual = entries.Where(x => x.EmployeeId == employee.Id)
                 .Sum(x => OperatingCalendarService.CalculateNetHours(x.StartTime, x.EndTime, x.BreakMinutes));
             var plannedHours = planned.Where(x => x.EmployeeId == employee.Id)
@@ -318,10 +326,6 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
             });
         }
 
-        var calendar = db.OperatingCalendarDays.AsNoTracking()
-            .Where(x => x.Date.Date >= start && x.Date.Date <= end)
-            .OrderBy(x => x.Date)
-            .ToList();
         CalendarDays.Clear();
         foreach (var x in calendar)
         {
