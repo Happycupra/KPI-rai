@@ -29,7 +29,7 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="380" />
+                <ColumnDefinition Width="410" />
             </Grid.ColumnDefinitions>
 
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
@@ -125,13 +125,42 @@
                         <TextBlock Text="Mitarbeiter" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
                         <TextBlock Text="Arbeitsplatz" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,14" />
+                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,6" />
+                        <TextBlock Text="{Binding WorkstationSkillRequirementText}" Foreground="#1D4ED8" TextWrapping="Wrap" Margin="0,0,0,14" />
                         <TextBlock Text="Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
+
+                        <Border Background="#F8FAFC" CornerRadius="9" Padding="12" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Passende Mitarbeitende" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <TextBlock Text="Verfügbar, nicht doppelt belegt und – falls gefordert – ausreichend qualifiziert. Sortiert nach Skill und Wochenbelastung."
+                                           Foreground="#64748B" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,8" />
+                                <ItemsControl ItemsSource="{Binding EmployeeSuggestions}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="White" CornerRadius="7" Padding="8" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding SkillText}" Foreground="#475569" FontSize="12" />
+                                                        <TextBlock Text="{Binding LoadText}" Foreground="#64748B" FontSize="12" />
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Content="Übernehmen" Padding="10,4" Margin="8,0,0,0"
+                                                            Command="{Binding DataContext.UseSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="78" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
                         <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
-                            <TextBlock Text="Beim Speichern prüft KPI-rai automatisch auf Abwesenheit und Doppelbelegung. Die Auftragsabdeckung wird danach neu berechnet."
+                            <TextBlock Text="KPI-rai prüft Abwesenheit, Doppelbelegung und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
                                        TextWrapping="Wrap" Foreground="#1E3A8A" />
                         </Border>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="42" Margin="0,0,0,10" />
