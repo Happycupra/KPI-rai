@@ -165,6 +165,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             result.Add(new CalendarEntryRow
             {
+                Date = date.Date,
                 EntryType = "Betriebskalender",
                 Accent = x.IsWorkingDay ? "#7C3AED" : "#64748B",
                 IsAllDay = true,
@@ -180,7 +181,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             result.Add(new CalendarEntryRow
             {
+                Date = date.Date,
                 EntryType = "Einsatz",
+                EmployeeId = x.EmployeeId,
                 Accent = "#2563EB",
                 StartTime = x.StartTime,
                 SortTime = x.StartTime,
@@ -196,6 +199,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             var start = x.PlannedStart ?? x.Shift?.StartTime ?? TimeSpan.FromHours(12);
             result.Add(new CalendarEntryRow
             {
+                Date = date.Date,
                 EntryType = "Auftrag",
                 Accent = x.Priority is "Dringend" or "Hoch" ? "#EA580C" : "#0F766E",
                 StartTime = start,
@@ -211,7 +215,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             result.Add(new CalendarEntryRow
             {
+                Date = date.Date,
                 EntryType = "Abwesenheit",
+                EmployeeId = x.EmployeeId,
                 Accent = "#DC2626",
                 IsAllDay = true,
                 SortTime = TimeSpan.Zero,
@@ -251,6 +257,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
 public sealed class CalendarEntryRow
 {
+    public DateTime Date { get; set; }
+    public int? EmployeeId { get; set; }
     public string EntryType { get; set; } = string.Empty;
     public string Accent { get; set; } = "#2563EB";
     public TimeSpan StartTime { get; set; }
