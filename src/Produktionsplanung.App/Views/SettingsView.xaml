@@ -40,7 +40,7 @@
                 <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20" Margin="8,0,0,0">
                     <StackPanel>
                         <TextBlock Text="Lokale Speicherorte" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="KPI-rai speichert die operative Datenbank lokal unter %LOCALAPPDATA%."
+                        <TextBlock Text="OpsCompact speichert die operative Datenbank lokal. Der bisherige Datenpfad bleibt aus Kompatibilitätsgründen erhalten."
                                    Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,16" />
 
                         <TextBlock Text="Datenbank" FontWeight="SemiBold" />
@@ -56,7 +56,7 @@
             <Border Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="Backup &amp; Wiederherstellung" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
-                    <TextBlock Text="Ein .kpibackup enthält einen konsistenten SQLite-Snapshot, die Anwendungseinstellungen und Backup-Metadaten. Vor jeder Wiederherstellung wird automatisch ein zusätzliches Sicherheitsbackup erstellt."
+                    <TextBlock Text="Ein .kpibackup enthält einen konsistenten SQLite-Snapshot, die Anwendungseinstellungen und Backup-Metadaten. Die Dateiendung bleibt mit bisherigen Backups kompatibel. Vor jeder Wiederherstellung wird automatisch ein zusätzliches Sicherheitsbackup erstellt."
                                Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,16" />
 
                     <Grid Margin="0,0,0,12">
@@ -96,7 +96,7 @@
                                 Command="{Binding CreateBackupCommand}" />
                         <Button Content="Backup wiederherstellen" Height="36" Padding="16,0" Margin="0,0,8,0"
                                 Command="{Binding RestoreBackupCommand}" />
-                        <Button Content="KPI-rai neu starten" Height="36" Padding="16,0"
+                        <Button Content="OpsCompact neu starten" Height="36" Padding="16,0"
                                 Command="{Binding RestartApplicationCommand}" />
                     </StackPanel>
                 </StackPanel>
@@ -105,7 +105,7 @@
             <Border Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="CSV-Export" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
-                    <TextBlock Text="Der Komplett-Export erstellt getrennte CSV-Dateien für Mitarbeiter, Abwesenheiten, Planung, Produktionsaufträge, Ist-Produktion/OEE und Stillstände."
+                    <TextBlock Text="Der Komplett-Export erstellt getrennte CSV-Dateien für Mitarbeiter, Skills, Arbeitsplätze, Schichten, Abwesenheiten, Planung, Produktionsaufträge, Ist-Produktion/OEE und Stillstände."
                                Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,16" />
 
                     <Grid Margin="0,0,0,12">
