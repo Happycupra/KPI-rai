@@ -37,34 +37,31 @@ jobs:
         shell: pwsh
         run: |
           dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false --output artifacts/single-file
-          $source = Join-Path $PWD "artifacts/single-file/Produktionsplanung.exe"
-          $target = Join-Path $PWD "artifacts/single-file/KPI-rai.exe"
-          if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
-          if (Test-Path $target) { Remove-Item $target -Force }
-          Move-Item $source $target
+          $exe = Join-Path $PWD "artifacts/single-file/OpsCompact.exe"
+          if (-not (Test-Path $exe)) { throw "Single-file executable not found: $exe" }
 
       - name: Prepare USB portable package
         shell: pwsh
         run: |
           $usb = Join-Path $PWD "artifacts/usb-portable"
           New-Item -ItemType Directory -Path $usb -Force | Out-Null
-          Copy-Item "artifacts/single-file/KPI-rai.exe" (Join-Path $usb "KPI-rai.exe") -Force
-          Set-Content -Path (Join-Path $usb "portable.mode") -Value "KPI-rai USB portable mode" -Encoding UTF8
+          Copy-Item "artifacts/single-file/OpsCompact.exe" (Join-Path $usb "OpsCompact.exe") -Force
+          Set-Content -Path (Join-Path $usb "portable.mode") -Value "OpsCompact USB portable mode" -Encoding UTF8
           @"
-          KPI-rai USB / Portable
-          ======================
+          OpsCompact USB / Portable
+          =========================
 
           1. Diesen gesamten Ordner auf einen USB-Stick oder in einen beliebigen beschreibbaren Ordner kopieren.
-          2. KPI-rai.exe starten.
+          2. OpsCompact.exe starten.
           3. Die Datei portable.mode NICHT löschen. Sie aktiviert den USB-Modus.
 
           Im USB-Modus bleiben die Daten beim Programm:
-          - produktionsplanung.db: direkt neben KPI-rai.exe
-          - settings.json: direkt neben KPI-rai.exe
+          - produktionsplanung.db: direkt neben OpsCompact.exe
+          - settings.json: direkt neben OpsCompact.exe
           - Backups: Unterordner Backups
           - Exporte: Unterordner Exports
 
-          Wird portable.mode entfernt, verwendet KPI-rai wieder %LOCALAPPDATA%\Produktionsplanung.
+          Wird portable.mode entfernt, verwendet OpsCompact aus Kompatibilitätsgründen weiterhin %LOCALAPPDATA%\Produktionsplanung.
           "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
 
       - name: Install Inno Setup
@@ -75,28 +72,28 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "/DMyAppVersion=0.1.0" "installer\KPI-rai.iss"
+          & $iscc "/DMyAppVersion=0.1.0" "installer\OpsCompact.iss"
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4
         with:
-          name: produktionsplanung-win-x64
+          name: OpsCompact-Windows-0.1.0-win-x64
           path: artifacts/win-x64
 
       - name: Upload portable single EXE
         uses: actions/upload-artifact@v4
         with:
-          name: KPI-rai-Portable-0.1.0-win-x64
-          path: artifacts/single-file/KPI-rai.exe
+          name: OpsCompact-Portable-0.1.0-win-x64
+          path: artifacts/single-file/OpsCompact.exe
 
       - name: Upload USB portable package
         uses: actions/upload-artifact@v4
         with:
-          name: KPI-rai-USB-Portable-0.1.0-win-x64
+          name: OpsCompact-USB-Portable-0.1.0-win-x64
           path: artifacts/usb-portable
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: KPI-rai-Setup-0.1.0-win-x64
+          name: OpsCompact-Setup-0.1.0-win-x64
           path: artifacts/installer/*.exe
