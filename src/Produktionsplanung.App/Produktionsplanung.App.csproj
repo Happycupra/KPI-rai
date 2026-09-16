@@ -16,10 +16,6 @@
     <ApplicationIcon>Assets\OpsCompact.ico</ApplicationIcon>
   </PropertyGroup>
 
-  <Target Name="GenerateOpsCompactIcon" BeforeTargets="PrepareForBuild">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\build\Generate-OpsCompactIcon.ps1&quot;" />
-  </Target>
-
   <ItemGroup>
     <InternalsVisibleTo Include="Produktionsplanung.RegressionTests" />
   </ItemGroup>
