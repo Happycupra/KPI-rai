@@ -1,11 +1,12 @@
 <Window x:Class="Produktionsplanung.App.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="KPI-rai Anmeldung" Width="470" Height="520" ResizeMode="NoResize"
+        xmlns:views="clr-namespace:Produktionsplanung.App.Views"
+        Title="OpsCompact Anmeldung" Width="470" Height="540" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen" Background="#F8FAFC">
     <Grid Margin="34">
         <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="KPI-rai" FontSize="34" FontWeight="Bold" Foreground="#0F172A" />
+            <views:BrandLogo HorizontalAlignment="Left" Margin="0,0,0,10"/>
             <TextBlock x:Name="ModeTitle" Text="Anmeldung" FontSize="19" FontWeight="SemiBold" Foreground="#334155" Margin="0,4,0,4" />
             <TextBlock x:Name="ModeDescription" Text="Mit deinem lokalen Benutzerkonto anmelden." Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,22" />
 
