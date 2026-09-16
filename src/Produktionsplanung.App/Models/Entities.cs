@@ -64,6 +64,28 @@ public class Absence
     public string? Comment { get; set; }
 }
 
+public class OperatingCalendarDay
+{
+    public int Id { get; set; }
+    public DateTime Date { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public bool IsWorkingDay { get; set; }
+    public double TargetHoursFactor { get; set; } = 1;
+    public string? Comment { get; set; }
+}
+
+public class WorkTimeEntry
+{
+    public int Id { get; set; }
+    public int EmployeeId { get; set; }
+    public Employee Employee { get; set; } = null!;
+    public DateTime Date { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    public int BreakMinutes { get; set; }
+    public string? Comment { get; set; }
+}
+
 public class PlanningAssignment
 {
     public int Id { get; set; }
