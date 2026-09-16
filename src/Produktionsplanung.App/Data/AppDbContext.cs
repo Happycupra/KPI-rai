@@ -33,6 +33,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<EmployeeQualification>().HasOne(x => x.Employee).WithMany(x => x.Qualifications).HasForeignKey(x => x.EmployeeId);
         modelBuilder.Entity<EmployeeQualification>().HasOne(x => x.Qualification).WithMany(x => x.Employees).HasForeignKey(x => x.QualificationId);
 
+        modelBuilder.Entity<Workstation>()
+            .HasOne(x => x.RequiredQualification)
+            .WithMany()
+            .HasForeignKey(x => x.RequiredQualificationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<ProductionOrder>().HasIndex(x => x.OrderNumber).IsUnique();
         modelBuilder.Entity<ProductionOrder>().HasIndex(x => new { x.PlannedDate, x.WorkstationId, x.ShiftId });
         modelBuilder.Entity<ProductionOrder>().HasOne(x => x.Workstation).WithMany().HasForeignKey(x => x.WorkstationId).OnDelete(DeleteBehavior.Restrict);
