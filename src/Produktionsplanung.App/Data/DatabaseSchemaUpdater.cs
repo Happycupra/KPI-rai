@@ -12,6 +12,33 @@ public static class DatabaseSchemaUpdater
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Workstations_RequiredQualificationId ON Workstations (RequiredQualificationId);");
 
         db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS OperatingCalendarDays (
+                Id INTEGER NOT NULL CONSTRAINT PK_OperatingCalendarDays PRIMARY KEY AUTOINCREMENT,
+                Date TEXT NOT NULL,
+                Name TEXT NOT NULL,
+                IsWorkingDay INTEGER NOT NULL,
+                TargetHoursFactor REAL NOT NULL,
+                Comment TEXT NULL
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_OperatingCalendarDays_Date ON OperatingCalendarDays (Date);");
+
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS WorkTimeEntries (
+                Id INTEGER NOT NULL CONSTRAINT PK_WorkTimeEntries PRIMARY KEY AUTOINCREMENT,
+                EmployeeId INTEGER NOT NULL,
+                Date TEXT NOT NULL,
+                StartTime TEXT NOT NULL,
+                EndTime TEXT NOT NULL,
+                BreakMinutes INTEGER NOT NULL,
+                Comment TEXT NULL,
+                CONSTRAINT FK_WorkTimeEntries_Employees_EmployeeId
+                    FOREIGN KEY (EmployeeId) REFERENCES Employees (Id) ON DELETE RESTRICT
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_WorkTimeEntries_EmployeeId_Date ON WorkTimeEntries (EmployeeId, Date);");
+
+        db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS ProductionOrders (
                 Id INTEGER NOT NULL CONSTRAINT PK_ProductionOrders PRIMARY KEY AUTOINCREMENT,
                 OrderNumber TEXT NOT NULL,
