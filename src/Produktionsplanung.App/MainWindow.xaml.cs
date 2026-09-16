@@ -48,5 +48,12 @@ public partial class MainWindow : Window
     private void ShowAbsences_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new AbsencesView(); }
     private void ShowUserAdmin_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) ContentHost.Content = new UserAdminView(); }
     private void ShowSettings_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) ContentHost.Content = new SettingsView(); }
+
+    private void ChangePassword_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new ChangePasswordWindow { Owner = this };
+        dialog.ShowDialog();
+    }
+
     private void ShowDashboard() => ContentHost.Content = new DashboardView();
 }
