@@ -19,6 +19,15 @@ public partial class MainWindow : Window
     private void ShowSkills_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new SkillMatrixView();
 
+    private void ShowWorkstations_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new WorkstationsView();
+
+    private void ShowShifts_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new ShiftsView();
+
+    private void ShowAbsences_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new AbsencesView();
+
     private void ShowDashboard() =>
         ContentHost.Content = new DashboardView();
 }
