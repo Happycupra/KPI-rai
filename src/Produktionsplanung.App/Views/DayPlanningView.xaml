@@ -55,11 +55,15 @@
 
                     <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Auftragsabdeckung" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
-                            <TextBlock Text="Personalbedarf aus Produktionsaufträgen im Vergleich zur tatsächlich eingeplanten Mannschaft."
-                                       Foreground="#64748B" Margin="0,4,0,10" />
-                            <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" AutoGenerateColumns="False" IsReadOnly="True"
-                                      CanUserAddRows="False" HeadersVisibility="Column" MinHeight="130" MaxHeight="240">
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="Auftragsabdeckung" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <Button Grid.Column="1" Content="Auto besetzen" Padding="12,5" Command="{Binding AutoStaffSelectedOrderCommand}"/>
+                            </Grid>
+                            <TextBlock Text="Auftrag markieren und automatisch mit verfügbaren, passenden Mitarbeitenden auffüllen."
+                                       Foreground="#64748B" Margin="0,0,0,10" />
+                            <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" SelectedItem="{Binding SelectedProductionOrderCoverage, Mode=TwoWay}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="130" MaxHeight="240">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
                                     <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.2*" />
@@ -160,7 +164,7 @@
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
                         <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
-                            <TextBlock Text="KPI-rai prüft Abwesenheit, Doppelbelegung und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
+                            <TextBlock Text="OpsCompact prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
                                        TextWrapping="Wrap" Foreground="#1E3A8A" />
                         </Border>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="42" Margin="0,0,0,10" />
