@@ -1,6 +1,6 @@
-using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.Data;
 
@@ -19,14 +19,8 @@ public class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var baseDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Produktionsplanung",
-            "Data");
-
-        Directory.CreateDirectory(baseDir);
-        var dbPath = Path.Combine(baseDir, "produktionsplanung.db");
-        optionsBuilder.UseSqlite($"Data Source={dbPath}");
+        AppPaths.EnsureDirectories();
+        optionsBuilder.UseSqlite($"Data Source={AppPaths.DatabasePath}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
