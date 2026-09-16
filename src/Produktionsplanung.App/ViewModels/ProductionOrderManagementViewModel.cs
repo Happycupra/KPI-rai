@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -185,6 +186,16 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             return;
         }
 
+        if (db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id))
+        {
+            StatusMessage = "Aufträge mit Ist-Produktion können nicht gelöscht werden. Bitte abschliessen, damit die Produktionshistorie erhalten bleibt.";
+            return;
+        }
+
+        if (MessageBox.Show($"Auftrag {entity.OrderNumber} endgültig löschen?",
+                "Produktionsauftrag löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
         db.ProductionOrders.Remove(entity);
         db.SaveChanges();
         LoadOrders();
@@ -211,7 +222,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             Workstations.Add(new WorkstationOption { Id = item.Id, Name = item.Name });
 
         Shifts.Clear();
-        foreach (var item in db.Shifts.AsNoTracking().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
+        foreach (var item in db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
         {
             Shifts.Add(new ShiftOption
             {
@@ -239,8 +250,9 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         var items = db.ProductionOrders.AsNoTracking()
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
             .OrderBy(x => x.PlannedDate)
-            .ThenBy(x => x.Shift!.StartTime)
+            .ThenBy(x => x.Shift?.StartTime)
             .ThenBy(x => x.OrderNumber)
             .ToList();
 

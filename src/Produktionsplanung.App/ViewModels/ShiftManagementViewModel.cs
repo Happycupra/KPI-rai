@@ -107,7 +107,7 @@ public partial class ShiftManagementViewModel : ObservableObject
     private void Load(int? selectId = null)
     {
         using var db = new AppDbContext();
-        var items = db.Shifts.AsNoTracking().OrderBy(x => x.StartTime).ToList();
+        var items = db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ToList();
         Shifts.Clear();
         foreach (var item in items) Shifts.Add(item);
         SelectedShift = selectId is null ? null : Shifts.FirstOrDefault(x => x.Id == selectId);

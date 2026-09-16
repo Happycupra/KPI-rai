@@ -64,7 +64,8 @@ public partial class DashboardViewModel : ObservableObject
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
             .Where(x => x.PlannedDate.Date == today)
-            .OrderBy(x => x.Shift!.StartTime)
+            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .OrderBy(x => x.Shift?.StartTime)
             .ThenBy(x => x.Workstation.Name)
             .ThenBy(x => x.OrderNumber)
             .ToList();

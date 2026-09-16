@@ -252,7 +252,7 @@ public partial class AnalyticsViewModel : ObservableObject
         foreach (var workstation in workstations)
         {
             var workstationOrders = orders.Where(x => x.WorkstationId == workstation.Id).ToList();
-            var workstationCoverage = coverageRows.Where(x => x.WorkstationName == workstation.Name).ToList();
+            var workstationCoverage = coverageRows.Where(x => x.WorkstationId == workstation.Id).ToList();
             var required = workstationCoverage.Sum(x => x.RequiredStaff);
             var covered = workstationCoverage.Sum(x => Math.Min(x.PlannedStaff, x.RequiredStaff));
             var coverage = required > 0 ? covered * 100.0 / required : 100;

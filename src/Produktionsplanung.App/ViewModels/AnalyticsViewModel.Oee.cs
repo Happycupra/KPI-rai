@@ -9,9 +9,9 @@ public partial class AnalyticsViewModel
     public ObservableCollection<OeeWorkstationRow> OeeWorkstationRows { get; } = new();
 
     [ObservableProperty] private int oeeRecords;
-    [ObservableProperty] private double oeeTotalQuantity;
-    [ObservableProperty] private double oeeGoodQuantity;
-    [ObservableProperty] private double oeeScrapQuantity;
+    [ObservableProperty] private string oeeTotalQuantityText = "—";
+    [ObservableProperty] private string oeeGoodQuantityText = "—";
+    [ObservableProperty] private string oeeScrapQuantityText = "—";
     [ObservableProperty] private double oeeDowntimeMinutes;
     [ObservableProperty] private double oeeAvailabilityPercent;
     [ObservableProperty] private double oeePerformancePercent;
@@ -23,8 +23,6 @@ public partial class AnalyticsViewModel
     public string OeePerformanceText => $"{OeePerformancePercent:N1} %";
     public string OeeQualityText => $"{OeeQualityPercent:N1} %";
     public string OeeText => $"{OeePercent:N1} %";
-    public string OeeTotalQuantityText => $"{OeeTotalQuantity:N0}";
-    public string OeeScrapQuantityText => $"{OeeScrapQuantity:N0}";
     public string OeeDowntimeText => $"{OeeDowntimeMinutes:N0} min";
 
     public void RefreshOeeAnalytics()
@@ -33,9 +31,9 @@ public partial class AnalyticsViewModel
         var summary = OeeAnalyticsService.LoadPeriod(start, end);
 
         OeeRecords = summary.Records;
-        OeeTotalQuantity = summary.TotalQuantity;
-        OeeGoodQuantity = summary.GoodQuantity;
-        OeeScrapQuantity = summary.ScrapQuantity;
+        OeeTotalQuantityText = summary.TotalQuantityText;
+        OeeGoodQuantityText = summary.GoodQuantityText;
+        OeeScrapQuantityText = summary.ScrapQuantityText;
         OeeDowntimeMinutes = summary.DowntimeMinutes;
         OeeAvailabilityPercent = summary.AvailabilityPercent;
         OeePerformancePercent = summary.PerformancePercent;

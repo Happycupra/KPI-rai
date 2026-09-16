@@ -27,6 +27,9 @@ jobs:
       - name: Build
         run: dotnet build Produktionsplanung.sln --configuration Release --no-restore
 
+      - name: Regression tests (isolated SQLite and WPF)
+        run: dotnet run --project tests/Produktionsplanung.RegressionTests --configuration Release
+
       - name: Publish standalone Windows x64
         run: dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/win-x64
 

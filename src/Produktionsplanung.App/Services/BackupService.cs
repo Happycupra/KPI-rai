@@ -101,6 +101,7 @@ public static class BackupService
             AppPaths.EnsureDirectories();
             SqliteConnection.ClearAllPools();
             File.Copy(databasePath, AppPaths.DatabasePath, overwrite: true);
+            SessionService.InvalidateAfterRestore();
 
             if (File.Exists(settingsPath))
                 File.Copy(settingsPath, AppPaths.SettingsPath, overwrite: true);
@@ -116,12 +117,14 @@ public static class BackupService
         var sourceBuilder = new SqliteConnectionStringBuilder
         {
             DataSource = AppPaths.DatabasePath,
-            Mode = SqliteOpenMode.ReadWrite
+            Mode = SqliteOpenMode.ReadWrite,
+            Pooling = false
         };
         var destinationBuilder = new SqliteConnectionStringBuilder
         {
             DataSource = destinationPath,
-            Mode = SqliteOpenMode.ReadWriteCreate
+            Mode = SqliteOpenMode.ReadWriteCreate,
+            Pooling = false // Release the snapshot before ZIP reads and deletes it.
         };
 
         using var source = new SqliteConnection(sourceBuilder.ConnectionString);
@@ -136,7 +139,8 @@ public static class BackupService
         var builder = new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadOnly
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false
         };
 
         using var connection = new SqliteConnection(builder.ConnectionString);

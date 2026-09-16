@@ -40,7 +40,7 @@ public partial class App : Application
                 AuditService.Log("Abmeldung", "Session", SessionService.CurrentUser?.Id.ToString(), null);
 
             var settings = AppSettingsService.Load();
-            if (settings.AutoBackupOnExit)
+            if (settings.AutoBackupOnExit && !SessionService.RequiresRestart)
                 BackupService.CreateAutomaticBackup(settings);
         }
         catch

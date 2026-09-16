@@ -4,7 +4,9 @@ namespace Produktionsplanung.App.Services;
 
 public static class AppPaths
 {
-    public static string RootDirectory => Path.Combine(
+    internal static string? RootDirectoryOverride { get; set; }
+
+    public static string RootDirectory => RootDirectoryOverride ?? Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Produktionsplanung");
 
