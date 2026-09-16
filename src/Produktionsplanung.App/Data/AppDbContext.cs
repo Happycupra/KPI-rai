@@ -14,6 +14,8 @@ public class AppDbContext : DbContext
     public DbSet<Absence> Absences => Set<Absence>();
     public DbSet<PlanningAssignment> PlanningAssignments => Set<PlanningAssignment>();
     public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
+    public DbSet<ProductionActual> ProductionActuals => Set<ProductionActual>();
+    public DbSet<DowntimeEntry> DowntimeEntries => Set<DowntimeEntry>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -64,5 +66,23 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.ShiftId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ProductionActual>()
+            .HasIndex(x => new { x.ProductionOrderId, x.Date });
+
+        modelBuilder.Entity<ProductionActual>()
+            .HasOne(x => x.ProductionOrder)
+            .WithMany(x => x.Actuals)
+            .HasForeignKey(x => x.ProductionOrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DowntimeEntry>()
+            .HasIndex(x => x.ProductionActualId);
+
+        modelBuilder.Entity<DowntimeEntry>()
+            .HasOne(x => x.ProductionActual)
+            .WithMany(x => x.Downtimes)
+            .HasForeignKey(x => x.ProductionActualId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
