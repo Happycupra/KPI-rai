@@ -33,6 +33,7 @@
                 <Border DockPanel.Dock="Bottom" BorderBrush="#334155" BorderThickness="0,1,0,0" Padding="4,14,4,4">
                     <StackPanel>
                         <TextBlock x:Name="SessionInfoBlock" Foreground="#CBD5E1" FontSize="12" TextWrapping="Wrap" />
+                        <Button Content="Passwort ändern" Height="30" Margin="0,8,0,3" Click="ChangePassword_Click" />
                         <TextBlock x:Name="VersionBlock" Foreground="#64748B" FontSize="11" Margin="0,4,0,0" />
                         <TextBlock Text="Windows Desktop · SQLite" Foreground="#64748B" FontSize="11" Margin="0,3,0,0" />
                     </StackPanel>
