@@ -85,6 +85,23 @@ public partial class DayPlanningViewModel
     }
 
     [RelayCommand]
+    private void SaveValidated()
+    {
+        if (SelectedEmployee is not null && SelectedWorkstation is not null)
+        {
+            using var db = new AppDbContext();
+            var check = QualificationPlanningService.CheckEmployee(db, SelectedEmployee.Id, SelectedWorkstation.Id);
+            if (!check.IsQualified)
+            {
+                StatusMessage = $"Zuweisung blockiert: {SelectedEmployee.DisplayName} erfüllt die Pflichtqualifikation für {SelectedWorkstation.Name} nicht. {check.Message}";
+                return;
+            }
+        }
+
+        Save();
+    }
+
+    [RelayCommand]
     private void UseSuggestion(EmployeeSuggestion? suggestion)
     {
         if (suggestion is null)
