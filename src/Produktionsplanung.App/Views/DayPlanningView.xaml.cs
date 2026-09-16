@@ -19,19 +19,21 @@ public partial class DayPlanningView : UserControl
         };
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
-        viewModel.RefreshProductionOrderCoverage();
-        viewModel.RefreshSkillAlerts();
-        viewModel.RefreshEmployeeSuggestions();
+        RefreshSupplementalPlanningData(viewModel);
     }
 
     private static void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is not DayPlanningViewModel viewModel) return;
         if (e.PropertyName is nameof(DayPlanningViewModel.SelectedDate) or nameof(DayPlanningViewModel.StatusMessage))
-        {
-            viewModel.RefreshProductionOrderCoverage();
-            viewModel.RefreshSkillAlerts();
-            viewModel.RefreshEmployeeSuggestions();
-        }
+            RefreshSupplementalPlanningData(viewModel);
+    }
+
+    private static void RefreshSupplementalPlanningData(DayPlanningViewModel viewModel)
+    {
+        viewModel.RefreshProductionOrderCoverage();
+        viewModel.RefreshSkillAlerts();
+        viewModel.RefreshOperatingCalendarAlert();
+        viewModel.RefreshEmployeeSuggestions();
     }
 }
