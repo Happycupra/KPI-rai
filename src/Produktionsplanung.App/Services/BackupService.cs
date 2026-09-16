@@ -14,7 +14,7 @@ public static class BackupService
     {
         AppPaths.EnsureDirectories();
         if (!File.Exists(AppPaths.DatabasePath))
-            throw new InvalidOperationException("Die KPI-rai-Datenbank wurde nicht gefunden.");
+            throw new InvalidOperationException("Die OpsCompact-Datenbank wurde nicht gefunden.");
 
         if (!targetPath.EndsWith(".kpibackup", StringComparison.OrdinalIgnoreCase))
             targetPath += ".kpibackup";
@@ -23,7 +23,7 @@ public static class BackupService
         if (!string.IsNullOrWhiteSpace(targetDirectory))
             Directory.CreateDirectory(targetDirectory);
 
-        var tempDirectory = Path.Combine(Path.GetTempPath(), $"kpi-rai-backup-{Guid.NewGuid():N}");
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"opscompact-backup-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
 
         try
@@ -37,7 +37,7 @@ public static class BackupService
 
             var manifest = new BackupManifest
             {
-                Product = "KPI-rai",
+                Product = "OpsCompact",
                 CreatedAtLocal = DateTime.Now,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown",
                 DatabaseFile = "produktionsplanung.db",
@@ -67,7 +67,7 @@ public static class BackupService
             : settings.DefaultBackupDirectory;
 
         Directory.CreateDirectory(directory);
-        var path = Path.Combine(directory, $"KPI-rai-auto-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup");
+        var path = Path.Combine(directory, $"OpsCompact-auto-{DateTime.Now:yyyyMMdd-HHmmss}.kpibackup");
         var created = CreateBackup(path, settings);
         PruneAutomaticBackups(directory, settings.BackupRetentionCount);
         return created;
@@ -78,7 +78,7 @@ public static class BackupService
         if (!File.Exists(backupPath))
             throw new FileNotFoundException("Die ausgewählte Backup-Datei wurde nicht gefunden.", backupPath);
 
-        var tempDirectory = Path.Combine(Path.GetTempPath(), $"kpi-rai-restore-{Guid.NewGuid():N}");
+        var tempDirectory = Path.Combine(Path.GetTempPath(), $"opscompact-restore-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
 
         try
@@ -86,7 +86,7 @@ public static class BackupService
             ZipFile.ExtractToDirectory(backupPath, tempDirectory, overwriteFiles: true);
             var databasePath = Path.Combine(tempDirectory, "produktionsplanung.db");
             if (!File.Exists(databasePath))
-                throw new InvalidDataException("Das Backup enthält keine KPI-rai-Datenbank.");
+                throw new InvalidDataException("Das Backup enthält keine OpsCompact-Datenbank.");
 
             ValidateDatabase(databasePath);
 
@@ -124,7 +124,7 @@ public static class BackupService
         {
             DataSource = destinationPath,
             Mode = SqliteOpenMode.ReadWriteCreate,
-            Pooling = false // Release the snapshot before ZIP reads and deletes it.
+            Pooling = false
         };
 
         using var source = new SqliteConnection(sourceBuilder.ConnectionString);
@@ -149,14 +149,17 @@ public static class BackupService
         command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name IN ('Employees','ProductionOrders');";
         var count = Convert.ToInt32(command.ExecuteScalar());
         if (count < 2)
-            throw new InvalidDataException("Die Datei ist kein gültiges KPI-rai-Backup.");
+            throw new InvalidDataException("Die Datei ist kein gültiges OpsCompact-Backup.");
     }
 
     private static void PruneAutomaticBackups(string directory, int retentionCount)
     {
         retentionCount = Math.Clamp(retentionCount, 1, 100);
         var files = new DirectoryInfo(directory)
-            .GetFiles("KPI-rai-auto-*.kpibackup")
+            .GetFiles("*.kpibackup")
+            .Where(x =>
+                x.Name.StartsWith("OpsCompact-auto-", StringComparison.OrdinalIgnoreCase) ||
+                x.Name.StartsWith("KPI-rai-auto-", StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(x => x.CreationTimeUtc)
             .Skip(retentionCount)
             .ToList();
