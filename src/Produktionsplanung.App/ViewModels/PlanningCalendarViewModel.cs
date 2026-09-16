@@ -48,17 +48,10 @@ public partial class PlanningCalendarViewModel : ObservableObject
         Load();
     }
 
-    [RelayCommand]
-    private void ShowDay() => SelectedViewIndex = 0;
-
-    [RelayCommand]
-    private void ShowWeek() => SelectedViewIndex = 1;
-
-    [RelayCommand]
-    private void ShowMonth() => SelectedViewIndex = 2;
-
-    [RelayCommand]
-    private void Today() => SelectedDate = DateTime.Today;
+    [RelayCommand] private void ShowDay() => SelectedViewIndex = 0;
+    [RelayCommand] private void ShowWeek() => SelectedViewIndex = 1;
+    [RelayCommand] private void ShowMonth() => SelectedViewIndex = 2;
+    [RelayCommand] private void Today() => SelectedDate = DateTime.Today;
 
     [RelayCommand]
     private void Previous()
@@ -89,10 +82,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         StatusMessage = $"Kalender aktualisiert · {DateTime.Now:HH:mm}.";
     }
 
-    public void SelectDate(DateTime date)
-    {
-        SelectedDate = date.Date;
-    }
+    public void SelectDate(DateTime date) => SelectedDate = date.Date;
 
     private void Load()
     {
@@ -117,8 +107,12 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Where(x => x.StartDate.Date <= rangeEnd && x.EndDate.Date >= rangeStart)
             .ToList();
 
+        var operatingDays = db.OperatingCalendarDays.AsNoTracking()
+            .Where(x => x.Date.Date >= rangeStart && x.Date.Date <= rangeEnd)
+            .ToList();
+
         DayEntries.Clear();
-        foreach (var item in BuildEntriesForDate(SelectedDate.Date, assignments, orders, absences))
+        foreach (var item in BuildEntriesForDate(SelectedDate.Date, assignments, orders, absences, operatingDays))
             DayEntries.Add(item);
 
         var monday = GetMonday(SelectedDate);
@@ -132,7 +126,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 DayName = date.ToString("ddd", culture),
                 DateText = date.ToString("dd.MM."),
                 IsToday = date == DateTime.Today,
-                Entries = BuildEntriesForDate(date, assignments, orders, absences)
+                Entries = BuildEntriesForDate(date, assignments, orders, absences, operatingDays)
             });
         }
 
@@ -142,7 +136,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         for (var i = 0; i < 42; i++)
         {
             var date = gridStart.AddDays(i);
-            var entries = BuildEntriesForDate(date, assignments, orders, absences);
+            var entries = BuildEntriesForDate(date, assignments, orders, absences, operatingDays);
             MonthDays.Add(new CalendarMonthDay
             {
                 Date = date,
@@ -162,9 +156,25 @@ public partial class PlanningCalendarViewModel : ObservableObject
         DateTime date,
         IEnumerable<Models.PlanningAssignment> assignments,
         IEnumerable<Models.ProductionOrder> orders,
-        IEnumerable<Models.Absence> absences)
+        IEnumerable<Models.Absence> absences,
+        IEnumerable<Models.OperatingCalendarDay> operatingDays)
     {
         var result = new List<CalendarEntryRow>();
+
+        foreach (var x in operatingDays.Where(x => x.Date.Date == date.Date))
+        {
+            result.Add(new CalendarEntryRow
+            {
+                EntryType = "Betriebskalender",
+                Accent = x.IsWorkingDay ? "#7C3AED" : "#64748B",
+                IsAllDay = true,
+                SortTime = TimeSpan.Zero,
+                TimeText = "ganztägig",
+                Title = x.Name,
+                Subtitle = x.IsWorkingDay ? $"Sonderarbeitstag · Soll {x.TargetHoursFactor:0.##}×" : "Betriebsfrei",
+                Detail = x.Comment ?? string.Empty
+            });
+        }
 
         foreach (var x in assignments.Where(x => x.Date.Date == date.Date))
         {
@@ -190,9 +200,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 Accent = x.Priority is "Dringend" or "Hoch" ? "#EA580C" : "#0F766E",
                 StartTime = start,
                 SortTime = start,
-                TimeText = x.PlannedStart.HasValue
-                    ? $"ab {x.PlannedStart.Value:hh\\:mm}"
-                    : x.Shift?.Name ?? "ganztägig",
+                TimeText = x.PlannedStart.HasValue ? $"ab {x.PlannedStart.Value:hh\\:mm}" : x.Shift?.Name ?? "ganztägig",
                 Title = $"{x.OrderNumber} · {x.Product}",
                 Subtitle = $"{x.Workstation.Name} · {x.Shift?.Name ?? "ohne Schicht"} · Bedarf {x.RequiredStaff}",
                 Detail = $"{x.Status} · Priorität {x.Priority}"
@@ -226,7 +234,6 @@ public partial class PlanningCalendarViewModel : ObservableObject
         var monthStart = new DateTime(SelectedDate.Year, SelectedDate.Month, 1);
         var start = GetMonday(monthStart);
         var end = start.AddDays(41);
-
         var weekStart = GetMonday(SelectedDate);
         if (weekStart < start) start = weekStart;
         if (weekStart.AddDays(6) > end) end = weekStart.AddDays(6);
