@@ -78,7 +78,7 @@
                         <TextBlock Text="Arbeitsplatz, Schicht und Zeit pro Mitarbeiter und Tag; Abwesenheiten werden direkt in der Zelle angezeigt."
                                    Foreground="#64748B" Margin="0,0,0,10" />
                         <DataGrid ItemsSource="{Binding EmployeeRows}" AutoGenerateColumns="False" IsReadOnly="True"
-                                  CanUserAddRows="False" HeadersVisibility="Column" RowHeight="Auto" MinHeight="310"
+                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="310"
                                   HorizontalScrollBarVisibility="Auto">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="150" ElementStyle="{StaticResource WeekCellText}" />

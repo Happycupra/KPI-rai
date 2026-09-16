@@ -7,7 +7,7 @@ dotnet run --project tests/Produktionsplanung.RegressionTests --configuration Re
 ```
 
 The dependency-free test executable uses a fresh temporary SQLite database for
- each scenario. It never opens the user's production database. A non-zero exit
+each scenario. It never opens the user's production database. A non-zero exit
 code fails both the Windows build and release workflows.
 
 Coverage includes SQLite query execution, WPF view construction, null shifts,
@@ -40,3 +40,8 @@ trigger protecting production orders with actual records, including databases
 created by older builds. Orders without actual records require confirmation to
 delete. A successful restore invalidates the old session and closes the app;
 the next start applies schema updates and requires a new login.
+
+The first Windows run also exposed an invalid DataGrid RowHeight value and a
+pooled SQLite snapshot handle preventing ZIP creation. Both are covered by the
+view-construction and backup round-trip tests. Temporary backup connections now
+disable pooling so Windows file handles are closed before ZIP/copy operations.

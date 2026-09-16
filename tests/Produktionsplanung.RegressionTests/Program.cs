@@ -102,6 +102,15 @@ internal static class Program
         _ = new DayPlanningView();
         _ = new WeekPlanningView();
         _ = new ProductionActualView();
+        _ = new ProductionOrdersView();
+        _ = new EmployeesView();
+        _ = new WorkstationsView();
+        _ = new ShiftsView();
+        _ = new AbsencesView();
+        _ = new SkillMatrixView();
+        _ = new SettingsView();
+        _ = new Produktionsplanung.App.LoginWindow();
+        _ = new Produktionsplanung.App.ChangePasswordWindow();
     }
 
     private static void WorkstationDeletion()
