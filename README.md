@@ -1,39 +1,32 @@
-# KPI-rai – Produktionsplanung für Windows
+# OpsCompact – Planen · Produzieren · Verbessern
 
-Native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung auf Basis des definierten Windows-Master-Prompts.
+OpsCompact ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung mit integrierten KPIs, OEE, Kalender, Skills und Betriebsdaten.
 
-## Ziel
+## Kernfunktionen
 
-Die Anwendung unterstützt Produktionsleiter und Teamleiter bei:
-
+- Dashboard mit live berechneten Produktions- und Personal-KPIs
+- Outlook-ähnlicher Planungs-Kalender mit Tag-, Woche- und Monatsansicht
 - Tages- und Wochenplanung
-- Mitarbeiter- und Qualifikationsverwaltung
-- Arbeitsplätzen / Produktionslinien
-- Abwesenheiten und Schichten
-- Warnungen bei Unterbesetzung, Doppelbelegung und fehlenden Qualifikationen
-- späteren Produktionsaufträgen, KPIs, Exporten und Mehrbenutzerbetrieb
+- automatische Mitarbeitervorschläge und Auto-Besetzung für Produktionsaufträge
+- Pflichtqualifikationen je Arbeitsplatz und Skill-Matrix mit Level 0–3
+- Mitarbeiter-, Schicht-, Arbeitsplatz- und Abwesenheitsverwaltung
+- Betriebskalender mit Feiertagen, Betriebsferien, Sonderarbeitstagen und Sollstunden-Faktoren
+- Arbeitszeitkonto mit Soll-, Plan-, Ist- und Saldo-Stunden
+- Produktionsaufträge und Personalbedarfs-Abdeckung
+- Ist-Produktion, Stillstände, Ausschuss und OEE
+- Wochen- und Monatsauswertungen
+- Benutzerrollen, Login und Audit-Log
+- Backup / Restore und CSV-Komplettexport
+- Installer, self-contained Single-EXE und echter USB-/Portable-Modus
 
 ## Technologie
 
 - C# / .NET 8
 - WPF
-- MVVM
+- MVVM mit CommunityToolkit.Mvvm
 - Entity Framework Core
 - SQLite
-- CommunityToolkit.Mvvm
-
-## Projektstatus
-
-Dies ist das MVP-Grundgerüst. Enthalten sind bereits:
-
-- native WPF-Anwendung
-- linke Navigation
-- Dashboard
-- SQLite-Datenbank
-- Mitarbeiter-, Arbeitsplatz-, Schicht-, Qualifikations-, Abwesenheits- und Planungsmodelle
-- Demo-Daten beim ersten Start
-- MVVM-/Datenstruktur
-- GitHub Actions Build für Windows
+- GitHub Actions für Build, Tests, Portable-Pakete, Installer und Releases
 
 ## Start lokal
 
@@ -43,25 +36,33 @@ Voraussetzungen:
 - .NET 8 SDK
 - Visual Studio 2022 mit Workload **.NET-Desktopentwicklung** oder `dotnet` CLI
 
+Das Windows-Icon wird beim Build automatisch aus der versionierten Icon-Quelle erzeugt.
+
 ```powershell
 dotnet restore
 dotnet build Produktionsplanung.sln
 dotnet run --project src/Produktionsplanung.App/Produktionsplanung.App.csproj
 ```
 
-## Datenbank
+Die erzeugte Anwendung heißt `OpsCompact.exe`.
 
-Die lokale SQLite-Datenbank wird unter `%LOCALAPPDATA%\Produktionsplanung\Data\produktionsplanung.db` angelegt.
+## Daten und Kompatibilität
 
-## MVP-Roadmap
+Für bestehende Installationen bleibt der bisherige lokale Datenpfad bewusst erhalten:
 
-1. Mitarbeiterverwaltung vollständig editierbar machen
-2. Skill-Matrix ergänzen
-3. Arbeitsplätze und Schichten pflegbar machen
-4. Abwesenheiten erfassen
-5. Tagesplanung mit Drag & Drop
-6. Wochenplanung
-7. Warnsystem
-8. Backup / Restore
-9. Produktionsaufträge
-10. PDF-/CSV-Export und KPIs
+`%LOCALAPPDATA%\Produktionsplanung\Data\produktionsplanung.db`
+
+Dadurch bleiben vorhandene Daten beim Wechsel auf den Namen OpsCompact erhalten. Im USB-Modus liegen Datenbank, Einstellungen, Backups und Exporte beim Programmordner.
+
+Die Backup-Endung `.kpibackup` bleibt ebenfalls erhalten, damit ältere Backups weiter eingelesen werden können. Neue Backups, Exportordner, Setup-Dateien und Release-Artefakte tragen den Namen **OpsCompact**.
+
+## Release-Artefakte
+
+Ein Windows-Build erzeugt:
+
+- `OpsCompact.exe` als self-contained Single-EXE
+- `OpsCompact-USB-Portable-<Version>-win-x64`
+- `OpsCompact-Windows-<Version>-win-x64`
+- `OpsCompact-Setup-<Version>-win-x64.exe`
+
+Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Installer, portablem ZIP, Single-EXE und USB-Paket.
