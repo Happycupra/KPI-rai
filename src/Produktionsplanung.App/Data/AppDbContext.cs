@@ -13,6 +13,8 @@ public class AppDbContext : DbContext
     public DbSet<Workstation> Workstations => Set<Workstation>();
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<Absence> Absences => Set<Absence>();
+    public DbSet<OperatingCalendarDay> OperatingCalendarDays => Set<OperatingCalendarDay>();
+    public DbSet<WorkTimeEntry> WorkTimeEntries => Set<WorkTimeEntry>();
     public DbSet<PlanningAssignment> PlanningAssignments => Set<PlanningAssignment>();
     public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
     public DbSet<ProductionActual> ProductionActuals => Set<ProductionActual>();
@@ -38,6 +40,10 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.RequiredQualificationId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<OperatingCalendarDay>().HasIndex(x => x.Date).IsUnique();
+        modelBuilder.Entity<WorkTimeEntry>().HasIndex(x => new { x.EmployeeId, x.Date });
+        modelBuilder.Entity<WorkTimeEntry>().HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ProductionOrder>().HasIndex(x => x.OrderNumber).IsUnique();
         modelBuilder.Entity<ProductionOrder>().HasIndex(x => new { x.PlannedDate, x.WorkstationId, x.ShiftId });
