@@ -21,6 +21,7 @@ public partial class MainWindow : Window
         VersionBlock.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0"}";
 
         var canOperate = SessionService.IsPlannerOrAdmin;
+        PlanningCalendarButton.IsEnabled = canOperate;
         DayPlanningButton.IsEnabled = canOperate;
         WeekPlanningButton.IsEnabled = canOperate;
         ProductionOrdersButton.IsEnabled = canOperate;
@@ -36,7 +37,8 @@ public partial class MainWindow : Window
     }
 
     private void ShowDashboard_Click(object sender, RoutedEventArgs e) => ShowDashboard();
-    private void ShowDayPlanning_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new DayPlanningView(); }
+    private void ShowPlanningCalendar_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new PlanningCalendarView(); }
+    private void ShowDayPlanning_Click(object sender, RoutedEventArgs e) => OpenDayPlanning(DateTime.Today);
     private void ShowWeekPlanning_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new WeekPlanningView(); }
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new ProductionOrdersView(); }
     private void ShowProductionActual_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new ProductionActualView(); }
@@ -48,6 +50,12 @@ public partial class MainWindow : Window
     private void ShowAbsences_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new AbsencesView(); }
     private void ShowUserAdmin_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) ContentHost.Content = new UserAdminView(); }
     private void ShowSettings_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) ContentHost.Content = new SettingsView(); }
+
+    public void OpenDayPlanning(DateTime date)
+    {
+        if (SessionService.IsPlannerOrAdmin)
+            ContentHost.Content = new DayPlanningView(date);
+    }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
     {
