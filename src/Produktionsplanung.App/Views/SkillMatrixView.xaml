@@ -1,0 +1,51 @@
+<UserControl x:Class="Produktionsplanung.App.Views.SkillMatrixView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Skill-Matrix" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
+            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer" Foreground="#64748B" Margin="0,4,0,18" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="260" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0" Height="36" Padding="10,6" Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neue Qualifikation" />
+            <Button Grid.Column="1" Content="+ Qualifikation" Command="{Binding AddQualificationCommand}" Padding="14,7" Margin="8,0,0,0" />
+
+            <ComboBox Grid.Column="3" Height="36" ItemsSource="{Binding Qualifications}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}" />
+            <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Padding="14,7" Margin="8,0,0,0" />
+        </Grid>
+
+        <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="12">
+            <DataGrid x:Name="MatrixGrid"
+                      ItemsSource="{Binding Rows}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      FrozenColumnCount="3" />
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock VerticalAlignment="Center" Foreground="#64748B" Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
+            <Button Grid.Column="1" Content="Neu laden" Command="{Binding LoadCommand}" Padding="16,8" Margin="0,0,8,0" />
+            <Button Grid.Column="2" Content="Skill-Matrix speichern" Command="{Binding SaveMatrixCommand}" Padding="18,8" />
+        </Grid>
+    </Grid>
+</UserControl>
