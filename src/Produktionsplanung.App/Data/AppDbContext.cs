@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<Absence> Absences => Set<Absence>();
     public DbSet<PlanningAssignment> PlanningAssignments => Set<PlanningAssignment>();
+    public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -44,5 +45,24 @@ public class AppDbContext : DbContext
             .HasOne(x => x.Qualification)
             .WithMany(x => x.Employees)
             .HasForeignKey(x => x.QualificationId);
+
+        modelBuilder.Entity<ProductionOrder>()
+            .HasIndex(x => x.OrderNumber)
+            .IsUnique();
+
+        modelBuilder.Entity<ProductionOrder>()
+            .HasIndex(x => new { x.PlannedDate, x.WorkstationId, x.ShiftId });
+
+        modelBuilder.Entity<ProductionOrder>()
+            .HasOne(x => x.Workstation)
+            .WithMany()
+            .HasForeignKey(x => x.WorkstationId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ProductionOrder>()
+            .HasOne(x => x.Shift)
+            .WithMany()
+            .HasForeignKey(x => x.ShiftId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
