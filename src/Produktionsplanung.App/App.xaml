@@ -7,5 +7,16 @@
         <SolidColorBrush x:Key="WarningBrush" Color="#D97706" />
         <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
         <SolidColorBrush x:Key="SurfaceBrush" Color="#F8FAFC" />
+
+        <DrawingImage x:Key="OpsCompactIcon">
+            <DrawingImage.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#EFF6FF" Geometry="M 2,2 L 30,2 30,30 2,30 Z" />
+                    <GeometryDrawing Brush="#0F3B67" Geometry="M 5,7 L 27,7 27,27 5,27 Z M 8,11 L 24,11 24,24 8,24 Z" />
+                    <GeometryDrawing Brush="#2563EB" Geometry="M 9,4 L 12,4 12,10 9,10 Z M 20,4 L 23,4 23,10 20,10 Z" />
+                    <GeometryDrawing Brush="#16A34A" Geometry="M 10,18 L 14,22 23,13 25,15 14,26 8,20 Z" />
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
     </Application.Resources>
 </Application>
