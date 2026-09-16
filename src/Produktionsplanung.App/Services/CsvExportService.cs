@@ -21,6 +21,9 @@ public static class CsvExportService
         using var db = new AppDbContext();
 
         ExportEmployees(db, exportDirectory, delimiter, encoding);
+        ExportWorkstations(db, exportDirectory, delimiter, encoding);
+        ExportSkills(db, exportDirectory, delimiter, encoding);
+        ExportShifts(db, exportDirectory, delimiter, encoding);
         ExportAbsences(db, exportDirectory, delimiter, encoding);
         ExportPlanning(db, exportDirectory, delimiter, encoding);
         ExportOrders(db, exportDirectory, delimiter, encoding);
@@ -51,6 +54,75 @@ public static class CsvExportService
         }
 
         File.WriteAllLines(Path.Combine(directory, "mitarbeiter.csv"), lines, encoding);
+    }
+
+    private static void ExportWorkstations(AppDbContext db, string directory, char delimiter, Encoding encoding)
+    {
+        var lines = new List<string>
+        {
+            Join(delimiter, "Arbeitsplatz", "Bereich", "Minimum", "Optimal", "Maximum", "Pflichtqualifikation", "Mindest-Level", "Aktiv")
+        };
+
+        foreach (var x in db.Workstations.AsNoTracking().Include(x => x.RequiredQualification).OrderBy(x => x.Name))
+        {
+            lines.Add(Join(delimiter,
+                x.Name,
+                x.Area,
+                x.MinimumStaff.ToString(ExportCulture),
+                x.OptimalStaff.ToString(ExportCulture),
+                x.MaximumStaff.ToString(ExportCulture),
+                x.RequiredQualification?.Name ?? string.Empty,
+                x.RequiredQualificationLevel > 0 ? x.RequiredQualificationLevel.ToString(ExportCulture) : string.Empty,
+                x.IsActive ? "Ja" : "Nein"));
+        }
+
+        File.WriteAllLines(Path.Combine(directory, "arbeitsplaetze.csv"), lines, encoding);
+    }
+
+    private static void ExportSkills(AppDbContext db, string directory, char delimiter, Encoding encoding)
+    {
+        var lines = new List<string>
+        {
+            Join(delimiter, "Personalnummer", "Mitarbeiter", "Qualifikation", "Level")
+        };
+
+        var rows = db.EmployeeQualifications.AsNoTracking()
+            .Include(x => x.Employee)
+            .Include(x => x.Qualification)
+            .OrderBy(x => x.Employee.LastName)
+            .ThenBy(x => x.Employee.FirstName)
+            .ThenBy(x => x.Qualification.Name)
+            .ToList();
+
+        foreach (var x in rows)
+        {
+            lines.Add(Join(delimiter,
+                x.Employee.PersonnelNumber,
+                $"{x.Employee.LastName}, {x.Employee.FirstName}",
+                x.Qualification.Name,
+                x.Level.ToString(ExportCulture)));
+        }
+
+        File.WriteAllLines(Path.Combine(directory, "skill_matrix.csv"), lines, encoding);
+    }
+
+    private static void ExportShifts(AppDbContext db, string directory, char delimiter, Encoding encoding)
+    {
+        var lines = new List<string>
+        {
+            Join(delimiter, "Schicht", "Start", "Ende", "Pause min")
+        };
+
+        foreach (var x in db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
+        {
+            lines.Add(Join(delimiter,
+                x.Name,
+                x.StartTime.ToString(@"hh\:mm"),
+                x.EndTime.ToString(@"hh\:mm"),
+                x.BreakMinutes.ToString(ExportCulture)));
+        }
+
+        File.WriteAllLines(Path.Combine(directory, "schichten.csv"), lines, encoding);
     }
 
     private static void ExportAbsences(AppDbContext db, string directory, char delimiter, Encoding encoding)
@@ -85,7 +157,7 @@ public static class CsvExportService
             .Include(x => x.Employee)
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .AsEnumerable()
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();
