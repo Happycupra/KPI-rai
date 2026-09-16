@@ -19,6 +19,7 @@
                     <Button Content="Tagesplanung" Height="42" Margin="0,0,0,8" Click="ShowDayPlanning_Click" />
                     <Button Content="Wochenplanung" Height="42" Margin="0,0,0,8" Click="ShowWeekPlanning_Click" />
                     <Button Content="Produktionsaufträge" Height="42" Margin="0,0,0,8" Click="ShowProductionOrders_Click" />
+                    <Button Content="Ist-Produktion / OEE" Height="42" Margin="0,0,0,8" Click="ShowProductionActual_Click" />
                     <Button Content="Auswertungen / KPIs" Height="42" Margin="0,0,0,8" Click="ShowAnalytics_Click" />
                     <Button Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
                     <Button Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
