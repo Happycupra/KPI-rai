@@ -1,0 +1,143 @@
+<UserControl x:Class="Produktionsplanung.App.Views.DayPlanningView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel>
+                <TextBlock Text="Tagesplanung" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
+                <TextBlock Text="{Binding SelectedDateText}" FontSize="15" Foreground="#64748B" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" />
+                <Button Content="Heute" Height="34" Padding="14,0" Command="{Binding TodayCommand}" Margin="0,0,8,0" />
+                <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Width="145" Height="34" Margin="0,0,8,0" />
+                <Button Content="›" Width="38" Height="34" Command="{Binding NextDayCommand}" Margin="0,0,8,0" />
+                <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="380" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
+                <StackPanel>
+                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Warnungen und Hinweise" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <ItemsControl ItemsSource="{Binding Alerts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F8FAFC" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="80" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="#B91C1C" />
+                                                <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="#334155" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="Besetzung je Arbeitsplatz" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <DataGrid ItemsSource="{Binding Staffing}" AutoGenerateColumns="False" IsReadOnly="True"
+                                      CanUserAddRows="False" HeadersVisibility="Column" MinHeight="150" MaxHeight="220">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="*" />
+                                    <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="80" />
+                                    <DataGridTextColumn Header="Minimum" Binding="{Binding MinimumStaff}" Width="80" />
+                                    <DataGridTextColumn Header="Optimal" Binding="{Binding OptimalStaff}" Width="80" />
+                                    <DataGridTextColumn Header="Maximum" Binding="{Binding MaximumStaff}" Width="80" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="White" CornerRadius="12" Padding="18">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Geplante Einsätze" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <Button Grid.Column="1" Content="+ Neue Zuweisung" Padding="14,6" Command="{Binding NewAssignmentCommand}" />
+                            </Grid>
+
+                            <DataGrid ItemsSource="{Binding Assignments}" SelectedItem="{Binding SelectedAssignment, Mode=TwoWay}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      HeadersVisibility="Column" MinHeight="260">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*" />
+                                    <DataGridTextColumn Header="Funktion" Binding="{Binding Role}" Width="1.2*" />
+                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.2*" />
+                                    <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="1.2*" />
+                                    <DataGridTextColumn Header="Zeit" Binding="{Binding TimeText}" Width="100" />
+                                    <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="1.5*" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Zuweisung" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
+                        <TextBlock Text="Mitarbeiter einer Schicht und einem Arbeitsplatz zuordnen." Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,20" />
+
+                        <TextBlock Text="Mitarbeiter" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
+
+                        <TextBlock Text="Arbeitsplatz" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}"
+                                  DisplayMemberPath="Name" Height="34" Margin="0,0,0,14" />
+
+                        <TextBlock Text="Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}"
+                                  DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
+
+                        <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="78"
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
+
+                        <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
+                            <TextBlock Text="Beim Speichern prüft KPI-rai automatisch auf Abwesenheit und Doppelbelegung. Die Besetzung wird danach neu berechnet."
+                                       TextWrapping="Wrap" Foreground="#1E3A8A" />
+                        </Border>
+
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="42" Margin="0,0,0,10" />
+
+                        <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" />
+                        <Button Content="Neue Zuweisung" Height="38" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" />
+                        <Button Content="Ausgewählte Zuweisung löschen" Height="38" Command="{Binding DeleteCommand}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
