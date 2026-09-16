@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -101,7 +102,7 @@ public partial class WeekPlanningViewModel : ObservableObject
         var sourceEnd = targetEnd.AddDays(-7);
         var source = db.PlanningAssignments.AsNoTracking()
             .Where(x => x.Date.Date >= sourceStart && x.Date.Date <= sourceEnd)
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .AsEnumerable()
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();
@@ -128,6 +129,7 @@ public partial class WeekPlanningViewModel : ObservableObject
 
         var copied = 0;
         var skipped = 0;
+        var skippedSkill = 0;
 
         foreach (var item in source)
         {
@@ -150,6 +152,13 @@ public partial class WeekPlanningViewModel : ObservableObject
                 continue;
             }
 
+            var skillCheck = QualificationPlanningService.CheckEmployee(db, item.EmployeeId, item.WorkstationId);
+            if (!skillCheck.IsQualified)
+            {
+                skippedSkill++;
+                continue;
+            }
+
             db.PlanningAssignments.Add(new PlanningAssignment
             {
                 EmployeeId = item.EmployeeId,
@@ -166,9 +175,9 @@ public partial class WeekPlanningViewModel : ObservableObject
 
         db.SaveChanges();
         LoadWeek();
-        StatusMessage = skipped == 0
+        StatusMessage = skipped == 0 && skippedSkill == 0
             ? $"Vorwoche erfolgreich kopiert: {copied} Einsätze."
-            : $"Vorwoche kopiert: {copied} Einsätze; {skipped} wegen Abwesenheit oder inaktiven Stammdaten übersprungen.";
+            : $"Vorwoche kopiert: {copied} Einsätze; {skipped} wegen Abwesenheit/inaktiven Stammdaten und {skippedSkill} wegen nicht erfüllter Qualifikationspflicht übersprungen.";
     }
 
     private void LoadWeek()
@@ -187,7 +196,7 @@ public partial class WeekPlanningViewModel : ObservableObject
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
             .Where(x => x.Date.Date >= WeekStart.Date && x.Date.Date <= weekEnd)
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .AsEnumerable()
             .OrderBy(x => x.Date)
             .ThenBy(x => x.StartTime)
             .ToList();
@@ -215,7 +224,7 @@ public partial class WeekPlanningViewModel : ObservableObject
         }
 
         BuildStaffing(assignments, db);
-        BuildAlerts(assignments, absences);
+        BuildAlerts(assignments, absences, db);
     }
 
     private static string BuildDayCell(
@@ -291,7 +300,7 @@ public partial class WeekPlanningViewModel : ObservableObject
         }
     }
 
-    private void BuildAlerts(List<PlanningAssignment> assignments, List<Absence> absences)
+    private void BuildAlerts(List<PlanningAssignment> assignments, List<Absence> absences, AppDbContext db)
     {
         Alerts.Clear();
 
@@ -323,13 +332,24 @@ public partial class WeekPlanningViewModel : ObservableObject
                 x.StartDate.Date <= end.Date &&
                 x.EndDate.Date >= start.Date);
 
-            if (absence is null) continue;
-
-            Alerts.Add(new PlanningAlert
+            if (absence is not null)
             {
-                Severity = "Rot",
-                Message = $"{assignment.Date:ddd dd.MM.}: {assignment.Employee.LastName}, {assignment.Employee.FirstName} ist eingeplant, aber als {absence.Type} abwesend."
-            });
+                Alerts.Add(new PlanningAlert
+                {
+                    Severity = "Rot",
+                    Message = $"{assignment.Date:ddd dd.MM.}: {assignment.Employee.LastName}, {assignment.Employee.FirstName} ist eingeplant, aber als {absence.Type} abwesend."
+                });
+            }
+
+            var skillCheck = QualificationPlanningService.CheckEmployee(db, assignment.EmployeeId, assignment.WorkstationId);
+            if (!skillCheck.IsQualified)
+            {
+                Alerts.Add(new PlanningAlert
+                {
+                    Severity = "Rot",
+                    Message = $"{assignment.Date:ddd dd.MM.}: {assignment.Employee.LastName}, {assignment.Employee.FirstName} erfüllt die Pflichtqualifikation für {assignment.Workstation.Name} nicht. {skillCheck.Message}"
+                });
+            }
         }
 
         if (assignments.Count == 0)
