@@ -22,6 +22,9 @@ public partial class MainWindow : Window
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new ProductionOrdersView();
 
+    private void ShowProductionActual_Click(object sender, RoutedEventArgs e) =>
+        ContentHost.Content = new ProductionActualView();
+
     private void ShowAnalytics_Click(object sender, RoutedEventArgs e) =>
         ContentHost.Content = new AnalyticsView();
 
