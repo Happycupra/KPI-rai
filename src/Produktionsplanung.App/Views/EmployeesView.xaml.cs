@@ -5,9 +5,16 @@ namespace Produktionsplanung.App.Views;
 
 public partial class EmployeesView : UserControl
 {
-    public EmployeesView()
+    public EmployeesView() : this(null)
+    {
+    }
+
+    public EmployeesView(int? employeeId)
     {
         InitializeComponent();
-        DataContext = new EmployeeManagementViewModel();
+        var viewModel = new EmployeeManagementViewModel();
+        if (employeeId.HasValue)
+            viewModel.SelectEmployeeById(employeeId.Value);
+        DataContext = viewModel;
     }
 }
