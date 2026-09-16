@@ -342,7 +342,7 @@ public partial class WeekPlanningViewModel : ObservableObject
 
     private static DateTime GetMonday(DateTime date)
     {
-        var day = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var day = (7 + ((int)date.DayOfWeek - (int)DayOfWeek.Monday)) % 7;
         return date.Date.AddDays(-day);
     }
 
