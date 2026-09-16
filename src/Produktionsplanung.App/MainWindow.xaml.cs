@@ -24,6 +24,7 @@ public partial class MainWindow : Window
         PlanningCalendarButton.IsEnabled = canOperate;
         DayPlanningButton.IsEnabled = canOperate;
         WeekPlanningButton.IsEnabled = canOperate;
+        WorkTimeCalendarButton.IsEnabled = canOperate;
         ProductionOrdersButton.IsEnabled = canOperate;
         ProductionActualButton.IsEnabled = canOperate;
         EmployeesButton.IsEnabled = canOperate;
@@ -40,6 +41,7 @@ public partial class MainWindow : Window
     private void ShowPlanningCalendar_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new PlanningCalendarView(); }
     private void ShowDayPlanning_Click(object sender, RoutedEventArgs e) => OpenDayPlanning(DateTime.Today);
     private void ShowWeekPlanning_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new WeekPlanningView(); }
+    private void ShowWorkTimeCalendar_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new WorkTimeCalendarView(); }
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new ProductionOrdersView(); }
     private void ShowProductionActual_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) ContentHost.Content = new ProductionActualView(); }
     private void ShowAnalytics_Click(object sender, RoutedEventArgs e) => ContentHost.Content = new AnalyticsView();
