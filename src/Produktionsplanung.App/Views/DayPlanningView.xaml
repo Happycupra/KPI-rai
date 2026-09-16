@@ -16,7 +16,7 @@
 
             <StackPanel>
                 <TextBlock Text="Tagesplanung" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-                <TextBlock Text="{Binding SelectedDateText}" FontSize="15" Foreground="#64748B" Margin="0,4,0,0" />
+                <TextBlock Text="{Binding SelectedDateText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,0" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -60,16 +60,19 @@
 
                     <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Besetzung je Arbeitsplatz" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <TextBlock Text="Besetzung je Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4" />
+                            <TextBlock Text="Bewertet werden nur tatsächlich geplante Arbeitsplatz-/Schicht-Kombinationen." Foreground="#64748B" Margin="0,0,0,10" />
                             <DataGrid ItemsSource="{Binding Staffing}" AutoGenerateColumns="False" IsReadOnly="True"
-                                      CanUserAddRows="False" HeadersVisibility="Column" MinHeight="150" MaxHeight="220">
+                                      CanUserAddRows="False" HeadersVisibility="Column" MinHeight="150" MaxHeight="240">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="*" />
-                                    <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="80" />
-                                    <DataGridTextColumn Header="Minimum" Binding="{Binding MinimumStaff}" Width="80" />
-                                    <DataGridTextColumn Header="Optimal" Binding="{Binding OptimalStaff}" Width="80" />
-                                    <DataGridTextColumn Header="Maximum" Binding="{Binding MaximumStaff}" Width="80" />
-                                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120" />
+                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.4*" />
+                                    <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="1.1*" />
+                                    <DataGridTextColumn Header="Zeit" Binding="{Binding TimeText}" Width="95" />
+                                    <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="70" />
+                                    <DataGridTextColumn Header="Min" Binding="{Binding MinimumStaff}" Width="60" />
+                                    <DataGridTextColumn Header="Opt" Binding="{Binding OptimalStaff}" Width="60" />
+                                    <DataGridTextColumn Header="Max" Binding="{Binding MaximumStaff}" Width="60" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="115" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>
@@ -126,7 +129,7 @@
                                  AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
 
                         <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
-                            <TextBlock Text="Beim Speichern prüft KPI-rai automatisch auf Abwesenheit und Doppelbelegung. Die Besetzung wird danach neu berechnet."
+                            <TextBlock Text="Beim Speichern prüft KPI-rai automatisch auf Abwesenheit und Doppelbelegung. Die schichtgenaue Besetzung wird danach neu berechnet."
                                        TextWrapping="Wrap" Foreground="#1E3A8A" />
                         </Border>
 
