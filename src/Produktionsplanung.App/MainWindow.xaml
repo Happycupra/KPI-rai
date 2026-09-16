@@ -17,13 +17,14 @@
 
                     <Button Content="Dashboard" Height="42" Margin="0,0,0,8" Click="ShowDashboard_Click" />
                     <Button Content="Mitarbeiter" Height="42" Margin="0,0,0,8" Click="ShowEmployees_Click" />
-                    <Button Content="Skill-Matrix" Height="42" Margin="0,0,0,18" Click="ShowSkills_Click" />
+                    <Button Content="Skill-Matrix" Height="42" Margin="0,0,0,8" Click="ShowSkills_Click" />
+                    <Button Content="Arbeitsplätze" Height="42" Margin="0,0,0,8" Click="ShowWorkstations_Click" />
+                    <Button Content="Schichten" Height="42" Margin="0,0,0,8" Click="ShowShifts_Click" />
+                    <Button Content="Abwesenheiten" Height="42" Margin="0,0,0,18" Click="ShowAbsences_Click" />
 
                     <TextBlock Text="NÄCHSTE MODULE" Foreground="#64748B" FontSize="11" FontWeight="SemiBold" Margin="4,0,0,8" />
                     <Button Content="Tagesplanung" Height="40" Margin="0,0,0,6" IsEnabled="False" />
                     <Button Content="Wochenplanung" Height="40" Margin="0,0,0,6" IsEnabled="False" />
-                    <Button Content="Arbeitsplätze" Height="40" Margin="0,0,0,6" IsEnabled="False" />
-                    <Button Content="Abwesenheiten" Height="40" Margin="0,0,0,6" IsEnabled="False" />
                     <Button Content="Produktionsaufträge" Height="40" Margin="0,0,0,6" IsEnabled="False" />
                     <Button Content="Auswertungen / KPIs" Height="40" Margin="0,0,0,6" IsEnabled="False" />
                     <Button Content="Einstellungen" Height="40" IsEnabled="False" />
