@@ -97,14 +97,23 @@ public partial class SkillMatrixViewModel : ObservableObject
     {
         if (SelectedQualification is null) return;
 
-        if (MessageBox.Show($"Qualifikation '{SelectedQualification.Name}' inklusive aller Mitarbeiter-Zuordnungen löschen?",
+        if (MessageBox.Show($"Qualifikation '{SelectedQualification.Name}' inklusive aller Mitarbeiter-Zuordnungen löschen? Pflichtzuordnungen an Arbeitsplätzen werden dabei ebenfalls entfernt.",
                 "Qualifikation löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
         using var db = new AppDbContext();
-        var links = db.EmployeeQualifications.Where(x => x.QualificationId == SelectedQualification.Id);
+        var qualificationId = SelectedQualification.Id;
+
+        var workstations = db.Workstations.Where(x => x.RequiredQualificationId == qualificationId).ToList();
+        foreach (var workstation in workstations)
+        {
+            workstation.RequiredQualificationId = null;
+            workstation.RequiredQualificationLevel = 0;
+        }
+
+        var links = db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId);
         db.EmployeeQualifications.RemoveRange(links);
-        var qualification = db.Qualifications.First(x => x.Id == SelectedQualification.Id);
+        var qualification = db.Qualifications.First(x => x.Id == qualificationId);
         db.Qualifications.Remove(qualification);
         db.SaveChanges();
         SelectedQualification = null;
