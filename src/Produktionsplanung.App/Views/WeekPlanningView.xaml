@@ -30,6 +30,7 @@
                 <Button Content="Diese Woche" Height="34" Padding="14,0" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" />
                 <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="34" Margin="0,0,8,0" />
                 <Button Content="›" Width="38" Height="34" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" />
+                <Button Content="PDF Wochenplan" Height="34" Padding="14,0" Margin="0,0,8,0" Click="ExportWeeklyPlanPdf_Click" />
                 <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
             </StackPanel>
         </Grid>
@@ -41,7 +42,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="Wochenaktionen" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
-                            <TextBlock Text="Die Vorwoche kann nur in eine noch leere Zielwoche kopiert werden. Abwesende Mitarbeiter werden dabei übersprungen."
+                            <TextBlock Text="Die Vorwoche kann nur in eine noch leere Zielwoche kopiert werden. Der PDF-Wochenplan fasst Produkt, Maschine, Schicht und Mitarbeiter kompakt auf 1–2 A4-Seiten zusammen."
                                        Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
                             <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" Margin="0,8,0,0" />
                         </StackPanel>
@@ -53,7 +54,7 @@
                 <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Auftragsabdeckung der Woche" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="Personalbedarf aus Produktionsaufträgen im Vergleich zur tatsächlich eingeplanten Mannschaft je Linie und Schicht."
+                        <TextBlock Text="Jede Produktionsschicht eines mehrschichtigen Auftrags wird separat dargestellt und mit der tatsächlich eingeplanten Mannschaft verglichen."
                                    Foreground="#64748B" Margin="0,4,0,10" />
                         <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" AutoGenerateColumns="False" IsReadOnly="True"
                                   CanUserAddRows="False" HeadersVisibility="Column" MinHeight="170" MaxHeight="300">
@@ -63,6 +64,7 @@
                                 <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.2*" />
                                 <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.1*" />
                                 <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="105" />
+                                <DataGridTextColumn Header="Lauf" Binding="{Binding RunText}" Width="75" />
                                 <DataGridTextColumn Header="Bedarf" Binding="{Binding RequiredStaff}" Width="60" />
                                 <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="65" />
                                 <DataGridTextColumn Header="Diff." Binding="{Binding DifferenceText}" Width="55" />
