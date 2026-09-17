@@ -57,6 +57,68 @@ public static class PasswordService
     }
 }
 
+public static class RecoveryCodeService
+{
+    public static bool HasRecoveryCode()
+    {
+        var settings = AppSettingsService.Load();
+        return !string.IsNullOrWhiteSpace(settings.RecoveryCodeHash) &&
+               !string.IsNullOrWhiteSpace(settings.RecoveryCodeSalt);
+    }
+
+    public static string CreateOrReplaceRecoveryCode(bool allowWithoutAuthenticatedAdministrator = false)
+    {
+        if (!allowWithoutAuthenticatedAdministrator && !SessionService.IsAdministrator)
+            throw new InvalidOperationException("Nur ein Administrator darf den Recovery-Code erneuern.");
+
+        var raw = Convert.ToHexString(RandomNumberGenerator.GetBytes(15));
+        var normalized = Normalize(raw);
+        var display = string.Join('-', Enumerable.Range(0, 6).Select(i => normalized.Substring(i * 5, 5)));
+        var (hash, salt) = PasswordService.HashPassword(normalized);
+        AppSettingsService.Update(settings =>
+        {
+            settings.RecoveryCodeHash = hash;
+            settings.RecoveryCodeSalt = salt;
+            settings.RecoveryCodeCreatedAtUtc = DateTime.UtcNow;
+        });
+        AuditService.Log("Recovery-Code erstellt", "Security", null, "Recovery-Code wurde neu erzeugt.");
+        return display;
+    }
+
+    public static (bool Success, string Message) ResetPassword(string username, string recoveryCode, string newPassword)
+    {
+        var validation = PasswordService.ValidatePassword(newPassword);
+        if (validation is not null)
+            return (false, validation);
+
+        var settings = AppSettingsService.Load();
+        if (string.IsNullOrWhiteSpace(settings.RecoveryCodeHash) || string.IsNullOrWhiteSpace(settings.RecoveryCodeSalt))
+            return (false, "Für diese Installation wurde noch kein Recovery-Code eingerichtet. Bitte mit einem anderen Administratorkonto anmelden oder ein vorhandenes Backup wiederherstellen.");
+
+        var normalizedCode = Normalize(recoveryCode);
+        if (normalizedCode.Length != 30 || !PasswordService.Verify(normalizedCode, settings.RecoveryCodeHash, settings.RecoveryCodeSalt))
+            return (false, "Der Recovery-Code ist ungültig.");
+
+        var normalizedUser = username.Trim();
+        using var db = new AppDbContext();
+        var user = db.UserAccounts.FirstOrDefault(x => x.Username == normalizedUser);
+        if (user is null)
+            return (false, "Dieser Benutzer ist nicht vorhanden.");
+        if (!user.IsActive)
+            return (false, "Dieser Benutzer ist deaktiviert. Ein Administrator muss ihn zuerst wieder aktivieren.");
+
+        var (hash, salt) = PasswordService.HashPassword(newPassword);
+        user.PasswordHash = hash;
+        user.PasswordSalt = salt;
+        db.SaveChanges();
+        AuditService.Log("Passwort wiederhergestellt", nameof(UserAccount), user.Id.ToString(), $"Recovery für {user.Username}");
+        return (true, "Das Passwort wurde zurückgesetzt. Du kannst dich jetzt mit dem neuen Passwort anmelden.");
+    }
+
+    private static string Normalize(string? code) =>
+        new((code ?? string.Empty).Where(char.IsLetterOrDigit).Select(char.ToUpperInvariant).ToArray());
+}
+
 public static class AuthenticationService
 {
     public static bool HasUsers()
