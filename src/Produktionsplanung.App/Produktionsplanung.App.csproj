@@ -5,19 +5,24 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>OpsCompact</AssemblyName>
+    <AssemblyName>SolutionCompakt</AssemblyName>
     <RootNamespace>Produktionsplanung.App</RootNamespace>
     <VersionPrefix>0.1.0</VersionPrefix>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
-    <Product>OpsCompact</Product>
-    <Company>OpsCompact</Company>
-    <Description>Planen · Produzieren · Verbessern</Description>
-    <ApplicationIcon>Assets\OpsCompact.ico</ApplicationIcon>
+    <Product>SolutionCompakt</Product>
+    <Company>SolutionCompakt</Company>
+    <Description>Planen · Organisieren · Voranbringen · Einfach effizienter</Description>
+    <ApplicationIcon>Assets\SolutionCompakt.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Produktionsplanung.RegressionTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\SolutionCompakt.ico" />
+    <Resource Include="Assets\SolutionCompaktLogo.jpg" />
   </ItemGroup>
 
   <ItemGroup>
