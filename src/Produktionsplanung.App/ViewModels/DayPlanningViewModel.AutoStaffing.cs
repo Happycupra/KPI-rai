@@ -30,24 +30,23 @@ public partial class DayPlanningViewModel
         var missing = Math.Max(0, coverage.RequiredStaff - coverage.PlannedStaff);
         if (missing == 0)
         {
-            StatusMessage = $"{coverage.OrderNumber} ist bereits personell gedeckt.";
+            StatusMessage = $"{coverage.OrderNumber} ist in dieser Schicht bereits personell gedeckt.";
             return;
         }
 
         using var db = new AppDbContext();
-        var order = db.ProductionOrders.AsNoTracking()
-            .Include(x => x.Shift)
-            .FirstOrDefault(x => x.Id == coverage.OrderId);
-        if (order?.Shift is null)
+        var order = db.ProductionOrders.AsNoTracking().FirstOrDefault(x => x.Id == coverage.OrderId);
+        var shift = db.Shifts.AsNoTracking().FirstOrDefault(x => x.Id == coverage.ShiftId.Value);
+        if (order is null || shift is null)
         {
-            StatusMessage = "Der Auftrag oder seine Schicht wurde nicht mehr gefunden.";
+            StatusMessage = "Der Auftrag oder die Schicht wurde nicht mehr gefunden.";
             return;
         }
 
         var suggestions = QualificationPlanningService.Suggest(
-            order.PlannedDate,
+            coverage.Date,
             order.WorkstationId,
-            order.ShiftId!.Value)
+            coverage.ShiftId.Value)
             .Take(missing)
             .ToList();
 
@@ -63,12 +62,12 @@ public partial class DayPlanningViewModel
             {
                 EmployeeId = suggestion.EmployeeId,
                 WorkstationId = order.WorkstationId,
-                ShiftId = order.ShiftId,
-                Date = order.PlannedDate.Date,
-                StartTime = order.Shift.StartTime,
-                EndTime = order.Shift.EndTime,
-                BreakMinutes = order.Shift.BreakMinutes,
-                Comment = $"Auto-Besetzung · {order.OrderNumber}"
+                ShiftId = coverage.ShiftId,
+                Date = coverage.Date.Date,
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime,
+                BreakMinutes = shift.BreakMinutes,
+                Comment = $"Auto-Besetzung · {order.OrderNumber} · Schicht {coverage.SequenceNumber}"
             });
         }
 
@@ -81,7 +80,7 @@ public partial class DayPlanningViewModel
 
         var remaining = Math.Max(0, missing - suggestions.Count);
         StatusMessage = remaining == 0
-            ? $"{coverage.OrderNumber}: {suggestions.Count} Mitarbeiter automatisch passend eingeplant."
-            : $"{coverage.OrderNumber}: {suggestions.Count} passend eingeplant; für {remaining} Position(en) wurde kein geeigneter Mitarbeiter gefunden.";
+            ? $"{coverage.OrderNumber} · {coverage.ShiftName}: {suggestions.Count} Mitarbeiter automatisch passend eingeplant."
+            : $"{coverage.OrderNumber} · {coverage.ShiftName}: {suggestions.Count} passend eingeplant; für {remaining} Position(en) wurde kein geeigneter Mitarbeiter gefunden.";
     }
 }
