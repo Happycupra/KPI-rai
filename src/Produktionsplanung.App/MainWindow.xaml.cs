@@ -38,6 +38,9 @@ public partial class MainWindow : Window
     {
         var user = SessionService.CurrentUser;
         SessionInfoBlock.Text = user is null ? "Nicht angemeldet" : $"{user.DisplayName} · {user.Role}";
+        TopbarUserNameBlock.Text = user?.DisplayName ?? "Nicht angemeldet";
+        TopbarRoleBlock.Text = user?.Role ?? "Keine Sitzung";
+        TopbarInitialsBlock.Text = GetInitials(user?.DisplayName);
         VersionBlock.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0"}";
         var canOperate = SessionService.IsPlannerOrAdmin;
         PlanningCalendarButton.IsEnabled = canOperate; DayPlanningButton.IsEnabled = canOperate; WeekPlanningButton.IsEnabled = canOperate;
@@ -45,6 +48,14 @@ public partial class MainWindow : Window
         EmployeesButton.IsEnabled = canOperate; SkillsButton.IsEnabled = canOperate; WorkstationsButton.IsEnabled = canOperate;
         ShiftsButton.IsEnabled = canOperate; AbsencesButton.IsEnabled = canOperate;
         UserAdminButton.IsEnabled = SessionService.IsAdministrator; SettingsButton.IsEnabled = SessionService.IsAdministrator;
+    }
+
+    private static string GetInitials(string? displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName)) return "SC";
+        var parts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
     }
 
     private void ShowDashboard_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Dashboard));
@@ -144,7 +155,7 @@ public partial class MainWindow : Window
         {
             button.Content = collapsed ? string.Empty : button.ToolTip?.ToString() ?? string.Empty;
             button.HorizontalContentAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Left;
-            button.Padding = collapsed ? new Thickness(0) : new Thickness(12, 0, 12, 0);
+            button.Padding = collapsed ? new Thickness(0) : new Thickness(9, 0, 9, 0);
         }
 
         ApplyGroupVisibility();
@@ -205,11 +216,15 @@ public partial class MainWindow : Window
         foreach (var button in NavigationPanel.Children.OfType<Button>().Where(x => x.Tag is not null))
         {
             button.Background = Brushes.Transparent;
+            button.BorderBrush = Brushes.Transparent;
             button.Foreground = new SolidColorBrush(Color.FromRgb(217, 230, 242));
+            button.FontWeight = FontWeights.Medium;
         }
         if (active is null) return;
-        active.Background = (Brush)FindResource("PrimaryBrush");
+        active.Background = (Brush)FindResource("SidebarActiveBrush");
+        active.BorderBrush = (Brush)FindResource("PrimaryBrush");
         active.Foreground = Brushes.White;
+        active.FontWeight = FontWeights.SemiBold;
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
