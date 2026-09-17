@@ -62,11 +62,7 @@ public partial class MainWindow : Window
             Navigate(new WeekPlanningView(), "Wochenplanung", WeekPlanningButton);
     }
 
-    private void ShowWorkTimeCalendar_Click(object sender, RoutedEventArgs e)
-    {
-        if (SessionService.IsPlannerOrAdmin)
-            Navigate(new WorkTimeCalendarView(), "Arbeitszeit / Betrieb", WorkTimeCalendarButton);
-    }
+    private void ShowWorkTimeCalendar_Click(object sender, RoutedEventArgs e) => OpenWorkTimeCalendar();
 
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e)
     {
@@ -129,6 +125,12 @@ public partial class MainWindow : Window
     {
         if (SessionService.IsPlannerOrAdmin)
             Navigate(new DayPlanningView(date), $"Tagesplanung · {date:dd.MM.yyyy}", DayPlanningButton);
+    }
+
+    public void OpenWorkTimeCalendar()
+    {
+        if (SessionService.IsPlannerOrAdmin)
+            Navigate(new WorkTimeCalendarView(), "Arbeitszeit / Betrieb", WorkTimeCalendarButton);
     }
 
     public void OpenEmployee(int employeeId)
