@@ -15,7 +15,6 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     public ObservableCollection<WorkstationOption> Workstations { get; } = new();
     public ObservableCollection<ShiftOption> Shifts { get; } = new();
     public ObservableCollection<ProductionSchedulePreviewRow> RunSchedulePreview { get; } = new();
-
     public IReadOnlyList<string> Priorities { get; } = new[] { "Niedrig", "Normal", "Hoch", "Dringend" };
     public IReadOnlyList<string> Statuses { get; } = new[] { "Geplant", "Bereit", "Läuft", "Pausiert", "Abgeschlossen", "Problem" };
     public IReadOnlyList<string> Units { get; } = new[] { "Stück", "kg", "g", "l", "ml", "Charge" };
@@ -36,345 +35,133 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     [ObservableProperty] private string comment = string.Empty;
     [ObservableProperty] private string statusMessage = string.Empty;
 
-    public string RunScheduleSummary => PlannedShiftCount <= 1
-        ? "1 Schicht"
-        : $"{PlannedShiftCount} aufeinanderfolgende Schichten";
+    public string RunScheduleSummary => PlannedShiftCount <= 1 ? "1 Schicht" : $"{PlannedShiftCount} aufeinanderfolgende Schichten";
 
-    public ProductionOrderManagementViewModel()
-    {
-        LoadReferenceData();
-        LoadOrders();
-        NewOrder();
-    }
+    public ProductionOrderManagementViewModel() { LoadReferenceData(); LoadOrders(); NewOrder(); }
 
     partial void OnSelectedOrderChanged(ProductionOrderRow? value)
     {
         if (value is null) return;
-
-        OrderNumber = value.OrderNumber;
-        Product = value.Product;
-        Description = value.Description ?? string.Empty;
-        Quantity = value.Quantity;
-        Unit = value.Unit;
-        Priority = value.Priority;
-        PlannedDate = value.PlannedDate;
+        OrderNumber = value.OrderNumber; Product = value.Product; Description = value.Description ?? string.Empty; Quantity = value.Quantity;
+        Unit = value.Unit; Priority = value.Priority; PlannedDate = value.PlannedDate;
         SelectedWorkstation = Workstations.FirstOrDefault(x => x.Id == value.WorkstationId);
-        SelectedShift = Shifts.FirstOrDefault(x => x.Id == value.ShiftId);
-        PlannedShiftCount = Math.Max(1, value.PlannedShiftCount);
-        RequiredStaff = value.RequiredStaff;
-        Status = value.Status;
-        Comment = value.Comment ?? string.Empty;
-        StatusMessage = string.Empty;
+        SelectedShift = Shifts.FirstOrDefault(x => x.Id == value.ShiftId); PlannedShiftCount = Math.Max(1, value.PlannedShiftCount);
+        RequiredStaff = value.RequiredStaff; Status = value.Status; Comment = value.Comment ?? string.Empty; StatusMessage = string.Empty;
         RefreshRunSchedulePreview();
     }
-
     partial void OnPlannedDateChanged(DateTime value) => RefreshRunSchedulePreview();
-
     partial void OnSelectedShiftChanged(ShiftOption? value) => RefreshRunSchedulePreview();
-
-    partial void OnPlannedShiftCountChanged(int value)
-    {
-        OnPropertyChanged(nameof(RunScheduleSummary));
-        RefreshRunSchedulePreview();
-    }
-
-    [RelayCommand]
-    private void NewOrder()
-    {
-        SelectedOrder = null;
-        OrderNumber = string.Empty;
-        Product = string.Empty;
-        Description = string.Empty;
-        Quantity = 1;
-        Unit = "Stück";
-        Priority = "Normal";
-        PlannedDate = DateTime.Today;
-        SelectedWorkstation = Workstations.FirstOrDefault();
-        SelectedShift = Shifts.FirstOrDefault();
-        PlannedShiftCount = 1;
-        RequiredStaff = SelectedWorkstation is null ? 1 : Math.Max(1, GetDefaultRequiredStaff(SelectedWorkstation.Id));
-        Status = "Geplant";
-        Comment = string.Empty;
-        StatusMessage = string.Empty;
-        RefreshRunSchedulePreview();
-    }
-
+    partial void OnPlannedShiftCountChanged(int value) { OnPropertyChanged(nameof(RunScheduleSummary)); RefreshRunSchedulePreview(); }
     partial void OnSelectedWorkstationChanged(WorkstationOption? value)
     {
-        if (value is not null && SelectedOrder is null)
-            RequiredStaff = Math.Max(1, GetDefaultRequiredStaff(value.Id));
+        if (value is not null && SelectedOrder is null) RequiredStaff = Math.Max(1, GetDefaultRequiredStaff(value.Id));
+        RefreshRunSchedulePreview();
     }
 
-    [RelayCommand]
-    private void Save()
+    [RelayCommand] private void NewOrder()
     {
-        var normalizedOrderNumber = OrderNumber.Trim();
-        var normalizedProduct = Product.Trim();
+        SelectedOrder = null; OrderNumber = string.Empty; Product = string.Empty; Description = string.Empty; Quantity = 1; Unit = "Stück"; Priority = "Normal";
+        PlannedDate = DateTime.Today; SelectedWorkstation = Workstations.FirstOrDefault(); SelectedShift = Shifts.FirstOrDefault(); PlannedShiftCount = 1;
+        RequiredStaff = SelectedWorkstation is null ? 1 : Math.Max(1, GetDefaultRequiredStaff(SelectedWorkstation.Id)); Status = "Geplant"; Comment = string.Empty; StatusMessage = string.Empty;
+        RefreshRunSchedulePreview();
+    }
 
-        if (string.IsNullOrWhiteSpace(normalizedOrderNumber))
-        {
-            StatusMessage = "Bitte eine Auftragsnummer eingeben.";
-            return;
-        }
+    [RelayCommand] private void Save()
+    {
+        var normalizedOrderNumber = OrderNumber.Trim(); var normalizedProduct = Product.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedOrderNumber)) { StatusMessage = "Bitte eine Auftragsnummer eingeben."; return; }
+        if (string.IsNullOrWhiteSpace(normalizedProduct)) { StatusMessage = "Bitte ein Produkt eingeben."; return; }
+        if (!double.IsFinite(Quantity) || Quantity <= 0) { StatusMessage = "Die Menge muss eine gültige Zahl grösser als 0 sein."; return; }
+        if (RequiredStaff <= 0) { StatusMessage = "Der Personalbedarf muss mindestens 1 betragen."; return; }
+        if (PlannedShiftCount is < 1 or > ProductionScheduleService.MaxPlannedShiftCount) { StatusMessage = $"Die Laufdauer muss zwischen 1 und {ProductionScheduleService.MaxPlannedShiftCount} Schichten liegen."; return; }
+        if (SelectedWorkstation is null) { StatusMessage = "Bitte einen Arbeitsplatz auswählen."; return; }
+        if (SelectedShift is null) { StatusMessage = "Bitte eine Startschicht auswählen."; return; }
 
-        if (string.IsNullOrWhiteSpace(normalizedProduct))
+        var schedule = ProductionScheduleService.BuildPreview(PlannedDate, SelectedWorkstation.Id, SelectedShift.Id, PlannedShiftCount);
+        if (schedule.Count != PlannedShiftCount)
         {
-            StatusMessage = "Bitte ein Produkt eingeben.";
-            return;
-        }
-
-        if (Quantity <= 0)
-        {
-            StatusMessage = "Die Menge muss grösser als 0 sein.";
-            return;
-        }
-
-        if (RequiredStaff <= 0)
-        {
-            StatusMessage = "Der Personalbedarf muss mindestens 1 betragen.";
-            return;
-        }
-
-        if (PlannedShiftCount is < 1 or > ProductionScheduleService.MaxPlannedShiftCount)
-        {
-            StatusMessage = $"Die Laufdauer muss zwischen 1 und {ProductionScheduleService.MaxPlannedShiftCount} Schichten liegen.";
-            return;
-        }
-
-        if (SelectedWorkstation is null)
-        {
-            StatusMessage = "Bitte einen Arbeitsplatz auswählen.";
-            return;
-        }
-
-        if (SelectedShift is null)
-        {
-            StatusMessage = "Bitte eine Startschicht auswählen.";
+            StatusMessage = schedule.Count == 0
+                ? "Der Auftrag kann nicht gespeichert werden: Starttag oder Startschicht ist für diesen Arbeitsplatz nicht freigegeben."
+                : $"Der Auftrag kann nicht gespeichert werden: Es konnten nur {schedule.Count} von {PlannedShiftCount} Produktionsschichten geplant werden.";
             return;
         }
 
         using var db = new AppDbContext();
-        var editingId = SelectedOrder?.Id;
-        var duplicate = db.ProductionOrders.AsNoTracking().Any(x =>
-            x.OrderNumber == normalizedOrderNumber && (!editingId.HasValue || x.Id != editingId.Value));
-
-        if (duplicate)
+        using var transaction = db.Database.BeginTransaction();
+        try
         {
-            StatusMessage = "Diese Auftragsnummer existiert bereits.";
-            return;
-        }
+            var editingId = SelectedOrder?.Id;
+            if (db.ProductionOrders.AsNoTracking().Any(x => x.OrderNumber == normalizedOrderNumber && (!editingId.HasValue || x.Id != editingId.Value))) { StatusMessage = "Diese Auftragsnummer existiert bereits."; return; }
+            ProductionOrder entity;
+            if (SelectedOrder is null) { entity = new ProductionOrder(); db.ProductionOrders.Add(entity); }
+            else entity = db.ProductionOrders.First(x => x.Id == SelectedOrder.Id);
 
-        ProductionOrder entity;
-        if (SelectedOrder is null)
+            entity.OrderNumber = normalizedOrderNumber; entity.Product = normalizedProduct; entity.Description = string.IsNullOrWhiteSpace(Description) ? null : Description.Trim();
+            entity.Quantity = Quantity; entity.Unit = Unit; entity.Priority = Priority; entity.PlannedDate = PlannedDate.Date; entity.WorkstationId = SelectedWorkstation.Id;
+            entity.ShiftId = SelectedShift.Id; entity.PlannedStart = SelectedShift.StartTime; entity.PlannedEnd = SelectedShift.EndTime; entity.PlannedShiftCount = PlannedShiftCount;
+            entity.RequiredStaff = RequiredStaff; entity.Status = Status; entity.Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim();
+            db.SaveChanges();
+            ProductionScheduleService.SyncRunSlots(db, entity);
+            db.SaveChanges();
+            var slotCount = db.ProductionRunSlots.Count(x => x.ProductionOrderId == entity.Id);
+            if (slotCount != PlannedShiftCount) throw new InvalidOperationException($"Terminplanung unvollständig ({slotCount}/{PlannedShiftCount}).");
+            transaction.Commit();
+            LoadOrders(entity.Id);
+            StatusMessage = PlannedShiftCount == 1 ? "Produktionsauftrag gespeichert." : $"Produktionsauftrag gespeichert und auf {PlannedShiftCount} Schichten verteilt.";
+        }
+        catch (Exception ex)
         {
-            entity = new ProductionOrder();
-            db.ProductionOrders.Add(entity);
+            transaction.Rollback();
+            StatusMessage = $"Produktionsauftrag wurde nicht gespeichert: {ex.Message}";
         }
-        else
-        {
-            entity = db.ProductionOrders.First(x => x.Id == SelectedOrder.Id);
-        }
-
-        entity.OrderNumber = normalizedOrderNumber;
-        entity.Product = normalizedProduct;
-        entity.Description = string.IsNullOrWhiteSpace(Description) ? null : Description.Trim();
-        entity.Quantity = Quantity;
-        entity.Unit = Unit;
-        entity.Priority = Priority;
-        entity.PlannedDate = PlannedDate.Date;
-        entity.WorkstationId = SelectedWorkstation.Id;
-        entity.ShiftId = SelectedShift.Id;
-        entity.PlannedStart = SelectedShift.StartTime;
-        entity.PlannedEnd = SelectedShift.EndTime;
-        entity.PlannedShiftCount = PlannedShiftCount;
-        entity.RequiredStaff = RequiredStaff;
-        entity.Status = Status;
-        entity.Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim();
-
-        db.SaveChanges();
-        ProductionScheduleService.SyncRunSlots(db, entity);
-        db.SaveChanges();
-        LoadOrders(entity.Id);
-        StatusMessage = PlannedShiftCount == 1
-            ? "Produktionsauftrag gespeichert."
-            : $"Produktionsauftrag gespeichert und auf {PlannedShiftCount} Schichten verteilt.";
     }
 
-    [RelayCommand]
-    private void Delete()
+    [RelayCommand] private void Delete()
     {
-        if (SelectedOrder is null)
-        {
-            StatusMessage = "Bitte zuerst einen Produktionsauftrag auswählen.";
-            return;
-        }
-
-        using var db = new AppDbContext();
-        var entity = db.ProductionOrders.FirstOrDefault(x => x.Id == SelectedOrder.Id);
-        if (entity is null)
-        {
-            StatusMessage = "Der Produktionsauftrag wurde nicht mehr gefunden.";
-            LoadOrders();
-            return;
-        }
-
-        if (db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id))
-        {
-            StatusMessage = "Aufträge mit Ist-Produktion können nicht gelöscht werden. Bitte abschliessen, damit die Produktionshistorie erhalten bleibt.";
-            return;
-        }
-
-        if (MessageBox.Show($"Auftrag {entity.OrderNumber} endgültig löschen?",
-                "Produktionsauftrag löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
-            return;
-
-        db.ProductionOrders.Remove(entity);
-        db.SaveChanges();
-        LoadOrders();
-        NewOrder();
-        StatusMessage = "Produktionsauftrag gelöscht.";
+        if (SelectedOrder is null) { StatusMessage = "Bitte zuerst einen Produktionsauftrag auswählen."; return; }
+        using var db = new AppDbContext(); var entity = db.ProductionOrders.FirstOrDefault(x => x.Id == SelectedOrder.Id);
+        if (entity is null) { StatusMessage = "Der Produktionsauftrag wurde nicht mehr gefunden."; LoadOrders(); return; }
+        if (db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id)) { StatusMessage = "Aufträge mit Ist-Produktion können nicht gelöscht werden. Bitte abschliessen, damit die Produktionshistorie erhalten bleibt."; return; }
+        if (MessageBox.Show($"Auftrag {entity.OrderNumber} endgültig löschen?", "Produktionsauftrag löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        db.ProductionOrders.Remove(entity); db.SaveChanges(); LoadOrders(); NewOrder(); StatusMessage = "Produktionsauftrag gelöscht.";
     }
 
-    [RelayCommand]
-    private void Refresh()
-    {
-        LoadReferenceData();
-        LoadOrders(SelectedOrder?.Id);
-        StatusMessage = "Produktionsaufträge aktualisiert.";
-    }
+    [RelayCommand] private void Refresh() { LoadReferenceData(); LoadOrders(SelectedOrder?.Id); StatusMessage = "Produktionsaufträge aktualisiert."; }
 
     private void RefreshRunSchedulePreview()
     {
         RunSchedulePreview.Clear();
-        if (SelectedShift is null || PlannedShiftCount <= 0)
-            return;
-
-        var shiftModels = Shifts.Select(x => new Shift
-        {
-            Id = x.Id,
-            Name = x.Name,
-            StartTime = x.StartTime,
-            EndTime = x.EndTime,
-            BreakMinutes = x.BreakMinutes
-        });
-
-        foreach (var slot in ProductionScheduleService.Build(
-                     PlannedDate,
-                     SelectedShift.Id,
-                     PlannedShiftCount,
-                     shiftModels))
-        {
-            RunSchedulePreview.Add(new ProductionSchedulePreviewRow
-            {
-                SequenceNumber = slot.SequenceNumber,
-                Date = slot.Date,
-                ShiftName = slot.ShiftName,
-                TimeText = slot.TimeText
-            });
-        }
+        if (SelectedWorkstation is null || SelectedShift is null || PlannedShiftCount <= 0) return;
+        foreach (var slot in ProductionScheduleService.BuildPreview(PlannedDate, SelectedWorkstation.Id, SelectedShift.Id, PlannedShiftCount))
+            RunSchedulePreview.Add(new ProductionSchedulePreviewRow { SequenceNumber = slot.SequenceNumber, Date = slot.Date, ShiftName = slot.ShiftName, TimeText = slot.TimeText });
     }
 
     private void LoadReferenceData()
     {
-        using var db = new AppDbContext();
-        var workstationId = SelectedWorkstation?.Id;
-        var shiftId = SelectedShift?.Id;
-
-        Workstations.Clear();
-        foreach (var item in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name))
-            Workstations.Add(new WorkstationOption { Id = item.Id, Name = item.Name });
-
-        Shifts.Clear();
-        foreach (var item in db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ThenBy(x => x.Name))
-        {
-            Shifts.Add(new ShiftOption
-            {
-                Id = item.Id,
-                Name = item.Name,
-                StartTime = item.StartTime,
-                EndTime = item.EndTime,
-                BreakMinutes = item.BreakMinutes
-            });
-        }
-
-        SelectedWorkstation = Workstations.FirstOrDefault(x => x.Id == workstationId) ?? Workstations.FirstOrDefault();
-        SelectedShift = Shifts.FirstOrDefault(x => x.Id == shiftId) ?? Shifts.FirstOrDefault();
-        RefreshRunSchedulePreview();
+        using var db = new AppDbContext(); var workstationId = SelectedWorkstation?.Id; var shiftId = SelectedShift?.Id;
+        Workstations.Clear(); foreach (var item in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name)) Workstations.Add(new WorkstationOption { Id = item.Id, Name = item.Name });
+        Shifts.Clear(); foreach (var item in db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).ThenBy(x => x.Name)) Shifts.Add(new ShiftOption { Id = item.Id, Name = item.Name, StartTime = item.StartTime, EndTime = item.EndTime, BreakMinutes = item.BreakMinutes });
+        SelectedWorkstation = Workstations.FirstOrDefault(x => x.Id == workstationId) ?? Workstations.FirstOrDefault(); SelectedShift = Shifts.FirstOrDefault(x => x.Id == shiftId) ?? Shifts.FirstOrDefault(); RefreshRunSchedulePreview();
     }
-
-    private int GetDefaultRequiredStaff(int workstationId)
-    {
-        using var db = new AppDbContext();
-        return db.Workstations.AsNoTracking().Where(x => x.Id == workstationId).Select(x => x.OptimalStaff).FirstOrDefault();
-    }
-
+    private int GetDefaultRequiredStaff(int workstationId) { using var db = new AppDbContext(); return db.Workstations.AsNoTracking().Where(x => x.Id == workstationId).Select(x => x.OptimalStaff).FirstOrDefault(); }
     private void LoadOrders(int? selectId = null)
     {
-        using var db = new AppDbContext();
-        var items = db.ProductionOrders.AsNoTracking()
-            .Include(x => x.Workstation)
-            .Include(x => x.Shift)
-            .AsEnumerable()
-            .OrderBy(x => x.PlannedDate)
-            .ThenBy(x => x.Shift?.StartTime)
-            .ThenBy(x => x.OrderNumber)
-            .ToList();
-
-        Orders.Clear();
-        foreach (var item in items)
-        {
-            Orders.Add(new ProductionOrderRow
-            {
-                Id = item.Id,
-                OrderNumber = item.OrderNumber,
-                Product = item.Product,
-                Description = item.Description,
-                Quantity = item.Quantity,
-                Unit = item.Unit,
-                Priority = item.Priority,
-                PlannedDate = item.PlannedDate,
-                WorkstationId = item.WorkstationId,
-                WorkstationName = item.Workstation.Name,
-                ShiftId = item.ShiftId,
-                ShiftName = item.Shift?.Name ?? "Individuell",
-                PlannedShiftCount = Math.Max(1, item.PlannedShiftCount),
-                RequiredStaff = item.RequiredStaff,
-                Status = item.Status,
-                Comment = item.Comment
-            });
-        }
-
+        using var db = new AppDbContext(); var items = db.ProductionOrders.AsNoTracking().Include(x => x.Workstation).Include(x => x.Shift).AsEnumerable().OrderBy(x => x.PlannedDate).ThenBy(x => x.Shift?.StartTime).ThenBy(x => x.OrderNumber).ToList();
+        Orders.Clear(); foreach (var item in items) Orders.Add(new ProductionOrderRow { Id=item.Id, OrderNumber=item.OrderNumber, Product=item.Product, Description=item.Description, Quantity=item.Quantity, Unit=item.Unit, Priority=item.Priority, PlannedDate=item.PlannedDate, WorkstationId=item.WorkstationId, WorkstationName=item.Workstation.Name, ShiftId=item.ShiftId, ShiftName=item.Shift?.Name ?? "Individuell", PlannedShiftCount=Math.Max(1,item.PlannedShiftCount), RequiredStaff=item.RequiredStaff, Status=item.Status, Comment=item.Comment });
         SelectedOrder = selectId.HasValue ? Orders.FirstOrDefault(x => x.Id == selectId.Value) : null;
     }
 }
 
 public class ProductionOrderRow
 {
-    public int Id { get; set; }
-    public string OrderNumber { get; set; } = string.Empty;
-    public string Product { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public double Quantity { get; set; }
-    public string Unit { get; set; } = string.Empty;
-    public string Priority { get; set; } = string.Empty;
-    public DateTime PlannedDate { get; set; }
-    public int WorkstationId { get; set; }
-    public string WorkstationName { get; set; } = string.Empty;
-    public int? ShiftId { get; set; }
-    public string ShiftName { get; set; } = string.Empty;
-    public int PlannedShiftCount { get; set; } = 1;
-    public int RequiredStaff { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string? Comment { get; set; }
-    public string QuantityText => $"{Quantity:N0} {Unit}";
-    public string RunText => PlannedShiftCount == 1 ? "1 Schicht" : $"{PlannedShiftCount} Schichten";
+    public int Id { get; set; } public string OrderNumber { get; set; } = string.Empty; public string Product { get; set; } = string.Empty; public string? Description { get; set; }
+    public double Quantity { get; set; } public string Unit { get; set; } = string.Empty; public string Priority { get; set; } = string.Empty; public DateTime PlannedDate { get; set; }
+    public int WorkstationId { get; set; } public string WorkstationName { get; set; } = string.Empty; public int? ShiftId { get; set; } public string ShiftName { get; set; } = string.Empty;
+    public int PlannedShiftCount { get; set; } = 1; public int RequiredStaff { get; set; } public string Status { get; set; } = string.Empty; public string? Comment { get; set; }
+    public string QuantityText => $"{Quantity:N0} {Unit}"; public string RunText => PlannedShiftCount == 1 ? "1 Schicht" : $"{PlannedShiftCount} Schichten";
 }
-
 public sealed class ProductionSchedulePreviewRow
 {
-    public int SequenceNumber { get; set; }
-    public DateTime Date { get; set; }
-    public string ShiftName { get; set; } = string.Empty;
-    public string TimeText { get; set; } = string.Empty;
+    public int SequenceNumber { get; set; } public DateTime Date { get; set; } public string ShiftName { get; set; } = string.Empty; public string TimeText { get; set; } = string.Empty;
     public string DateText => Date.ToString("ddd dd.MM.");
 }
