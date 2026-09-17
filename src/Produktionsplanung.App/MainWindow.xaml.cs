@@ -93,7 +93,10 @@ public partial class MainWindow : Window
 
     private void ShowEntry(NavigationEntry entry)
     {
-        ContentHost.Content = entry.CreateContent();
+        // Eine History-Navigation muss dieselbe View-Instanz wieder anzeigen. Dadurch bleiben
+        // Kalenderdatum, Filter, Auswahl und noch nicht gespeicherte Formulareingaben beim
+        // Zurück-Navigieren erhalten, statt durch einen neuen ViewModel-Aufbau verloren zu gehen.
+        ContentHost.Content = entry.GetContent();
         currentNavigation = entry;
         CurrentPageTitle.Text = entry.Title;
         SetActiveNavigation(FindName(entry.ButtonName) as Button);
@@ -132,5 +135,16 @@ public partial class MainWindow : Window
     private void ChangePassword_Click(object sender, RoutedEventArgs e) { var dialog = new ChangePasswordWindow { Owner = this }; dialog.ShowDialog(); }
 
     private enum NavigationRoute { Dashboard, PlanningCalendar, DayPlanning, WeekPlanning, WorkTimeCalendar, ProductionOrders, ProductionActual, Analytics, Employees, Skills, Workstations, Shifts, Absences, UserAdmin, Settings }
-    private sealed record NavigationEntry(NavigationRoute Route, string Title, string ButtonName, Func<object> CreateContent, DateTime? Date = null, int? EmployeeId = null);
+
+    private sealed record NavigationEntry(
+        NavigationRoute Route,
+        string Title,
+        string ButtonName,
+        Func<object> CreateContent,
+        DateTime? Date = null,
+        int? EmployeeId = null)
+    {
+        private object? content;
+        public object GetContent() => content ??= CreateContent();
+    }
 }
