@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -11,6 +12,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
 {
     public ObservableCollection<Workstation> Workstations { get; } = new();
     public ObservableCollection<WorkstationQualificationOption> Qualifications { get; } = new();
+    public ObservableCollection<WorkstationShiftRuleRow> ShiftRules { get; } = new();
     public IReadOnlyList<SkillLevelChoice> SkillLevels { get; } = new[]
     {
         new SkillLevelChoice(1, "Level 1 · In Einarbeitung"),
@@ -28,6 +30,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
     [ObservableProperty] private SkillLevelChoice? selectedRequiredQualificationLevel;
     [ObservableProperty] private bool isActive = true;
     [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private string shiftModelText = "Nicht konfiguriert";
 
     public WorkstationManagementViewModel() => Load();
 
@@ -44,6 +47,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
         SelectedRequiredQualificationLevel = SkillLevels.FirstOrDefault(x => x.Level == Math.Clamp(value.RequiredQualificationLevel, 1, 3))
                                              ?? SkillLevels[1];
         IsActive = value.IsActive;
+        LoadShiftRules(value.Id);
         StatusMessage = string.Empty;
     }
 
@@ -59,8 +63,47 @@ public partial class WorkstationManagementViewModel : ObservableObject
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id is null);
         SelectedRequiredQualificationLevel = SkillLevels[1];
         IsActive = true;
+        LoadShiftRules(null);
+        ApplyShiftPreset("1");
         StatusMessage = string.Empty;
     }
+
+    [RelayCommand]
+    private void ApplyShiftPreset(string? preset)
+    {
+        if (ShiftRules.Count == 0)
+            return;
+
+        if (int.TryParse(preset, out var shiftCount))
+        {
+            shiftCount = Math.Clamp(shiftCount, 1, ShiftRules.Count);
+            for (var i = 0; i < ShiftRules.Count; i++)
+            {
+                var row = ShiftRules[i];
+                row.IsEnabled = i < shiftCount;
+                row.Monday = row.Tuesday = row.Wednesday = row.Thursday = row.Friday = i < shiftCount;
+                row.Saturday = row.Sunday = false;
+            }
+        }
+        else if (string.Equals(preset, "MoFr", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var row in ShiftRules.Where(x => x.IsEnabled))
+            {
+                row.Monday = row.Tuesday = row.Wednesday = row.Thursday = row.Friday = true;
+                row.Saturday = row.Sunday = false;
+            }
+        }
+        else if (string.Equals(preset, "7Tage", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var row in ShiftRules.Where(x => x.IsEnabled))
+                row.Monday = row.Tuesday = row.Wednesday = row.Thursday = row.Friday = row.Saturday = row.Sunday = true;
+        }
+
+        RefreshShiftModelText();
+    }
+
+    [RelayCommand]
+    private void RefreshShiftModel() => RefreshShiftModelText();
 
     [RelayCommand]
     private void Save()
@@ -74,6 +117,15 @@ public partial class WorkstationManagementViewModel : ObservableObject
         if (MinimumStaff < 0 || OptimalStaff < MinimumStaff || MaximumStaff < OptimalStaff)
         {
             StatusMessage = "Besetzung muss gelten: Minimum ≤ Optimal ≤ Maximum.";
+            return;
+        }
+
+        var configuredRules = ShiftRules
+            .Where(x => x.IsEnabled && x.HasAnyDay)
+            .ToList();
+        if (IsActive && configuredRules.Count == 0)
+        {
+            StatusMessage = "Für einen aktiven Arbeitsplatz muss mindestens eine Schicht an mindestens einem Wochentag freigegeben sein.";
             return;
         }
 
@@ -101,10 +153,43 @@ public partial class WorkstationManagementViewModel : ObservableObject
         entity.IsActive = IsActive;
         db.SaveChanges();
 
+        var oldRules = db.WorkstationShiftRules.Where(x => x.WorkstationId == entity.Id).ToList();
+        if (oldRules.Count > 0)
+            db.WorkstationShiftRules.RemoveRange(oldRules);
+
+        foreach (var row in configuredRules)
+        {
+            db.WorkstationShiftRules.Add(new WorkstationShiftRule
+            {
+                WorkstationId = entity.Id,
+                ShiftId = row.ShiftId,
+                Monday = row.Monday,
+                Tuesday = row.Tuesday,
+                Wednesday = row.Wednesday,
+                Thursday = row.Thursday,
+                Friday = row.Friday,
+                Saturday = row.Saturday,
+                Sunday = row.Sunday
+            });
+        }
+        db.SaveChanges();
+
+        var futureSlots = db.ProductionRunSlots.AsNoTracking()
+            .Include(x => x.ProductionOrder)
+            .Where(x => x.ProductionOrder.WorkstationId == entity.Id && x.Date.Date >= DateTime.Today)
+            .ToList();
+        var incompatible = futureSlots.Count(slot =>
+        {
+            var rule = configuredRules.FirstOrDefault(x => x.ShiftId == slot.ShiftId);
+            return rule is null || !rule.IsAllowed(slot.Date.DayOfWeek);
+        });
+
         Load(entity.Id);
-        StatusMessage = entity.RequiredQualificationId.HasValue
-            ? "Arbeitsplatz inklusive Qualifikationspflicht gespeichert."
-            : "Arbeitsplatz gespeichert.";
+        StatusMessage = incompatible > 0
+            ? $"Arbeitsplatz und Schichtmodell gespeichert. Hinweis: {incompatible} bestehende Produktionsschicht(en) liegen ausserhalb des neuen Modells und wurden bewusst NICHT verschoben."
+            : entity.RequiredQualificationId.HasValue
+                ? "Arbeitsplatz inklusive Qualifikationspflicht und Schichtmodell gespeichert."
+                : "Arbeitsplatz inklusive Schichtmodell gespeichert.";
     }
 
     [RelayCommand]
@@ -140,17 +225,126 @@ public partial class WorkstationManagementViewModel : ObservableObject
 
         var items = db.Workstations.AsNoTracking()
             .Include(x => x.RequiredQualification)
+            .Include(x => x.ShiftRules)
+                .ThenInclude(x => x.Shift)
             .OrderBy(x => x.Name)
             .ToList();
         Workstations.Clear();
-        foreach (var item in items) Workstations.Add(item);
+        foreach (var item in items)
+        {
+            item.ShiftModelSummary = BuildShiftModelSummary(item.ShiftRules);
+            Workstations.Add(item);
+        }
 
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == qualificationId)
                                         ?? Qualifications.FirstOrDefault(x => x.Id is null);
         SelectedRequiredQualificationLevel ??= SkillLevels[1];
         SelectedWorkstation = selectId is null ? null : Workstations.FirstOrDefault(x => x.Id == selectId);
+        if (selectId is null && ShiftRules.Count == 0)
+            LoadShiftRules(null);
+    }
+
+    private void LoadShiftRules(int? workstationId)
+    {
+        using var db = new AppDbContext();
+        var shifts = db.Shifts.AsNoTracking()
+            .AsEnumerable()
+            .OrderBy(x => x.StartTime)
+            .ThenBy(x => x.Name)
+            .ToList();
+        var saved = workstationId.HasValue
+            ? db.WorkstationShiftRules.AsNoTracking().Where(x => x.WorkstationId == workstationId.Value).ToList()
+            : new List<WorkstationShiftRule>();
+        var legacyFallback = workstationId.HasValue && saved.Count == 0;
+
+        ShiftRules.Clear();
+        foreach (var shift in shifts)
+        {
+            var rule = saved.FirstOrDefault(x => x.ShiftId == shift.Id);
+            ShiftRules.Add(new WorkstationShiftRuleRow
+            {
+                ShiftId = shift.Id,
+                ShiftName = shift.Name,
+                TimeText = $"{shift.StartTime:hh\\:mm}–{shift.EndTime:hh\\:mm}",
+                IsEnabled = rule is not null || legacyFallback,
+                Monday = rule?.Monday ?? legacyFallback,
+                Tuesday = rule?.Tuesday ?? legacyFallback,
+                Wednesday = rule?.Wednesday ?? legacyFallback,
+                Thursday = rule?.Thursday ?? legacyFallback,
+                Friday = rule?.Friday ?? legacyFallback,
+                Saturday = rule?.Saturday ?? legacyFallback,
+                Sunday = rule?.Sunday ?? legacyFallback
+            });
+        }
+        RefreshShiftModelText();
+    }
+
+    private void RefreshShiftModelText() => ShiftModelText = BuildShiftModelSummary(ShiftRules);
+
+    private static string BuildShiftModelSummary(IEnumerable<WorkstationShiftRule> rules)
+    {
+        var rows = rules.Select(x => new WorkstationShiftRuleRow
+        {
+            ShiftId = x.ShiftId,
+            ShiftName = x.Shift?.Name ?? string.Empty,
+            IsEnabled = true,
+            Monday = x.Monday,
+            Tuesday = x.Tuesday,
+            Wednesday = x.Wednesday,
+            Thursday = x.Thursday,
+            Friday = x.Friday,
+            Saturday = x.Saturday,
+            Sunday = x.Sunday
+        });
+        return BuildShiftModelSummary(rows);
+    }
+
+    private static string BuildShiftModelSummary(IEnumerable<WorkstationShiftRuleRow> source)
+    {
+        var rows = source.Where(x => x.IsEnabled && x.HasAnyDay).ToList();
+        if (rows.Count == 0)
+            return "Nicht konfiguriert";
+
+        var baseName = rows.Count == 1 && rows[0].ShiftName.Contains("tag", StringComparison.OrdinalIgnoreCase)
+            ? "Tagschicht"
+            : rows.Count == 1 ? "1-Schicht"
+            : $"{rows.Count}-Schicht";
+
+        var moFr = rows.All(x => x.Monday && x.Tuesday && x.Wednesday && x.Thursday && x.Friday && !x.Saturday && !x.Sunday);
+        var allDays = rows.All(x => x.Monday && x.Tuesday && x.Wednesday && x.Thursday && x.Friday && x.Saturday && x.Sunday);
+        var days = allDays ? "7 Tage" : moFr ? "Mo–Fr" : "individuell";
+        return $"{baseName} · {days}";
     }
 }
 
 public sealed record WorkstationQualificationOption(int? Id, string Name);
 public sealed record SkillLevelChoice(int Level, string Name);
+
+public partial class WorkstationShiftRuleRow : ObservableObject
+{
+    public int ShiftId { get; set; }
+    public string ShiftName { get; set; } = string.Empty;
+    public string TimeText { get; set; } = string.Empty;
+    [ObservableProperty] private bool isEnabled;
+    [ObservableProperty] private bool monday;
+    [ObservableProperty] private bool tuesday;
+    [ObservableProperty] private bool wednesday;
+    [ObservableProperty] private bool thursday;
+    [ObservableProperty] private bool friday;
+    [ObservableProperty] private bool saturday;
+    [ObservableProperty] private bool sunday;
+
+    public bool HasAnyDay => Monday || Tuesday || Wednesday || Thursday || Friday || Saturday || Sunday;
+
+    public bool IsAllowed(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => Monday,
+        DayOfWeek.Tuesday => Tuesday,
+        DayOfWeek.Wednesday => Wednesday,
+        DayOfWeek.Thursday => Thursday,
+        DayOfWeek.Friday => Friday,
+        DayOfWeek.Saturday => Saturday,
+        DayOfWeek.Sunday => Sunday,
+        _ => false
+    };
+}
