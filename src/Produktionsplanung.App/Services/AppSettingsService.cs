@@ -16,20 +16,41 @@ public sealed class AppSettings
     public DateTime? LastSuccessfulBackupAtLocal { get; set; }
     public string LastSuccessfulBackupPath { get; set; } = string.Empty;
 
+    // Security settings are installation-wide.
+    public bool AutoLockEnabled { get; set; } = true;
+    public int AutoLockMinutes { get; set; } = 30;
+
     // Local recovery credential. Only the PBKDF2 hash/salt is stored; the recovery code itself
     // is shown once to the administrator and must be kept outside the application.
     public string RecoveryCodeHash { get; set; } = string.Empty;
     public string RecoveryCodeSalt { get; set; } = string.Empty;
     public DateTime? RecoveryCodeCreatedAtUtc { get; set; }
 
-    // Navigation/UI preferences.
+    // Legacy installation-wide UI values. They remain for backwards-compatible deserialization
+    // and are copied into a user's profile the first time that user opens the new version.
     public bool SidebarCollapsed { get; set; }
     public bool PlanningGroupCollapsed { get; set; }
     public bool ProductionGroupCollapsed { get; set; }
     public bool MasterDataGroupCollapsed { get; set; }
     public bool SystemGroupCollapsed { get; set; }
+    public int CalendarSelectedViewIndex { get; set; } = 1;
+    public string CalendarSearchText { get; set; } = string.Empty;
+    public bool CalendarShowAssignments { get; set; } = true;
+    public bool CalendarShowOrders { get; set; } = true;
+    public bool CalendarShowAbsences { get; set; } = true;
+    public bool CalendarShowOperatingCalendar { get; set; } = true;
+    public bool CalendarShowWeekends { get; set; } = true;
 
-    // Planning calendar preferences.
+    public Dictionary<string, UserUiPreferences> UserUiPreferences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class UserUiPreferences
+{
+    public bool SidebarCollapsed { get; set; }
+    public bool PlanningGroupCollapsed { get; set; }
+    public bool ProductionGroupCollapsed { get; set; }
+    public bool MasterDataGroupCollapsed { get; set; }
+    public bool SystemGroupCollapsed { get; set; }
     public int CalendarSelectedViewIndex { get; set; } = 1;
     public string CalendarSearchText { get; set; } = string.Empty;
     public bool CalendarShowAssignments { get; set; } = true;
@@ -68,6 +89,40 @@ public static class AppSettingsService
             update(settings);
             SaveUnlocked(settings);
             return settings;
+        }
+    }
+
+    public static UserUiPreferences LoadCurrentUserPreferences()
+    {
+        lock (Sync)
+        {
+            var settings = LoadUnlocked();
+            var key = GetCurrentUserKey();
+            if (!settings.UserUiPreferences.TryGetValue(key, out var preferences))
+            {
+                preferences = CreateLegacyPreferences(settings);
+                settings.UserUiPreferences[key] = preferences;
+                SaveUnlocked(settings);
+            }
+            return Clone(preferences);
+        }
+    }
+
+    public static UserUiPreferences UpdateCurrentUserPreferences(Action<UserUiPreferences> update)
+    {
+        lock (Sync)
+        {
+            var settings = LoadUnlocked();
+            var key = GetCurrentUserKey();
+            if (!settings.UserUiPreferences.TryGetValue(key, out var preferences))
+            {
+                preferences = CreateLegacyPreferences(settings);
+                settings.UserUiPreferences[key] = preferences;
+            }
+            update(preferences);
+            Normalize(preferences);
+            SaveUnlocked(settings);
+            return Clone(preferences);
         }
     }
 
@@ -132,6 +187,44 @@ public static class AppSettingsService
         DefaultExportDirectory = AppPaths.IsPortableMode ? "Exports" : AppPaths.ExportsDirectory
     };
 
+    private static string GetCurrentUserKey()
+    {
+        var username = SessionService.CurrentUser?.Username?.Trim();
+        return string.IsNullOrWhiteSpace(username) ? "__default__" : username.ToLowerInvariant();
+    }
+
+    private static UserUiPreferences CreateLegacyPreferences(AppSettings settings) => new()
+    {
+        SidebarCollapsed = settings.SidebarCollapsed,
+        PlanningGroupCollapsed = settings.PlanningGroupCollapsed,
+        ProductionGroupCollapsed = settings.ProductionGroupCollapsed,
+        MasterDataGroupCollapsed = settings.MasterDataGroupCollapsed,
+        SystemGroupCollapsed = settings.SystemGroupCollapsed,
+        CalendarSelectedViewIndex = settings.CalendarSelectedViewIndex,
+        CalendarSearchText = settings.CalendarSearchText,
+        CalendarShowAssignments = settings.CalendarShowAssignments,
+        CalendarShowOrders = settings.CalendarShowOrders,
+        CalendarShowAbsences = settings.CalendarShowAbsences,
+        CalendarShowOperatingCalendar = settings.CalendarShowOperatingCalendar,
+        CalendarShowWeekends = settings.CalendarShowWeekends
+    };
+
+    private static UserUiPreferences Clone(UserUiPreferences source) => new()
+    {
+        SidebarCollapsed = source.SidebarCollapsed,
+        PlanningGroupCollapsed = source.PlanningGroupCollapsed,
+        ProductionGroupCollapsed = source.ProductionGroupCollapsed,
+        MasterDataGroupCollapsed = source.MasterDataGroupCollapsed,
+        SystemGroupCollapsed = source.SystemGroupCollapsed,
+        CalendarSelectedViewIndex = source.CalendarSelectedViewIndex,
+        CalendarSearchText = source.CalendarSearchText,
+        CalendarShowAssignments = source.CalendarShowAssignments,
+        CalendarShowOrders = source.CalendarShowOrders,
+        CalendarShowAbsences = source.CalendarShowAbsences,
+        CalendarShowOperatingCalendar = source.CalendarShowOperatingCalendar,
+        CalendarShowWeekends = source.CalendarShowWeekends
+    };
+
     private static void Normalize(AppSettings settings)
     {
         var company = settings.CompanyName?.Trim() ?? string.Empty;
@@ -146,9 +239,28 @@ public static class AppSettingsService
         settings.BackupRetentionCount = Math.Clamp(settings.BackupRetentionCount, 1, 100);
         settings.CsvDelimiter = string.IsNullOrEmpty(settings.CsvDelimiter) ? ";" : settings.CsvDelimiter[..1];
         settings.LastSuccessfulBackupPath = settings.LastSuccessfulBackupPath?.Trim() ?? string.Empty;
+        settings.AutoLockMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
         settings.RecoveryCodeHash = settings.RecoveryCodeHash?.Trim() ?? string.Empty;
         settings.RecoveryCodeSalt = settings.RecoveryCodeSalt?.Trim() ?? string.Empty;
         settings.CalendarSelectedViewIndex = Math.Clamp(settings.CalendarSelectedViewIndex, 0, 2);
         settings.CalendarSearchText ??= string.Empty;
+
+        settings.UserUiPreferences ??= new Dictionary<string, UserUiPreferences>(StringComparer.OrdinalIgnoreCase);
+        var normalized = new Dictionary<string, UserUiPreferences>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in settings.UserUiPreferences)
+        {
+            var key = pair.Key?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(key) || pair.Value is null)
+                continue;
+            Normalize(pair.Value);
+            normalized[key] = pair.Value;
+        }
+        settings.UserUiPreferences = normalized;
+    }
+
+    private static void Normalize(UserUiPreferences preferences)
+    {
+        preferences.CalendarSelectedViewIndex = Math.Clamp(preferences.CalendarSelectedViewIndex, 0, 2);
+        preferences.CalendarSearchText ??= string.Empty;
     }
 }
