@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<EmployeeQualification> EmployeeQualifications => Set<EmployeeQualification>();
     public DbSet<Workstation> Workstations => Set<Workstation>();
     public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<WorkstationShiftRule> WorkstationShiftRules => Set<WorkstationShiftRule>();
     public DbSet<Absence> Absences => Set<Absence>();
     public DbSet<OperatingCalendarDay> OperatingCalendarDays => Set<OperatingCalendarDay>();
     public DbSet<WorkTimeEntry> WorkTimeEntries => Set<WorkTimeEntry>();
@@ -41,6 +42,18 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.RequiredQualificationId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<WorkstationShiftRule>().HasIndex(x => new { x.WorkstationId, x.ShiftId }).IsUnique();
+        modelBuilder.Entity<WorkstationShiftRule>()
+            .HasOne(x => x.Workstation)
+            .WithMany(x => x.ShiftRules)
+            .HasForeignKey(x => x.WorkstationId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<WorkstationShiftRule>()
+            .HasOne(x => x.Shift)
+            .WithMany()
+            .HasForeignKey(x => x.ShiftId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<OperatingCalendarDay>().HasIndex(x => x.Date).IsUnique();
         modelBuilder.Entity<WorkTimeEntry>().HasIndex(x => new { x.EmployeeId, x.Date });
