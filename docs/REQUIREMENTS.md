@@ -1,7 +1,7 @@
 # Anforderungen – SolutionCompakt Produktionsplanung
 
 **Produktname:** SolutionCompakt  
-**Branding:** SolutionCompakt-Logo und Windows-App-Icon sind als eingebettete Anwendungsressourcen vorgesehen.
+**Branding:** SolutionCompakt-Logo und Windows-App-Icon werden als eingebettete Anwendungsressourcen ausgeliefert.
 
 Diese Datei fasst die Zielarchitektur und den geplanten Funktionsumfang der Windows-Anwendung zusammen.
 
