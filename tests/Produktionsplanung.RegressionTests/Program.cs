@@ -17,6 +17,10 @@ internal static class Program
         app.InitializeComponent();
         var tests = new (string Name, Action Run)[]
         {
+            ("Demo seeding preserves cleared data and disabled shift models", DemoSeederPreservesChanges),
+            ("Day planning only offers shifts allowed for workstation and date", DayPlanningAllowedShifts),
+            ("Order status edits preserve existing production run slots", OrderStatusKeepsRunSlots),
+            ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
             ("Workstation with orders cannot be deleted", WorkstationDeletion),
@@ -72,6 +76,119 @@ internal static class Program
     private static void Near(double actual, double expected) =>
         Check(Math.Abs(actual - expected) < 0.000001, $"Expected {expected}, got {actual}");
 
+    private static void DemoSeederPreservesChanges()
+    {
+        int workstationId;
+        using (var db = new AppDbContext())
+        {
+            var workstation = db.Workstations.OrderBy(x => x.Id).First();
+            workstationId = workstation.Id;
+            workstation.IsActive = false;
+            db.WorkstationShiftRules.RemoveRange(
+                db.WorkstationShiftRules.Where(x => x.WorkstationId == workstationId));
+            db.ProductionOrders.RemoveRange(db.ProductionOrders);
+            db.SaveChanges();
+
+            DemoDataSeeder.Seed(db);
+
+            Check(!db.WorkstationShiftRules.Any(x => x.WorkstationId == workstationId),
+                "Seeder recreated deliberately removed workstation shift rules");
+            Check(!db.ProductionOrders.Any(),
+                "Seeder recreated demo production orders after user cleared them");
+        }
+
+        var vm = new WorkstationManagementViewModel();
+        vm.SelectedWorkstation = vm.Workstations.Single(x => x.Id == workstationId);
+        Check(vm.ShiftRules.All(x => !x.IsEnabled),
+            "Workstation editor interpreted zero saved rules as all shifts enabled");
+    }
+
+    private static void DayPlanningAllowedShifts()
+    {
+        var date = new DateTime(2030, 1, 14); // Monday
+        int workstationId;
+        int allowedShiftId;
+        using (var db = new AppDbContext())
+        {
+            var workstation = db.Workstations.OrderBy(x => x.Id).First();
+            var shift = db.Shifts.Single(x => x.Name == "Frühschicht");
+            workstationId = workstation.Id;
+            allowedShiftId = shift.Id;
+
+            db.WorkstationShiftRules.RemoveRange(
+                db.WorkstationShiftRules.Where(x => x.WorkstationId == workstationId));
+            db.WorkstationShiftRules.Add(new WorkstationShiftRule
+            {
+                WorkstationId = workstationId,
+                ShiftId = allowedShiftId,
+                Monday = true,
+                Tuesday = false,
+                Wednesday = false,
+                Thursday = false,
+                Friday = false,
+                Saturday = false,
+                Sunday = false
+            });
+            db.SaveChanges();
+        }
+
+        var vm = new DayPlanningViewModel { SelectedDate = date };
+        vm.SelectedWorkstation = vm.Workstations.Single(x => x.Id == workstationId);
+        Check(vm.Shifts.Count == 1 && vm.Shifts[0].Id == allowedShiftId,
+            "Day planning exposes shifts that are not allowed for the workstation/date");
+    }
+
+    private static void OrderStatusKeepsRunSlots()
+    {
+        int orderId;
+        List<(int Id, int Sequence, DateTime Date, int ShiftId)> before;
+        using (var db = new AppDbContext())
+        {
+            var order = db.ProductionOrders.OrderBy(x => x.Id).First();
+            orderId = order.Id;
+            before = db.ProductionRunSlots.AsNoTracking()
+                .Where(x => x.ProductionOrderId == orderId)
+                .OrderBy(x => x.SequenceNumber)
+                .AsEnumerable()
+                .Select(x => (x.Id, x.SequenceNumber, x.Date, x.ShiftId))
+                .ToList();
+        }
+
+        var vm = new ProductionOrderManagementViewModel();
+        vm.SelectedOrder = vm.Orders.Single(x => x.Id == orderId);
+        vm.Status = "Läuft";
+        vm.Priority = "Dringend";
+        vm.Comment = "Nur Statusänderung";
+        vm.SaveCommand.Execute(null);
+
+        using var check = new AppDbContext();
+        var after = check.ProductionRunSlots.AsNoTracking()
+            .Where(x => x.ProductionOrderId == orderId)
+            .OrderBy(x => x.SequenceNumber)
+            .AsEnumerable()
+            .Select(x => (x.Id, x.SequenceNumber, x.Date, x.ShiftId))
+            .ToList();
+        Check(before.SequenceEqual(after), "Status-only order edit rebuilt production run slots");
+        Check(check.ProductionOrders.Single(x => x.Id == orderId).Status == "Läuft",
+            "Status-only order edit was not saved");
+    }
+
+    private static void CalendarWeekendFilter()
+    {
+        var vm = new PlanningCalendarViewModel { SelectedDate = new DateTime(2030, 1, 15) };
+        vm.ShowWeekends = false;
+        Check(vm.WeekDays.Count == 5, "Week view still shows weekend columns");
+        Check(vm.MonthColumnCount == 5, "Month view did not switch to five columns");
+        Check(vm.MonthDays.Count == 30, "Six-week month grid did not reduce to 30 weekday cells");
+        Check(vm.MonthDays.All(x => x.Date.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday),
+            "Month view still contains weekend days while weekend filter is disabled");
+
+        vm.ShowWeekends = true;
+        Check(vm.WeekDays.Count == 7, "Week view did not restore weekends");
+        Check(vm.MonthColumnCount == 7 && vm.MonthDays.Count == 42,
+            "Month view did not restore the seven-column 42-day grid");
+    }
+
     private static void QuerySmoke()
     {
         using (var db = new AppDbContext())
@@ -102,6 +219,7 @@ internal static class Program
         _ = new AnalyticsView();
         _ = new DayPlanningView();
         _ = new WeekPlanningView();
+        _ = new PlanningCalendarView();
         _ = new ProductionActualView();
         _ = new ProductionOrdersView();
         _ = new EmployeesView();
