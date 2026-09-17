@@ -1,6 +1,6 @@
-# OpsCompact – Planen · Produzieren · Verbessern
+# SolutionCompakt – Planen · Organisieren · Voranbringen
 
-OpsCompact ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung mit integrierten KPIs, OEE, Kalender, Skills und Betriebsdaten.
+SolutionCompakt ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung mit integrierten KPIs, OEE, Kalender, Skills und Betriebsdaten.
 
 ## Kernfunktionen
 
@@ -19,6 +19,12 @@ OpsCompact ist eine native Windows-Anwendung für Personal-, Arbeits- und Produk
 - Backup / Restore und CSV-Komplettexport
 - Installer, self-contained Single-EXE und echter USB-/Portable-Modus
 
+## Branding
+
+Das vollständige SolutionCompakt-Logo sowie das daraus abgeleitete Multi-Resolution-Windows-Icon sind im Projekt eingebettet. Das Icon wird für Anwendung, Fenster, Taskleiste, Installer und Verknüpfungen verwendet.
+
+**Planen · Organisieren · Voranbringen – Einfach effizienter.**
+
 ## Technologie
 
 - C# / .NET 8
@@ -36,15 +42,13 @@ Voraussetzungen:
 - .NET 8 SDK
 - Visual Studio 2022 mit Workload **.NET-Desktopentwicklung** oder `dotnet` CLI
 
-Das Windows-Icon liegt als versioniertes Multi-Resolution-ICO direkt im Projekt und wird sowohl für `OpsCompact.exe` als auch für den Installer verwendet.
-
 ```powershell
 dotnet restore
 dotnet build Produktionsplanung.sln
 dotnet run --project src/Produktionsplanung.App/Produktionsplanung.App.csproj
 ```
 
-Die erzeugte Anwendung heißt `OpsCompact.exe`.
+Die erzeugte Anwendung heißt `SolutionCompakt.exe`.
 
 ## Daten und Kompatibilität
 
@@ -52,17 +56,17 @@ Für bestehende Installationen bleibt der bisherige lokale Datenpfad bewusst erh
 
 `%LOCALAPPDATA%\Produktionsplanung\Data\produktionsplanung.db`
 
-Dadurch bleiben vorhandene Daten beim Wechsel auf den Namen OpsCompact erhalten. Im USB-Modus liegen Datenbank, Einstellungen, Backups und Exporte beim Programmordner.
+Dadurch bleiben vorhandene Daten auch nach der Umbenennung von OpsCompact auf SolutionCompakt erhalten. Im USB-Modus liegen Datenbank, Einstellungen, Backups und Exporte beim Programmordner.
 
-Die Backup-Endung `.kpibackup` bleibt ebenfalls erhalten, damit ältere Backups weiter eingelesen werden können. Neue Backups, Exportordner, Setup-Dateien und Release-Artefakte tragen den Namen **OpsCompact**.
+Die Backup-Endung `.kpibackup` bleibt ebenfalls erhalten, damit ältere Backups weiter eingelesen werden können. Neue Backups, Exportordner, Setup-Dateien und Release-Artefakte tragen den Namen **SolutionCompakt**.
 
 ## Release-Artefakte
 
 Ein Windows-Build erzeugt:
 
-- `OpsCompact.exe` als self-contained Single-EXE
-- `OpsCompact-USB-Portable-<Version>-win-x64`
-- `OpsCompact-Windows-<Version>-win-x64`
-- `OpsCompact-Setup-<Version>-win-x64.exe`
+- `SolutionCompakt.exe` als self-contained Single-EXE
+- `SolutionCompakt-USB-Portable-<Version>-win-x64`
+- `SolutionCompakt-Windows-<Version>-win-x64`
+- `SolutionCompakt-Setup-<Version>-win-x64.exe`
 
 Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Installer, portablem ZIP, Single-EXE und USB-Paket.
