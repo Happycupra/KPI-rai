@@ -165,6 +165,22 @@ public static class AuthenticationService
         return (true, "Anmeldung erfolgreich.", user);
     }
 
+    public static (bool Success, string Message) VerifyCurrentPassword(string password)
+    {
+        var current = SessionService.CurrentUser;
+        if (current is null)
+            return (false, "Keine aktive Sitzung.");
+
+        using var db = new AppDbContext();
+        var user = db.UserAccounts.AsNoTracking().FirstOrDefault(x => x.Id == current.Id);
+        if (user is null || !user.IsActive)
+            return (false, "Das aktuelle Benutzerkonto ist nicht verfügbar.");
+
+        return PasswordService.Verify(password, user.PasswordHash, user.PasswordSalt)
+            ? (true, "Passwort bestätigt.")
+            : (false, "Das aktuelle Passwort ist falsch.");
+    }
+
     public static (bool Success, string Message) ChangeOwnPassword(string currentPassword, string newPassword)
     {
         var current = SessionService.CurrentUser;
