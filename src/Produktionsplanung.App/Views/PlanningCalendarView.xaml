@@ -53,7 +53,6 @@
                         </StackPanel>
                         <Border Grid.Column="3" Background="White" BorderBrush="#D7E2EE" BorderThickness="1"
                                 CornerRadius="10" Padding="7,2" VerticalAlignment="Top" Margin="8,0,0,0">
-                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="#334155" FontWeight="SemiBold"/>
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Visibility" Value="Visible"/>
@@ -64,6 +63,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="#334155" FontWeight="SemiBold"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -98,7 +98,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Header / navigation -->
         <Grid Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -113,24 +112,39 @@
                 <Button Content="Heute" Height="34" Padding="14,0" Command="{Binding TodayCommand}" Margin="0,0,6,0"/>
                 <Button Content="›" Width="38" Height="34" Command="{Binding NextCommand}" Margin="0,0,14,0"/>
 
-                <Button Content="Tag" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowDayCommand}">
+                <Button Content="Tag" Command="{Binding ShowDayCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
-                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="0">
+                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="Woche" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowWeekCommand}">
+                <Button Content="Woche" Command="{Binding ShowWeekCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
-                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="1">
+                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="Monat" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowMonthCommand}">
+                <Button Content="Monat" Command="{Binding ShowMonthCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
-                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="2">
+                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </DataTrigger>
+                            </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
@@ -139,7 +153,6 @@
             </WrapPanel>
         </Grid>
 
-        <!-- KPI strip -->
         <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/>
@@ -170,7 +183,6 @@
             </Border>
         </Grid>
 
-        <!-- Main workspace -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="238"/>
@@ -180,7 +192,6 @@
                 <ColumnDefinition Width="292"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left navigation / filters -->
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
@@ -211,9 +222,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- Center calendar -->
             <Grid Grid.Column="2">
-                <!-- Day -->
                 <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
@@ -225,26 +234,21 @@
                                 <StackPanel><TextBlock Text="Tagesagenda" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Ganztägige Ereignisse und zeitlich geplante Einsätze" FontSize="10.5" Foreground="#829AB1"/></StackPanel>
                                 <Button Grid.Column="1" Content="Tagesplanung" Padding="13,6" Click="OpenDayPlanning_Click"/>
                             </Grid>
-
                             <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,3,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
                             <TextBlock Text="Keine ganztägigen Einträge." Foreground="#9FB3C8" FontSize="10.5" Margin="0,2,0,10">
                                 <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
-
                             <Border Height="1" Background="#E7EEF5" Margin="0,4,0,12"/>
                             <TextBlock Text="ZEITPLAN" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,0,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
-                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,4,0,0">
-                                <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Foreground="#94A3B8" HorizontalAlignment="Center">
-                                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
-                                </TextBlock>
-                            </Border>
+                            <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,12,0,0">
+                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
 
-                <!-- Week -->
                 <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
@@ -259,7 +263,7 @@
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
                                                     BorderThickness="0,0,0,1" BorderBrush="#E7EEF5" Background="#F8FBFF" Padding="8" HorizontalContentAlignment="Stretch">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="#829AB1" HorizontalAlignment="Center" TextTransform="Uppercase"/>
+                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="#829AB1" HorizontalAlignment="Center"/>
                                                     <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="#102A43" HorizontalAlignment="Center"/>
                                                     <TextBlock Text="{Binding EntryCountText}" FontSize="9.5" Foreground="#627D98" HorizontalAlignment="Center"/>
                                                 </StackPanel>
@@ -279,7 +283,6 @@
                     </ScrollViewer>
                 </Border>
 
-                <!-- Month -->
                 <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
@@ -318,36 +321,33 @@
                 </Border>
             </Grid>
 
-            <!-- Right details / people -->
             <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
-                        <Grid>
-                            <StackPanel>
-                                <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
-                                <Border Margin="0,11,0,0">
-                                    <Border.Style>
-                                        <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
-                                    </Border.Style>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding SelectedEntry.Title}" FontSize="17" FontWeight="SemiBold" Foreground="#102A43" TextWrapping="Wrap" Margin="0,3,0,2"/>
-                                        <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="#627D98"/>
-                                        <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                                        <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="#627D98" TextWrapping="Wrap" Margin="0,5,0,12"/>
-                                        <Button Content="Öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
-                                        <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
-                                    </StackPanel>
-                                </Border>
-                                <StackPanel Margin="0,14,0,4">
-                                    <StackPanel.Style>
-                                        <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
-                                    </StackPanel.Style>
-                                    <TextBlock Text="Noch nichts ausgewählt" Foreground="#627D98" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="#829AB1" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        <StackPanel>
+                            <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
+                            <Border Margin="0,11,0,0">
+                                <Border.Style>
+                                    <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding SelectedEntry.Title}" FontSize="17" FontWeight="SemiBold" Foreground="#102A43" TextWrapping="Wrap" Margin="0,3,0,2"/>
+                                    <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="#627D98"/>
+                                    <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                    <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="#627D98" TextWrapping="Wrap" Margin="0,5,0,12"/>
+                                    <Button Content="Öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
+                                    <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
                                 </StackPanel>
+                            </Border>
+                            <StackPanel Margin="0,14,0,4">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="Noch nichts ausgewählt" Foreground="#627D98" FontWeight="SemiBold"/>
+                                <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="#829AB1" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
                     </Border>
 
                     <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14">
