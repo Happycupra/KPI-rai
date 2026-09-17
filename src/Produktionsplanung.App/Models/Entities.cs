@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Produktionsplanung.App.Models;
 
 public class Employee
@@ -42,6 +44,10 @@ public class Workstation
     public Qualification? RequiredQualification { get; set; }
     public int RequiredQualificationLevel { get; set; }
     public bool IsActive { get; set; } = true;
+    public ICollection<WorkstationShiftRule> ShiftRules { get; set; } = new List<WorkstationShiftRule>();
+
+    [NotMapped]
+    public string ShiftModelSummary { get; set; } = "Nicht konfiguriert";
 }
 
 public class Shift
@@ -51,6 +57,22 @@ public class Shift
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public int BreakMinutes { get; set; }
+}
+
+public class WorkstationShiftRule
+{
+    public int Id { get; set; }
+    public int WorkstationId { get; set; }
+    public Workstation Workstation { get; set; } = null!;
+    public int ShiftId { get; set; }
+    public Shift Shift { get; set; } = null!;
+    public bool Monday { get; set; } = true;
+    public bool Tuesday { get; set; } = true;
+    public bool Wednesday { get; set; } = true;
+    public bool Thursday { get; set; } = true;
+    public bool Friday { get; set; } = true;
+    public bool Saturday { get; set; }
+    public bool Sunday { get; set; }
 }
 
 public class Absence
