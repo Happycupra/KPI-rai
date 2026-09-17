@@ -1,5 +1,7 @@
 # Anforderungen – SolutionCompakt Produktionsplanung
 
+**Produktname:** SolutionCompakt
+
 Diese Datei fasst die Zielarchitektur und den geplanten Funktionsumfang der Windows-Anwendung zusammen.
 
 ## Zielplattform
