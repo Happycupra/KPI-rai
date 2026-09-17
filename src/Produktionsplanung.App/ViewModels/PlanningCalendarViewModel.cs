@@ -13,11 +13,11 @@ public partial class PlanningCalendarViewModel : ObservableObject
 {
     private readonly CultureInfo culture = CultureInfo.GetCultureInfo("de-CH");
     private List<PlanningAssignment> assignments = new();
-    private List<ProductionOrder> orders = new();
+    private List<ProductionRunSlot> runSlots = new();
     private List<Absence> absences = new();
     private List<OperatingCalendarDay> operatingDays = new();
     private List<Employee> employees = new();
-    private Dictionary<int, ProductionOrderCoverageRow> coverageByOrderId = new();
+    private Dictionary<int, ProductionOrderCoverageRow> coverageByRunSlotId = new();
 
     public ObservableCollection<CalendarEntryRow> DayAllDayEntries { get; } = new();
     public ObservableCollection<CalendarEntryRow> DayTimedEntries { get; } = new();
@@ -53,8 +53,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
     public string SelectedDateText => SelectedDate.ToString("dddd, dd. MMMM", culture);
     public string SelectedDateShortText => SelectedDate.ToString("dd.MM.yyyy", culture);
     public string DayCoverageText => UnderstaffedOrderCount == 0
-        ? "Alle offenen Aufträge sind personell gedeckt oder haben keinen Fehlbestand."
-        : $"{UnderstaffedOrderCount} Auftrag/Aufträge sind noch unterbesetzt.";
+        ? "Alle Produktionsschichten sind personell gedeckt oder haben keinen Fehlbestand."
+        : $"{UnderstaffedOrderCount} Produktionsschicht(en) sind noch unterbesetzt.";
     public string VisibleEntryText
     {
         get
@@ -146,6 +146,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
     {
         var (rangeStart, rangeEnd) = GetLoadRange();
         using var db = new AppDbContext();
+        ProductionScheduleService.EnsureMissingRunSlots(db);
 
         assignments = db.PlanningAssignments.AsNoTracking()
             .Include(x => x.Employee)
@@ -154,10 +155,11 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Where(x => x.Date.Date >= rangeStart && x.Date.Date <= rangeEnd)
             .ToList();
 
-        orders = db.ProductionOrders.AsNoTracking()
-            .Include(x => x.Workstation)
+        runSlots = db.ProductionRunSlots.AsNoTracking()
             .Include(x => x.Shift)
-            .Where(x => x.PlannedDate.Date >= rangeStart && x.PlannedDate.Date <= rangeEnd)
+            .Include(x => x.ProductionOrder)
+                .ThenInclude(x => x.Workstation)
+            .Where(x => x.Date.Date >= rangeStart && x.Date.Date <= rangeEnd)
             .ToList();
 
         absences = db.Absences.AsNoTracking()
@@ -175,8 +177,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .ThenBy(x => x.FirstName)
             .ToList();
 
-        coverageByOrderId = ProductionOrderCoverageService.Load(rangeStart, rangeEnd)
-            .ToDictionary(x => x.OrderId);
+        coverageByRunSlotId = ProductionOrderCoverageService.Load(rangeStart, rangeEnd)
+            .Where(x => x.RunSlotId > 0)
+            .ToDictionary(x => x.RunSlotId);
 
         RebuildViews();
     }
@@ -308,26 +311,26 @@ public partial class PlanningCalendarViewModel : ObservableObject
             });
         }
 
-        foreach (var x in orders.Where(x => x.PlannedDate.Date == date.Date))
+        foreach (var slot in runSlots.Where(x => x.Date.Date == date.Date))
         {
-            var start = x.PlannedStart ?? x.Shift?.StartTime ?? TimeSpan.FromHours(12);
-            coverageByOrderId.TryGetValue(x.Id, out var coverage);
+            var order = slot.ProductionOrder;
+            coverageByRunSlotId.TryGetValue(slot.Id, out var coverage);
             var isUnderstaffed = coverage?.CoverageStatus == "Unterbesetzt";
             result.Add(new CalendarEntryRow
             {
                 Date = date.Date,
-                EntryId = x.Id,
+                EntryId = slot.Id,
                 EntryType = "Auftrag",
                 TypeLabel = isUnderstaffed ? "AUFTRAG · PERSONAL FEHLT" : "AUFTRAG",
                 Accent = isUnderstaffed ? "#D97706" : "#0F766E",
                 Background = isUnderstaffed ? "#FFF7ED" : "#ECFDF5",
-                StartTime = start,
-                SortTime = start,
-                TimeText = x.PlannedStart.HasValue ? $"ab {x.PlannedStart.Value:hh\\:mm}" : x.Shift?.Name ?? "Ganztägig",
-                Title = $"{x.OrderNumber} · {x.Product}",
-                Subtitle = $"{x.Workstation.Name} · {x.Shift?.Name ?? "ohne Schicht"}",
-                BadgeText = coverage?.CoverageText ?? $"0/{x.RequiredStaff}",
-                Detail = $"{x.Status} · Priorität {x.Priority} · Personal {coverage?.CoverageText ?? $"0/{x.RequiredStaff}"}"
+                StartTime = slot.Shift.StartTime,
+                SortTime = slot.Shift.StartTime,
+                TimeText = $"{slot.Shift.StartTime:hh\\:mm}–{slot.Shift.EndTime:hh\\:mm}",
+                Title = $"{order.OrderNumber} · {order.Product}",
+                Subtitle = $"{order.Workstation.Name} · {slot.Shift.Name} · Lauf {slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}",
+                BadgeText = coverage?.CoverageText ?? $"0/{order.RequiredStaff}",
+                Detail = $"{order.Status} · Priorität {order.Priority} · Personal {coverage?.CoverageText ?? $"0/{order.RequiredStaff}"} · Produktionsschicht {slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}"
             });
         }
 
@@ -403,14 +406,14 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Select(x => x.EmployeeId)
             .Distinct()
             .Count();
-        OrderCount = orders.Count(x => x.PlannedDate.Date == date);
+        OrderCount = runSlots.Count(x => x.Date.Date == date && x.ProductionOrder.Status != "Abgeschlossen");
         AbsenceCount = absences
             .Where(x => x.StartDate.Date <= date && x.EndDate.Date >= date)
             .Select(x => x.EmployeeId)
             .Distinct()
             .Count();
         AvailableEmployeeCount = Math.Max(0, employees.Count - AbsenceCount);
-        UnderstaffedOrderCount = coverageByOrderId.Values.Count(x =>
+        UnderstaffedOrderCount = coverageByRunSlotId.Values.Count(x =>
             x.Date.Date == date && x.CoverageStatus == "Unterbesetzt");
 
         OnPropertyChanged(nameof(DayCoverageText));
