@@ -118,10 +118,23 @@ public class ProductionOrder
     public Workstation Workstation { get; set; } = null!;
     public int? ShiftId { get; set; }
     public Shift? Shift { get; set; }
+    public int PlannedShiftCount { get; set; } = 1;
     public int RequiredStaff { get; set; }
     public string Status { get; set; } = "Geplant";
     public string? Comment { get; set; }
+    public ICollection<ProductionRunSlot> RunSlots { get; set; } = new List<ProductionRunSlot>();
     public ICollection<ProductionActual> Actuals { get; set; } = new List<ProductionActual>();
+}
+
+public class ProductionRunSlot
+{
+    public int Id { get; set; }
+    public int ProductionOrderId { get; set; }
+    public ProductionOrder ProductionOrder { get; set; } = null!;
+    public int SequenceNumber { get; set; }
+    public DateTime Date { get; set; }
+    public int ShiftId { get; set; }
+    public Shift Shift { get; set; } = null!;
 }
 
 public class ProductionActual
