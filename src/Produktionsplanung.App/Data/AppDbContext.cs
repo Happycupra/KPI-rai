@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkTimeEntry> WorkTimeEntries => Set<WorkTimeEntry>();
     public DbSet<PlanningAssignment> PlanningAssignments => Set<PlanningAssignment>();
     public DbSet<ProductionOrder> ProductionOrders => Set<ProductionOrder>();
+    public DbSet<ProductionRunSlot> ProductionRunSlots => Set<ProductionRunSlot>();
     public DbSet<ProductionActual> ProductionActuals => Set<ProductionActual>();
     public DbSet<DowntimeEntry> DowntimeEntries => Set<DowntimeEntry>();
     public DbSet<UserAccount> UserAccounts => Set<UserAccount>();
@@ -49,6 +50,19 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProductionOrder>().HasIndex(x => new { x.PlannedDate, x.WorkstationId, x.ShiftId });
         modelBuilder.Entity<ProductionOrder>().HasOne(x => x.Workstation).WithMany().HasForeignKey(x => x.WorkstationId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<ProductionOrder>().HasOne(x => x.Shift).WithMany().HasForeignKey(x => x.ShiftId).OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<ProductionRunSlot>().HasIndex(x => new { x.ProductionOrderId, x.SequenceNumber }).IsUnique();
+        modelBuilder.Entity<ProductionRunSlot>().HasIndex(x => new { x.Date, x.ShiftId });
+        modelBuilder.Entity<ProductionRunSlot>()
+            .HasOne(x => x.ProductionOrder)
+            .WithMany(x => x.RunSlots)
+            .HasForeignKey(x => x.ProductionOrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ProductionRunSlot>()
+            .HasOne(x => x.Shift)
+            .WithMany()
+            .HasForeignKey(x => x.ShiftId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ProductionActual>().HasIndex(x => new { x.ProductionOrderId, x.Date });
         modelBuilder.Entity<ProductionActual>().HasOne(x => x.ProductionOrder).WithMany(x => x.Actuals).HasForeignKey(x => x.ProductionOrderId).OnDelete(DeleteBehavior.Cascade);
