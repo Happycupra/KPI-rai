@@ -54,6 +54,7 @@ public partial class MainWindow : Window
     public void OpenDayPlanning(DateTime date) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.DayPlanning, date: date.Date)); }
     public void OpenWorkTimeCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
     public void OpenEmployee(int employeeId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees, employeeId: employeeId)); }
+    public void OpenProductionOrder(int productionOrderId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders, productionOrderId: productionOrderId)); }
 
     public void OpenEmployeeQuickCard(int employeeId, DateTime? contextDate = null)
     {
@@ -64,13 +65,18 @@ public partial class MainWindow : Window
         employeeQuickCardWindow.Show();
     }
 
-    private NavigationEntry CreateEntry(NavigationRoute route, DateTime? date = null, int? employeeId = null) => route switch
+    private NavigationEntry CreateEntry(
+        NavigationRoute route,
+        DateTime? date = null,
+        int? employeeId = null,
+        int? productionOrderId = null) => route switch
     {
         NavigationRoute.Dashboard => new(route, "Dashboard", nameof(DashboardButton), () => new DashboardView()),
         NavigationRoute.PlanningCalendar => new(route, "Planungskalender", nameof(PlanningCalendarButton), () => new PlanningCalendarView()),
-        NavigationRoute.DayPlanning => new(route, $"Tagesplanung · {(date ?? DateTime.Today):dd.MM.yyyy}", nameof(DayPlanningButton), () => new DayPlanningView((date ?? DateTime.Today).Date), date?.Date),
+        NavigationRoute.DayPlanning => new(route, $"Tagesplanung · {(date ?? DateTime.Today):dd.MM.yyyy}", nameof(DayPlanningButton), () => new DayPlanningView((date ?? DateTime.Today).Date), Date: date?.Date),
         NavigationRoute.WeekPlanning => new(route, "Wochenplanung", nameof(WeekPlanningButton), () => new WeekPlanningView()),
         NavigationRoute.WorkTimeCalendar => new(route, "Arbeitszeit / Betrieb", nameof(WorkTimeCalendarButton), () => new WorkTimeCalendarView()),
+        NavigationRoute.ProductionOrders when productionOrderId.HasValue => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView(productionOrderId.Value), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
         NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView()),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
@@ -142,7 +148,8 @@ public partial class MainWindow : Window
         string ButtonName,
         Func<object> CreateContent,
         DateTime? Date = null,
-        int? EmployeeId = null)
+        int? EmployeeId = null,
+        int? ProductionOrderId = null)
     {
         private object? content;
         public object GetContent() => content ??= CreateContent();
