@@ -4,7 +4,7 @@
         Title="Mitarbeiter" Width="440" MinWidth="420" Height="760" MinHeight="620"
         WindowStartupLocation="Manual" ResizeMode="CanResizeWithGrip"
         Background="#F8FAFC" ShowInTaskbar="False"
-        Icon="/Produktionsplanung.App;component/Assets/OpsCompact.ico">
+        Icon="{StaticResource SolutionCompaktIcon}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
