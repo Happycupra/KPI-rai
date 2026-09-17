@@ -1,8 +1,8 @@
-# KPI-rai – Versionen und Releases
+# SolutionCompakt – Versionen und Releases
 
 ## Versionsschema
 
-KPI-rai verwendet Semantic Versioning im Format `MAJOR.MINOR.PATCH`.
+SolutionCompakt verwendet Semantic Versioning im Format `MAJOR.MINOR.PATCH`.
 
 - `MAJOR`: inkompatible Änderungen an Datenmodell/Arbeitsweise
 - `MINOR`: neue Funktionen bei grundsätzlich kompatibler Nutzung
@@ -16,7 +16,8 @@ Jeder Push auf `main` baut automatisch:
 
 1. die WPF-Anwendung,
 2. einen self-contained Windows-x64-Publish inklusive .NET Runtime,
-3. den Windows-Installer `KPI-rai-Setup-<Version>-win-x64.exe`.
+3. eine portable Single-EXE und ein USB-Paket,
+4. den Windows-Installer `SolutionCompakt-Setup-<Version>-win-x64.exe`.
 
 Die Ergebnisse werden als GitHub-Actions-Artefakte bereitgestellt.
 
@@ -32,6 +33,8 @@ Der Workflow erzeugt automatisch:
 
 - den Windows-Installer,
 - ein portables Windows-x64-ZIP,
+- eine portable Single-EXE,
+- ein USB-/Portable-Paket,
 - eine GitHub Release mit automatisch generierten Release Notes.
 
 ## Versionsanzeige
