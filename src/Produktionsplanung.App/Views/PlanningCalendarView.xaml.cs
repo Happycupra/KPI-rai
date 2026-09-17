@@ -26,14 +26,14 @@ public partial class PlanningCalendarView : UserControl
 
     private void ApplySavedPreferences()
     {
-        var settings = AppSettingsService.Load();
-        viewModel.SelectedViewIndex = settings.CalendarSelectedViewIndex;
-        viewModel.SearchText = settings.CalendarSearchText;
-        viewModel.ShowAssignments = settings.CalendarShowAssignments;
-        viewModel.ShowOrders = settings.CalendarShowOrders;
-        viewModel.ShowAbsences = settings.CalendarShowAbsences;
-        viewModel.ShowOperatingCalendar = settings.CalendarShowOperatingCalendar;
-        viewModel.ShowWeekends = settings.CalendarShowWeekends;
+        var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        viewModel.SelectedViewIndex = preferences.CalendarSelectedViewIndex;
+        viewModel.SearchText = preferences.CalendarSearchText;
+        viewModel.ShowAssignments = preferences.CalendarShowAssignments;
+        viewModel.ShowOrders = preferences.CalendarShowOrders;
+        viewModel.ShowAbsences = preferences.CalendarShowAbsences;
+        viewModel.ShowOperatingCalendar = preferences.CalendarShowOperatingCalendar;
+        viewModel.ShowWeekends = preferences.CalendarShowWeekends;
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -51,15 +51,15 @@ public partial class PlanningCalendarView : UserControl
             nameof(PlanningCalendarViewModel.ShowWeekends)))
             return;
 
-        AppSettingsService.Update(settings =>
+        AppSettingsService.UpdateCurrentUserPreferences(preferences =>
         {
-            settings.CalendarSelectedViewIndex = viewModel.SelectedViewIndex;
-            settings.CalendarSearchText = viewModel.SearchText;
-            settings.CalendarShowAssignments = viewModel.ShowAssignments;
-            settings.CalendarShowOrders = viewModel.ShowOrders;
-            settings.CalendarShowAbsences = viewModel.ShowAbsences;
-            settings.CalendarShowOperatingCalendar = viewModel.ShowOperatingCalendar;
-            settings.CalendarShowWeekends = viewModel.ShowWeekends;
+            preferences.CalendarSelectedViewIndex = viewModel.SelectedViewIndex;
+            preferences.CalendarSearchText = viewModel.SearchText;
+            preferences.CalendarShowAssignments = viewModel.ShowAssignments;
+            preferences.CalendarShowOrders = viewModel.ShowOrders;
+            preferences.CalendarShowAbsences = viewModel.ShowAbsences;
+            preferences.CalendarShowOperatingCalendar = viewModel.ShowOperatingCalendar;
+            preferences.CalendarShowWeekends = viewModel.ShowWeekends;
         });
     }
 
