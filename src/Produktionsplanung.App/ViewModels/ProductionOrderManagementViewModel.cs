@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -13,6 +14,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     public ObservableCollection<ProductionOrderRow> Orders { get; } = new();
     public ObservableCollection<WorkstationOption> Workstations { get; } = new();
     public ObservableCollection<ShiftOption> Shifts { get; } = new();
+    public ObservableCollection<ProductionSchedulePreviewRow> RunSchedulePreview { get; } = new();
 
     public IReadOnlyList<string> Priorities { get; } = new[] { "Niedrig", "Normal", "Hoch", "Dringend" };
     public IReadOnlyList<string> Statuses { get; } = new[] { "Geplant", "Bereit", "Läuft", "Pausiert", "Abgeschlossen", "Problem" };
@@ -28,10 +30,15 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     [ObservableProperty] private DateTime plannedDate = DateTime.Today;
     [ObservableProperty] private WorkstationOption? selectedWorkstation;
     [ObservableProperty] private ShiftOption? selectedShift;
+    [ObservableProperty] private int plannedShiftCount = 1;
     [ObservableProperty] private int requiredStaff = 1;
     [ObservableProperty] private string status = "Geplant";
     [ObservableProperty] private string comment = string.Empty;
     [ObservableProperty] private string statusMessage = string.Empty;
+
+    public string RunScheduleSummary => PlannedShiftCount <= 1
+        ? "1 Schicht"
+        : $"{PlannedShiftCount} aufeinanderfolgende Schichten";
 
     public ProductionOrderManagementViewModel()
     {
@@ -53,10 +60,22 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         PlannedDate = value.PlannedDate;
         SelectedWorkstation = Workstations.FirstOrDefault(x => x.Id == value.WorkstationId);
         SelectedShift = Shifts.FirstOrDefault(x => x.Id == value.ShiftId);
+        PlannedShiftCount = Math.Max(1, value.PlannedShiftCount);
         RequiredStaff = value.RequiredStaff;
         Status = value.Status;
         Comment = value.Comment ?? string.Empty;
         StatusMessage = string.Empty;
+        RefreshRunSchedulePreview();
+    }
+
+    partial void OnPlannedDateChanged(DateTime value) => RefreshRunSchedulePreview();
+
+    partial void OnSelectedShiftChanged(ShiftOption? value) => RefreshRunSchedulePreview();
+
+    partial void OnPlannedShiftCountChanged(int value)
+    {
+        OnPropertyChanged(nameof(RunScheduleSummary));
+        RefreshRunSchedulePreview();
     }
 
     [RelayCommand]
@@ -72,10 +91,12 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         PlannedDate = DateTime.Today;
         SelectedWorkstation = Workstations.FirstOrDefault();
         SelectedShift = Shifts.FirstOrDefault();
+        PlannedShiftCount = 1;
         RequiredStaff = SelectedWorkstation is null ? 1 : Math.Max(1, GetDefaultRequiredStaff(SelectedWorkstation.Id));
         Status = "Geplant";
         Comment = string.Empty;
         StatusMessage = string.Empty;
+        RefreshRunSchedulePreview();
     }
 
     partial void OnSelectedWorkstationChanged(WorkstationOption? value)
@@ -114,6 +135,12 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             return;
         }
 
+        if (PlannedShiftCount is < 1 or > ProductionScheduleService.MaxPlannedShiftCount)
+        {
+            StatusMessage = $"Die Laufdauer muss zwischen 1 und {ProductionScheduleService.MaxPlannedShiftCount} Schichten liegen.";
+            return;
+        }
+
         if (SelectedWorkstation is null)
         {
             StatusMessage = "Bitte einen Arbeitsplatz auswählen.";
@@ -122,7 +149,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 
         if (SelectedShift is null)
         {
-            StatusMessage = "Bitte eine Schicht auswählen.";
+            StatusMessage = "Bitte eine Startschicht auswählen.";
             return;
         }
 
@@ -159,13 +186,18 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         entity.ShiftId = SelectedShift.Id;
         entity.PlannedStart = SelectedShift.StartTime;
         entity.PlannedEnd = SelectedShift.EndTime;
+        entity.PlannedShiftCount = PlannedShiftCount;
         entity.RequiredStaff = RequiredStaff;
         entity.Status = Status;
         entity.Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim();
 
         db.SaveChanges();
+        ProductionScheduleService.SyncRunSlots(db, entity);
+        db.SaveChanges();
         LoadOrders(entity.Id);
-        StatusMessage = "Produktionsauftrag gespeichert.";
+        StatusMessage = PlannedShiftCount == 1
+            ? "Produktionsauftrag gespeichert."
+            : $"Produktionsauftrag gespeichert und auf {PlannedShiftCount} Schichten verteilt.";
     }
 
     [RelayCommand]
@@ -211,6 +243,37 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         StatusMessage = "Produktionsaufträge aktualisiert.";
     }
 
+    private void RefreshRunSchedulePreview()
+    {
+        RunSchedulePreview.Clear();
+        if (SelectedShift is null || PlannedShiftCount <= 0)
+            return;
+
+        var shiftModels = Shifts.Select(x => new Shift
+        {
+            Id = x.Id,
+            Name = x.Name,
+            StartTime = x.StartTime,
+            EndTime = x.EndTime,
+            BreakMinutes = x.BreakMinutes
+        });
+
+        foreach (var slot in ProductionScheduleService.Build(
+                     PlannedDate,
+                     SelectedShift.Id,
+                     PlannedShiftCount,
+                     shiftModels))
+        {
+            RunSchedulePreview.Add(new ProductionSchedulePreviewRow
+            {
+                SequenceNumber = slot.SequenceNumber,
+                Date = slot.Date,
+                ShiftName = slot.ShiftName,
+                TimeText = slot.TimeText
+            });
+        }
+    }
+
     private void LoadReferenceData()
     {
         using var db = new AppDbContext();
@@ -236,6 +299,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 
         SelectedWorkstation = Workstations.FirstOrDefault(x => x.Id == workstationId) ?? Workstations.FirstOrDefault();
         SelectedShift = Shifts.FirstOrDefault(x => x.Id == shiftId) ?? Shifts.FirstOrDefault();
+        RefreshRunSchedulePreview();
     }
 
     private int GetDefaultRequiredStaff(int workstationId)
@@ -250,7 +314,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         var items = db.ProductionOrders.AsNoTracking()
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
+            .AsEnumerable()
             .OrderBy(x => x.PlannedDate)
             .ThenBy(x => x.Shift?.StartTime)
             .ThenBy(x => x.OrderNumber)
@@ -273,6 +337,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
                 WorkstationName = item.Workstation.Name,
                 ShiftId = item.ShiftId,
                 ShiftName = item.Shift?.Name ?? "Individuell",
+                PlannedShiftCount = Math.Max(1, item.PlannedShiftCount),
                 RequiredStaff = item.RequiredStaff,
                 Status = item.Status,
                 Comment = item.Comment
@@ -297,8 +362,19 @@ public class ProductionOrderRow
     public string WorkstationName { get; set; } = string.Empty;
     public int? ShiftId { get; set; }
     public string ShiftName { get; set; } = string.Empty;
+    public int PlannedShiftCount { get; set; } = 1;
     public int RequiredStaff { get; set; }
     public string Status { get; set; } = string.Empty;
     public string? Comment { get; set; }
     public string QuantityText => $"{Quantity:N0} {Unit}";
+    public string RunText => PlannedShiftCount == 1 ? "1 Schicht" : $"{PlannedShiftCount} Schichten";
+}
+
+public sealed class ProductionSchedulePreviewRow
+{
+    public int SequenceNumber { get; set; }
+    public DateTime Date { get; set; }
+    public string ShiftName { get; set; } = string.Empty;
+    public string TimeText { get; set; } = string.Empty;
+    public string DateText => Date.ToString("ddd dd.MM.");
 }
