@@ -5,9 +5,13 @@ namespace Produktionsplanung.App.Views;
 
 public partial class ProductionOrdersView : UserControl
 {
-    public ProductionOrdersView()
+    public ProductionOrdersView(int? selectedOrderId = null)
     {
         InitializeComponent();
-        DataContext = new ProductionOrderManagementViewModel();
+        var viewModel = new ProductionOrderManagementViewModel();
+        DataContext = viewModel;
+
+        if (selectedOrderId.HasValue)
+            viewModel.SelectedOrder = viewModel.Orders.FirstOrDefault(x => x.Id == selectedOrderId.Value);
     }
 }
