@@ -35,7 +35,36 @@ public partial class DayPlanningViewModel
     {
         OnPropertyChanged(nameof(WorkstationSkillRequirementText));
         RefreshAllowedShifts();
+        EnsureExistingAssignmentShiftVisible(value);
         RefreshEmployeeSuggestions();
+    }
+
+    private void EnsureExistingAssignmentShiftVisible(WorkstationOption? workstation)
+    {
+        if (workstation is null ||
+            SelectedAssignment?.ShiftId is not int shiftId ||
+            SelectedAssignment.WorkstationId != workstation.Id ||
+            Shifts.Any(x => x.Id == shiftId))
+            return;
+
+        // Ein bereits gespeicherter Einsatz kann nach einer späteren Änderung des Maschinen-
+        // Schichtmodells ausserhalb der aktuellen Freigabe liegen. Er muss beim Bearbeiten
+        // trotzdem mit seiner ursprünglichen Schicht angezeigt werden, statt stillschweigend
+        // auf die erste heute erlaubte Schicht umzuschalten. Speichern bleibt weiterhin durch
+        // SaveValidated blockiert, bis eine gültige Schicht gewählt wurde.
+        using var db = new AppDbContext();
+        var existingShift = db.Shifts.AsNoTracking().FirstOrDefault(x => x.Id == shiftId);
+        if (existingShift is null)
+            return;
+
+        Shifts.Add(new ShiftOption
+        {
+            Id = existingShift.Id,
+            Name = existingShift.Name,
+            StartTime = existingShift.StartTime,
+            EndTime = existingShift.EndTime,
+            BreakMinutes = existingShift.BreakMinutes
+        });
     }
 
     partial void OnSelectedShiftChanged(ShiftOption? value) => RefreshEmployeeSuggestions();
