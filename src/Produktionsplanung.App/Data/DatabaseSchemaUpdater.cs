@@ -11,6 +11,37 @@ public static class DatabaseSchemaUpdater
         EnsureColumn(db, "Workstations", "RequiredQualificationLevel", "INTEGER NOT NULL DEFAULT 0");
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_Workstations_RequiredQualificationId ON Workstations (RequiredQualificationId);");
 
+        var shiftRuleTableExisted = TableExists(db, "WorkstationShiftRules");
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS WorkstationShiftRules (
+                Id INTEGER NOT NULL CONSTRAINT PK_WorkstationShiftRules PRIMARY KEY AUTOINCREMENT,
+                WorkstationId INTEGER NOT NULL,
+                ShiftId INTEGER NOT NULL,
+                Monday INTEGER NOT NULL,
+                Tuesday INTEGER NOT NULL,
+                Wednesday INTEGER NOT NULL,
+                Thursday INTEGER NOT NULL,
+                Friday INTEGER NOT NULL,
+                Saturday INTEGER NOT NULL,
+                Sunday INTEGER NOT NULL,
+                CONSTRAINT FK_WorkstationShiftRules_Workstations_WorkstationId
+                    FOREIGN KEY (WorkstationId) REFERENCES Workstations (Id) ON DELETE CASCADE,
+                CONSTRAINT FK_WorkstationShiftRules_Shifts_ShiftId
+                    FOREIGN KEY (ShiftId) REFERENCES Shifts (Id) ON DELETE RESTRICT
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_WorkstationShiftRules_WorkstationId_ShiftId ON WorkstationShiftRules (WorkstationId, ShiftId);");
+        if (!shiftRuleTableExisted)
+        {
+            db.Database.ExecuteSqlRaw("""
+                INSERT INTO WorkstationShiftRules
+                    (WorkstationId, ShiftId, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
+                SELECT w.Id, s.Id, 1, 1, 1, 1, 1, 1, 1
+                FROM Workstations w
+                CROSS JOIN Shifts s;
+                """);
+        }
+
         db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS OperatingCalendarDays (
                 Id INTEGER NOT NULL CONSTRAINT PK_OperatingCalendarDays PRIMARY KEY AUTOINCREMENT,
@@ -158,6 +189,30 @@ public static class DatabaseSchemaUpdater
             """);
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_TimestampUtc ON AuditLogs (TimestampUtc);");
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_AuditLogs_Username ON AuditLogs (Username);");
+    }
+
+    private static bool TableExists(AppDbContext db, string tableName)
+    {
+        var connection = db.Database.GetDbConnection();
+        var closeAfter = connection.State != ConnectionState.Open;
+        if (closeAfter)
+            connection.Open();
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT COUNT(1) FROM sqlite_master WHERE type='table' AND name=$name;";
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "$name";
+            parameter.Value = tableName;
+            command.Parameters.Add(parameter);
+            return Convert.ToInt32(command.ExecuteScalar()) > 0;
+        }
+        finally
+        {
+            if (closeAfter)
+                connection.Close();
+        }
     }
 
     private static void EnsureColumn(AppDbContext db, string tableName, string columnName, string definition)
