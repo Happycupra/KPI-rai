@@ -10,21 +10,23 @@ public static class ProductionOrderCoverageService
         using var db = new AppDbContext();
         var start = startDate.Date;
         var end = endDate.Date;
+        ProductionScheduleService.EnsureMissingRunSlots(db);
 
-        var orders = db.ProductionOrders.AsNoTracking()
-            .Include(x => x.Workstation)
+        var slots = db.ProductionRunSlots.AsNoTracking()
             .Include(x => x.Shift)
-            .Where(x => x.PlannedDate.Date >= start &&
-                        x.PlannedDate.Date <= end &&
-                        x.Status != "Abgeschlossen")
+            .Include(x => x.ProductionOrder)
+                .ThenInclude(x => x.Workstation)
+            .Where(x => x.Date.Date >= start &&
+                        x.Date.Date <= end &&
+                        x.ProductionOrder.Status != "Abgeschlossen")
             .AsEnumerable()
-            .OrderBy(x => x.PlannedDate)
-            .ThenBy(x => x.Shift?.StartTime)
-            .ThenBy(x => x.Workstation.Name)
-            .ThenBy(x => x.OrderNumber)
+            .OrderBy(x => x.Date)
+            .ThenBy(x => x.Shift.StartTime)
+            .ThenBy(x => x.ProductionOrder.Workstation.Name)
+            .ThenBy(x => x.ProductionOrder.OrderNumber)
             .ToList();
 
-        if (orders.Count == 0)
+        if (slots.Count == 0)
             return new List<ProductionOrderCoverageRow>();
 
         var assignments = db.PlanningAssignments.AsNoTracking()
@@ -32,12 +34,13 @@ public static class ProductionOrderCoverageService
             .ToList();
 
         var rows = new List<ProductionOrderCoverageRow>();
-        foreach (var order in orders)
+        foreach (var slot in slots)
         {
+            var order = slot.ProductionOrder;
             var plannedStaff = assignments
-                .Where(x => x.Date.Date == order.PlannedDate.Date &&
+                .Where(x => x.Date.Date == slot.Date.Date &&
                             x.WorkstationId == order.WorkstationId &&
-                            x.ShiftId == order.ShiftId)
+                            x.ShiftId == slot.ShiftId)
                 .Select(x => x.EmployeeId)
                 .Distinct()
                 .Count();
@@ -51,14 +54,16 @@ public static class ProductionOrderCoverageService
 
             rows.Add(new ProductionOrderCoverageRow
             {
+                RunSlotId = slot.Id,
+                SequenceNumber = slot.SequenceNumber,
                 OrderId = order.Id,
                 OrderNumber = order.OrderNumber,
                 Product = order.Product,
-                Date = order.PlannedDate.Date,
+                Date = slot.Date.Date,
                 WorkstationId = order.WorkstationId,
                 WorkstationName = order.Workstation.Name,
-                ShiftId = order.ShiftId,
-                ShiftName = order.Shift?.Name ?? "Individuell",
+                ShiftId = slot.ShiftId,
+                ShiftName = slot.Shift.Name,
                 RequiredStaff = order.RequiredStaff,
                 PlannedStaff = plannedStaff,
                 Difference = difference,
@@ -74,6 +79,8 @@ public static class ProductionOrderCoverageService
 
 public class ProductionOrderCoverageRow
 {
+    public int RunSlotId { get; set; }
+    public int SequenceNumber { get; set; }
     public int WorkstationId { get; set; }
     public int OrderId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
@@ -90,4 +97,5 @@ public class ProductionOrderCoverageRow
     public string OrderStatus { get; set; } = string.Empty;
     public string CoverageText => $"{PlannedStaff}/{RequiredStaff}";
     public string DifferenceText => Difference < 0 ? $"{Difference}" : $"+{Difference}";
+    public string RunText => SequenceNumber > 0 ? $"Schicht {SequenceNumber}" : string.Empty;
 }
