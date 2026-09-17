@@ -3,147 +3,273 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
     <UserControl.Resources>
-        <Style x:Key="ModeButton" TargetType="Button">
-            <Setter Property="Padding" Value="14,7"/>
+        <Style x:Key="CalendarModeButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="72"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
-            <Setter Property="MinWidth" Value="76"/>
         </Style>
+
+        <Style x:Key="CalendarCardButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <DataTemplate x:Key="CalendarEntryTemplate">
-            <Border BorderBrush="{Binding Accent}" BorderThickness="4,0,0,0" Background="#F8FAFC"
-                    CornerRadius="6" Padding="8,6" Margin="0,0,0,6">
-                <StackPanel>
-                    <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="#64748B"/>
-                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#0F172A" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Subtitle}" FontSize="11" Foreground="#475569" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
+            <Button Style="{StaticResource CalendarCardButton}"
+                    Click="CalendarEntry_Click"
+                    MouseDoubleClick="CalendarEntry_DoubleClick"
+                    ToolTip="Einmal klicken: Details · Doppelklick: öffnen">
+                <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
+                        CornerRadius="8" Padding="9,8" Margin="0,0,0,7">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4"/>
+                            <ColumnDefinition Width="9"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{Binding Accent}" CornerRadius="2"/>
+                        <StackPanel Grid.Column="2">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding Accent}"/>
+                                <TextBlock Text="  ·  " FontSize="9" Foreground="#94A3B8"/>
+                                <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="#64748B"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#0F172A"
+                                       FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,1"/>
+                            <TextBlock Text="{Binding Subtitle}" FontSize="10.5" Foreground="#526173"
+                                       TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                        <Border Grid.Column="3" Background="White" BorderBrush="#D7E2EE" BorderThickness="1"
+                                CornerRadius="10" Padding="7,2" VerticalAlignment="Top" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="#334155" FontWeight="SemiBold"/>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding BadgeText}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="CompactCalendarEntryTemplate">
+            <Button Style="{StaticResource CalendarCardButton}"
+                    Click="CalendarEntry_Click"
+                    MouseDoubleClick="CalendarEntry_DoubleClick">
+                <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
+                        CornerRadius="5" Padding="5,3" Margin="0,0,0,3">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="3"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Background="{Binding Accent}" CornerRadius="2"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Title}" FontSize="9.5" Foreground="#243447"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+                </Border>
+            </Button>
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="22">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,16">
+        <!-- Header / navigation -->
+        <Grid Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Planungskalender" FontSize="30" FontWeight="Bold" Foreground="#0F172A"/>
-                <TextBlock Text="{Binding HeaderText}" FontSize="15" Foreground="#64748B" Margin="0,3,0,0"/>
+                <TextBlock Text="Planungskalender" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
+                <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="#627D98" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousCommand}" Margin="0,0,6,0"/>
                 <Button Content="Heute" Height="34" Padding="14,0" Command="{Binding TodayCommand}" Margin="0,0,6,0"/>
-                <Button Content="›" Width="38" Height="34" Command="{Binding NextCommand}" Margin="0,0,12,0"/>
-                <Button Content="Tag" Style="{StaticResource ModeButton}" Command="{Binding ShowDayCommand}"/>
-                <Button Content="Woche" Style="{StaticResource ModeButton}" Command="{Binding ShowWeekCommand}"/>
-                <Button Content="Monat" Style="{StaticResource ModeButton}" Command="{Binding ShowMonthCommand}"/>
-                <Button Content="Tagesplanung öffnen" Padding="14,7" Margin="8,0,0,0" Click="OpenDayPlanning_Click"/>
+                <Button Content="›" Width="38" Height="34" Command="{Binding NextCommand}" Margin="0,0,14,0"/>
+
+                <Button Content="Tag" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowDayCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="Woche" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowWeekCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="Monat" Style="{StaticResource CalendarModeButton}" Command="{Binding ShowMonthCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Background" Value="{StaticResource PrimaryBrush}"/><Setter Property="Foreground" Value="White"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="+ Einsatz planen" Height="34" Padding="15,0" Margin="8,0,0,0"
+                        Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenDayPlanning_Click"/>
             </WrapPanel>
         </Grid>
 
-        <Grid Grid.Row="1">
+        <!-- KPI strip -->
+        <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="235"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="*"/><ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="1.5*"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <Border Background="White" CornerRadius="12" Padding="12" Margin="0,0,0,12">
-                    <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}" DisplayDate="{Binding SelectedDate, Mode=TwoWay}"
-                              SelectionMode="SingleDate"/>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="14">
-                    <StackPanel>
-                        <TextBlock Text="Legende" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
-                            <Rectangle Width="10" Height="10" Fill="#2563EB" RadiusX="2" RadiusY="2" Margin="0,3,8,0"/>
-                            <TextBlock Text="Mitarbeiter-Einsatz"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
-                            <Rectangle Width="10" Height="10" Fill="#0F766E" RadiusX="2" RadiusY="2" Margin="0,3,8,0"/>
-                            <TextBlock Text="Produktionsauftrag"/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal">
-                            <Rectangle Width="10" Height="10" Fill="#DC2626" RadiusX="2" RadiusY="2" Margin="0,3,8,0"/>
-                            <TextBlock Text="Abwesenheit"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#64748B" TextWrapping="Wrap" Margin="0,14,0,0"/>
-                        <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Margin="0,12,0,0" Padding="10,6"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
+            <Border Grid.Column="0" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="GEPLANT" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding PlannedEmployeesCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="#627D98"/></StackPanel>
+            </Border>
+            <Border Grid.Column="2" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="AUFTRÄGE" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding OrderCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="am gewählten Tag" FontSize="10" Foreground="#627D98"/></StackPanel>
+            </Border>
+            <Border Grid.Column="4" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="ABWESEND" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding AbsenceCount}" FontSize="21" FontWeight="SemiBold" Foreground="#B91C1C"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="#627D98"/></StackPanel>
+            </Border>
+            <Border Grid.Column="6" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="IM BETRIEB" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="21" FontWeight="SemiBold" Foreground="#0F766E"/><TextBlock Text="nicht abwesend" FontSize="10" Foreground="#627D98"/></StackPanel>
+            </Border>
+            <Border Grid.Column="8" Background="#F8FBFF" BorderBrush="#C9DDF2" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Width="31" Height="31" CornerRadius="16" Background="#EAF2FF" VerticalAlignment="Center" Margin="0,0,10,0"><TextBlock Text="!" FontWeight="Bold" Foreground="#1D4ED8" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                    <StackPanel Grid.Column="1"><TextBlock Text="Personalabdeckung" FontSize="10" FontWeight="SemiBold" Foreground="#334E68"/><TextBlock Text="{Binding DayCoverageText}" FontSize="10.5" Foreground="#526173" TextWrapping="Wrap"/></StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
 
+        <!-- Main workspace -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="238"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="292"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left navigation / filters -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
+                        <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}" DisplayDate="{Binding SelectedDate, Mode=TwoWay}" SelectionMode="SingleDate"/>
+                    </Border>
+
+                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="13" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Suchen &amp; filtern" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,0,10" Height="32" Padding="8,4" ToolTip="Name, Auftrag, Linie oder Notiz suchen"/>
+                            <CheckBox Content="Mitarbeiter-Einsätze" IsChecked="{Binding ShowAssignments}" Margin="0,2,0,6"/>
+                            <CheckBox Content="Produktionsaufträge" IsChecked="{Binding ShowOrders}" Margin="0,2,0,6"/>
+                            <CheckBox Content="Abwesenheiten" IsChecked="{Binding ShowAbsences}" Margin="0,2,0,6"/>
+                            <CheckBox Content="Betriebskalender" IsChecked="{Binding ShowOperatingCalendar}" Margin="0,2,0,6"/>
+                            <CheckBox Content="Wochenende anzeigen" IsChecked="{Binding ShowWeekends}" Margin="0,2,0,8"/>
+                            <Button Content="Filter zurücksetzen" Command="{Binding ResetFiltersCommand}" Height="30"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Background="#F8FBFF" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="13">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedDateText}" FontWeight="SemiBold" Foreground="#243B53" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding VisibleEntryText}" FontSize="10.5" Foreground="#627D98" Margin="0,3,0,0"/>
+                            <TextBlock Text="{Binding StatusMessage}" FontSize="10" Foreground="#829AB1" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Height="30" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Center calendar -->
             <Grid Grid.Column="2">
-                <!-- Tagesansicht -->
-                <Border Background="White" CornerRadius="12" Padding="18">
+                <!-- Day -->
+                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
                     <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="0">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
+                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock Text="Tagesagenda" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,12"/>
-                            <ItemsControl ItemsSource="{Binding DayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
-                            <TextBlock Text="Keine Einträge für diesen Tag." Foreground="#94A3B8" Margin="0,12,0,0">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DayEntries.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel><TextBlock Text="Tagesagenda" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Ganztägige Ereignisse und zeitlich geplante Einsätze" FontSize="10.5" Foreground="#829AB1"/></StackPanel>
+                                <Button Grid.Column="1" Content="Tagesplanung" Padding="13,6" Click="OpenDayPlanning_Click"/>
+                            </Grid>
+
+                            <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,3,0,6"/>
+                            <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
+                            <TextBlock Text="Keine ganztägigen Einträge." Foreground="#9FB3C8" FontSize="10.5" Margin="0,2,0,10">
+                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
+
+                            <Border Height="1" Background="#E7EEF5" Margin="0,4,0,12"/>
+                            <TextBlock Text="ZEITPLAN" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
+                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,4,0,0">
+                                <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Foreground="#94A3B8" HorizontalAlignment="Center">
+                                    <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                </TextBlock>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
 
-                <!-- Wochenansicht -->
-                <Border Background="White" CornerRadius="12" Padding="12">
+                <!-- Week -->
+                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="1">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
+                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding WeekDays}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="7"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Margin="3" MinWidth="135" MinHeight="560">
+                                    <Border BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="8" Margin="3" MinWidth="155" MinHeight="610" Background="#FCFDFE">
                                         <DockPanel>
-                                            <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" BorderThickness="0"
-                                                    Background="#F8FAFC" Padding="8" HorizontalContentAlignment="Stretch">
+                                            <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
+                                                    BorderThickness="0,0,0,1" BorderBrush="#E7EEF5" Background="#F8FBFF" Padding="8" HorizontalContentAlignment="Stretch">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding DayName}" FontSize="12" Foreground="#64748B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="#829AB1" HorizontalAlignment="Center" TextTransform="Uppercase"/>
+                                                    <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="#102A43" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding EntryCountText}" FontSize="9.5" Foreground="#627D98" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="7">
-                                                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
+                                                <StackPanel>
+                                                    <ItemsControl ItemsSource="{Binding AllDayEntries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}"/>
+                                                    <Border Height="1" Background="#E7EEF5" Margin="0,5,0,7"/>
+                                                    <ItemsControl ItemsSource="{Binding TimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
+                                                </StackPanel>
                                             </ScrollViewer>
                                         </DockPanel>
                                     </Border>
@@ -153,60 +279,110 @@
                     </ScrollViewer>
                 </Border>
 
-                <!-- Monatsansicht -->
-                <Border Background="White" CornerRadius="12" Padding="12">
+                <!-- Month -->
+                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="2">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
+                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="34"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <UniformGrid Columns="7">
-                            <TextBlock Text="Mo" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="Di" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="Mi" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="Do" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="Fr" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="Sa" HorizontalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBlock Text="So" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="Mo" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
+                            <TextBlock Text="Di" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
+                            <TextBlock Text="Mi" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
+                            <TextBlock Text="Do" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
+                            <TextBlock Text="Fr" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
+                            <TextBlock Text="Sa" HorizontalAlignment="Center" Foreground="#829AB1" FontWeight="SemiBold"/>
+                            <TextBlock Text="So" HorizontalAlignment="Center" Foreground="#829AB1" FontWeight="SemiBold"/>
                         </UniformGrid>
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding MonthDays}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><UniformGrid Columns="7" Rows="6"/></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="7" Rows="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Tag="{Binding Date}" Click="SelectCalendarDate_Click" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
-                                            Padding="0" Margin="2" Background="White" BorderBrush="#E2E8F0" BorderThickness="1">
-                                        <StackPanel Margin="7">
-                                            <TextBlock Text="{Binding DayNumber}" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,5"/>
-                                            <ItemsControl ItemsSource="{Binding Entries}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border BorderBrush="{Binding Accent}" BorderThickness="3,0,0,0" Background="#F8FAFC" Padding="5,3" Margin="0,0,0,3">
-                                                            <TextBlock Text="{Binding Title}" FontSize="10" TextTrimming="CharacterEllipsis"/>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                            <TextBlock Text="{Binding MoreText}" FontSize="10" Foreground="#64748B"/>
-                                        </StackPanel>
-                                    </Button>
+                                    <Border Margin="2" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
+                                                    Width="28" Height="26" HorizontalAlignment="Left" Padding="0" Margin="0,0,0,4">
+                                                <TextBlock Text="{Binding DayNumber}" FontSize="11" FontWeight="SemiBold"/>
+                                            </Button>
+                                            <StackPanel>
+                                                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}"/>
+                                                <TextBlock Text="{Binding MoreText}" FontSize="9.5" Foreground="#627D98" Margin="2,1,0,0"/>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Grid>
                 </Border>
             </Grid>
+
+            <!-- Right details / people -->
+            <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
+                                <Border Margin="0,11,0,0">
+                                    <Border.Style>
+                                        <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding SelectedEntry.Title}" FontSize="17" FontWeight="SemiBold" Foreground="#102A43" TextWrapping="Wrap" Margin="0,3,0,2"/>
+                                        <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="#627D98"/>
+                                        <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                                        <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="#627D98" TextWrapping="Wrap" Margin="0,5,0,12"/>
+                                        <Button Content="Öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
+                                        <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Margin="0,14,0,4">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Noch nichts ausgewählt" Foreground="#627D98" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="#829AB1" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel><TextBlock Text="Mitarbeiter am Tag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/><TextBlock Text="Nicht abwesende Mitarbeitende" FontSize="9.5" Foreground="#829AB1"/></StackPanel>
+                                <Border Grid.Column="1" Background="#EDF6FF" CornerRadius="10" Padding="7,2" VerticalAlignment="Top"><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="#1D4ED8" FontWeight="SemiBold"/></Border>
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding DayEmployees}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource CalendarCardButton}" Click="EmployeeRow_Click">
+                                            <Border BorderBrush="#E1EAF2" BorderThickness="0,0,0,1" Padding="0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <Border Width="30" Height="30" CornerRadius="15" Background="#EAF2FF"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="#1D4ED8"/></Border>
+                                                    <StackPanel Grid.Column="2">
+                                                        <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="#243B53" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding AssignmentText}" FontSize="9.5" Foreground="#829AB1" TextTrimming="CharacterEllipsis"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3" Margin="8,0,0,0">
+                                                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="8.5" Foreground="#627D98" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </UserControl>
