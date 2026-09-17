@@ -21,128 +21,38 @@
 
             <TextBlock Text="Personal heute" FontSize="18" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,8" />
             <UniformGrid Columns="4" Margin="0,0,0,18">
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Aktive Mitarbeiter" Foreground="#64748B" />
-                        <TextBlock Text="{Binding ActiveEmployees}" FontSize="28" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Verfügbar" Foreground="#64748B" />
-                        <TextBlock Text="{Binding AvailableEmployees}" FontSize="28" FontWeight="Bold" Foreground="#166534" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Heute eingeplant" Foreground="#64748B" />
-                        <TextBlock Text="{Binding PlannedEmployees}" FontSize="28" FontWeight="Bold" Foreground="#1D4ED8" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16">
-                    <StackPanel>
-                        <TextBlock Text="Abwesend" Foreground="#64748B" />
-                        <TextBlock Text="{Binding AbsentEmployees}" FontSize="28" FontWeight="Bold" Foreground="#B45309" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Aktive Mitarbeiter" Foreground="#64748B" /><TextBlock Text="{Binding ActiveEmployees}" FontSize="28" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Verfügbar" Foreground="#64748B" /><TextBlock Text="{Binding AvailableEmployees}" FontSize="28" FontWeight="Bold" Foreground="#166534" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Heute eingeplant" Foreground="#64748B" /><TextBlock Text="{Binding PlannedEmployees}" FontSize="28" FontWeight="Bold" Foreground="#1D4ED8" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16"><StackPanel><TextBlock Text="Abwesend" Foreground="#64748B" /><TextBlock Text="{Binding AbsentEmployees}" FontSize="28" FontWeight="Bold" Foreground="#B45309" Margin="0,4,0,0" /></StackPanel></Border>
             </UniformGrid>
 
             <TextBlock Text="Produktion heute" FontSize="18" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,8" />
             <UniformGrid Columns="5" Margin="0,0,0,22">
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Aufträge heute" Foreground="#64748B" />
-                        <TextBlock Text="{Binding OrdersToday}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Laufend" Foreground="#64748B" />
-                        <TextBlock Text="{Binding RunningOrders}" FontSize="27" FontWeight="Bold" Foreground="#1D4ED8" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Abgeschlossen" Foreground="#64748B" />
-                        <TextBlock Text="{Binding CompletedOrdersToday}" FontSize="27" FontWeight="Bold" Foreground="#166534" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
-                    <StackPanel>
-                        <TextBlock Text="Personalabdeckung" Foreground="#64748B" />
-                        <TextBlock Text="{Binding PersonnelCoveragePercent, StringFormat={}{0}%}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
-                <Border Background="#FEF2F2" CornerRadius="12" Padding="16">
-                    <StackPanel>
-                        <TextBlock Text="Unterbesetzte Aufträge" Foreground="#991B1B" />
-                        <TextBlock Text="{Binding UnderstaffedOrders}" FontSize="27" FontWeight="Bold" Foreground="#B91C1C" Margin="0,4,0,0" />
-                    </StackPanel>
-                </Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Produktionsschichten" Foreground="#64748B" /><TextBlock Text="{Binding OrdersToday}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Laufend" Foreground="#64748B" /><TextBlock Text="{Binding RunningOrders}" FontSize="27" FontWeight="Bold" Foreground="#1D4ED8" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Abgeschlossen" Foreground="#64748B" /><TextBlock Text="{Binding CompletedOrdersToday}" FontSize="27" FontWeight="Bold" Foreground="#166534" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0"><StackPanel><TextBlock Text="Personalabdeckung" Foreground="#64748B" /><TextBlock Text="{Binding PersonnelCoveragePercent, StringFormat={}{0}%}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" Margin="0,4,0,0" /></StackPanel></Border>
+                <Border Background="#FEF2F2" CornerRadius="12" Padding="16"><StackPanel><TextBlock Text="Unterbesetzte Schichten" Foreground="#991B1B" /><TextBlock Text="{Binding UnderstaffedOrders}" FontSize="27" FontWeight="Bold" Foreground="#B91C1C" Margin="0,4,0,0" /></StackPanel></Border>
             </UniformGrid>
 
             <Grid Margin="0,0,0,18">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.15*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.15*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                 <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,14,0">
                     <StackPanel>
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Handlungsbedarf" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
-                            <Border Grid.Column="1" Background="#FEF2F2" CornerRadius="12" Padding="9,3">
-                                <TextBlock Text="{Binding OpenProblems, StringFormat={}{0} offen}" Foreground="#B91C1C" FontWeight="SemiBold" />
-                            </Border>
-                        </Grid>
-
-                        <ItemsControl ItemsSource="{Binding Issues}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#F8FAFC" CornerRadius="8" Padding="11" Margin="0,0,0,7">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="58" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="#B91C1C" />
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#0F172A" />
-                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="#475569" Margin="0,2,0,0" />
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <TextBlock Text="Keine offenen Probleme." Foreground="#166534" FontWeight="SemiBold" Margin="0,4,0,0">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding OpenProblems}" Value="0">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                        <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Handlungsbedarf" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" /><Border Grid.Column="1" Background="#FEF2F2" CornerRadius="12" Padding="9,3"><TextBlock Text="{Binding OpenProblems, StringFormat={}{0} offen}" Foreground="#B91C1C" FontWeight="SemiBold" /></Border></Grid>
+                        <ItemsControl ItemsSource="{Binding Issues}"><ItemsControl.ItemTemplate><DataTemplate><Border Background="#F8FAFC" CornerRadius="8" Padding="11" Margin="0,0,0,7"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="58" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="#B91C1C" /><StackPanel Grid.Column="1"><TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#0F172A" /><TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="#475569" Margin="0,2,0,0" /></StackPanel></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        <TextBlock Text="Keine offenen Probleme." Foreground="#166534" FontWeight="SemiBold" Margin="0,4,0,0"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding OpenProblems}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
                     </StackPanel>
                 </Border>
 
                 <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="18">
                     <StackPanel>
                         <TextBlock Text="Linienstatus heute" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
-                        <DataGrid ItemsSource="{Binding WorkstationStatuses}" AutoGenerateColumns="False" IsReadOnly="True"
-                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220" MaxHeight="330">
+                        <DataGrid ItemsSource="{Binding WorkstationStatuses}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220" MaxHeight="330">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.4*" />
-                                <DataGridTextColumn Header="Aufträge" Binding="{Binding OrderCount}" Width="65" />
+                                <DataGridTextColumn Header="Schichten" Binding="{Binding OrderCount}" Width="70" />
                                 <DataGridTextColumn Header="Offen" Binding="{Binding OpenOrderCount}" Width="55" />
                                 <DataGridTextColumn Header="Personal" Binding="{Binding CoverageText}" Width="75" />
                                 <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="110" />
@@ -154,18 +64,17 @@
 
             <Border Background="White" CornerRadius="12" Padding="18">
                 <StackPanel>
-                    <TextBlock Text="Produktionsaufträge heute" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4" />
-                    <TextBlock Text="Auftragsstatus und Personalabdeckung basieren direkt auf Produktionsaufträgen und Tagesplanung."
-                               Foreground="#64748B" Margin="0,0,0,10" />
-                    <DataGrid ItemsSource="{Binding TodayOrders}" AutoGenerateColumns="False" IsReadOnly="True"
-                              CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220">
+                    <TextBlock Text="Produktionsschichten heute" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4" />
+                    <TextBlock Text="Jede laufende Schicht eines mehrschichtigen Produktionsauftrags erscheint separat mit Produkt, Maschine und Personalabdeckung." Foreground="#64748B" Margin="0,0,0,10" />
+                    <DataGrid ItemsSource="{Binding TodayOrders}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="95" />
-                            <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.4*" />
-                            <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.2*" />
-                            <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="1.1*" />
+                            <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.35*" />
+                            <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.15*" />
+                            <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="1.05*" />
+                            <DataGridTextColumn Header="Lauf" Binding="{Binding RunText}" Width="60" />
                             <DataGridTextColumn Header="Priorität" Binding="{Binding Priority}" Width="85" />
-                            <DataGridTextColumn Header="Auftragsstatus" Binding="{Binding Status}" Width="105" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
                             <DataGridTextColumn Header="Personal" Binding="{Binding CoverageText}" Width="70" />
                             <DataGridTextColumn Header="Abdeckung" Binding="{Binding CoverageStatus}" Width="105" />
                         </DataGrid.Columns>
