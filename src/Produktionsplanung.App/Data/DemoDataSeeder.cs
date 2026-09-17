@@ -1,4 +1,5 @@
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.Data;
 
@@ -10,6 +11,7 @@ public static class DemoDataSeeder
             SeedBaseData(db);
 
         SeedProductionOrders(db);
+        ProductionScheduleService.EnsureMissingRunSlots(db);
     }
 
     private static void SeedBaseData(AppDbContext db)
@@ -81,6 +83,7 @@ public static class DemoDataSeeder
                 PlannedEnd = early.EndTime,
                 WorkstationId = line1.Id,
                 ShiftId = early.Id,
+                PlannedShiftCount = 1,
                 RequiredStaff = 4,
                 Status = "Bereit",
                 Comment = "Demo-Auftrag für die Frühschicht"
@@ -97,6 +100,7 @@ public static class DemoDataSeeder
                 PlannedEnd = late.EndTime,
                 WorkstationId = line2.Id,
                 ShiftId = late.Id,
+                PlannedShiftCount = 1,
                 RequiredStaff = 3,
                 Status = "Geplant",
                 Comment = "Demo-Auftrag für die Spätschicht"
