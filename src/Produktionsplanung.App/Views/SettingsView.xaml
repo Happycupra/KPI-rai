@@ -11,7 +11,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="Einstellungen" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-                    <TextBlock Text="Unternehmensdaten, Datensicherung und Exporte verwalten." FontSize="15" Foreground="#64748B" Margin="0,4,0,0" />
+                    <TextBlock Text="Unternehmensdaten, Sicherheit, Datensicherung und Exporte verwalten." FontSize="15" Foreground="#64748B" Margin="0,4,0,0" />
                 </StackPanel>
                 <Button Grid.Column="1" Content="Einstellungen speichern" Height="36" Padding="16,0"
                         VerticalAlignment="Center" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButtonStyle}" />
@@ -100,6 +100,28 @@
                                 Command="{Binding RestartApplicationCommand}" />
                     </StackPanel>
                 </StackPanel>
+            </Border>
+
+            <Border Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE72E;" FontSize="18" Foreground="#1D4ED8" Margin="0,1,9,0" />
+                            <TextBlock Text="Sicherheit &amp; Recovery" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
+                        </StackPanel>
+                        <TextBlock Text="Der Recovery-Code ist der Notfallzugang für ein vergessenes Passwort. Er wird nur gehasht gespeichert und kann nicht aus der App ausgelesen werden."
+                                   Foreground="#64748B" TextWrapping="Wrap" Margin="0,6,0,10" />
+                        <TextBlock Text="{Binding RecoveryCodeStatus}" FontWeight="SemiBold" Foreground="#334155" />
+                        <TextBlock Text="Beim Erneuern wird der bisherige Code sofort ungültig. Das aktuelle Administrator-Passwort muss erneut bestätigt werden."
+                                   Foreground="#9A3412" TextWrapping="Wrap" Margin="0,6,24,0" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Recovery-Code erneuern" Height="38" Padding="16,0" VerticalAlignment="Center"
+                            Command="{Binding ManageRecoveryCodeCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+                </Grid>
             </Border>
 
             <Border Background="White" CornerRadius="12" Padding="20" Margin="0,0,0,16">
