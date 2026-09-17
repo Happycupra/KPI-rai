@@ -18,6 +18,7 @@ internal static class Program
         var tests = new (string Name, Action Run)[]
         {
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
+            ("Production actual choices sort by date and shift time", ProductionActualOrdering),
             ("Workstation with orders cannot be deleted", WorkstationDeletion),
             ("Order history protected in UI and database", OrderDeletion),
             ("Existing downtime prevents incompatible runtime edits", DowntimeEdit),
@@ -113,6 +114,38 @@ internal static class Program
         _ = new Produktionsplanung.App.ChangePasswordWindow();
     }
 
+    private static void ProductionActualOrdering()
+    {
+        var date = new DateTime(2030, 1, 14);
+        int earlyId, lateId, nextDayId;
+        using (var db = new AppDbContext())
+        {
+            var order = db.ProductionOrders.First();
+            var early = db.Shifts.Single(x => x.Name == "Frühschicht");
+            var late = db.Shifts.Single(x => x.Name == "Spätschicht");
+            // Insert late before early so insertion order cannot satisfy the assertion.
+            var lateSlot = new ProductionRunSlot { ProductionOrderId = order.Id,
+                SequenceNumber = 20, Date = date, ShiftId = late.Id };
+            var earlySlot = new ProductionRunSlot { ProductionOrderId = order.Id,
+                SequenceNumber = 21, Date = date, ShiftId = early.Id };
+            var nextDaySlot = new ProductionRunSlot { ProductionOrderId = order.Id,
+                SequenceNumber = 22, Date = date.AddDays(1), ShiftId = late.Id };
+            db.ProductionRunSlots.AddRange(lateSlot, earlySlot, nextDaySlot);
+            db.SaveChanges();
+            earlyId = earlySlot.Id;
+            lateId = lateSlot.Id;
+            nextDayId = nextDaySlot.Id;
+        }
+        var vm = new ProductionActualViewModel();
+        var ids = vm.Orders.Where(x => x.RunSlotId == earlyId || x.RunSlotId == lateId || x.RunSlotId == nextDayId)
+            .Select(x => x.RunSlotId!.Value).ToArray();
+        Check(ids.SequenceEqual(new[] { nextDayId, earlyId, lateId }), "Production shifts are not ordered by descending date and ascending start time");
+        vm.RefreshCommand.Execute(null);
+        var refreshed = vm.Orders.Where(x => ids.Contains(x.RunSlotId ?? -1))
+            .Select(x => x.RunSlotId!.Value).ToArray();
+        Check(refreshed.SequenceEqual(ids), "Refreshing changed production shift ordering");
+    }
+
     private static void WorkstationDeletion()
     {
         using var db = new AppDbContext();
@@ -127,9 +160,10 @@ internal static class Program
     private static int AddActual()
     {
         using var db = new AppDbContext();
+        var slot = db.ProductionRunSlots.OrderBy(x => x.Id).First();
         var actual = new ProductionActual
         {
-            ProductionOrderId = db.ProductionOrders.First().Id, Date = DateTime.Today,
+            ProductionOrderId = slot.ProductionOrderId, ProductionRunSlotId = slot.Id, Date = slot.Date,
             PlannedProductionMinutes = 450, RunMinutes = 400, IdealRatePerHour = 100,
             TotalQuantity = 100, GoodQuantity = 100
         };
@@ -207,8 +241,25 @@ internal static class Program
         vm.CopyPreviousWeekCommand.Execute(null);
         using var check = new AppDbContext();
         Check(!check.PlanningAssignments.Any(x => x.Date == monday.AddDays(6)), "Copied absent Sunday night employee");
-        // Without the absence the same assignment must copy successfully.
+        // Removing the absence must not bypass the workstation's Sunday restriction.
         check.Absences.RemoveRange(check.Absences);
+        check.SaveChanges();
+        vm.CopyPreviousWeekCommand.Execute(null);
+        Check(!check.PlanningAssignments.Any(x => x.Date == monday.AddDays(6)), "Copied a shift that is not allowed on Sunday");
+        // Only an explicitly permitted Sunday night may now be copied.
+        var source = check.PlanningAssignments.Single(x => x.Date == monday.AddDays(-1));
+        var rule = check.WorkstationShiftRules.Single(x =>
+            x.WorkstationId == source.WorkstationId && x.ShiftId == source.ShiftId);
+        rule.Sunday = true;
+        check.SaveChanges();
+        // With the rule enabled, the next-day absence must still block the copy.
+        var absence = new Absence { EmployeeId = source.EmployeeId, Type = "Ferien",
+            StartDate = monday.AddDays(7), EndDate = monday.AddDays(7) };
+        check.Absences.Add(absence);
+        check.SaveChanges();
+        vm.CopyPreviousWeekCommand.Execute(null);
+        Check(!check.PlanningAssignments.Any(x => x.Date == monday.AddDays(6)), "Allowed Sunday shift ignored following Monday absence");
+        check.Absences.Remove(absence);
         check.SaveChanges();
         vm.CopyPreviousWeekCommand.Execute(null);
         Check(check.PlanningAssignments.Any(x => x.Date == monday.AddDays(6)), "Valid Sunday night not copied");
