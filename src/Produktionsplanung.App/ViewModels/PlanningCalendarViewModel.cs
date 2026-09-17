@@ -52,9 +52,12 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     public string SelectedDateText => SelectedDate.ToString("dddd, dd. MMMM", culture);
     public string SelectedDateShortText => SelectedDate.ToString("dd.MM.yyyy", culture);
+    public int MonthColumnCount => ShowWeekends ? 7 : 5;
+
     public string DayCoverageText => UnderstaffedOrderCount == 0
         ? "Alle Produktionsschichten sind personell gedeckt oder haben keinen Fehlbestand."
         : $"{UnderstaffedOrderCount} Produktionsschicht(en) sind noch unterbesetzt.";
+
     public string VisibleEntryText
     {
         get
@@ -85,7 +88,12 @@ public partial class PlanningCalendarViewModel : ObservableObject
     partial void OnShowOrdersChanged(bool value) => RebuildViews();
     partial void OnShowAbsencesChanged(bool value) => RebuildViews();
     partial void OnShowOperatingCalendarChanged(bool value) => RebuildViews();
-    partial void OnShowWeekendsChanged(bool value) => RebuildViews();
+
+    partial void OnShowWeekendsChanged(bool value)
+    {
+        OnPropertyChanged(nameof(MonthColumnCount));
+        RebuildViews();
+    }
 
     [RelayCommand] private void ShowDay() => SelectedViewIndex = 0;
     [RelayCommand] private void ShowWeek() => SelectedViewIndex = 1;
@@ -221,6 +229,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
         for (var i = 0; i < 42; i++)
         {
             var date = gridStart.AddDays(i);
+            if (!ShowWeekends && date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
+                continue;
+
             var entries = GetFilteredEntries(date);
             MonthDays.Add(new CalendarMonthDay
             {
@@ -241,6 +252,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         {
             SelectedEntry = selectedDateEntries
                 .Concat(WeekDays.SelectMany(x => x.AllDayEntries.Concat(x.TimedEntries)))
+                .Concat(MonthDays.SelectMany(x => x.Entries))
                 .FirstOrDefault(x => $"{x.EntryType}:{x.EntryId}:{x.Date:yyyyMMdd}" == selectedKey);
         }
 
@@ -307,7 +319,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 TimeText = $"{x.StartTime:hh\\:mm}–{x.EndTime:hh\\:mm}",
                 Title = $"{x.Employee.LastName}, {x.Employee.FirstName}",
                 Subtitle = $"{x.Workstation.Name} · {x.Shift?.Name ?? "Individuell"}",
-                Detail = string.IsNullOrWhiteSpace(x.Comment) ? $"{x.Employee.Role} · Pause {x.BreakMinutes} Min." : x.Comment!
+                Detail = string.IsNullOrWhiteSpace(x.Comment)
+                    ? $"{x.Employee.Role} · Pause {x.BreakMinutes} Min."
+                    : x.Comment!
             });
         }
 
@@ -320,6 +334,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             {
                 Date = date.Date,
                 EntryId = slot.Id,
+                ProductionOrderId = order.Id,
                 EntryType = "Auftrag",
                 TypeLabel = isUnderstaffed ? "AUFTRAG · PERSONAL FEHLT" : "AUFTRAG",
                 Accent = isUnderstaffed ? "#D97706" : "#0F766E",
@@ -452,6 +467,7 @@ public sealed class CalendarEntryRow
     public DateTime Date { get; set; }
     public int EntryId { get; set; }
     public int? EmployeeId { get; set; }
+    public int? ProductionOrderId { get; set; }
     public string EntryType { get; set; } = string.Empty;
     public string TypeLabel { get; set; } = string.Empty;
     public string Accent { get; set; } = "#2563EB";
