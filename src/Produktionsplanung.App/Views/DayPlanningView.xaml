@@ -164,11 +164,11 @@
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
                         <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
-                            <TextBlock Text="OpsCompact prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
+                            <TextBlock Text="SolutionCompakt prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
                                        TextWrapping="Wrap" Foreground="#1E3A8A" />
                         </Border>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="42" Margin="0,0,0,10" />
-                        <Button Content="Speichern" Height="38" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" />
+                        <Button Content="Speichern" Height="38" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
                         <Button Content="Neue Zuweisung" Height="38" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" />
                         <Button Content="Ausgewählte Zuweisung löschen" Height="38" Command="{Binding DeleteCommand}" />
                     </StackPanel>
