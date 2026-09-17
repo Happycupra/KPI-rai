@@ -18,9 +18,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private int backupRetentionCount = 10;
     [ObservableProperty] private string csvDelimiter = ";";
     [ObservableProperty] private bool includeUtf8Bom = true;
+    [ObservableProperty] private bool autoLockEnabled = true;
+    [ObservableProperty] private int autoLockMinutes = 30;
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string recoveryCodeStatus = "Nicht eingerichtet";
 
+    public IReadOnlyList<int> AutoLockOptions { get; } = new[] { 15, 30, 60 };
     public string DatabasePath => AppPaths.DatabasePath;
     public string SettingsPath => AppPaths.SettingsPath;
 
@@ -237,8 +240,8 @@ public partial class SettingsViewModel : ObservableObject
 
     private AppSettings BuildSettings()
     {
-        // Vorhandene Einstellungen weiterverwenden, damit Security-/UI-Zustände wie Recovery-Code,
-        // Navigation und Kalenderpräferenzen beim Speichern dieser Seite nicht verloren gehen.
+        // Vorhandene Einstellungen weiterverwenden, damit Security- und Benutzerprofile
+        // beim Speichern dieser Seite nicht verloren gehen.
         var settings = AppSettingsService.Load();
         settings.CompanyName = CompanyName;
         settings.SiteName = SiteName;
@@ -248,6 +251,8 @@ public partial class SettingsViewModel : ObservableObject
         settings.BackupRetentionCount = BackupRetentionCount;
         settings.CsvDelimiter = CsvDelimiter;
         settings.IncludeUtf8Bom = IncludeUtf8Bom;
+        settings.AutoLockEnabled = AutoLockEnabled;
+        settings.AutoLockMinutes = AutoLockMinutes;
         return settings;
     }
 
@@ -261,6 +266,8 @@ public partial class SettingsViewModel : ObservableObject
         BackupRetentionCount = settings.BackupRetentionCount;
         CsvDelimiter = settings.CsvDelimiter;
         IncludeUtf8Bom = settings.IncludeUtf8Bom;
+        AutoLockEnabled = settings.AutoLockEnabled;
+        AutoLockMinutes = AutoLockOptions.Contains(settings.AutoLockMinutes) ? settings.AutoLockMinutes : 30;
     }
 
     private void RefreshRecoveryCodeStatus() => RefreshRecoveryCodeStatus(AppSettingsService.Load());
