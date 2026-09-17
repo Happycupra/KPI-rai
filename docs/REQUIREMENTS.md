@@ -1,4 +1,4 @@
-# Anforderungen – KPI-rai Produktionsplanung
+# Anforderungen – SolutionCompakt Produktionsplanung
 
 Diese Datei fasst die Zielarchitektur und den geplanten Funktionsumfang der Windows-Anwendung zusammen.
 

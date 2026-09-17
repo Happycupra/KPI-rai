@@ -24,20 +24,20 @@ public static class StartupHealthService
             var available = GetAvailableFreeSpace();
             if (available >= 0 && available < CriticalFreeBytes)
             {
-                errorMessage = $"Zu wenig freier Speicher am KPI-rai-Datenspeicher ({FormatBytes(available)} frei). Mindestens 25 MB werden benötigt.";
+                errorMessage = $"Zu wenig freier Speicher am SolutionCompakt-Datenspeicher ({FormatBytes(available)} frei). Mindestens 25 MB werden benötigt.";
                 Release();
                 return false;
             }
 
             if (available >= 0 && available < WarningFreeBytes)
-                warningMessage = $"Hinweis: Am KPI-rai-Datenspeicher sind nur noch {FormatBytes(available)} frei. Bitte Backup erstellen und Speicherplatz prüfen.";
+                warningMessage = $"Hinweis: Am SolutionCompakt-Datenspeicher sind nur noch {FormatBytes(available)} frei. Bitte Backup erstellen und Speicherplatz prüfen.";
 
             if (File.Exists(AppPaths.DatabasePath))
             {
                 var integrity = CheckDatabaseIntegrity();
                 if (!string.Equals(integrity, "ok", StringComparison.OrdinalIgnoreCase))
                 {
-                    errorMessage = $"Die lokale KPI-rai-Datenbank hat die Integritätsprüfung nicht bestanden: {integrity}. Bitte ein Backup wiederherstellen, bevor weitergearbeitet wird.";
+                    errorMessage = $"Die lokale SolutionCompakt-Datenbank hat die Integritätsprüfung nicht bestanden: {integrity}. Bitte ein Backup wiederherstellen, bevor weitergearbeitet wird.";
                     Release();
                     return false;
                 }
@@ -47,13 +47,13 @@ public static class StartupHealthService
         }
         catch (IOException ex)
         {
-            errorMessage = $"Der KPI-rai-Datenspeicher ist bereits durch eine andere Instanz belegt oder nicht beschreibbar. Schliessen Sie andere KPI-rai-Fenster und prüfen Sie den Datenträger.\n\n{ex.Message}";
+            errorMessage = $"Der SolutionCompakt-Datenspeicher ist bereits durch eine andere Instanz belegt oder nicht beschreibbar. Schliessen Sie andere SolutionCompakt-Fenster und prüfen Sie den Datenträger.\n\n{ex.Message}";
             Release();
             return false;
         }
         catch (Exception ex)
         {
-            errorMessage = $"KPI-rai konnte den Datenspeicher nicht sicher initialisieren.\n\n{ex.Message}";
+            errorMessage = $"SolutionCompakt konnte den Datenspeicher nicht sicher initialisieren.\n\n{ex.Message}";
             Release();
             return false;
         }
@@ -79,7 +79,7 @@ public static class StartupHealthService
     private static void VerifyWritableStorage()
     {
         var testPath = Path.Combine(AppPaths.RootDirectory, $".write-test-{Guid.NewGuid():N}.tmp");
-        File.WriteAllText(testPath, "KPI-rai", Encoding.UTF8);
+        File.WriteAllText(testPath, "SolutionCompakt", Encoding.UTF8);
         File.Delete(testPath);
     }
 

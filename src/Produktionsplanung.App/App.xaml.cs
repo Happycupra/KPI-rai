@@ -13,14 +13,14 @@ public partial class App : Application
         AppPaths.InitializeStorageMode(e.Args);
         if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
         {
-            MessageBox.Show(startupError, "KPI-rai – Startprüfung", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(startupError, "SolutionCompakt – Startprüfung", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(startupWarning))
         {
-            MessageBox.Show(startupWarning, "KPI-rai – Speicherhinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(startupWarning, "SolutionCompakt – Speicherhinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
         using (var db = new AppDbContext())
