@@ -14,7 +14,7 @@ public partial class LoginWindow : Window
 
         if (_setupMode)
         {
-            Title = "KPI-rai Ersteinrichtung";
+            Title = "SolutionCompakt Ersteinrichtung";
             ModeTitle.Text = "Ersteinrichtung";
             ModeDescription.Text = "Lege den ersten lokalen Administrator an. Es gibt kein voreingestelltes Standardpasswort.";
             DisplayNamePanel.Visibility = Visibility.Visible;

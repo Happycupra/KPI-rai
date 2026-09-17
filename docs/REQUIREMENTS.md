@@ -1,4 +1,7 @@
-# Anforderungen – KPI-rai Produktionsplanung
+# Anforderungen – SolutionCompakt Produktionsplanung
+
+**Produktname:** SolutionCompakt  
+**Branding:** SolutionCompakt-Logo und Windows-App-Icon werden als eingebettete, für die Windows-Anwendung validierte Ressourcen ausgeliefert.
 
 Diese Datei fasst die Zielarchitektur und den geplanten Funktionsumfang der Windows-Anwendung zusammen.
 

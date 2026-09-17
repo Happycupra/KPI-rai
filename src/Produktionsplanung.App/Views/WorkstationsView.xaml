@@ -119,7 +119,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <TextBlock Text="Bestehende Produktionsschichten werden beim Ändern dieses Modells nicht automatisch verschoben. OpsCompact warnt stattdessen beim Speichern."
+                                <TextBlock Text="Bestehende Produktionsschichten werden beim Ändern dieses Modells nicht automatisch verschoben. SolutionCompakt warnt stattdessen beim Speichern."
                                            Foreground="#8A5A12" FontSize="11" TextWrapping="Wrap" Margin="0,9,0,0"/>
                             </StackPanel>
                         </Border>
@@ -147,7 +147,7 @@
                         <CheckBox Content="Arbeitsplatz aktiv" IsChecked="{Binding IsActive}" Margin="0,2,0,14"/>
                         <WrapPanel>
                             <Button Content="Neu" Command="{Binding NewWorkstationCommand}" Padding="14,7" Margin="0,0,8,0"/>
-                            <Button Content="Speichern" Command="{Binding SaveCommand}" Padding="16,7" Margin="0,0,8,0" Background="{StaticResource PrimaryBrush}" Foreground="White"/>
+                            <Button Content="Speichern" Command="{Binding SaveCommand}" Padding="16,7" Margin="0,0,8,0" Style="{StaticResource PrimaryButtonStyle}"/>
                             <Button Content="Löschen" Command="{Binding DeleteCommand}" Padding="14,7"/>
                         </WrapPanel>
                         <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="#B45309" Margin="0,14,0,0"/>

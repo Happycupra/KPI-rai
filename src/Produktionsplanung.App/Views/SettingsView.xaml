@@ -14,7 +14,7 @@
                     <TextBlock Text="Unternehmensdaten, Datensicherung und Exporte verwalten." FontSize="15" Foreground="#64748B" Margin="0,4,0,0" />
                 </StackPanel>
                 <Button Grid.Column="1" Content="Einstellungen speichern" Height="36" Padding="16,0"
-                        VerticalAlignment="Center" Command="{Binding SaveSettingsCommand}" />
+                        VerticalAlignment="Center" Command="{Binding SaveSettingsCommand}" Style="{StaticResource PrimaryButtonStyle}" />
             </Grid>
 
             <Grid Margin="0,0,0,16">
@@ -40,7 +40,7 @@
                 <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20" Margin="8,0,0,0">
                     <StackPanel>
                         <TextBlock Text="Lokale Speicherorte" FontSize="20" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="OpsCompact speichert die operative Datenbank lokal. Der bisherige Datenpfad bleibt aus Kompatibilitätsgründen erhalten."
+                        <TextBlock Text="SolutionCompakt speichert die operative Datenbank lokal. Der bisherige Datenpfad bleibt aus Kompatibilitätsgründen erhalten."
                                    Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,16" />
 
                         <TextBlock Text="Datenbank" FontWeight="SemiBold" />
@@ -96,7 +96,7 @@
                                 Command="{Binding CreateBackupCommand}" />
                         <Button Content="Backup wiederherstellen" Height="36" Padding="16,0" Margin="0,0,8,0"
                                 Command="{Binding RestoreBackupCommand}" />
-                        <Button Content="OpsCompact neu starten" Height="36" Padding="16,0"
+                        <Button Content="SolutionCompakt neu starten" Height="36" Padding="16,0"
                                 Command="{Binding RestartApplicationCommand}" />
                     </StackPanel>
                 </StackPanel>
@@ -138,7 +138,7 @@
                     </Grid>
 
                     <Button Content="Alle Daten als CSV exportieren" Height="36" Padding="16,0" HorizontalAlignment="Left"
-                            Command="{Binding ExportAllCommand}" />
+                            Command="{Binding ExportAllCommand}" Style="{StaticResource PrimaryButtonStyle}" />
                 </StackPanel>
             </Border>
 

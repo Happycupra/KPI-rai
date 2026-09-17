@@ -50,7 +50,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Auftrag bearbeiten" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="Die Laufdauer kann mehrere aufeinanderfolgende Schichten umfassen. OpsCompact erzeugt die Schichtfolge automatisch."
+                        <TextBlock Text="Die Laufdauer kann mehrere aufeinanderfolgende Schichten umfassen. SolutionCompakt erzeugt die Schichtfolge automatisch."
                                    Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,18" />
 
                         <TextBlock Text="Auftragsnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
@@ -150,7 +150,7 @@
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14" />
 
                         <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,10" />
-                        <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" />
+                        <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
                         <Button Content="Neuer Auftrag" Height="38" Command="{Binding NewOrderCommand}" Margin="0,0,0,8" />
                         <Button Content="Ausgewählten Auftrag löschen" Height="38" Command="{Binding DeleteCommand}" />
                     </StackPanel>

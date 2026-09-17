@@ -26,7 +26,7 @@ public partial class ChangePasswordWindow : Window
             return;
         }
 
-        MessageBox.Show(result.Message, "KPI-rai", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(result.Message, "SolutionCompakt", MessageBoxButton.OK, MessageBoxImage.Information);
         DialogResult = true;
         Close();
     }
