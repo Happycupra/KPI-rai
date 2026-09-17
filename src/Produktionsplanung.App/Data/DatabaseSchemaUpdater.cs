@@ -52,6 +52,7 @@ public static class DatabaseSchemaUpdater
                 PlannedEnd TEXT NULL,
                 WorkstationId INTEGER NOT NULL,
                 ShiftId INTEGER NULL,
+                PlannedShiftCount INTEGER NOT NULL DEFAULT 1,
                 RequiredStaff INTEGER NOT NULL,
                 Status TEXT NOT NULL,
                 Comment TEXT NULL,
@@ -61,8 +62,34 @@ public static class DatabaseSchemaUpdater
                     FOREIGN KEY (ShiftId) REFERENCES Shifts (Id) ON DELETE SET NULL
             );
             """);
+        EnsureColumn(db, "ProductionOrders", "PlannedShiftCount", "INTEGER NOT NULL DEFAULT 1");
         db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ProductionOrders_OrderNumber ON ProductionOrders (OrderNumber);");
         db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ProductionOrders_PlannedDate_WorkstationId_ShiftId ON ProductionOrders (PlannedDate, WorkstationId, ShiftId);");
+
+        db.Database.ExecuteSqlRaw("""
+            CREATE TABLE IF NOT EXISTS ProductionRunSlots (
+                Id INTEGER NOT NULL CONSTRAINT PK_ProductionRunSlots PRIMARY KEY AUTOINCREMENT,
+                ProductionOrderId INTEGER NOT NULL,
+                SequenceNumber INTEGER NOT NULL,
+                Date TEXT NOT NULL,
+                ShiftId INTEGER NOT NULL,
+                CONSTRAINT FK_ProductionRunSlots_ProductionOrders_ProductionOrderId
+                    FOREIGN KEY (ProductionOrderId) REFERENCES ProductionOrders (Id) ON DELETE CASCADE,
+                CONSTRAINT FK_ProductionRunSlots_Shifts_ShiftId
+                    FOREIGN KEY (ShiftId) REFERENCES Shifts (Id) ON DELETE RESTRICT
+            );
+            """);
+        db.Database.ExecuteSqlRaw("CREATE UNIQUE INDEX IF NOT EXISTS IX_ProductionRunSlots_ProductionOrderId_SequenceNumber ON ProductionRunSlots (ProductionOrderId, SequenceNumber);");
+        db.Database.ExecuteSqlRaw("CREATE INDEX IF NOT EXISTS IX_ProductionRunSlots_Date_ShiftId ON ProductionRunSlots (Date, ShiftId);");
+        db.Database.ExecuteSqlRaw("""
+            INSERT INTO ProductionRunSlots (ProductionOrderId, SequenceNumber, Date, ShiftId)
+            SELECT p.Id, 1, p.PlannedDate, p.ShiftId
+            FROM ProductionOrders p
+            WHERE p.ShiftId IS NOT NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM ProductionRunSlots s WHERE s.ProductionOrderId = p.Id
+              );
+            """);
 
         db.Database.ExecuteSqlRaw("""
             CREATE TABLE IF NOT EXISTS ProductionActuals (
