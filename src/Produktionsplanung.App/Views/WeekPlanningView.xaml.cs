@@ -1,8 +1,12 @@
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Win32;
+using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
 namespace Produktionsplanung.App.Views;
@@ -37,6 +41,47 @@ public partial class WeekPlanningView : UserControl
         {
             mainWindow.OpenEmployeeQuickCard(row.EmployeeId, viewModel.WeekStart);
             e.Handled = true;
+        }
+    }
+
+    private void ExportWeeklyPlanPdf_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not WeekPlanningViewModel viewModel)
+            return;
+
+        try
+        {
+            var settings = AppSettingsService.Load();
+            var exportDirectory = string.IsNullOrWhiteSpace(settings.DefaultExportDirectory)
+                ? AppPaths.ExportsDirectory
+                : settings.DefaultExportDirectory;
+            Directory.CreateDirectory(exportDirectory);
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Wochenplan als PDF exportieren",
+                Filter = "PDF-Dokument (*.pdf)|*.pdf",
+                AddExtension = true,
+                DefaultExt = ".pdf",
+                FileName = WeeklyPlanPdfService.BuildFileName(viewModel.WeekStart),
+                InitialDirectory = exportDirectory
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var result = WeeklyPlanPdfService.Export(viewModel.WeekStart, dialog.FileName);
+            viewModel.StatusMessage = $"PDF-Wochenplan erstellt: {result.PageCount} Seite(n), {result.ProductionShiftCount} Produktionsschichten.";
+
+            Process.Start(new ProcessStartInfo(result.FilePath)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            viewModel.StatusMessage = $"PDF-Export fehlgeschlagen: {ex.Message}";
+            MessageBox.Show(ex.Message, "PDF-Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
