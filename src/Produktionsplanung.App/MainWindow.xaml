@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Produktionsplanung.App.Views"
-        Title="OpsCompact – Produktions- &amp; Personalplanung" Icon="{StaticResource OpsCompactIcon}"
+        Title="SolutionCompakt – Produktions- &amp; Personalplanung" Icon="{StaticResource SolutionCompaktIcon}"
         Height="840" Width="1480" MinHeight="720" MinWidth="1120"
         Background="{StaticResource SurfaceBrush}">
     <Window.Resources>
@@ -49,16 +49,15 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Navigation -->
         <Border x:Name="SidebarBorder" Grid.Column="0" Background="{StaticResource SidebarBrush}">
             <DockPanel Margin="14,14,14,12">
                 <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
-                    <Border x:Name="FullBrand" Background="White" CornerRadius="10" Padding="8">
-                        <views:BrandLogo HorizontalAlignment="Left" />
+                    <Border x:Name="FullBrand" Background="White" CornerRadius="10" Padding="4">
+                        <views:BrandLogo HorizontalAlignment="Center" />
                     </Border>
                     <Border x:Name="CompactBrand" Width="44" Height="44" Background="White" CornerRadius="10"
                             HorizontalAlignment="Center" Visibility="Collapsed">
-                        <Image Source="{StaticResource OpsCompactIcon}" Width="28" Height="28" />
+                        <Image Source="{StaticResource SolutionCompaktIcon}" Width="30" Height="30" />
                     </Border>
                 </Grid>
 
@@ -105,7 +104,6 @@
             </DockPanel>
         </Border>
 
-        <!-- Main area -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="58" />
@@ -126,10 +124,10 @@
                             Click="Back_Click" IsEnabled="False" Margin="0,0,14,0" />
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <TextBlock x:Name="CurrentPageTitle" Text="Dashboard" Foreground="{StaticResource TextBrush}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="OpsCompact" Foreground="#94A3B8" FontSize="10" />
+                        <TextBlock Text="SolutionCompakt" Foreground="#94A3B8" FontSize="10" />
                     </StackPanel>
                     <Border Grid.Column="3" Background="#EFF6FF" CornerRadius="15" Padding="10,5" VerticalAlignment="Center">
-                        <TextBlock Text="Planen · Produzieren · Verbessern" Foreground="#1D4ED8" FontSize="11" FontWeight="SemiBold" />
+                        <TextBlock Text="Planen · Organisieren · Voranbringen" Foreground="#1D4ED8" FontSize="11" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
             </Border>
