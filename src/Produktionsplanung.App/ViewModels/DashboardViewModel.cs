@@ -37,6 +37,7 @@ public partial class DashboardViewModel : ObservableObject
     {
         var today = DateTime.Today;
         using var db = new AppDbContext();
+        ProductionScheduleService.EnsureMissingRunSlots(db);
 
         var activeEmployeeIds = db.Employees.AsNoTracking()
             .Where(x => x.IsActive)
@@ -60,19 +61,20 @@ public partial class DashboardViewModel : ObservableObject
         AvailableEmployees = Math.Max(0, ActiveEmployees - AbsentEmployees);
         PlannedEmployees = plannedEmployeeIds.Count(x => activeEmployeeIds.Contains(x));
 
-        var orders = db.ProductionOrders.AsNoTracking()
-            .Include(x => x.Workstation)
+        var runSlots = db.ProductionRunSlots.AsNoTracking()
             .Include(x => x.Shift)
-            .Where(x => x.PlannedDate.Date == today)
-            .AsEnumerable() // SQLite cannot order TimeSpan values.
-            .OrderBy(x => x.Shift?.StartTime)
-            .ThenBy(x => x.Workstation.Name)
-            .ThenBy(x => x.OrderNumber)
+            .Include(x => x.ProductionOrder)
+                .ThenInclude(x => x.Workstation)
+            .Where(x => x.Date.Date == today)
+            .AsEnumerable()
+            .OrderBy(x => x.Shift.StartTime)
+            .ThenBy(x => x.ProductionOrder.Workstation.Name)
+            .ThenBy(x => x.ProductionOrder.OrderNumber)
             .ToList();
 
-        OrdersToday = orders.Count;
-        RunningOrders = orders.Count(x => x.Status == "Läuft");
-        CompletedOrdersToday = orders.Count(x => x.Status == "Abgeschlossen");
+        OrdersToday = runSlots.Count;
+        RunningOrders = runSlots.Count(x => x.ProductionOrder.Status == "Läuft");
+        CompletedOrdersToday = runSlots.Count(x => x.ProductionOrder.Status == "Abgeschlossen");
 
         var coverage = ProductionOrderCoverageService.Load(today, today);
         UnderstaffedOrders = coverage.Count(x => x.CoverageStatus == "Unterbesetzt");
@@ -83,9 +85,9 @@ public partial class DashboardViewModel : ObservableObject
             ? 100
             : (int)Math.Round(coveredStaff * 100.0 / requiredStaff, MidpointRounding.AwayFromZero);
 
-        BuildIssues(db, today, activeEmployeeIds, absentEmployeeIds, coverage);
-        BuildOrders(orders, coverage);
-        BuildWorkstationStatuses(db, orders, coverage);
+        BuildIssues(db, today, activeEmployeeIds, absentEmployeeIds, coverage, runSlots);
+        BuildOrders(runSlots, coverage);
+        BuildWorkstationStatuses(db, runSlots, coverage);
 
         OpenProblems = Issues.Count;
         LastUpdatedText = $"Aktualisiert: {DateTime.Now:HH:mm}";
@@ -96,7 +98,8 @@ public partial class DashboardViewModel : ObservableObject
         DateTime today,
         List<int> activeEmployeeIds,
         List<int> absentEmployeeIds,
-        List<ProductionOrderCoverageRow> coverage)
+        List<ProductionOrderCoverageRow> coverage,
+        List<ProductionRunSlot> runSlots)
     {
         Issues.Clear();
 
@@ -105,8 +108,8 @@ public partial class DashboardViewModel : ObservableObject
             Issues.Add(new DashboardIssue
             {
                 Severity = "Rot",
-                Title = $"Personal fehlt · {row.OrderNumber}",
-                Message = $"{row.WorkstationName} / {row.ShiftName}: {row.PlannedStaff}/{row.RequiredStaff} Personen eingeplant ({Math.Abs(row.Difference)} fehlen)."
+                Title = $"Personal fehlt · {row.OrderNumber} · {row.ShiftName}",
+                Message = $"{row.WorkstationName}: {row.PlannedStaff}/{row.RequiredStaff} Personen eingeplant ({Math.Abs(row.Difference)} fehlen), Produktionsschicht {row.SequenceNumber}."
             });
         }
 
@@ -130,27 +133,30 @@ public partial class DashboardViewModel : ObservableObject
         }
 
         var overdueOrders = db.ProductionOrders.AsNoTracking()
-            .Where(x => x.PlannedDate.Date < today && x.Status != "Abgeschlossen")
-            .OrderBy(x => x.PlannedDate)
+            .Include(x => x.RunSlots)
+            .Where(x => x.Status != "Abgeschlossen")
+            .AsEnumerable()
+            .Where(x => x.RunSlots.Count > 0 && x.RunSlots.Max(s => s.Date.Date) < today)
+            .OrderBy(x => x.RunSlots.Max(s => s.Date))
             .Take(8)
             .ToList();
 
         foreach (var order in overdueOrders)
         {
+            var lastDate = order.RunSlots.Max(x => x.Date);
             Issues.Add(new DashboardIssue
             {
                 Severity = "Gelb",
                 Title = $"Überfälliger Auftrag · {order.OrderNumber}",
-                Message = $"Geplant für {order.PlannedDate:dd.MM.yyyy}, aktueller Status: {order.Status}."
+                Message = $"Letzte geplante Produktionsschicht war am {lastDate:dd.MM.yyyy}, aktueller Status: {order.Status}."
             });
         }
 
-        var problemOrders = db.ProductionOrders.AsNoTracking()
-            .Where(x => x.PlannedDate.Date == today && x.Status == "Problem")
-            .OrderBy(x => x.OrderNumber)
-            .ToList();
-
-        foreach (var order in problemOrders)
+        foreach (var order in runSlots
+                     .Select(x => x.ProductionOrder)
+                     .Where(x => x.Status == "Problem")
+                     .DistinctBy(x => x.Id)
+                     .OrderBy(x => x.OrderNumber))
         {
             Issues.Add(new DashboardIssue
             {
@@ -163,39 +169,45 @@ public partial class DashboardViewModel : ObservableObject
         }
     }
 
-    private void BuildOrders(List<ProductionOrder> orders, List<ProductionOrderCoverageRow> coverage)
+    private void BuildOrders(List<ProductionRunSlot> runSlots, List<ProductionOrderCoverageRow> coverage)
     {
         TodayOrders.Clear();
-        var coverageByOrder = coverage.ToDictionary(x => x.OrderId);
+        var coverageBySlot = coverage
+            .Where(x => x.RunSlotId > 0)
+            .ToDictionary(x => x.RunSlotId);
 
-        foreach (var order in orders)
+        foreach (var slot in runSlots)
         {
-            coverageByOrder.TryGetValue(order.Id, out var orderCoverage);
+            var order = slot.ProductionOrder;
+            coverageBySlot.TryGetValue(slot.Id, out var slotCoverage);
             TodayOrders.Add(new DashboardOrderRow
             {
                 OrderNumber = order.OrderNumber,
                 Product = order.Product,
                 WorkstationName = order.Workstation.Name,
-                ShiftName = order.Shift?.Name ?? "Individuell",
+                ShiftName = slot.Shift.Name,
+                RunText = $"{slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}",
                 Priority = order.Priority,
                 Status = order.Status,
                 CoverageText = order.Status == "Abgeschlossen"
                     ? "—"
-                    : orderCoverage?.CoverageText ?? $"0/{order.RequiredStaff}",
+                    : slotCoverage?.CoverageText ?? $"0/{order.RequiredStaff}",
                 CoverageStatus = order.Status == "Abgeschlossen"
                     ? "Abgeschlossen"
-                    : orderCoverage?.CoverageStatus ?? "Unterbesetzt"
+                    : slotCoverage?.CoverageStatus ?? "Unterbesetzt"
             });
         }
     }
 
     private void BuildWorkstationStatuses(
         AppDbContext db,
-        List<ProductionOrder> orders,
+        List<ProductionRunSlot> runSlots,
         List<ProductionOrderCoverageRow> coverage)
     {
         WorkstationStatuses.Clear();
-        var coverageByOrder = coverage.ToDictionary(x => x.OrderId);
+        var coverageBySlot = coverage
+            .Where(x => x.RunSlotId > 0)
+            .ToDictionary(x => x.RunSlotId);
         var workstations = db.Workstations.AsNoTracking()
             .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
@@ -203,33 +215,33 @@ public partial class DashboardViewModel : ObservableObject
 
         foreach (var workstation in workstations)
         {
-            var workstationOrders = orders.Where(x => x.WorkstationId == workstation.Id).ToList();
-            var openOrders = workstationOrders.Where(x => x.Status != "Abgeschlossen").ToList();
-            var uncovered = openOrders.Count(x =>
-                coverageByOrder.TryGetValue(x.Id, out var row) && row.CoverageStatus == "Unterbesetzt");
-            var problemOrders = workstationOrders.Count(x => x.Status == "Problem");
+            var workstationSlots = runSlots.Where(x => x.ProductionOrder.WorkstationId == workstation.Id).ToList();
+            var openSlots = workstationSlots.Where(x => x.ProductionOrder.Status != "Abgeschlossen").ToList();
+            var uncovered = openSlots.Count(x =>
+                coverageBySlot.TryGetValue(x.Id, out var row) && row.CoverageStatus == "Unterbesetzt");
+            var problemSlots = workstationSlots.Count(x => x.ProductionOrder.Status == "Problem");
 
-            var required = openOrders.Sum(x => x.RequiredStaff);
-            var planned = openOrders.Sum(x =>
-                coverageByOrder.TryGetValue(x.Id, out var row) ? row.PlannedStaff : 0);
+            var required = openSlots.Sum(x => x.ProductionOrder.RequiredStaff);
+            var planned = openSlots.Sum(x =>
+                coverageBySlot.TryGetValue(x.Id, out var row) ? row.PlannedStaff : 0);
 
-            var status = problemOrders > 0
+            var status = problemSlots > 0
                 ? "Problem"
                 : uncovered > 0
                     ? "Personal fehlt"
-                    : openOrders.Count > 0
+                    : openSlots.Count > 0
                         ? "Bereit"
-                        : workstationOrders.Count > 0
+                        : workstationSlots.Count > 0
                             ? "Abgeschlossen"
-                            : "Kein Auftrag";
+                            : "Kein Lauf";
 
             WorkstationStatuses.Add(new DashboardWorkstationRow
             {
                 WorkstationName = workstation.Name,
                 Area = workstation.Area,
-                OrderCount = workstationOrders.Count,
-                OpenOrderCount = openOrders.Count,
-                CoverageText = openOrders.Count == 0 ? "—" : $"{planned}/{required}",
+                OrderCount = workstationSlots.Count,
+                OpenOrderCount = openSlots.Count,
+                CoverageText = openSlots.Count == 0 ? "—" : $"{planned}/{required}",
                 StatusText = status
             });
         }
@@ -249,6 +261,7 @@ public class DashboardOrderRow
     public string Product { get; set; } = string.Empty;
     public string WorkstationName { get; set; } = string.Empty;
     public string ShiftName { get; set; } = string.Empty;
+    public string RunText { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string CoverageText { get; set; } = string.Empty;
