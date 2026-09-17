@@ -95,6 +95,11 @@ public partial class ShiftManagementViewModel : ObservableObject
             StatusMessage = "Schicht kann nicht gelöscht werden, da Planungen vorhanden sind.";
             return;
         }
+        if (db.ProductionRunSlots.Any(x => x.ShiftId == id))
+        {
+            StatusMessage = "Schicht kann nicht gelöscht werden, da sie in Produktionsläufen verwendet wird.";
+            return;
+        }
 
         var entity = db.Shifts.First(x => x.Id == id);
         db.Shifts.Remove(entity);
