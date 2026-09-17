@@ -14,6 +14,23 @@ public partial class PlanningCalendarView : UserControl
         InitializeComponent();
         viewModel = new PlanningCalendarViewModel();
         DataContext = viewModel;
+        Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
+    }
+
+    private void PlanningCalendarView_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        UpdateResponsiveLayout(e.NewSize.Width);
+
+    private void UpdateResponsiveLayout(double width)
+    {
+        if (CalendarDetailColumn is null || CalendarDetailGapColumn is null || CalendarDetailPanel is null)
+            return;
+
+        // Bei kleineren App-Fenstern bekommt der eigentliche Kalender Vorrang. Die rechte
+        // Detailspalte wird ausgeblendet; Einträge bleiben per Doppelklick direkt erreichbar.
+        var compact = width < 1150;
+        CalendarDetailColumn.Width = compact ? new GridLength(0) : new GridLength(292);
+        CalendarDetailGapColumn.Width = compact ? new GridLength(0) : new GridLength(12);
+        CalendarDetailPanel.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void CalendarEntry_Click(object sender, RoutedEventArgs e)
@@ -21,7 +38,7 @@ public partial class PlanningCalendarView : UserControl
         if (sender is not FrameworkElement { DataContext: CalendarEntryRow entry })
             return;
 
-        viewModel.SelectEntry(entry);
+        SelectEntry(entry);
         e.Handled = true;
     }
 
@@ -30,9 +47,16 @@ public partial class PlanningCalendarView : UserControl
         if (sender is not FrameworkElement { DataContext: CalendarEntryRow entry })
             return;
 
-        viewModel.SelectEntry(entry);
+        SelectEntry(entry);
         OpenEntry(entry);
         e.Handled = true;
+    }
+
+    private void SelectEntry(CalendarEntryRow entry)
+    {
+        if (viewModel.SelectedDate.Date != entry.Date.Date)
+            viewModel.SelectDate(entry.Date);
+        viewModel.SelectEntry(entry);
     }
 
     private void OpenSelectedEntry_Click(object sender, RoutedEventArgs e)
@@ -43,24 +67,34 @@ public partial class PlanningCalendarView : UserControl
 
     private void ClearSelection_Click(object sender, RoutedEventArgs e) => viewModel.SelectEntry(null);
 
-    private void OpenEntry(CalendarEntryRow entry)
+    private static void OpenEntry(CalendarEntryRow entry)
     {
         if (Application.Current.MainWindow is not MainWindow mainWindow)
             return;
 
+        switch (entry.EntryType)
+        {
+            case "Einsatz":
+                mainWindow.OpenDayPlanning(entry.Date);
+                return;
+
+            case "Auftrag" when entry.ProductionOrderId.HasValue:
+                mainWindow.OpenProductionOrder(entry.ProductionOrderId.Value);
+                return;
+
+            case "Abwesenheit" when entry.EmployeeId.HasValue:
+                mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
+                return;
+
+            case "Betriebskalender":
+                mainWindow.OpenWorkTimeCalendar();
+                return;
+        }
+
         if (entry.EmployeeId.HasValue)
-        {
             mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
-            return;
-        }
-
-        if (entry.EntryType == "Betriebskalender")
-        {
-            mainWindow.OpenWorkTimeCalendar();
-            return;
-        }
-
-        mainWindow.OpenDayPlanning(entry.Date);
+        else
+            mainWindow.OpenDayPlanning(entry.Date);
     }
 
     private void EmployeeRow_Click(object sender, RoutedEventArgs e)
