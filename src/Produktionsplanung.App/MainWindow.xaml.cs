@@ -12,7 +12,6 @@ public partial class MainWindow : Window
     private readonly Stack<NavigationEntry> navigationHistory = new();
     private NavigationEntry? currentNavigation;
     private EmployeeQuickCardWindow? employeeQuickCardWindow;
-    private Button? activeNavButton;
     private bool sidebarCollapsed;
 
     public MainWindow()
@@ -75,7 +74,7 @@ public partial class MainWindow : Window
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
         NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView()),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
-        NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), employeeId: employeeId),
+        NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
         NavigationRoute.Employees => new(route, "Mitarbeiter", nameof(EmployeesButton), () => new EmployeesView()),
         NavigationRoute.Skills => new(route, "Skill-Matrix", nameof(SkillsButton), () => new SkillMatrixView()),
         NavigationRoute.Workstations => new(route, "Arbeitsplätze", nameof(WorkstationsButton), () => new WorkstationsView()),
@@ -97,8 +96,7 @@ public partial class MainWindow : Window
         ContentHost.Content = entry.CreateContent();
         currentNavigation = entry;
         CurrentPageTitle.Text = entry.Title;
-        var button = FindName(entry.ButtonName) as Button;
-        SetActiveNavigation(button);
+        SetActiveNavigation(FindName(entry.ButtonName) as Button);
         BackButton.IsEnabled = navigationHistory.Count > 0;
     }
 
@@ -128,7 +126,7 @@ public partial class MainWindow : Window
     private void SetActiveNavigation(Button? active)
     {
         foreach (var button in NavigationPanel.Children.OfType<Button>()) { button.Background = Brushes.Transparent; button.Foreground = new SolidColorBrush(Color.FromRgb(217, 230, 242)); }
-        activeNavButton = active; if (active is null) return; active.Background = (Brush)FindResource("PrimaryBrush"); active.Foreground = Brushes.White;
+        if (active is null) return; active.Background = (Brush)FindResource("PrimaryBrush"); active.Foreground = Brushes.White;
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e) { var dialog = new ChangePasswordWindow { Owner = this }; dialog.ShowDialog(); }
