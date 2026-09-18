@@ -1,0 +1,728 @@
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.EntityFrameworkCore;
+using Produktionsplanung.App.Data;
+using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
+
+namespace Produktionsplanung.App.ViewModels;
+
+public partial class ManufacturingControlViewModel : ObservableObject
+{
+    public ObservableCollection<OperationDefinition> Operations { get; } = new();
+    public ObservableCollection<ManufacturingRouting> Routings { get; } = new();
+    public ObservableCollection<RoutingStepRow> RoutingSteps { get; } = new();
+    public ObservableCollection<ProductionOrderOption> ProductionOrders { get; } = new();
+    public ObservableCollection<JobCardRow> JobCards { get; } = new();
+    public ObservableCollection<CapacityRow> CapacityRows { get; } = new();
+    public ObservableCollection<Workstation> Workstations { get; } = new();
+    public ObservableCollection<Qualification> Qualifications { get; } = new();
+    public ObservableCollection<Employee> Employees { get; } = new();
+
+    [ObservableProperty] private OperationDefinition? selectedOperation;
+    [ObservableProperty] private string operationCode = string.Empty;
+    [ObservableProperty] private string operationName = string.Empty;
+    [ObservableProperty] private string operationDescription = string.Empty;
+    [ObservableProperty] private Workstation? selectedDefaultWorkstation;
+    [ObservableProperty] private double defaultMinutes = 30;
+    [ObservableProperty] private int operationRequiredStaff = 1;
+    [ObservableProperty] private Qualification? selectedRequiredQualification;
+    [ObservableProperty] private int requiredQualificationLevel = 1;
+    [ObservableProperty] private bool operationIsActive = true;
+
+    [ObservableProperty] private ManufacturingRouting? selectedRouting;
+    [ObservableProperty] private string routingProduct = string.Empty;
+    [ObservableProperty] private string routingName = string.Empty;
+    [ObservableProperty] private bool routingIsActive = true;
+    [ObservableProperty] private OperationDefinition? selectedStepOperation;
+    [ObservableProperty] private Workstation? selectedStepWorkstation;
+    [ObservableProperty] private double stepMinutes = 30;
+    [ObservableProperty] private int stepRequiredStaff = 1;
+
+    [ObservableProperty] private ProductionOrderOption? selectedProductionOrder;
+    [ObservableProperty] private JobCardRow? selectedJobCard;
+    [ObservableProperty] private Employee? selectedJobCardEmployee;
+    [ObservableProperty] private double finishGoodQuantity;
+    [ObservableProperty] private double finishScrapQuantity;
+    [ObservableProperty] private string jobCardComment = string.Empty;
+
+    [ObservableProperty] private string statusMessage = string.Empty;
+
+    public ManufacturingControlViewModel()
+    {
+        LoadMasterData();
+        LoadOperations();
+        LoadRoutings();
+        LoadProductionOrders();
+        LoadJobCards();
+        RefreshCapacity();
+        NewOperation();
+        NewRouting();
+    }
+
+    partial void OnSelectedOperationChanged(OperationDefinition? value)
+    {
+        if (value is null) return;
+        OperationCode = value.Code;
+        OperationName = value.Name;
+        OperationDescription = value.Description ?? string.Empty;
+        SelectedDefaultWorkstation = Workstations.FirstOrDefault(x => x.Id == value.DefaultWorkstationId);
+        DefaultMinutes = value.DefaultMinutes;
+        OperationRequiredStaff = value.RequiredStaff;
+        SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == value.RequiredQualificationId);
+        RequiredQualificationLevel = value.RequiredQualificationLevel <= 0 ? 1 : value.RequiredQualificationLevel;
+        OperationIsActive = value.IsActive;
+        StatusMessage = string.Empty;
+    }
+
+    partial void OnSelectedRoutingChanged(ManufacturingRouting? value)
+    {
+        if (value is null)
+        {
+            RoutingSteps.Clear();
+            return;
+        }
+
+        RoutingProduct = value.Product;
+        RoutingName = value.Name;
+        RoutingIsActive = value.IsActive;
+        LoadRoutingSteps(value.Id);
+        StatusMessage = string.Empty;
+    }
+
+    partial void OnSelectedProductionOrderChanged(ProductionOrderOption? value)
+    {
+        LoadJobCards(value?.Id);
+        if (value is not null)
+        {
+            var routing = Routings.FirstOrDefault(x =>
+                x.IsActive && string.Equals(x.Product.Trim(), value.Product.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (routing is not null)
+                SelectedRouting = routing;
+        }
+    }
+
+    partial void OnSelectedJobCardChanged(JobCardRow? value)
+    {
+        SelectedJobCardEmployee = value?.EmployeeId is int id ? Employees.FirstOrDefault(x => x.Id == id) : null;
+        FinishGoodQuantity = value?.GoodQuantity ?? 0;
+        FinishScrapQuantity = value?.ScrapQuantity ?? 0;
+        JobCardComment = value?.Comment ?? string.Empty;
+    }
+
+    [RelayCommand]
+    private void Refresh()
+    {
+        LoadMasterData();
+        LoadOperations();
+        LoadRoutings();
+        LoadProductionOrders();
+        LoadJobCards(SelectedProductionOrder?.Id);
+        RefreshCapacity();
+        StatusMessage = "Fertigungssteuerung aktualisiert.";
+    }
+
+    [RelayCommand]
+    private void NewOperation()
+    {
+        SelectedOperation = null;
+        OperationCode = string.Empty;
+        OperationName = string.Empty;
+        OperationDescription = string.Empty;
+        SelectedDefaultWorkstation = Workstations.FirstOrDefault();
+        DefaultMinutes = 30;
+        OperationRequiredStaff = 1;
+        SelectedRequiredQualification = null;
+        RequiredQualificationLevel = 1;
+        OperationIsActive = true;
+        StatusMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void SaveOperation()
+    {
+        if (!EnsurePlanner()) return;
+
+        var code = OperationCode.Trim();
+        var name = OperationName.Trim();
+        if (code.Length == 0 || name.Length == 0)
+        {
+            StatusMessage = "Code und Bezeichnung des Arbeitsgangs sind Pflichtfelder.";
+            return;
+        }
+        if (!double.IsFinite(DefaultMinutes) || DefaultMinutes <= 0 || DefaultMinutes > 100000)
+        {
+            StatusMessage = "Die Sollzeit muss grösser als 0 Minuten sein.";
+            return;
+        }
+        if (OperationRequiredStaff < 1 || OperationRequiredStaff > 100)
+        {
+            StatusMessage = "Der Personalbedarf muss zwischen 1 und 100 liegen.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        var id = SelectedOperation?.Id ?? 0;
+        if (db.OperationDefinitions.Any(x => x.Code == code && x.Id != id))
+        {
+            StatusMessage = $"Der Arbeitsgang-Code {code} existiert bereits.";
+            return;
+        }
+
+        OperationDefinition entity;
+        if (id == 0)
+        {
+            entity = new OperationDefinition();
+            db.OperationDefinitions.Add(entity);
+        }
+        else
+        {
+            entity = db.OperationDefinitions.First(x => x.Id == id);
+        }
+
+        entity.Code = code;
+        entity.Name = name;
+        entity.Description = string.IsNullOrWhiteSpace(OperationDescription) ? null : OperationDescription.Trim();
+        entity.DefaultWorkstationId = SelectedDefaultWorkstation?.Id;
+        entity.DefaultMinutes = DefaultMinutes;
+        entity.RequiredStaff = OperationRequiredStaff;
+        entity.RequiredQualificationId = SelectedRequiredQualification?.Id;
+        entity.RequiredQualificationLevel = SelectedRequiredQualification is null ? 0 : Math.Max(1, RequiredQualificationLevel);
+        entity.IsActive = OperationIsActive;
+        db.SaveChanges();
+
+        LoadOperations(entity.Id);
+        StatusMessage = "Arbeitsgang gespeichert.";
+    }
+
+    [RelayCommand]
+    private void NewRouting()
+    {
+        SelectedRouting = null;
+        RoutingProduct = string.Empty;
+        RoutingName = string.Empty;
+        RoutingIsActive = true;
+        RoutingSteps.Clear();
+        SelectedStepOperation = Operations.FirstOrDefault(x => x.IsActive);
+        ApplyOperationDefaultsToStep();
+        StatusMessage = string.Empty;
+    }
+
+    [RelayCommand]
+    private void SaveRouting()
+    {
+        if (!EnsurePlanner()) return;
+
+        var product = RoutingProduct.Trim();
+        var name = RoutingName.Trim();
+        if (product.Length == 0 || name.Length == 0)
+        {
+            StatusMessage = "Produkt und Name des Arbeitsplans sind Pflichtfelder.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        ManufacturingRouting entity;
+        if (SelectedRouting is null)
+        {
+            entity = new ManufacturingRouting();
+            db.ManufacturingRoutings.Add(entity);
+        }
+        else
+        {
+            entity = db.ManufacturingRoutings.First(x => x.Id == SelectedRouting.Id);
+        }
+
+        entity.Product = product;
+        entity.Name = name;
+        entity.IsActive = RoutingIsActive;
+        db.SaveChanges();
+        LoadRoutings(entity.Id);
+        StatusMessage = "Arbeitsplan gespeichert.";
+    }
+
+    [RelayCommand]
+    private void UseOperationDefaults()
+    {
+        ApplyOperationDefaultsToStep();
+    }
+
+    private void ApplyOperationDefaultsToStep()
+    {
+        if (SelectedStepOperation is null) return;
+        SelectedStepWorkstation = Workstations.FirstOrDefault(x => x.Id == SelectedStepOperation.DefaultWorkstationId)
+                                  ?? Workstations.FirstOrDefault();
+        StepMinutes = SelectedStepOperation.DefaultMinutes;
+        StepRequiredStaff = Math.Max(1, SelectedStepOperation.RequiredStaff);
+    }
+
+    [RelayCommand]
+    private void AddRoutingStep()
+    {
+        if (!EnsurePlanner()) return;
+        if (SelectedRouting is null)
+        {
+            StatusMessage = "Bitte den Arbeitsplan zuerst speichern.";
+            return;
+        }
+        if (SelectedStepOperation is null || SelectedStepWorkstation is null)
+        {
+            StatusMessage = "Arbeitsgang und Arbeitsplatz auswählen.";
+            return;
+        }
+        if (!double.IsFinite(StepMinutes) || StepMinutes <= 0 || StepRequiredStaff < 1)
+        {
+            StatusMessage = "Sollzeit und Personalbedarf des Schritts prüfen.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        var nextSequence = db.RoutingSteps
+            .Where(x => x.ManufacturingRoutingId == SelectedRouting.Id)
+            .Select(x => (int?)x.SequenceNumber)
+            .Max() ?? 0;
+        nextSequence = nextSequence == 0 ? 10 : nextSequence + 10;
+
+        db.RoutingSteps.Add(new RoutingStep
+        {
+            ManufacturingRoutingId = SelectedRouting.Id,
+            OperationDefinitionId = SelectedStepOperation.Id,
+            SequenceNumber = nextSequence,
+            WorkstationId = SelectedStepWorkstation.Id,
+            PlannedMinutes = StepMinutes,
+            RequiredStaff = StepRequiredStaff
+        });
+        db.SaveChanges();
+        LoadRoutingSteps(SelectedRouting.Id);
+        StatusMessage = "Arbeitsgang zum Arbeitsplan hinzugefügt.";
+    }
+
+    [RelayCommand]
+    private void DeleteRoutingStep(RoutingStepRow? row)
+    {
+        if (!EnsurePlanner()) return;
+        if (row is null || SelectedRouting is null) return;
+
+        using var db = new AppDbContext();
+        if (db.JobCards.Any(x => x.RoutingStepId == row.Id))
+        {
+            StatusMessage = "Dieser Arbeitsplan-Schritt wird bereits von Arbeitskarten verwendet und kann nicht gelöscht werden.";
+            return;
+        }
+        var entity = db.RoutingSteps.FirstOrDefault(x => x.Id == row.Id);
+        if (entity is null) return;
+        db.RoutingSteps.Remove(entity);
+        db.SaveChanges();
+        LoadRoutingSteps(SelectedRouting.Id);
+        StatusMessage = "Arbeitsplan-Schritt gelöscht.";
+    }
+
+    [RelayCommand]
+    private void GenerateJobCards()
+    {
+        if (!EnsurePlanner()) return;
+        if (SelectedProductionOrder is null)
+        {
+            StatusMessage = "Bitte einen Produktionsauftrag auswählen.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        var order = db.ProductionOrders.AsNoTracking().First(x => x.Id == SelectedProductionOrder.Id);
+        if (db.JobCards.Any(x => x.ProductionOrderId == order.Id))
+        {
+            StatusMessage = "Für diesen Auftrag existieren bereits Arbeitskarten.";
+            return;
+        }
+
+        var routing = db.ManufacturingRoutings.AsNoTracking()
+            .Where(x => x.IsActive)
+            .AsEnumerable()
+            .FirstOrDefault(x => string.Equals(x.Product.Trim(), order.Product.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (routing is null)
+        {
+            StatusMessage = $"Kein aktiver Arbeitsplan für Produkt „{order.Product}“ gefunden.";
+            return;
+        }
+
+        var steps = db.RoutingSteps.AsNoTracking()
+            .Include(x => x.OperationDefinition)
+            .Where(x => x.ManufacturingRoutingId == routing.Id)
+            .OrderBy(x => x.SequenceNumber)
+            .ToList();
+        if (steps.Count == 0)
+        {
+            StatusMessage = "Der Arbeitsplan enthält noch keine Arbeitsgänge.";
+            return;
+        }
+
+        foreach (var step in steps)
+        {
+            db.JobCards.Add(new JobCard
+            {
+                ProductionOrderId = order.Id,
+                RoutingStepId = step.Id,
+                SequenceNumber = step.SequenceNumber,
+                OperationCode = step.OperationDefinition.Code,
+                OperationName = step.OperationDefinition.Name,
+                WorkstationId = step.WorkstationId,
+                PlannedMinutes = step.PlannedMinutes,
+                RequiredStaff = step.RequiredStaff,
+                Status = "Bereit"
+            });
+        }
+
+        db.SaveChanges();
+        LoadJobCards(order.Id);
+        RefreshCapacity();
+        StatusMessage = $"{steps.Count} Arbeitskarte(n) aus dem Arbeitsplan erzeugt.";
+    }
+
+    [RelayCommand]
+    private void StartJobCard()
+    {
+        if (!EnsurePlanner() || SelectedJobCard is null) return;
+        using var db = new AppDbContext();
+        var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (card.Status == "Fertig")
+        {
+            StatusMessage = "Die Arbeitskarte ist bereits abgeschlossen.";
+            return;
+        }
+        if (card.Status == "In Produktion")
+        {
+            StatusMessage = "Die Arbeitskarte läuft bereits.";
+            return;
+        }
+
+        card.EmployeeId = SelectedJobCardEmployee?.Id ?? card.EmployeeId;
+        card.StartedAtUtc = DateTime.UtcNow;
+        card.PauseStartedAtUtc = null;
+        card.Status = "In Produktion";
+        card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? card.Comment : JobCardComment.Trim();
+        db.SaveChanges();
+        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        StatusMessage = "Arbeitskarte gestartet.";
+    }
+
+    [RelayCommand]
+    private void PauseJobCard()
+    {
+        if (!EnsurePlanner() || SelectedJobCard is null) return;
+        using var db = new AppDbContext();
+        var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (card.Status != "In Produktion" || !card.StartedAtUtc.HasValue)
+        {
+            StatusMessage = "Nur eine laufende Arbeitskarte kann pausiert werden.";
+            return;
+        }
+
+        card.RunMinutes += Math.Max(0, (DateTime.UtcNow - card.StartedAtUtc.Value).TotalMinutes);
+        card.StartedAtUtc = null;
+        card.PauseStartedAtUtc = DateTime.UtcNow;
+        card.Status = "Pausiert";
+        db.SaveChanges();
+        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        StatusMessage = "Arbeitskarte pausiert.";
+    }
+
+    [RelayCommand]
+    private void FinishJobCard()
+    {
+        if (!EnsurePlanner() || SelectedJobCard is null) return;
+        if (FinishGoodQuantity < 0 || FinishScrapQuantity < 0)
+        {
+            StatusMessage = "Gut- und Ausschussmenge dürfen nicht negativ sein.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (card.Status == "Fertig")
+        {
+            StatusMessage = "Die Arbeitskarte ist bereits abgeschlossen.";
+            return;
+        }
+
+        if (card.Status == "In Produktion" && card.StartedAtUtc.HasValue)
+            card.RunMinutes += Math.Max(0, (DateTime.UtcNow - card.StartedAtUtc.Value).TotalMinutes);
+
+        card.StartedAtUtc = null;
+        card.PauseStartedAtUtc = null;
+        card.EmployeeId = SelectedJobCardEmployee?.Id ?? card.EmployeeId;
+        card.GoodQuantity = FinishGoodQuantity;
+        card.ScrapQuantity = FinishScrapQuantity;
+        card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? null : JobCardComment.Trim();
+        card.CompletedAtUtc = DateTime.UtcNow;
+        card.Status = "Fertig";
+        db.SaveChanges();
+
+        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        RefreshCapacity();
+        StatusMessage = "Arbeitskarte abgeschlossen.";
+    }
+
+    [RelayCommand]
+    private void RefreshCapacity()
+    {
+        using var db = new AppDbContext();
+        var start = DateTime.Today;
+        var end = start.AddDays(7);
+        var workstations = db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name).ToList();
+        var rules = db.WorkstationShiftRules.AsNoTracking().Include(x => x.Shift).ToList();
+        var openCards = db.JobCards.AsNoTracking()
+            .Include(x => x.ProductionOrder)
+            .Where(x => x.Status != "Fertig" && x.ProductionOrder.PlannedDate >= start && x.ProductionOrder.PlannedDate < end)
+            .ToList();
+
+        CapacityRows.Clear();
+        foreach (var workstation in workstations)
+        {
+            var stationRules = rules.Where(x => x.WorkstationId == workstation.Id).ToList();
+            double availableMinutes = 0;
+            for (var day = start; day < end; day = day.AddDays(1))
+            {
+                foreach (var rule in stationRules.Where(x => IsAllowed(x, day.DayOfWeek)))
+                    availableMinutes += NetShiftMinutes(rule.Shift);
+            }
+
+            var stationCards = openCards.Where(x => x.WorkstationId == workstation.Id).ToList();
+            var loadMinutes = stationCards.Sum(x => x.PlannedMinutes);
+            var utilization = availableMinutes > 0 ? loadMinutes / availableMinutes * 100d : (loadMinutes > 0 ? 999d : 0d);
+            CapacityRows.Add(new CapacityRow
+            {
+                WorkstationId = workstation.Id,
+                WorkstationName = workstation.Name,
+                Area = workstation.Area,
+                AvailableMinutes = availableMinutes,
+                PlannedMinutes = loadMinutes,
+                OpenJobCards = stationCards.Count,
+                UtilizationPercent = utilization,
+                Status = utilization >= 100 ? "Überlastet" : utilization >= 85 ? "Knapp" : "Frei"
+            });
+        }
+    }
+
+    private void LoadMasterData()
+    {
+        using var db = new AppDbContext();
+        var workstationId = SelectedDefaultWorkstation?.Id;
+        var qualificationId = SelectedRequiredQualification?.Id;
+        var employeeId = SelectedJobCardEmployee?.Id;
+
+        Workstations.Clear();
+        foreach (var x in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name))
+            Workstations.Add(x);
+
+        Qualifications.Clear();
+        foreach (var x in db.Qualifications.AsNoTracking().OrderBy(x => x.Name))
+            Qualifications.Add(x);
+
+        Employees.Clear();
+        foreach (var x in db.Employees.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.LastName).ThenBy(x => x.FirstName))
+            Employees.Add(x);
+
+        SelectedDefaultWorkstation = Workstations.FirstOrDefault(x => x.Id == workstationId) ?? Workstations.FirstOrDefault();
+        SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == qualificationId);
+        SelectedJobCardEmployee = Employees.FirstOrDefault(x => x.Id == employeeId);
+    }
+
+    private void LoadOperations(int? selectId = null)
+    {
+        using var db = new AppDbContext();
+        var currentId = selectId ?? SelectedOperation?.Id;
+        var items = db.OperationDefinitions.AsNoTracking().OrderBy(x => x.Code).ToList();
+        Operations.Clear();
+        foreach (var item in items) Operations.Add(item);
+        SelectedOperation = currentId.HasValue ? Operations.FirstOrDefault(x => x.Id == currentId.Value) : null;
+        SelectedStepOperation ??= Operations.FirstOrDefault(x => x.IsActive);
+    }
+
+    private void LoadRoutings(int? selectId = null)
+    {
+        using var db = new AppDbContext();
+        var currentId = selectId ?? SelectedRouting?.Id;
+        var items = db.ManufacturingRoutings.AsNoTracking().OrderBy(x => x.Product).ThenBy(x => x.Name).ToList();
+        Routings.Clear();
+        foreach (var item in items) Routings.Add(item);
+        SelectedRouting = currentId.HasValue ? Routings.FirstOrDefault(x => x.Id == currentId.Value) : null;
+    }
+
+    private void LoadRoutingSteps(int routingId)
+    {
+        using var db = new AppDbContext();
+        var rows = db.RoutingSteps.AsNoTracking()
+            .Include(x => x.OperationDefinition)
+            .Include(x => x.Workstation)
+            .Where(x => x.ManufacturingRoutingId == routingId)
+            .OrderBy(x => x.SequenceNumber)
+            .ToList();
+        RoutingSteps.Clear();
+        foreach (var x in rows)
+        {
+            RoutingSteps.Add(new RoutingStepRow
+            {
+                Id = x.Id,
+                SequenceNumber = x.SequenceNumber,
+                OperationCode = x.OperationDefinition.Code,
+                OperationName = x.OperationDefinition.Name,
+                WorkstationName = x.Workstation.Name,
+                PlannedMinutes = x.PlannedMinutes,
+                RequiredStaff = x.RequiredStaff
+            });
+        }
+    }
+
+    private void LoadProductionOrders()
+    {
+        using var db = new AppDbContext();
+        var selectedId = SelectedProductionOrder?.Id;
+        var items = db.ProductionOrders.AsNoTracking()
+            .OrderByDescending(x => x.PlannedDate)
+            .ThenBy(x => x.OrderNumber)
+            .Select(x => new ProductionOrderOption
+            {
+                Id = x.Id,
+                OrderNumber = x.OrderNumber,
+                Product = x.Product,
+                PlannedDate = x.PlannedDate,
+                Status = x.Status
+            }).ToList();
+
+        ProductionOrders.Clear();
+        foreach (var item in items) ProductionOrders.Add(item);
+        SelectedProductionOrder = selectedId.HasValue
+            ? ProductionOrders.FirstOrDefault(x => x.Id == selectedId.Value)
+            : ProductionOrders.FirstOrDefault();
+    }
+
+    private void LoadJobCards(int? orderId = null, int? selectId = null)
+    {
+        using var db = new AppDbContext();
+        var query = db.JobCards.AsNoTracking()
+            .Include(x => x.Workstation)
+            .Include(x => x.Employee)
+            .Include(x => x.ProductionOrder)
+            .AsQueryable();
+        if (orderId.HasValue)
+            query = query.Where(x => x.ProductionOrderId == orderId.Value);
+
+        var items = query.OrderByDescending(x => x.ProductionOrder.PlannedDate)
+            .ThenBy(x => x.ProductionOrder.OrderNumber)
+            .ThenBy(x => x.SequenceNumber)
+            .ToList();
+
+        JobCards.Clear();
+        foreach (var x in items)
+        {
+            JobCards.Add(new JobCardRow
+            {
+                Id = x.Id,
+                ProductionOrderId = x.ProductionOrderId,
+                OrderNumber = x.ProductionOrder.OrderNumber,
+                Product = x.ProductionOrder.Product,
+                SequenceNumber = x.SequenceNumber,
+                OperationCode = x.OperationCode,
+                OperationName = x.OperationName,
+                WorkstationName = x.Workstation.Name,
+                EmployeeId = x.EmployeeId,
+                EmployeeName = x.Employee is null ? "–" : $"{x.Employee.LastName}, {x.Employee.FirstName}",
+                PlannedMinutes = x.PlannedMinutes,
+                RunMinutes = x.RunMinutes,
+                RequiredStaff = x.RequiredStaff,
+                Status = x.Status,
+                GoodQuantity = x.GoodQuantity,
+                ScrapQuantity = x.ScrapQuantity,
+                Comment = x.Comment
+            });
+        }
+
+        SelectedJobCard = selectId.HasValue ? JobCards.FirstOrDefault(x => x.Id == selectId.Value) : null;
+    }
+
+    private bool EnsurePlanner()
+    {
+        if (SessionService.IsPlannerOrAdmin) return true;
+        StatusMessage = "Nur Planer oder Administratoren dürfen Fertigungsdaten ändern.";
+        return false;
+    }
+
+    private static bool IsAllowed(WorkstationShiftRule rule, DayOfWeek day) => day switch
+    {
+        DayOfWeek.Monday => rule.Monday,
+        DayOfWeek.Tuesday => rule.Tuesday,
+        DayOfWeek.Wednesday => rule.Wednesday,
+        DayOfWeek.Thursday => rule.Thursday,
+        DayOfWeek.Friday => rule.Friday,
+        DayOfWeek.Saturday => rule.Saturday,
+        DayOfWeek.Sunday => rule.Sunday,
+        _ => false
+    };
+
+    private static double NetShiftMinutes(Shift shift)
+    {
+        var start = DateTime.Today + shift.StartTime;
+        var end = DateTime.Today + shift.EndTime;
+        if (end <= start) end = end.AddDays(1);
+        return Math.Max(0, (end - start).TotalMinutes - shift.BreakMinutes);
+    }
+}
+
+public sealed class RoutingStepRow
+{
+    public int Id { get; set; }
+    public int SequenceNumber { get; set; }
+    public string OperationCode { get; set; } = string.Empty;
+    public string OperationName { get; set; } = string.Empty;
+    public string WorkstationName { get; set; } = string.Empty;
+    public double PlannedMinutes { get; set; }
+    public int RequiredStaff { get; set; }
+}
+
+public sealed class ProductionOrderOption
+{
+    public int Id { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string Product { get; set; } = string.Empty;
+    public DateTime PlannedDate { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string DisplayName => $"{OrderNumber} · {Product} · {PlannedDate:dd.MM.yyyy}";
+}
+
+public sealed class JobCardRow
+{
+    public int Id { get; set; }
+    public int ProductionOrderId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string Product { get; set; } = string.Empty;
+    public int SequenceNumber { get; set; }
+    public string OperationCode { get; set; } = string.Empty;
+    public string OperationName { get; set; } = string.Empty;
+    public string WorkstationName { get; set; } = string.Empty;
+    public int? EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
+    public double PlannedMinutes { get; set; }
+    public double RunMinutes { get; set; }
+    public int RequiredStaff { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public double GoodQuantity { get; set; }
+    public double ScrapQuantity { get; set; }
+    public string? Comment { get; set; }
+    public string TimeText => $"{RunMinutes:N0} / {PlannedMinutes:N0} min";
+}
+
+public sealed class CapacityRow
+{
+    public int WorkstationId { get; set; }
+    public string WorkstationName { get; set; } = string.Empty;
+    public string Area { get; set; } = string.Empty;
+    public double AvailableMinutes { get; set; }
+    public double PlannedMinutes { get; set; }
+    public int OpenJobCards { get; set; }
+    public double UtilizationPercent { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string AvailableText => $"{AvailableMinutes / 60d:N1} h";
+    public string PlannedText => $"{PlannedMinutes / 60d:N1} h";
+    public string UtilizationText => UtilizationPercent >= 999 ? ">999 %" : $"{UtilizationPercent:N0} %";
+}
