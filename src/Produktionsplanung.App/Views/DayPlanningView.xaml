@@ -14,8 +14,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Tagesplanung" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-                <TextBlock Text="{Binding SelectedDateText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,0" />
+                <TextBlock Text="Tagesplanung" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                <TextBlock Text="{Binding SelectedDateText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" />
@@ -38,9 +38,9 @@
 
             <ScrollViewer x:Name="PlanningOverviewPanel" Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
                 <StackPanel>
-                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Warnungen und Hinweise" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <TextBlock Text="Warnungen und Hinweise" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
                             <ItemsControl ItemsSource="{Binding Alerts}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -55,22 +55,20 @@
                                                         <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
                                                             <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Gelb">
+                                                            <Setter TargetName="AlertSeverityText" Property="Text" Value="WARNUNG" />
+                                                            <Setter TargetName="AlertSeverityText" Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
+                                                            <Setter TargetName="AlertSeverityText" Property="Text" Value="HINWEIS" />
+                                                            <Setter TargetName="AlertSeverityText" Property="Foreground" Value="{StaticResource InfoBrush}" />
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Severity}" Value="Gelb"><Setter Property="Foreground" Value="{StaticResource WarningBrush}" /></DataTrigger>
-                                                                <DataTrigger Binding="{Binding Severity}" Value="Hinweis"><Setter Property="Foreground" Value="{StaticResource InfoBrush}" /></DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                                <TextBlock x:Name="AlertSeverityText" Text="KRITISCH" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}" />
                                                 <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
                                             </Grid>
                                         </Border>
@@ -80,15 +78,15 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
                             <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="Auftragsabdeckung" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <TextBlock Text="Auftragsabdeckung" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                                 <Button Grid.Column="1" Content="Auto besetzen" Padding="12,5" Command="{Binding AutoStaffSelectedOrderCommand}"/>
                             </Grid>
                             <TextBlock Text="Auftrag markieren und automatisch mit verfügbaren, passenden Mitarbeitenden auffüllen."
-                                       Foreground="#64748B" Margin="0,0,0,10" />
+                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,10" />
                             <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" SelectedItem="{Binding SelectedProductionOrderCoverage, Mode=TwoWay}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="130" MaxHeight="240">
                                 <DataGrid.Columns>
@@ -105,10 +103,10 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
-                            <TextBlock Text="Besetzung je Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4" />
-                            <TextBlock Text="Bewertet werden tatsächlich geplante Arbeitsplatz-/Schicht-Kombinationen; die Auftragsabdeckung oben zeigt den konkreten Personalbedarf." Foreground="#64748B" Margin="0,0,0,10" />
+                            <TextBlock Text="Besetzung je Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
+                            <TextBlock Text="Bewertet werden tatsächlich geplante Arbeitsplatz-/Schicht-Kombinationen; die Auftragsabdeckung oben zeigt den konkreten Personalbedarf." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,10" />
                             <DataGrid ItemsSource="{Binding Staffing}" AutoGenerateColumns="False" IsReadOnly="True"
                                       CanUserAddRows="False" HeadersVisibility="Column" MinHeight="150" MaxHeight="240">
                                 <DataGrid.Columns>
@@ -125,11 +123,11 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="White" CornerRadius="12" Padding="18">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18">
                         <StackPanel>
                             <Grid Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="Geplante Einsätze" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <TextBlock Text="Geplante Einsätze" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                                 <Button Grid.Column="1" Content="+ Neue Zuweisung" Padding="14,6" Command="{Binding NewAssignmentCommand}" />
                             </Grid>
                             <DataGrid ItemsSource="{Binding Assignments}" SelectedItem="{Binding SelectedAssignment, Mode=TwoWay}"
@@ -148,34 +146,34 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border x:Name="AssignmentEditorPanel" Grid.Row="0" Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
+            <Border x:Name="AssignmentEditorPanel" Grid.Row="0" Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="22">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="Zuweisung" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="Mitarbeiter einer Schicht und einem Arbeitsplatz zuordnen." Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,20" />
+                        <TextBlock Text="Zuweisung" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Mitarbeiter einer Schicht und einem Arbeitsplatz zuordnen." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,20" />
                         <TextBlock Text="Mitarbeiter" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
                         <TextBlock Text="Arbeitsplatz" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,6" />
-                        <TextBlock Text="{Binding WorkstationSkillRequirementText}" Foreground="#1D4ED8" TextWrapping="Wrap" Margin="0,0,0,14" />
+                        <TextBlock Text="{Binding WorkstationSkillRequirementText}" Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" Margin="0,0,0,14" />
                         <TextBlock Text="Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
 
-                        <Border Background="#F8FAFC" CornerRadius="9" Padding="12" Margin="0,0,0,14">
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="9" Padding="12" Margin="0,0,0,14">
                             <StackPanel>
-                                <TextBlock Text="Passende Mitarbeitende" FontWeight="SemiBold" Foreground="#0F172A" />
+                                <TextBlock Text="Passende Mitarbeitende" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                                 <TextBlock Text="Verfügbar, nicht doppelt belegt und – falls gefordert – ausreichend qualifiziert. Sortiert nach Skill und Wochenbelastung."
-                                           Foreground="#64748B" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,8" />
+                                           Foreground="{StaticResource MutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,8" />
                                 <ItemsControl ItemsSource="{Binding EmployeeSuggestions}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="White" CornerRadius="7" Padding="8" Margin="0,0,0,6">
+                                            <Border Background="{StaticResource CardBrush}" CornerRadius="7" Padding="8" Margin="0,0,0,6">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding EmployeeName}" FontWeight="SemiBold" />
-                                                        <TextBlock Text="{Binding SkillText}" Foreground="#475569" FontSize="12" />
-                                                        <TextBlock Text="{Binding LoadText}" Foreground="#64748B" FontSize="12" />
+                                                        <TextBlock Text="{Binding SkillText}" Foreground="{StaticResource MutedTextBrush}" FontSize="12" />
+                                                        <TextBlock Text="{Binding LoadText}" Foreground="{StaticResource MutedTextBrush}" FontSize="12" />
                                                     </StackPanel>
                                                     <Button Grid.Column="1" Content="Übernehmen" Padding="10,4" Margin="8,0,0,0"
                                                             Command="{Binding DataContext.UseSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -190,9 +188,9 @@
 
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
-                        <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,18">
+                        <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,18">
                             <TextBlock Text="SolutionCompakt prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
-                                       TextWrapping="Wrap" Foreground="#1E3A8A" />
+                                       TextWrapping="Wrap" Foreground="{StaticResource PrimaryDarkBrush}" />
                         </Border>
                         <Border CornerRadius="8" Padding="10,7" Margin="0,0,0,10">
                             <Border.Style>
