@@ -373,7 +373,10 @@ public partial class ManufacturingControlViewModel : ObservableObject
             });
         }
 
+        var trackedOrder = db.ProductionOrders.First(x => x.Id == order.Id);
+        trackedOrder.Status = "Bereit";
         db.SaveChanges();
+        LoadProductionOrders();
         LoadJobCards(order.Id);
         RefreshCapacity();
         StatusMessage = $"{steps.Count} Arbeitskarte(n) aus dem Arbeitsplan erzeugt.";
