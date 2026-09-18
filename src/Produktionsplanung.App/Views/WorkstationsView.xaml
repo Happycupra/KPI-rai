@@ -6,13 +6,13 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <StackPanel Margin="0,0,0,16">
             <TextBlock Text="Arbeitsplätze / Produktionslinien" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
-            <TextBlock Text="Maschinen, Besetzung, Qualifikationen und individuelle Schichtmodelle verwalten." Foreground="#627D98" Margin="0,4,0,0"/>
+            <TextBlock Text="Maschinen, Besetzung, Qualifikationen und individuelle Schichtmodelle verwalten." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0"/>
         </StackPanel>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions><ColumnDefinition Width="1.25*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="610"/></Grid.ColumnDefinitions>
 
-            <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="14">
+            <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="14">
                 <DataGrid ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation}" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False">
                     <DataGrid.Columns>
@@ -28,7 +28,7 @@
                 </DataGrid>
             </Border>
 
-            <Border Grid.Column="2" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="20">
+            <Border Grid.Column="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="20">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Arbeitsplatz bearbeiten" FontSize="20" FontWeight="SemiBold" Foreground="#102A43" Margin="0,0,0,16"/>
@@ -61,13 +61,13 @@
                                         <TextBlock Text="Nur freigegebene Schichten werden bei neuen Produktionsläufen verwendet. Wochentage können je Schicht unterschiedlich sein."
                                                    Foreground="#5A6B7D" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,0"/>
                                     </StackPanel>
-                                    <Border Grid.Column="1" Background="#EAF2FF" CornerRadius="12" Padding="10,4" VerticalAlignment="Top" Margin="12,0,0,0">
-                                        <TextBlock Text="{Binding ShiftModelText}" Foreground="#1D4ED8" FontWeight="SemiBold" FontSize="11"/>
+                                    <Border Grid.Column="1" Background="{StaticResource PrimarySoftBrush}" CornerRadius="12" Padding="10,4" VerticalAlignment="Top" Margin="12,0,0,0">
+                                        <TextBlock Text="{Binding ShiftModelText}" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold" FontSize="11"/>
                                     </Border>
                                 </Grid>
 
                                 <WrapPanel Margin="0,12,0,10">
-                                    <TextBlock Text="Schnellwahl:" VerticalAlignment="Center" Foreground="#64748B" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Schnellwahl:" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,8,0"/>
                                     <Button Content="1-Schicht" Command="{Binding ApplyShiftPresetCommand}" CommandParameter="1" Padding="10,4" Margin="0,0,6,0"/>
                                     <Button Content="2-Schicht" Command="{Binding ApplyShiftPresetCommand}" CommandParameter="2" Padding="10,4" Margin="0,0,6,0"/>
                                     <Button Content="3-Schicht" Command="{Binding ApplyShiftPresetCommand}" CommandParameter="3" Padding="10,4" Margin="0,0,12,0"/>
@@ -81,31 +81,31 @@
                                             <ColumnDefinition Width="38"/><ColumnDefinition Width="150"/><ColumnDefinition Width="54"/>
                                             <ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="AN" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="SCHICHT" FontSize="9" FontWeight="SemiBold" Foreground="#627D98"/>
-                                        <TextBlock Grid.Column="2" Text="ZEIT" FontSize="9" FontWeight="SemiBold" Foreground="#627D98"/>
-                                        <TextBlock Grid.Column="3" Text="MO" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="4" Text="DI" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="5" Text="MI" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="6" Text="DO" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="7" Text="FR" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="8" Text="SA" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
-                                        <TextBlock Grid.Column="9" Text="SO" FontSize="9" FontWeight="SemiBold" Foreground="#627D98" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="AN" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="SCHICHT" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+                                        <TextBlock Grid.Column="2" Text="ZEIT" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}"/>
+                                        <TextBlock Grid.Column="3" Text="MO" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Text="DI" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="5" Text="MI" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="6" Text="DO" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="7" Text="FR" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="8" Text="SA" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="9" Text="SO" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
                                     </Grid>
                                 </Border>
 
                                 <ItemsControl ItemsSource="{Binding ShiftRules}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="White" BorderBrush="#E1EAF3" BorderThickness="0,0,0,1" Padding="7,6">
+                                            <Border Background="{StaticResource CardBrush}" BorderBrush="#E1EAF3" BorderThickness="0,0,0,1" Padding="7,6">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="38"/><ColumnDefinition Width="150"/><ColumnDefinition Width="54"/>
                                                         <ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/><ColumnDefinition Width="34"/>
                                                     </Grid.ColumnDefinitions>
                                                     <CheckBox IsChecked="{Binding IsEnabled}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding ShiftName}" FontWeight="SemiBold" Foreground="#243B53" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="10" Foreground="#627D98" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding ShiftName}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding TimeText}" FontSize="10" Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center"/>
                                                     <CheckBox Grid.Column="3" IsChecked="{Binding Monday}" IsEnabled="{Binding IsEnabled}" HorizontalAlignment="Center"/>
                                                     <CheckBox Grid.Column="4" IsChecked="{Binding Tuesday}" IsEnabled="{Binding IsEnabled}" HorizontalAlignment="Center"/>
                                                     <CheckBox Grid.Column="5" IsChecked="{Binding Wednesday}" IsEnabled="{Binding IsEnabled}" HorizontalAlignment="Center"/>
@@ -124,11 +124,11 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="#EFF6FF" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,10">
                             <StackPanel>
-                                <TextBlock Text="Qualifikationspflicht" FontWeight="SemiBold" Foreground="#1E3A8A"/>
+                                <TextBlock Text="Qualifikationspflicht" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"/>
                                 <TextBlock Text="Nur entsprechend qualifizierte Mitarbeitende werden vorgeschlagen; Fehlplanungen erscheinen als Skill-Warnung."
-                                           Foreground="#1E3A8A" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                           Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" Margin="0,3,0,0"/>
                             </StackPanel>
                         </Border>
 
