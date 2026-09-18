@@ -60,9 +60,10 @@
                                             </Border.Style>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                <TextBlock Text="KRITISCH" FontWeight="SemiBold">
+                                                <TextBlock FontWeight="SemiBold">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="KRITISCH" />
                                                             <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Severity}" Value="Gelb">
