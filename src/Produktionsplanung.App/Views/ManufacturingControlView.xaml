@@ -214,7 +214,7 @@
                                     <TextBlock Text="Arbeitskarte rückmelden" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,14"/>
                                     <TextBlock Text="{Binding SelectedJobCard.OperationName}" FontSize="18" FontWeight="SemiBold"/>
                                     <TextBlock Text="{Binding SelectedJobCard.WorkstationName}" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,8"/>
-                                    <TextBlock Text="{Binding SelectedJobCard.RequirementText, StringFormat=Pflichtqualifikation: {0}}"
+                                    <TextBlock Text="{Binding SelectedJobCard.RequirementText, StringFormat='Pflichtqualifikation: {0}'}"
                                                FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,0,0,10"/>
 
                                     <TextBlock Text="Mitarbeiter" FontWeight="SemiBold"/>
