@@ -63,7 +63,7 @@
                         </Grid>
                     </Border>
 
-                    <DataGrid ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
                                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="100" />
