@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     public ObservableCollection<WorkstationOption> Workstations { get; } = new();
     public ObservableCollection<ShiftOption> Shifts { get; } = new();
     public ObservableCollection<ProductionSchedulePreviewRow> RunSchedulePreview { get; } = new();
+    public ICollectionView OrdersView { get; }
+    public IReadOnlyList<string> StatusFilters { get; } = new[] { "Alle", "Offen", "Geplant", "Bereit", "Läuft", "Pausiert", "Problem", "Abgeschlossen" };
     public IReadOnlyList<string> Priorities { get; } = new[] { "Niedrig", "Normal", "Hoch", "Dringend" };
     public IReadOnlyList<string> Statuses { get; } = new[] { "Geplant", "Bereit", "Läuft", "Pausiert", "Abgeschlossen", "Problem" };
     public IReadOnlyList<string> Units { get; } = new[] { "Stück", "kg", "g", "l", "ml", "Charge" };
@@ -34,6 +38,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     [ObservableProperty] private string status = "Geplant";
     [ObservableProperty] private string comment = string.Empty;
     [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private string searchText = string.Empty;
+    [ObservableProperty] private string selectedStatusFilter = "Alle";
 
     public string RunScheduleSummary => PlannedShiftCount <= 1
         ? "1 Schicht"
@@ -41,9 +47,60 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 
     public ProductionOrderManagementViewModel()
     {
+        OrdersView = CollectionViewSource.GetDefaultView(Orders);
+        OrdersView.Filter = MatchesOrderFilter;
         LoadReferenceData();
         LoadOrders();
         NewOrder();
+    }
+
+    public string OrderFilterSummary => $"{OrdersView.Cast<object>().Count()} von {Orders.Count} Aufträgen";
+
+    partial void OnSearchTextChanged(string value)
+    {
+        OrdersView.Refresh();
+        OnPropertyChanged(nameof(OrderFilterSummary));
+    }
+
+    partial void OnSelectedStatusFilterChanged(string value)
+    {
+        OrdersView.Refresh();
+        OnPropertyChanged(nameof(OrderFilterSummary));
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        SearchText = string.Empty;
+        SelectedStatusFilter = "Alle";
+        OrdersView.Refresh();
+        OnPropertyChanged(nameof(OrderFilterSummary));
+    }
+
+    private bool MatchesOrderFilter(object item)
+    {
+        if (item is not ProductionOrderRow row)
+            return false;
+
+        var statusMatches = SelectedStatusFilter switch
+        {
+            "Alle" => true,
+            "Offen" => !string.Equals(row.Status, "Abgeschlossen", StringComparison.OrdinalIgnoreCase),
+            _ => string.Equals(row.Status, SelectedStatusFilter, StringComparison.OrdinalIgnoreCase)
+        };
+        if (!statusMatches)
+            return false;
+
+        var term = SearchText?.Trim();
+        if (string.IsNullOrWhiteSpace(term))
+            return true;
+
+        return row.OrderNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.Product.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.WorkstationName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.ShiftName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.Status.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.Priority.Contains(term, StringComparison.OrdinalIgnoreCase);
     }
 
     partial void OnSelectedOrderChanged(ProductionOrderRow? value)
@@ -418,6 +475,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             });
         }
 
+        OrdersView.Refresh();
+        OnPropertyChanged(nameof(OrderFilterSummary));
         SelectedOrder = selectId.HasValue ? Orders.FirstOrDefault(x => x.Id == selectId) : null;
     }
 }
