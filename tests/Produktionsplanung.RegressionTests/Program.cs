@@ -222,6 +222,7 @@ internal static class Program
         _ = new PlanningCalendarView();
         _ = new ProductionActualView();
         _ = new ProductionOrdersView();
+        _ = new ManufacturingControlView();
         _ = new EmployeesView();
         _ = new WorkstationsView();
         _ = new ShiftsView();
