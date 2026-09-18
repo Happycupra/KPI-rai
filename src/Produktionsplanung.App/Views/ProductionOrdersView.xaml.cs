@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
@@ -9,6 +10,7 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
 {
     private readonly ProductionOrderManagementViewModel viewModel;
     private string baseline = string.Empty;
+    private bool? compactLayout;
 
     public ProductionOrdersView(int? selectedOrderId = null)
     {
@@ -21,6 +23,49 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
 
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         CaptureBaseline();
+        Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
+    }
+
+    private void LayoutRoot_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        UpdateResponsiveLayout(e.NewSize.Width);
+
+    private void UpdateResponsiveLayout(double width)
+    {
+        var compact = width < 1100;
+        if (compactLayout == compact)
+            return;
+
+        compactLayout = compact;
+        if (compact)
+        {
+            MasterDetailGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            MasterDetailGrid.RowDefinitions[0].Height = new GridLength(55, GridUnitType.Star);
+            MasterDetailGrid.RowDefinitions[1].Height = new GridLength(45, GridUnitType.Star);
+
+            Grid.SetRow(OrdersListPanel, 0);
+            Grid.SetColumn(OrdersListPanel, 0);
+            OrdersListPanel.Margin = new Thickness(0, 0, 0, 12);
+
+            Grid.SetRow(OrderEditorPanel, 1);
+            Grid.SetColumn(OrderEditorPanel, 0);
+            OrderEditorPanel.Margin = new Thickness(0);
+        }
+        else
+        {
+            MasterDetailGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.ColumnDefinitions[1].Width = new GridLength(430);
+            MasterDetailGrid.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.RowDefinitions[1].Height = new GridLength(0);
+
+            Grid.SetRow(OrdersListPanel, 0);
+            Grid.SetColumn(OrdersListPanel, 0);
+            OrdersListPanel.Margin = new Thickness(0, 0, 18, 0);
+
+            Grid.SetRow(OrderEditorPanel, 0);
+            Grid.SetColumn(OrderEditorPanel, 1);
+            OrderEditorPanel.Margin = new Thickness(0);
+        }
     }
 
     public bool HasUnsavedChanges => baseline != BuildSnapshot();

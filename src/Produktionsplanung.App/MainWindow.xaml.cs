@@ -1,7 +1,10 @@
+using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.Views;
 
@@ -17,6 +20,10 @@ public partial class MainWindow : Window
     private bool productionGroupCollapsed;
     private bool masterDataGroupCollapsed;
     private bool systemGroupCollapsed;
+    private readonly DispatcherTimer inactivityTimer = new() { Interval = TimeSpan.FromSeconds(10) };
+    private DateTime lastActivityUtc = DateTime.UtcNow;
+    private bool sessionLocked;
+    private bool bypassUnsavedChangesPrompt;
 
     public MainWindow()
     {
@@ -30,6 +37,12 @@ public partial class MainWindow : Window
         systemGroupCollapsed = settings.SystemGroupCollapsed;
         SetSidebarCollapsed(settings.SidebarCollapsed, persist: false);
         ApplyGroupVisibility();
+
+        inactivityTimer.Tick += InactivityTimer_Tick;
+        inactivityTimer.Start();
+        InputManager.Current.PreProcessInput += InputManager_PreProcessInput;
+        Closing += MainWindow_Closing;
+        Closed += MainWindow_Closed;
 
         Navigate(CreateEntry(NavigationRoute.Dashboard), addToHistory: false);
     }
@@ -116,6 +129,9 @@ public partial class MainWindow : Window
 
     private void Navigate(NavigationEntry entry, bool addToHistory = true)
     {
+        if (!CanLeaveCurrentContent())
+            return;
+
         if (addToHistory && currentNavigation is not null) navigationHistory.Push(currentNavigation);
         ShowEntry(entry);
     }
@@ -131,8 +147,100 @@ public partial class MainWindow : Window
 
     private void Back_Click(object sender, RoutedEventArgs e)
     {
-        if (navigationHistory.Count == 0) return;
+        if (navigationHistory.Count == 0 || !CanLeaveCurrentContent()) return;
         ShowEntry(navigationHistory.Pop());
+    }
+
+    private bool CanLeaveCurrentContent()
+    {
+        if (bypassUnsavedChangesPrompt ||
+            ContentHost.Content is not IUnsavedChangesAware dirtyAware ||
+            !dirtyAware.HasUnsavedChanges)
+            return true;
+
+        var result = MessageBox.Show(
+            this,
+            $"Es gibt ungespeicherte Änderungen in „{dirtyAware.UnsavedChangesDescription}“.\n\n" +
+            "Ja = speichern und fortfahren\nNein = Änderungen verwerfen\nAbbrechen = hier bleiben",
+            "Ungespeicherte Änderungen",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Warning);
+
+        if (result == MessageBoxResult.Cancel)
+            return false;
+
+        if (result == MessageBoxResult.No)
+        {
+            dirtyAware.DiscardChanges();
+            return true;
+        }
+
+        return dirtyAware.TrySaveChanges();
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (!CanLeaveCurrentContent())
+            e.Cancel = true;
+    }
+
+    private void MainWindow_Closed(object? sender, EventArgs e)
+    {
+        inactivityTimer.Stop();
+        InputManager.Current.PreProcessInput -= InputManager_PreProcessInput;
+    }
+
+    private void InputManager_PreProcessInput(object sender, PreProcessInputEventArgs e)
+    {
+        if (sessionLocked || !SessionService.IsAuthenticated)
+            return;
+
+        if (e.StagingItem.Input is KeyboardEventArgs or MouseEventArgs)
+            lastActivityUtc = DateTime.UtcNow;
+    }
+
+    private void InactivityTimer_Tick(object? sender, EventArgs e)
+    {
+        if (sessionLocked || !SessionService.IsAuthenticated)
+            return;
+
+        var settings = AppSettingsService.Load();
+        if (!settings.AutoLockEnabled)
+        {
+            lastActivityUtc = DateTime.UtcNow;
+            return;
+        }
+
+        var timeoutMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
+        if (DateTime.UtcNow - lastActivityUtc < TimeSpan.FromMinutes(timeoutMinutes))
+            return;
+
+        LockSession();
+    }
+
+    private void LockSession()
+    {
+        if (sessionLocked || SessionService.CurrentUser is null)
+            return;
+
+        sessionLocked = true;
+        employeeQuickCardWindow?.Close();
+        employeeQuickCardWindow = null;
+        AuditService.Log("Sitzung gesperrt", "Session", SessionService.CurrentUser.Id.ToString(),
+            "Automatische Sperre wegen Inaktivität.");
+
+        try
+        {
+            var unlock = new SessionUnlockWindow { Owner = this };
+            unlock.ShowDialog();
+        }
+        finally
+        {
+            sessionLocked = false;
+            lastActivityUtc = DateTime.UtcNow;
+            if (SessionService.IsAuthenticated)
+                AuditService.Log("Sitzung entsperrt", "Session", SessionService.CurrentUser?.Id.ToString(), null);
+        }
     }
 
     private void ToggleSidebar_Click(object sender, RoutedEventArgs e) => SetSidebarCollapsed(!sidebarCollapsed);
