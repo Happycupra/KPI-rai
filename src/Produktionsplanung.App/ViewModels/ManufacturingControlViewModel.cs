@@ -816,7 +816,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return false;
         }
 
-        var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == employeeId.Value && x.IsActive);
+        var resolvedEmployeeId = employeeId.Value;
+        var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == resolvedEmployeeId && x.IsActive);
         if (employee is null)
         {
             message = "Arbeitskarte gesperrt: Der ausgewählte Mitarbeiter ist nicht aktiv.";
@@ -824,7 +825,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         }
 
         var level = db.EmployeeQualifications.AsNoTracking()
-            .Where(x => x.EmployeeId == employeeId.Value && x.QualificationId == card.RequiredQualificationId.Value)
+            .Where(x => x.EmployeeId == resolvedEmployeeId && x.QualificationId == card.RequiredQualificationId.Value)
             .Select(x => (int?)x.Level)
             .FirstOrDefault() ?? 0;
 
