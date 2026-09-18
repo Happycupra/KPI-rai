@@ -11,8 +11,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Auswertungen / KPIs" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-                    <TextBlock Text="{Binding PeriodText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,0" />
+                    <TextBlock Text="Auswertungen / KPIs" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                    <TextBlock Text="{Binding PeriodText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -27,63 +27,63 @@
             </Grid>
 
             <UniformGrid Columns="4" Margin="0,0,0,14">
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Geplante Stunden" Foreground="#64748B" />
-                        <TextBlock Text="{Binding PlannedHoursText}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" />
-                        <TextBlock Text="{Binding TargetHoursText, StringFormat=Soll: {0}}" Foreground="#64748B" Margin="0,3,0,0" />
+                        <TextBlock Text="Geplante Stunden" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding PlannedHoursText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="{Binding TargetHoursText, StringFormat=Soll: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Stundendifferenz" Foreground="#64748B" />
-                        <TextBlock Text="{Binding HoursDifferenceText}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" />
-                        <TextBlock Text="Plan minus Soll" Foreground="#64748B" Margin="0,3,0,0" />
+                        <TextBlock Text="Stundendifferenz" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding HoursDifferenceText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Plan minus Soll" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Personalabdeckung" Foreground="#64748B" />
-                        <TextBlock Text="{Binding PersonnelCoverageText}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" />
-                        <TextBlock Text="{Binding UnderstaffedOrders, StringFormat=Unterbesetzte Aufträge: {0}}" Foreground="#64748B" Margin="0,3,0,0" />
+                        <TextBlock Text="Personalabdeckung" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding PersonnelCoverageText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="{Binding UnderstaffedOrders, StringFormat=Unterbesetzte Aufträge: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Fehlzeitenquote" Foreground="#64748B" />
-                        <TextBlock Text="{Binding AbsenceRateText}" FontSize="27" FontWeight="Bold" Foreground="#0F172A" />
-                        <TextBlock Text="{Binding AbsenceDays, StringFormat=Abwesenheitstage: {0}}" Foreground="#64748B" Margin="0,3,0,0" />
+                        <TextBlock Text="Fehlzeitenquote" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding AbsenceRateText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="{Binding AbsenceDays, StringFormat=Abwesenheitstage: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
             <UniformGrid Columns="4" Margin="0,0,0,20">
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Aktive Mitarbeiter" Foreground="#64748B" />
+                        <TextBlock Text="Aktive Mitarbeiter" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBlock Text="{Binding ActiveEmployees}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding PlannedEmployeeCount, StringFormat=Mit Planung: {0}}" Foreground="#64748B" />
+                        <TextBlock Text="{Binding PlannedEmployeeCount, StringFormat=Mit Planung: {0}}" Foreground="{StaticResource MutedTextBrush}" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Aufträge gesamt" Foreground="#64748B" />
+                        <TextBlock Text="Aufträge gesamt" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBlock Text="{Binding TotalOrders}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding OpenOrders, StringFormat=Offen: {0}}" Foreground="#64748B" />
+                        <TextBlock Text="{Binding OpenOrders, StringFormat=Offen: {0}}" Foreground="{StaticResource MutedTextBrush}" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Abschlussquote" Foreground="#64748B" />
+                        <TextBlock Text="Abschlussquote" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBlock Text="{Binding CompletionRateText}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding CompletedOrders, StringFormat=Abgeschlossen: {0}}" Foreground="#64748B" />
+                        <TextBlock Text="{Binding CompletedOrders, StringFormat=Abgeschlossen: {0}}" Foreground="{StaticResource MutedTextBrush}" />
                     </StackPanel>
                 </Border>
-                <Border Background="White" CornerRadius="12" Padding="16">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Auftragsprobleme" Foreground="#64748B" />
+                        <TextBlock Text="Auftragsprobleme" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBlock Text="{Binding ProblemOrders}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" />
-                        <TextBlock Text="{Binding RunningOrders, StringFormat=Laufend: {0}}" Foreground="#64748B" />
+                        <TextBlock Text="{Binding RunningOrders, StringFormat=Laufend: {0}}" Foreground="{StaticResource MutedTextBrush}" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -94,10 +94,10 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,16,0">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,16,0">
                     <StackPanel>
-                        <TextBlock Text="Verlauf im Zeitraum" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
-                        <TextBlock Text="Geplante Stunden je Tag; der Balken ist relativ zum stärksten Tag im gewählten Zeitraum." Foreground="#64748B" Margin="0,4,0,12" />
+                        <TextBlock Text="Verlauf im Zeitraum" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Geplante Stunden je Tag; der Balken ist relativ zum stärksten Tag im gewählten Zeitraum." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,12" />
                         <ItemsControl ItemsSource="{Binding DailyRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -108,11 +108,11 @@
                                             <ColumnDefinition Width="72" />
                                             <ColumnDefinition Width="80" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding DayText}" VerticalAlignment="Center" Foreground="#334155" />
+                                        <TextBlock Text="{Binding DayText}" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}" />
                                         <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding HoursChartPercent}"
                                                      Height="16" VerticalAlignment="Center" Margin="8,0" />
                                         <TextBlock Grid.Column="2" Text="{Binding PlannedHoursText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="3" Text="{Binding CoverageText}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#64748B" />
+                                        <TextBlock Grid.Column="3" Text="{Binding CoverageText}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" />
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -120,9 +120,9 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="18">
+                <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18">
                     <StackPanel>
-                        <TextBlock Text="Auftragsstatus" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,12" />
+                        <TextBlock Text="Auftragsstatus" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
                         <ItemsControl ItemsSource="{Binding OrderStatusRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -133,7 +133,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Status}" FontWeight="SemiBold" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="#64748B" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="{StaticResource MutedTextBrush}" />
                                         </Grid>
                                         <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="12" />
                                     </StackPanel>
@@ -144,10 +144,10 @@
                 </Border>
             </Grid>
 
-            <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Mitarbeiterstunden" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
-                    <TextBlock Text="Sollstunden werden aus den hinterlegten Wochen-Sollstunden auf eine Mo–Fr-Basis umgerechnet." Foreground="#64748B" Margin="0,4,0,10" />
+                    <TextBlock Text="Mitarbeiterstunden" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                    <TextBlock Text="Sollstunden werden aus den hinterlegten Wochen-Sollstunden auf eine Mo–Fr-Basis umgerechnet." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,10" />
                     <DataGrid ItemsSource="{Binding EmployeeRows}" AutoGenerateColumns="False" IsReadOnly="True"
                               CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220" MaxHeight="340">
                         <DataGrid.Columns>
@@ -169,9 +169,9 @@
                 </StackPanel>
             </Border>
 
-            <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Auswertung nach Arbeitsplatz / Linie" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                    <TextBlock Text="Auswertung nach Arbeitsplatz / Linie" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
                     <DataGrid ItemsSource="{Binding WorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
                               CanUserAddRows="False" HeadersVisibility="Column" MinHeight="200" MaxHeight="320">
                         <DataGrid.Columns>
@@ -189,44 +189,44 @@
                 </StackPanel>
             </Border>
 
-            <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                 <StackPanel>
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="OEE / Ist-Produktion" FontSize="21" FontWeight="SemiBold" Foreground="#0F172A" />
-                            <TextBlock Text="{Binding OeeDataState}" Foreground="#64748B" Margin="0,3,0,0" />
+                            <TextBlock Text="OEE / Ist-Produktion" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                            <TextBlock Text="{Binding OeeDataState}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding OeeRecords, StringFormat=Ist-Erfassungen: {0}}" Foreground="#64748B" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding OeeRecords, StringFormat=Ist-Erfassungen: {0}}" Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center" />
                     </Grid>
 
                     <UniformGrid Columns="4" Margin="0,0,0,14">
-                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Verfügbarkeit" Foreground="#64748B"/><TextBlock Text="{Binding OeeAvailabilityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Verfügbarkeit" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeAvailabilityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Leistung" Foreground="#64748B"/><TextBlock Text="{Binding OeePerformanceText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Leistung" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeePerformanceText}" FontSize="24" FontWeight="Bold"/></StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Qualität" Foreground="#64748B"/><TextBlock Text="{Binding OeeQualityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
+                            <StackPanel><TextBlock Text="Qualität" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeQualityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
                         </Border>
-                        <Border Background="#ECFDF5" CornerRadius="10" Padding="14">
-                            <StackPanel><TextBlock Text="OEE" Foreground="#047857"/><TextBlock Text="{Binding OeeText}" FontSize="26" FontWeight="Bold" Foreground="#047857"/></StackPanel>
+                        <Border Background="{StaticResource SuccessSoftBrush}" CornerRadius="10" Padding="14">
+                            <StackPanel><TextBlock Text="OEE" Foreground="{StaticResource SuccessBrush}"/><TextBlock Text="{Binding OeeText}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/></StackPanel>
                         </Border>
                     </UniformGrid>
 
                     <UniformGrid Columns="4" Margin="0,0,0,14">
-                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Gesamtmenge" Foreground="#64748B"/><TextBlock Text="{Binding OeeTotalQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Gesamtmenge" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeTotalQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Gutmenge" Foreground="#64748B"/><TextBlock Text="{Binding OeeGoodQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Gutmenge" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeGoodQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Ausschuss" Foreground="#64748B"/><TextBlock Text="{Binding OeeScrapQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel><TextBlock Text="Ausschuss" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeScrapQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
                         </Border>
-                        <Border Background="#F8FAFC" CornerRadius="8" Padding="12">
-                            <StackPanel><TextBlock Text="Erfasster Stillstand" Foreground="#64748B"/><TextBlock Text="{Binding OeeDowntimeText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12">
+                            <StackPanel><TextBlock Text="Erfasster Stillstand" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeDowntimeText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
                         </Border>
                     </UniformGrid>
 
@@ -247,15 +247,15 @@
                 </StackPanel>
             </Border>
 
-            <Border Background="#EFF6FF" CornerRadius="10" Padding="14">
+            <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="10" Padding="14">
                 <StackPanel>
-                    <TextBlock Text="OEE-Berechnung" FontWeight="SemiBold" Foreground="#1E3A8A" />
+                    <TextBlock Text="OEE-Berechnung" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" />
                     <TextBlock Text="Verfügbarkeit = Laufzeit / geplante Produktionszeit · Leistung = Ist-Menge / theoretische Menge bei Sollrate · Qualität = Gutmenge / Gesamtmenge · OEE = Verfügbarkeit × Leistung × Qualität. Leistung wird für OEE auf maximal 100 % begrenzt; Werte über der hinterlegten Sollrate sollten als Stammdatenhinweis geprüft werden."
-                               TextWrapping="Wrap" Foreground="#1E3A8A" Margin="0,3,0,0" />
+                               TextWrapping="Wrap" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,3,0,0" />
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#64748B" Margin="0,10,0,0" HorizontalAlignment="Right" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource MutedTextBrush}" Margin="0,10,0,0" HorizontalAlignment="Right" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
