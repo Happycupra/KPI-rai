@@ -55,20 +55,28 @@
                                                         <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
                                                             <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Severity}" Value="Gelb">
-                                                            <Setter TargetName="AlertSeverityText" Property="Text" Value="WARNUNG" />
-                                                            <Setter TargetName="AlertSeverityText" Property="Foreground" Value="{StaticResource WarningBrush}" />
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
-                                                            <Setter TargetName="AlertSeverityText" Property="Text" Value="HINWEIS" />
-                                                            <Setter TargetName="AlertSeverityText" Property="Foreground" Value="{StaticResource InfoBrush}" />
-                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                <TextBlock x:Name="AlertSeverityText" Text="KRITISCH" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}" />
+                                                <TextBlock Text="KRITISCH" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="Gelb">
+                                                                    <Setter Property="Text" Value="WARNUNG" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
+                                                                    <Setter Property="Text" Value="HINWEIS" />
+                                                                    <Setter Property="Foreground" Value="{StaticResource InfoBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
                                                 <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
                                             </Grid>
                                         </Border>
