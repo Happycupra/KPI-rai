@@ -925,7 +925,7 @@ public sealed class JobCardEmployeeChoice
     public int QualificationLevel { get; set; }
     public bool IsQualified { get; set; }
     public string StatusText { get; set; } = string.Empty;
-    public string DisplayText => $"{(IsQualified ? "✅" : "⚠")} {DisplayName} · {StatusText}";
+    public string DisplayText => $"{DisplayName} · {StatusText}";
 }
 
 public sealed class CapacityRow
