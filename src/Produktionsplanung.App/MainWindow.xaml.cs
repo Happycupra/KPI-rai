@@ -80,6 +80,7 @@ public partial class MainWindow : Window
     private void ShowWeekPlanning_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WeekPlanning)); }
     private void ShowWorkTimeCalendar_Click(object sender, RoutedEventArgs e) => OpenWorkTimeCalendar();
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders)); }
+    private void ShowManufacturingControl_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl)); }
     private void ShowProductionActual_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual)); }
     private void ShowAnalytics_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Analytics));
     private void ShowEmployees_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees)); }
@@ -433,7 +434,7 @@ public partial class MainWindow : Window
 
     private enum NavigationRoute
     {
-        Dashboard, PlanningCalendar, DayPlanning, WeekPlanning, WorkTimeCalendar, ProductionOrders,
+        Dashboard, PlanningCalendar, DayPlanning, WeekPlanning, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
         ProductionActual, Analytics, Employees, Skills, Workstations, Shifts, Absences, UserAdmin, Settings
     }
 
