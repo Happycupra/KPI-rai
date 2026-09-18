@@ -401,8 +401,10 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.PauseStartedAtUtc = null;
         card.Status = "In Produktion";
         card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? card.Comment : JobCardComment.Trim();
+        db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = "Läuft";
         db.SaveChanges();
-        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        LoadProductionOrders();
+        LoadJobCards(card.ProductionOrderId, card.Id);
         StatusMessage = "Arbeitskarte gestartet.";
     }
 
@@ -422,8 +424,10 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.StartedAtUtc = null;
         card.PauseStartedAtUtc = DateTime.UtcNow;
         card.Status = "Pausiert";
+        db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = "Pausiert";
         db.SaveChanges();
-        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        LoadProductionOrders();
+        LoadJobCards(card.ProductionOrderId, card.Id);
         StatusMessage = "Arbeitskarte pausiert.";
     }
 
@@ -458,7 +462,12 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.Status = "Fertig";
         db.SaveChanges();
 
-        LoadJobCards(SelectedProductionOrder?.Id, card.Id);
+        var remaining = db.JobCards.Any(x => x.ProductionOrderId == card.ProductionOrderId && x.Status != "Fertig");
+        db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = remaining ? "Läuft" : "Abgeschlossen";
+        db.SaveChanges();
+
+        LoadProductionOrders();
+        LoadJobCards(card.ProductionOrderId, card.Id);
         RefreshCapacity();
         StatusMessage = "Arbeitskarte abgeschlossen.";
     }
