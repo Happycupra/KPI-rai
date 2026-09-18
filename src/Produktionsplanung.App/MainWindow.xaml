@@ -140,6 +140,7 @@
 
                         <Button x:Name="ProductionGroupHeader" Content="▾  PRODUKTION" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
                         <Button x:Name="ProductionOrdersButton" Tag="&#xE8A5;" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
+                        <Button x:Name="ManufacturingControlButton" Tag="&#xE7C3;" Content="Fertigungssteuerung" ToolTip="Fertigungssteuerung" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
                         <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion / OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
                         <Button x:Name="AnalyticsButton" Tag="&#xE9D9;" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
