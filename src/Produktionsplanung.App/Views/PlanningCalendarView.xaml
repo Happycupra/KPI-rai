@@ -45,14 +45,14 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding Accent}"/>
                                 <TextBlock Text="  ·  " FontSize="9" Foreground="#94A3B8"/>
-                                <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="#64748B"/>
+                                <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/>
                             </StackPanel>
-                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="#0F172A"
+                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"
                                        FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,1"/>
                             <TextBlock Text="{Binding Subtitle}" FontSize="10.5" Foreground="#526173"
                                        TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
-                        <Border Grid.Column="3" Background="White" BorderBrush="#D7E2EE" BorderThickness="1"
+                        <Border Grid.Column="3" Background="{StaticResource CardBrush}" BorderBrush="#D7E2EE" BorderThickness="1"
                                 CornerRadius="10" Padding="7,2" VerticalAlignment="Top" Margin="8,0,0,0">
                             <Border.Style>
                                 <Style TargetType="Border">
@@ -64,7 +64,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="#334155" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -106,7 +106,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Planungskalender" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
-                <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="#627D98" Margin="0,3,0,0"/>
+                <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousCommand}" Margin="0,0,6,0"/>
@@ -163,22 +163,22 @@
                 <ColumnDefinition Width="1.5*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="GEPLANT" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding PlannedEmployeesCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="#627D98"/></StackPanel>
+            <Border Grid.Column="0" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="GEPLANT" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding PlannedEmployeesCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
             </Border>
-            <Border Grid.Column="2" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="AUFTRÄGE" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding OrderCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="am gewählten Tag" FontSize="10" Foreground="#627D98"/></StackPanel>
+            <Border Grid.Column="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="AUFTRÄGE" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding OrderCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="am gewählten Tag" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
             </Border>
-            <Border Grid.Column="4" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="ABWESEND" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding AbsenceCount}" FontSize="21" FontWeight="SemiBold" Foreground="#B91C1C"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="#627D98"/></StackPanel>
+            <Border Grid.Column="4" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="ABWESEND" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding AbsenceCount}" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
             </Border>
-            <Border Grid.Column="6" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="IM BETRIEB" FontSize="9" Foreground="#829AB1" FontWeight="SemiBold"/><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="21" FontWeight="SemiBold" Foreground="#0F766E"/><TextBlock Text="nicht abwesend" FontSize="10" Foreground="#627D98"/></StackPanel>
+            <Border Grid.Column="6" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
+                <StackPanel><TextBlock Text="IM BETRIEB" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="21" FontWeight="SemiBold" Foreground="#0F766E"/><TextBlock Text="nicht abwesend" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
             </Border>
             <Border Grid.Column="8" Background="#F8FBFF" BorderBrush="#C9DDF2" BorderThickness="1" CornerRadius="9" Padding="13,9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <Border Width="31" Height="31" CornerRadius="16" Background="#EAF2FF" VerticalAlignment="Center" Margin="0,0,10,0"><TextBlock Text="!" FontWeight="Bold" Foreground="#1D4ED8" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                    <Border Width="31" Height="31" CornerRadius="16" Background="{StaticResource PrimarySoftBrush}" VerticalAlignment="Center" Margin="0,0,10,0"><TextBlock Text="!" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                     <StackPanel Grid.Column="1"><TextBlock Text="Personalabdeckung" FontSize="10" FontWeight="SemiBold" Foreground="#334E68"/><TextBlock Text="{Binding DayCoverageText}" FontSize="10.5" Foreground="#526173" TextWrapping="Wrap"/></StackPanel>
                 </Grid>
             </Border>
@@ -195,13 +195,13 @@
 
             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
+                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
                         <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}" DisplayDate="{Binding SelectedDate, Mode=TwoWay}" SelectionMode="SingleDate"/>
                     </Border>
 
-                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="13" Margin="0,0,0,10">
+                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="13" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Suchen &amp; filtern" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
+                            <TextBlock Text="Suchen &amp; filtern" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
                             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,0,10" Height="32" Padding="8,4" ToolTip="Name, Auftrag, Linie oder Notiz suchen"/>
                             <CheckBox Content="Mitarbeiter-Einsätze" IsChecked="{Binding ShowAssignments}" Margin="0,2,0,6"/>
                             <CheckBox Content="Produktionsaufträge" IsChecked="{Binding ShowOrders}" Margin="0,2,0,6"/>
@@ -214,9 +214,9 @@
 
                     <Border Background="#F8FBFF" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="13">
                         <StackPanel>
-                            <TextBlock Text="{Binding SelectedDateText}" FontWeight="SemiBold" Foreground="#243B53" TextWrapping="Wrap"/>
-                            <TextBlock Text="{Binding VisibleEntryText}" FontSize="10.5" Foreground="#627D98" Margin="0,3,0,0"/>
-                            <TextBlock Text="{Binding StatusMessage}" FontSize="10" Foreground="#829AB1" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            <TextBlock Text="{Binding SelectedDateText}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding VisibleEntryText}" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
+                            <TextBlock Text="{Binding StatusMessage}" FontSize="10" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                             <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Height="30" Margin="0,10,0,0"/>
                         </StackPanel>
                     </Border>
@@ -224,7 +224,7 @@
             </ScrollViewer>
 
             <Grid Grid.Column="2">
-                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
+                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
@@ -232,16 +232,16 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Tagesagenda" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Ganztägige Ereignisse und zeitlich geplante Einsätze" FontSize="10.5" Foreground="#829AB1"/></StackPanel>
+                                <StackPanel><TextBlock Text="Tagesagenda" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Ganztägige Ereignisse und zeitlich geplante Einsätze" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
                                 <Button Grid.Column="1" Content="Tagesplanung" Padding="13,6" Click="OpenDayPlanning_Click"/>
                             </Grid>
-                            <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,3,0,6"/>
+                            <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
                             <TextBlock Text="Keine ganztägigen Einträge." Foreground="#9FB3C8" FontSize="10.5" Margin="0,2,0,10">
                                 <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                             <Border Height="1" Background="#E7EEF5" Margin="0,4,0,12"/>
-                            <TextBlock Text="ZEITPLAN" FontSize="9" FontWeight="SemiBold" Foreground="#829AB1" Margin="0,0,0,6"/>
+                            <TextBlock Text="ZEITPLAN" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
                             <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,12,0,0">
                                 <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
@@ -250,7 +250,7 @@
                     </ScrollViewer>
                 </Border>
 
-                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
+                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
@@ -264,9 +264,9 @@
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
                                                     BorderThickness="0,0,0,1" BorderBrush="#E7EEF5" Background="#F8FBFF" Padding="8" HorizontalContentAlignment="Stretch">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="#829AB1" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
                                                     <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="#102A43" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding EntryCountText}" FontSize="9.5" Foreground="#627D98" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding EntryCountText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
                                                 </StackPanel>
                                             </Button>
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="7">
@@ -284,22 +284,22 @@
                     </ScrollViewer>
                 </Border>
 
-                <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
+                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
                     <Border.Style>
                         <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                     </Border.Style>
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <UniformGrid Columns="{Binding MonthColumnCount}">
-                            <TextBlock Text="Mo" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
-                            <TextBlock Text="Di" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
-                            <TextBlock Text="Mi" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
-                            <TextBlock Text="Do" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
-                            <TextBlock Text="Fr" HorizontalAlignment="Center" Foreground="#627D98" FontWeight="SemiBold"/>
-                            <TextBlock Text="Sa" HorizontalAlignment="Center" Foreground="#829AB1" FontWeight="SemiBold">
+                            <TextBlock Text="Mo" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Di" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Mi" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Do" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Fr" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Sa" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold">
                                 <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
-                            <TextBlock Text="So" HorizontalAlignment="Center" Foreground="#829AB1" FontWeight="SemiBold">
+                            <TextBlock Text="So" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold">
                                 <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                         </UniformGrid>
@@ -307,7 +307,7 @@
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{Binding MonthColumnCount}" Rows="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Margin="2" Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
+                                    <Border Margin="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
                                         <DockPanel>
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
                                                     Width="28" Height="26" HorizontalAlignment="Left" Padding="0" Margin="0,0,0,4">
@@ -315,7 +315,7 @@
                                             </Button>
                                             <StackPanel>
                                                 <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}"/>
-                                                <TextBlock Text="{Binding MoreText}" FontSize="9.5" Foreground="#627D98" Margin="2,1,0,0"/>
+                                                <TextBlock Text="{Binding MoreText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" Margin="2,1,0,0"/>
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>
@@ -328,9 +328,9 @@
 
             <ScrollViewer x:Name="CalendarDetailPanel" Grid.Column="4" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/>
+                            <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
                             <Border Margin="0,11,0,0">
                                 <Border.Style>
                                     <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
@@ -338,9 +338,9 @@
                                 <StackPanel>
                                     <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold"/>
                                     <TextBlock Text="{Binding SelectedEntry.Title}" FontSize="17" FontWeight="SemiBold" Foreground="#102A43" TextWrapping="Wrap" Margin="0,3,0,2"/>
-                                    <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="#627D98"/>
+                                    <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                                    <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="#627D98" TextWrapping="Wrap" Margin="0,5,0,12"/>
+                                    <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,5,0,12"/>
                                     <Button Content="Öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
                                     <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
                                 </StackPanel>
@@ -349,18 +349,18 @@
                                 <StackPanel.Style>
                                     <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                                 </StackPanel.Style>
-                                <TextBlock Text="Noch nichts ausgewählt" Foreground="#627D98" FontWeight="SemiBold"/>
-                                <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="#829AB1" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Text="Noch nichts ausgewählt" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                                <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="{StaticResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
-                    <Border Background="White" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14">
+                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Mitarbeiter am Tag" FontSize="13" FontWeight="SemiBold" Foreground="#243B53"/><TextBlock Text="Nicht abwesende Mitarbeitende" FontSize="9.5" Foreground="#829AB1"/></StackPanel>
-                                <Border Grid.Column="1" Background="#EDF6FF" CornerRadius="10" Padding="7,2" VerticalAlignment="Top"><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="#1D4ED8" FontWeight="SemiBold"/></Border>
+                                <StackPanel><TextBlock Text="Mitarbeiter am Tag" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="Nicht abwesende Mitarbeitende" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+                                <Border Grid.Column="1" Background="#EDF6FF" CornerRadius="10" Padding="7,2" VerticalAlignment="Top"><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold"/></Border>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding DayEmployees}">
                                 <ItemsControl.ItemTemplate>
@@ -369,14 +369,14 @@
                                             <Border BorderBrush="#E1EAF2" BorderThickness="0,0,0,1" Padding="0,8">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                    <Border Width="30" Height="30" CornerRadius="15" Background="#EAF2FF"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="#1D4ED8"/></Border>
+                                                    <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PrimarySoftBrush}"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"/></Border>
                                                     <StackPanel Grid.Column="2">
-                                                        <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="#243B53" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="{Binding AssignmentText}" FontSize="9.5" Foreground="#829AB1" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding AssignmentText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" TextTrimming="CharacterEllipsis"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="3" Margin="8,0,0,0">
                                                         <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="{Binding StatusText}" FontSize="8.5" Foreground="#627D98" Margin="0,2,0,0"/>
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="8.5" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>

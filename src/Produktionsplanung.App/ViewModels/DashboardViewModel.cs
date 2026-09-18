@@ -25,6 +25,8 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty] private int personnelCoveragePercent;
     [ObservableProperty] private int openProblems;
     [ObservableProperty] private string lastUpdatedText = string.Empty;
+    [ObservableProperty] private string backupStatusText = string.Empty;
+    [ObservableProperty] private string backupStatusSeverity = "OK";
 
     public string TodayText => DateTime.Today.ToString("dddd, dd.MM.yyyy");
 
@@ -85,12 +87,31 @@ public partial class DashboardViewModel : ObservableObject
             ? 100
             : (int)Math.Round(coveredStaff * 100.0 / requiredStaff, MidpointRounding.AwayFromZero);
 
+        UpdateBackupStatus();
         BuildIssues(db, today, activeEmployeeIds, absentEmployeeIds, coverage, runSlots);
         BuildOrders(runSlots, coverage);
         BuildWorkstationStatuses(db, runSlots, coverage);
 
         OpenProblems = Issues.Count;
         LastUpdatedText = $"Aktualisiert: {DateTime.Now:HH:mm}";
+    }
+
+    private void UpdateBackupStatus()
+    {
+        var settings = AppSettingsService.Load();
+        if (!settings.LastSuccessfulBackupAtLocal.HasValue)
+        {
+            BackupStatusSeverity = "Rot";
+            BackupStatusText = "Noch kein erfolgreiches Backup protokolliert.";
+            return;
+        }
+
+        var age = DateTime.Now - settings.LastSuccessfulBackupAtLocal.Value;
+        var days = Math.Max(0, (int)Math.Floor(age.TotalDays));
+        BackupStatusSeverity = days >= 14 ? "Rot" : days >= 7 ? "Gelb" : "OK";
+        BackupStatusText = days == 0
+            ? $"Letztes erfolgreiches Backup heute um {settings.LastSuccessfulBackupAtLocal.Value:HH:mm}."
+            : $"Letztes erfolgreiches Backup vor {days} Tag(en) am {settings.LastSuccessfulBackupAtLocal.Value:dd.MM.yyyy HH:mm}.";
     }
 
     private void BuildIssues(
@@ -103,33 +124,75 @@ public partial class DashboardViewModel : ObservableObject
     {
         Issues.Clear();
 
+        if (BackupStatusSeverity != "OK")
+        {
+            Issues.Add(new DashboardIssue
+            {
+                Severity = BackupStatusSeverity,
+                Title = BackupStatusSeverity == "Rot" ? "Backup erforderlich" : "Backup prüfen",
+                Message = BackupStatusText,
+                Route = "Settings"
+            });
+        }
+
         foreach (var row in coverage.Where(x => x.CoverageStatus == "Unterbesetzt"))
         {
             Issues.Add(new DashboardIssue
             {
                 Severity = "Rot",
                 Title = $"Personal fehlt · {row.OrderNumber} · {row.ShiftName}",
-                Message = $"{row.WorkstationName}: {row.PlannedStaff}/{row.RequiredStaff} Personen eingeplant ({Math.Abs(row.Difference)} fehlen), Produktionsschicht {row.SequenceNumber}."
+                Message = $"{row.WorkstationName}: {row.PlannedStaff}/{row.RequiredStaff} Personen eingeplant ({Math.Abs(row.Difference)} fehlen), Produktionsschicht {row.SequenceNumber}.",
+                Route = "DayPlanning",
+                Date = today
             });
         }
 
-        var absenceAssignments = db.PlanningAssignments.AsNoTracking()
+        var todayAssignments = db.PlanningAssignments.AsNoTracking()
             .Include(x => x.Employee)
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
-            .Where(x => x.Date.Date == today &&
-                        absentEmployeeIds.Contains(x.EmployeeId) &&
-                        activeEmployeeIds.Contains(x.EmployeeId))
+            .Where(x => x.Date.Date == today && activeEmployeeIds.Contains(x.EmployeeId))
             .ToList();
 
-        foreach (var assignment in absenceAssignments)
+        foreach (var assignment in todayAssignments)
         {
-            Issues.Add(new DashboardIssue
+            if (absentEmployeeIds.Contains(assignment.EmployeeId))
             {
-                Severity = "Rot",
-                Title = "Abwesender Mitarbeiter eingeplant",
-                Message = $"{assignment.Employee.LastName}, {assignment.Employee.FirstName} ist auf {assignment.Workstation.Name} / {assignment.Shift?.Name ?? "Individuell"} eingeplant."
-            });
+                Issues.Add(new DashboardIssue
+                {
+                    Severity = "Rot",
+                    Title = "Abwesender Mitarbeiter eingeplant",
+                    Message = $"{assignment.Employee.LastName}, {assignment.Employee.FirstName} ist auf {assignment.Workstation.Name} / {assignment.Shift?.Name ?? "Individuell"} eingeplant.",
+                    Route = "DayPlanning",
+                    Date = today
+                });
+            }
+
+            var skill = QualificationPlanningService.CheckEmployee(db, assignment.EmployeeId, assignment.WorkstationId);
+            if (!skill.IsQualified)
+            {
+                Issues.Add(new DashboardIssue
+                {
+                    Severity = "Rot",
+                    Title = $"Qualifikation fehlt · {assignment.Employee.LastName}, {assignment.Employee.FirstName}",
+                    Message = $"{assignment.Workstation.Name}: {skill.Message}",
+                    Route = "DayPlanning",
+                    Date = today
+                });
+            }
+
+            if (!assignment.ShiftId.HasValue ||
+                !ProductionScheduleService.IsShiftAllowedOnDate(db, assignment.WorkstationId, assignment.ShiftId.Value, today))
+            {
+                Issues.Add(new DashboardIssue
+                {
+                    Severity = "Rot",
+                    Title = $"Schicht nicht freigegeben · {assignment.Workstation.Name}",
+                    Message = $"{assignment.Employee.LastName}, {assignment.Employee.FirstName}: {assignment.Shift?.Name ?? "Individuell"} ist für diesen Arbeitsplatz/Tag nicht freigegeben.",
+                    Route = "DayPlanning",
+                    Date = today
+                });
+            }
         }
 
         var overdueOrders = db.ProductionOrders.AsNoTracking()
@@ -148,7 +211,9 @@ public partial class DashboardViewModel : ObservableObject
             {
                 Severity = "Gelb",
                 Title = $"Überfälliger Auftrag · {order.OrderNumber}",
-                Message = $"Letzte geplante Produktionsschicht war am {lastDate:dd.MM.yyyy}, aktueller Status: {order.Status}."
+                Message = $"Letzte geplante Produktionsschicht war am {lastDate:dd.MM.yyyy}, aktueller Status: {order.Status}.",
+                Route = "ProductionOrders",
+                EntityId = order.Id
             });
         }
 
@@ -164,7 +229,9 @@ public partial class DashboardViewModel : ObservableObject
                 Title = $"Auftragsproblem · {order.OrderNumber}",
                 Message = string.IsNullOrWhiteSpace(order.Comment)
                     ? $"{order.Product} ist als Problem markiert."
-                    : order.Comment!
+                    : order.Comment!,
+                Route = "ProductionOrders",
+                EntityId = order.Id
             });
         }
     }
@@ -253,6 +320,9 @@ public class DashboardIssue
     public string Severity { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+    public string Route { get; set; } = "Dashboard";
+    public int? EntityId { get; set; }
+    public DateTime? Date { get; set; }
 }
 
 public class DashboardOrderRow

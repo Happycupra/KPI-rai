@@ -4,7 +4,7 @@
         Title="SolutionCompakt – Recovery-Code erneuern"
         Icon="{StaticResource SolutionCompaktIcon}"
         Width="520" Height="470" ResizeMode="NoResize"
-        WindowStartupLocation="CenterOwner" Background="#F8FAFC">
+        WindowStartupLocation="CenterOwner" Background="{StaticResource SubtleSurfaceBrush}">
     <Grid Margin="28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -13,14 +13,14 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <TextBlock Text="Recovery-Code erneuern" FontSize="25" FontWeight="Bold" Foreground="#0F172A" />
+            <TextBlock Text="Recovery-Code erneuern" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
             <TextBlock Text="Der bisherige Recovery-Code wird sofort ungültig. Zur Sicherheit musst du dein aktuelles Administrator-Passwort erneut bestätigen."
-                       Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,18" />
+                       Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,18" />
         </StackPanel>
 
         <Grid Grid.Row="1">
             <StackPanel x:Name="VerificationPanel">
-                <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,16">
+                <Border Background="{StaticResource WarningSoftBrush}" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,16">
                     <TextBlock Text="Bewahre den neuen Code ausserhalb der App auf, z. B. im Passwortmanager oder ausgedruckt in einem sicheren Ordner. Er kann später nicht erneut angezeigt werden."
                                Foreground="#9A3412" TextWrapping="Wrap" />
                 </Border>
@@ -31,7 +31,7 @@
             </StackPanel>
 
             <StackPanel x:Name="GeneratedPanel" Visibility="Collapsed">
-                <Border Background="#ECFDF5" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
+                <Border Background="{StaticResource SuccessSoftBrush}" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
                     <StackPanel>
                         <TextBlock Text="Neuer Recovery-Code" FontWeight="SemiBold" Foreground="#166534" />
                         <TextBlock Text="Der alte Code ist jetzt ungültig. Dieser neue Code wird nur in diesem Fenster im Klartext angezeigt."

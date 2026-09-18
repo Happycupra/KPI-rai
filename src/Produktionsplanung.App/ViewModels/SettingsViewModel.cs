@@ -47,6 +47,27 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ResetUiPreferences()
+    {
+        AppSettingsService.UpdateCurrentUserPreferences(preferences =>
+        {
+            preferences.SidebarCollapsed = false;
+            preferences.PlanningGroupCollapsed = false;
+            preferences.ProductionGroupCollapsed = false;
+            preferences.MasterDataGroupCollapsed = false;
+            preferences.SystemGroupCollapsed = false;
+            preferences.CalendarSelectedViewIndex = 1;
+            preferences.CalendarSearchText = string.Empty;
+            preferences.CalendarShowAssignments = true;
+            preferences.CalendarShowOrders = true;
+            preferences.CalendarShowAbsences = true;
+            preferences.CalendarShowOperatingCalendar = true;
+            preferences.CalendarShowWeekends = true;
+        });
+        StatusMessage = "Persönliche Benutzeroberfläche zurückgesetzt. Die Navigation wird beim nächsten Anmelden vollständig mit den Standardwerten geladen.";
+    }
+
+    [RelayCommand]
     private void ManageRecoveryCode()
     {
         if (!SessionService.IsAdministrator)

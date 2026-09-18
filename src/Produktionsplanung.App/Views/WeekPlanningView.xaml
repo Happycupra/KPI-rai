@@ -22,8 +22,8 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Wochenplanung" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-                <TextBlock Text="{Binding WeekRangeText}" FontSize="16" Foreground="#64748B" Margin="0,4,0,0" />
+                <TextBlock Text="Wochenplanung" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                <TextBlock Text="{Binding WeekRangeText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" />
@@ -37,25 +37,25 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Wochenaktionen" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                            <TextBlock Text="Wochenaktionen" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                             <TextBlock Text="Die Vorwoche kann nur in eine noch leere Zielwoche kopiert werden. Der PDF-Wochenplan fasst Produkt, Maschine, Schicht und Mitarbeiter kompakt auf 1–2 A4-Seiten zusammen."
-                                       Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,0" />
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" Margin="0,8,0,0" />
+                                       Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,8,0,0" />
                         </StackPanel>
                         <Button Grid.Column="1" Content="Vorwoche kopieren" Padding="18,8" Margin="18,0,0,0"
                                 VerticalAlignment="Center" Command="{Binding CopyPreviousWeekCommand}" />
                     </Grid>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="Auftragsabdeckung der Woche" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" />
+                        <TextBlock Text="Auftragsabdeckung der Woche" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                         <TextBlock Text="Jede Produktionsschicht eines mehrschichtigen Auftrags wird separat dargestellt und mit der tatsächlich eingeplanten Mannschaft verglichen."
-                                   Foreground="#64748B" Margin="0,4,0,10" />
+                                   Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,10" />
                         <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" AutoGenerateColumns="False" IsReadOnly="True"
                                   CanUserAddRows="False" HeadersVisibility="Column" MinHeight="170" MaxHeight="300">
                             <DataGrid.Columns>
@@ -74,11 +74,11 @@
                     </StackPanel>
                 </Border>
 
-                <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="Mitarbeiterübersicht" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,4" />
+                        <TextBlock Text="Mitarbeiterübersicht" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,4" />
                         <TextBlock Text="Arbeitsplatz, Schicht und Zeit pro Mitarbeiter und Tag; Abwesenheiten werden direkt in der Zelle angezeigt."
-                                   Foreground="#64748B" Margin="0,0,0,10" />
+                                   Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,10" />
                         <DataGrid ItemsSource="{Binding EmployeeRows}" AutoGenerateColumns="False" IsReadOnly="True"
                                   CanUserAddRows="False" HeadersVisibility="Column" MinHeight="310"
                                   HorizontalScrollBarVisibility="Auto">
@@ -99,9 +99,9 @@
 
                 <Grid Margin="0,0,0,16">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="1.25*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,16,0">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,16,0">
                         <StackPanel>
-                            <TextBlock Text="Besetzung je Tag, Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <TextBlock Text="Besetzung je Tag, Arbeitsplatz und Schicht" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
                             <DataGrid ItemsSource="{Binding StaffingRows}" AutoGenerateColumns="False" IsReadOnly="True"
                                       CanUserAddRows="False" HeadersVisibility="Column" MinHeight="240" MaxHeight="360">
                                 <DataGrid.Columns>
@@ -119,16 +119,16 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="18">
+                    <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18">
                         <StackPanel>
-                            <TextBlock Text="Warnungen und Hinweise" FontSize="19" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10" />
+                            <TextBlock Text="Warnungen und Hinweise" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
                             <ItemsControl ItemsSource="{Binding Alerts}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#F8FAFC" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="10" Margin="0,0,0,6">
                                             <StackPanel>
-                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="#B91C1C" />
-                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="#334155" Margin="0,2,0,0" />
+                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}" />
+                                                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0" />
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>

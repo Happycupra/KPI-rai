@@ -9,8 +9,8 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <TextBlock Text="Mitarbeiter" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-            <TextBlock Text="Mitarbeiter anlegen, bearbeiten, aktivieren oder deaktivieren" Foreground="#64748B" Margin="0,4,0,18" />
+            <TextBlock Text="Mitarbeiter" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="Mitarbeiter anlegen, bearbeiten, aktivieren oder deaktivieren" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,18" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,0,0,16">
@@ -32,7 +32,7 @@
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" CornerRadius="10" Padding="12">
+            <Border Grid.Column="0" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                 <DataGrid ItemsSource="{Binding Employees}"
                           SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
                           AutoGenerateColumns="False"
@@ -52,34 +52,34 @@
                 </DataGrid>
             </Border>
 
-            <Border Grid.Column="2" Background="White" CornerRadius="10" Padding="22">
+            <Border Grid.Column="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="22">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="{Binding EditorTitle}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,18" />
 
-                        <TextBlock Text="Personalnummer *" Foreground="#475569" />
+                        <TextBlock Text="Personalnummer *" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBox Text="{Binding PersonnelNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,12" Height="34" Padding="8,5" />
 
-                        <TextBlock Text="Vorname *" Foreground="#475569" />
+                        <TextBlock Text="Vorname *" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBox Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,12" Height="34" Padding="8,5" />
 
-                        <TextBlock Text="Nachname *" Foreground="#475569" />
+                        <TextBlock Text="Nachname *" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBox Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,12" Height="34" Padding="8,5" />
 
-                        <TextBlock Text="Funktion" Foreground="#475569" />
+                        <TextBlock Text="Funktion" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBox Text="{Binding Role, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,12" Height="34" Padding="8,5" />
 
-                        <TextBlock Text="Abteilung" Foreground="#475569" />
+                        <TextBlock Text="Abteilung" Foreground="{StaticResource MutedTextBrush}" />
                         <TextBox Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,12" Height="34" Padding="8,5" />
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Pensum %" Foreground="#475569" />
+                                <TextBlock Text="Pensum %" Foreground="{StaticResource MutedTextBrush}" />
                                 <TextBox Text="{Binding WorkloadPercent, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="34" Padding="8,5" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Sollstunden / Woche" Foreground="#475569" />
+                                <TextBlock Text="Sollstunden / Woche" Foreground="{StaticResource MutedTextBrush}" />
                                 <TextBox Text="{Binding WeeklyTargetHours, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="34" Padding="8,5" />
                             </StackPanel>
                         </Grid>

@@ -19,7 +19,7 @@
                 <TextBlock Text="Solution" FontSize="18" FontWeight="SemiBold" Foreground="#102A43" />
                 <TextBlock Text="Compakt" FontSize="18" FontWeight="SemiBold" Foreground="#2563EB" />
             </StackPanel>
-            <TextBlock Text="Production &amp; Workforce" FontSize="9.5" Foreground="#829AB1" Margin="1,2,0,0" />
+            <TextBlock Text="Production &amp; Workforce" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" Margin="1,2,0,0" />
         </StackPanel>
     </Grid>
 </UserControl>

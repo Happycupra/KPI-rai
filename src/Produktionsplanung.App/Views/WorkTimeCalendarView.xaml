@@ -11,8 +11,8 @@
         <Grid Margin="0,0,0,16">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Arbeitszeit &amp; Betriebskalender" FontSize="30" FontWeight="Bold" Foreground="#0F172A"/>
-                <TextBlock Text="{Binding MonthText}" FontSize="15" Foreground="#64748B" Margin="0,3,0,0"/>
+                <TextBlock Text="Arbeitszeit &amp; Betriebskalender" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+                <TextBlock Text="{Binding MonthText}" FontSize="15" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
                 <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousMonthCommand}" Margin="0,0,6,0"/>
@@ -28,7 +28,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
                     <Grid.RowDefinitions><RowDefinition Height="0.9*"/><RowDefinition Height="14"/><RowDefinition Height="1.1*"/></Grid.RowDefinitions>
 
-                    <Border Background="White" CornerRadius="10" Padding="12">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Soll / Plan / Ist je Mitarbeiter" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <DataGrid ItemsSource="{Binding Balances}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
@@ -43,7 +43,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="12">
+                    <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Erfasste Arbeitszeiten" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <DataGrid ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
@@ -59,7 +59,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="2" Grid.RowSpan="3" Background="White" CornerRadius="10" Padding="18">
+                    <Border Grid.Column="2" Grid.RowSpan="3" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="18">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel>
                                 <TextBlock Text="Arbeitszeit erfassen" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,14"/>
@@ -78,7 +78,7 @@
                                 <Button Content="Speichern" Command="{Binding SaveEntryCommand}" Height="36" Margin="0,0,0,7"/>
                                 <Button Content="Neu" Command="{Binding NewEntryCommand}" Height="36" Margin="0,0,0,7"/>
                                 <Button Content="Löschen" Command="{Binding DeleteEntryCommand}" Height="36"/>
-                                <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,14,0,0"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
@@ -88,10 +88,10 @@
             <TabItem Header="Betriebskalender">
                 <Grid Margin="14">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="380"/></Grid.ColumnDefinitions>
-                    <Border Background="White" CornerRadius="10" Padding="14">
+                    <Border Background="{StaticResource CardBrush}" CornerRadius="10" Padding="14">
                         <StackPanel>
                             <TextBlock Text="Kalender-Ausnahmen" FontSize="18" FontWeight="SemiBold"/>
-                            <TextBlock Text="Ohne Ausnahme gilt automatisch Montag bis Freitag als Arbeitstag. Hinterlege hier Feiertage, Betriebsferien, halbe Tage oder Sonderarbeitstage." Foreground="#64748B" TextWrapping="Wrap" Margin="0,4,0,10"/>
+                            <TextBlock Text="Ohne Ausnahme gilt automatisch Montag bis Freitag als Arbeitstag. Hinterlege hier Feiertage, Betriebsferien, halbe Tage oder Sonderarbeitstage." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,10"/>
                             <DataGrid ItemsSource="{Binding CalendarDays}" SelectedItem="{Binding SelectedCalendarDay, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="120"/>
@@ -103,7 +103,7 @@
                             </DataGrid>
                         </StackPanel>
                     </Border>
-                    <Border Grid.Column="2" Background="White" CornerRadius="10" Padding="18">
+                    <Border Grid.Column="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="18">
                         <StackPanel>
                             <TextBlock Text="Kalendertag bearbeiten" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,14"/>
                             <TextBlock Text="Datum" FontWeight="SemiBold"/>
@@ -113,13 +113,13 @@
                             <CheckBox Content="Arbeitstag / Sonderarbeitstag" IsChecked="{Binding CalendarIsWorkingDay}" Margin="0,2,0,12"/>
                             <TextBlock Text="Sollstunden-Faktor" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding CalendarTargetHoursFactor}" Height="32" Margin="0,4,0,5"/>
-                            <TextBlock Text="0 = frei · 0.5 = halber Tag · 1 = normal · bis 2 möglich" Foreground="#64748B" FontSize="11" Margin="0,0,0,12"/>
+                            <TextBlock Text="0 = frei · 0.5 = halber Tag · 1 = normal · bis 2 möglich" Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,12"/>
                             <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding CalendarComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14"/>
                             <Button Content="Speichern" Command="{Binding SaveCalendarDayCommand}" Height="36" Margin="0,0,0,7"/>
                             <Button Content="Neu" Command="{Binding NewCalendarDayCommand}" Height="36" Margin="0,0,0,7"/>
                             <Button Content="Ausnahme löschen" Command="{Binding DeleteCalendarDayCommand}" Height="36"/>
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,14,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>

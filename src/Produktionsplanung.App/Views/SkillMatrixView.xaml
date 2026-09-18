@@ -10,8 +10,8 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <TextBlock Text="Skill-Matrix" FontSize="30" FontWeight="Bold" Foreground="#0F172A" />
-            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer" Foreground="#64748B" Margin="0,4,0,18" />
+            <TextBlock Text="Skill-Matrix" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,18" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,0,0,16">
@@ -31,7 +31,7 @@
             <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Padding="14,7" Margin="8,0,0,0" />
         </Grid>
 
-        <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="12">
+        <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
             <DataGrid x:Name="MatrixGrid"
                       ItemsSource="{Binding Rows}"
                       AutoGenerateColumns="False"
@@ -43,7 +43,7 @@
 
         <Grid Grid.Row="3" Margin="0,16,0,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <TextBlock VerticalAlignment="Center" Foreground="#64748B" Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
+            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
             <Button Grid.Column="1" Content="Neu laden" Command="{Binding LoadCommand}" Padding="16,8" Margin="0,0,8,0" />
             <Button Grid.Column="2" Content="Skill-Matrix speichern" Command="{Binding SaveMatrixCommand}" Padding="18,8" />
         </Grid>

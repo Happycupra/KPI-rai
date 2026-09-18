@@ -87,6 +87,45 @@
                 </Border>
             </UniformGrid>
 
+            <Border Margin="0,0,0,16" Padding="14" CornerRadius="10" BorderThickness="1">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                        <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding BackupStatusSeverity}" Value="Gelb">
+                                <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource WarningBrush}" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding BackupStatusSeverity}" Value="Rot">
+                                <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource CardBrush}" Margin="0,0,12,0">
+                        <TextBlock Text="↥" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding BackupStatusSeverity}" Value="Gelb"><Setter Property="Foreground" Value="{StaticResource WarningBrush}" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding BackupStatusSeverity}" Value="Rot"><Setter Property="Foreground" Value="{StaticResource DangerBrush}" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Datensicherung" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="{Binding BackupStatusText}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- Handlungsbedarf directly below the primary KPI row -->
             <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,16">
                 <StackPanel>
