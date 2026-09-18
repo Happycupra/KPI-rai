@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
-    <Grid Margin="28">
+    <Grid Margin="28" SizeChanged="LayoutRoot_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -23,13 +23,17 @@
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1">
+        <Grid x:Name="MasterDetailGrid" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="0" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="430" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="18" Margin="0,0,18,0">
+            <Border x:Name="OrdersListPanel" Grid.Row="0" Grid.Column="0" Background="White" CornerRadius="12" Padding="18" Margin="0,0,18,0">
                 <DataGrid ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
                           AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
                     <DataGrid.Columns>
@@ -46,7 +50,7 @@
                 </DataGrid>
             </Border>
 
-            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
+            <Border x:Name="OrderEditorPanel" Grid.Row="0" Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Auftrag bearbeiten" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
@@ -149,7 +153,54 @@
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14" />
 
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,10" />
+                        <Border CornerRadius="8" Padding="10,7" Margin="0,0,0,10">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                    <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag und Produktionsschichten gespeichert.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag aktualisiert; bestehende Produktionsschichten blieben unverändert.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Auftrag aktualisiert; historische Stammdaten und Produktionsschichten blieben unverändert.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag gelöscht.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsaufträge aktualisiert.">
+                                            <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource InfoBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag und Produktionsschichten gespeichert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag aktualisiert; bestehende Produktionsschichten blieben unverändert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Auftrag aktualisiert; historische Stammdaten und Produktionsschichten blieben unverändert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag gelöscht."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsaufträge aktualisiert."><Setter Property="Foreground" Value="{StaticResource InfoBrush}" /></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
                         <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
                         <Button Content="Neuer Auftrag" Height="38" Command="{Binding NewOrderCommand}" Margin="0,0,0,8" />
                         <Button Content="Ausgewählten Auftrag löschen" Height="38" Command="{Binding DeleteCommand}" />
