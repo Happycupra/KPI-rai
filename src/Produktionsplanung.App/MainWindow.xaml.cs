@@ -385,12 +385,13 @@ public partial class MainWindow : Window
             if (notificationIssues.Count > 12)
             {
                 menu.Items.Add(new Separator());
-                menu.Items.Add(new MenuItem
+                var moreItem = new MenuItem
                 {
                     Header = $"+ {notificationIssues.Count - 12} weitere Hinweise im Dashboard",
                     Tag = new DashboardIssue { Route = "Dashboard" }
-                });
-                ((MenuItem)menu.Items[^1]).Click += NotificationItem_Click;
+                };
+                moreItem.Click += NotificationItem_Click;
+                menu.Items.Add(moreItem);
             }
         }
 
