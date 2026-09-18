@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Produktionsplanung.App.Services;
+using Produktionsplanung.App.ViewModels;
 using Produktionsplanung.App.Views;
 
 namespace Produktionsplanung.App;
@@ -24,18 +25,19 @@ public partial class MainWindow : Window
     private DateTime lastActivityUtc = DateTime.UtcNow;
     private bool sessionLocked;
     private bool bypassUnsavedChangesPrompt;
+    private List<DashboardIssue> notificationIssues = new();
 
     public MainWindow()
     {
         InitializeComponent();
         ApplyRolePermissions();
 
-        var settings = AppSettingsService.Load();
-        planningGroupCollapsed = settings.PlanningGroupCollapsed;
-        productionGroupCollapsed = settings.ProductionGroupCollapsed;
-        masterDataGroupCollapsed = settings.MasterDataGroupCollapsed;
-        systemGroupCollapsed = settings.SystemGroupCollapsed;
-        SetSidebarCollapsed(settings.SidebarCollapsed, persist: false);
+        var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        planningGroupCollapsed = preferences.PlanningGroupCollapsed;
+        productionGroupCollapsed = preferences.ProductionGroupCollapsed;
+        masterDataGroupCollapsed = preferences.MasterDataGroupCollapsed;
+        systemGroupCollapsed = preferences.SystemGroupCollapsed;
+        SetSidebarCollapsed(preferences.SidebarCollapsed, persist: false);
         ApplyGroupVisibility();
 
         inactivityTimer.Tick += InactivityTimer_Tick;
@@ -45,6 +47,7 @@ public partial class MainWindow : Window
         Closed += MainWindow_Closed;
 
         Navigate(CreateEntry(NavigationRoute.Dashboard), addToHistory: false);
+        RefreshNotifications();
     }
 
     private void ApplyRolePermissions()
@@ -143,6 +146,7 @@ public partial class MainWindow : Window
         CurrentPageTitle.Text = entry.Title;
         SetActiveNavigation(FindName(entry.ButtonName) as Button);
         BackButton.IsEnabled = navigationHistory.Count > 0;
+        RefreshNotifications();
     }
 
     private void Back_Click(object sender, RoutedEventArgs e)
@@ -268,34 +272,34 @@ public partial class MainWindow : Window
 
         ApplyGroupVisibility();
         if (persist)
-            AppSettingsService.Update(settings => settings.SidebarCollapsed = collapsed);
+            AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.SidebarCollapsed = collapsed);
     }
 
     private void TogglePlanningGroup_Click(object sender, RoutedEventArgs e)
     {
         planningGroupCollapsed = !planningGroupCollapsed;
-        AppSettingsService.Update(settings => settings.PlanningGroupCollapsed = planningGroupCollapsed);
+        AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.PlanningGroupCollapsed = planningGroupCollapsed);
         ApplyGroupVisibility();
     }
 
     private void ToggleProductionGroup_Click(object sender, RoutedEventArgs e)
     {
         productionGroupCollapsed = !productionGroupCollapsed;
-        AppSettingsService.Update(settings => settings.ProductionGroupCollapsed = productionGroupCollapsed);
+        AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.ProductionGroupCollapsed = productionGroupCollapsed);
         ApplyGroupVisibility();
     }
 
     private void ToggleMasterDataGroup_Click(object sender, RoutedEventArgs e)
     {
         masterDataGroupCollapsed = !masterDataGroupCollapsed;
-        AppSettingsService.Update(settings => settings.MasterDataGroupCollapsed = masterDataGroupCollapsed);
+        AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.MasterDataGroupCollapsed = masterDataGroupCollapsed);
         ApplyGroupVisibility();
     }
 
     private void ToggleSystemGroup_Click(object sender, RoutedEventArgs e)
     {
         systemGroupCollapsed = !systemGroupCollapsed;
-        AppSettingsService.Update(settings => settings.SystemGroupCollapsed = systemGroupCollapsed);
+        AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.SystemGroupCollapsed = systemGroupCollapsed);
         ApplyGroupVisibility();
     }
 
@@ -333,6 +337,90 @@ public partial class MainWindow : Window
         active.BorderBrush = (Brush)FindResource("PrimaryBrush");
         active.Foreground = Brushes.White;
         active.FontWeight = FontWeights.SemiBold;
+    }
+
+    private void RefreshNotifications()
+    {
+        try
+        {
+            var dashboard = new DashboardViewModel();
+            notificationIssues = dashboard.Issues.ToList();
+            NotificationCountText.Text = notificationIssues.Count > 99 ? "99+" : notificationIssues.Count.ToString();
+            NotificationCountBadge.Visibility = notificationIssues.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            NotificationButton.ToolTip = notificationIssues.Count == 0
+                ? "Keine offenen Hinweise"
+                : $"{notificationIssues.Count} offene Hinweise";
+        }
+        catch
+        {
+            notificationIssues = new List<DashboardIssue>();
+            NotificationCountBadge.Visibility = Visibility.Collapsed;
+            NotificationButton.ToolTip = "Benachrichtigungen konnten nicht geladen werden";
+        }
+    }
+
+    private void NotificationButton_Click(object sender, RoutedEventArgs e)
+    {
+        RefreshNotifications();
+        var menu = new ContextMenu { PlacementTarget = NotificationButton };
+
+        if (notificationIssues.Count == 0)
+        {
+            menu.Items.Add(new MenuItem { Header = "✓ Keine offenen Hinweise", IsEnabled = false });
+        }
+        else
+        {
+            foreach (var issue in notificationIssues.Take(12))
+            {
+                var prefix = issue.Severity == "Rot" ? "●" : "▲";
+                var item = new MenuItem
+                {
+                    Header = $"{prefix}  {issue.Title}\n    {issue.Message}",
+                    Tag = issue
+                };
+                item.Click += NotificationItem_Click;
+                menu.Items.Add(item);
+            }
+
+            if (notificationIssues.Count > 12)
+            {
+                menu.Items.Add(new Separator());
+                menu.Items.Add(new MenuItem
+                {
+                    Header = $"+ {notificationIssues.Count - 12} weitere Hinweise im Dashboard",
+                    Tag = new DashboardIssue { Route = "Dashboard" }
+                });
+                ((MenuItem)menu.Items[^1]).Click += NotificationItem_Click;
+            }
+        }
+
+        NotificationButton.ContextMenu = menu;
+        menu.IsOpen = true;
+    }
+
+    private void NotificationItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuItem { Tag: DashboardIssue issue })
+            return;
+
+        switch (issue.Route)
+        {
+            case "DayPlanning" when SessionService.IsPlannerOrAdmin:
+                OpenDayPlanning(issue.Date ?? DateTime.Today);
+                break;
+            case "ProductionOrders" when SessionService.IsPlannerOrAdmin && issue.EntityId.HasValue:
+                OpenProductionOrder(issue.EntityId.Value);
+                break;
+            case "ProductionOrders" when SessionService.IsPlannerOrAdmin:
+                Navigate(CreateEntry(NavigationRoute.ProductionOrders));
+                break;
+            case "Settings" when SessionService.IsAdministrator:
+                Navigate(CreateEntry(NavigationRoute.Settings));
+                break;
+            default:
+                Navigate(CreateEntry(NavigationRoute.Dashboard));
+                break;
+        }
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
