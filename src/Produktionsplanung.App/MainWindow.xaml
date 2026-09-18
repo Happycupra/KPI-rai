@@ -181,6 +181,19 @@
                         <TextBlock Text="SolutionCompakt · Operations" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="NotificationButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
+                                Style="{StaticResource SecondaryButtonStyle}" Click="NotificationButton_Click">
+                            <Grid Width="30" Height="28">
+                                <TextBlock Text="&#xE7ED;" FontFamily="Segoe MDL2 Assets" FontSize="17"
+                                           Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Border x:Name="NotificationCountBadge" Background="{StaticResource DangerBrush}" CornerRadius="8"
+                                        MinWidth="16" Height="16" Padding="3,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                        Margin="0,-3,-5,0" Visibility="Collapsed">
+                                    <TextBlock x:Name="NotificationCountText" Text="0" Foreground="White" FontSize="9" FontWeight="Bold"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
+                        </Button>
                         <Border Width="36" Height="36" Background="{StaticResource PrimarySoftBrush}" CornerRadius="18" Margin="0,0,10,0">
                             <TextBlock x:Name="TopbarInitialsBlock" Text="SC" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="12" FontWeight="Bold"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
