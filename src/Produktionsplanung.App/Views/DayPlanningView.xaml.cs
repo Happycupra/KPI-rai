@@ -10,6 +10,8 @@ namespace Produktionsplanung.App.Views;
 
 public partial class DayPlanningView : UserControl
 {
+    private bool? compactLayout;
+
     public DayPlanningView() : this(DateTime.Today)
     {
     }
@@ -26,7 +28,50 @@ public partial class DayPlanningView : UserControl
         PreviewMouseLeftButtonUp += EmployeeName_PreviewMouseLeftButtonUp;
         PreviewMouseMove += EmployeeName_PreviewMouseMove;
         MouseLeave += (_, _) => Cursor = Cursors.Arrow;
+        Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
         RefreshSupplementalPlanningData(viewModel);
+    }
+
+    private void LayoutRoot_SizeChanged(object sender, SizeChangedEventArgs e) =>
+        UpdateResponsiveLayout(e.NewSize.Width);
+
+    private void UpdateResponsiveLayout(double width)
+    {
+        var compact = width < 1100;
+        if (compactLayout == compact)
+            return;
+
+        compactLayout = compact;
+        if (compact)
+        {
+            MasterDetailGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            MasterDetailGrid.RowDefinitions[0].Height = new GridLength(55, GridUnitType.Star);
+            MasterDetailGrid.RowDefinitions[1].Height = new GridLength(45, GridUnitType.Star);
+
+            Grid.SetRow(PlanningOverviewPanel, 0);
+            Grid.SetColumn(PlanningOverviewPanel, 0);
+            PlanningOverviewPanel.Margin = new Thickness(0, 0, 0, 12);
+
+            Grid.SetRow(AssignmentEditorPanel, 1);
+            Grid.SetColumn(AssignmentEditorPanel, 0);
+            AssignmentEditorPanel.Margin = new Thickness(0);
+        }
+        else
+        {
+            MasterDetailGrid.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.ColumnDefinitions[1].Width = new GridLength(410);
+            MasterDetailGrid.RowDefinitions[0].Height = new GridLength(1, GridUnitType.Star);
+            MasterDetailGrid.RowDefinitions[1].Height = new GridLength(0);
+
+            Grid.SetRow(PlanningOverviewPanel, 0);
+            Grid.SetColumn(PlanningOverviewPanel, 0);
+            PlanningOverviewPanel.Margin = new Thickness(0, 0, 18, 0);
+
+            Grid.SetRow(AssignmentEditorPanel, 0);
+            Grid.SetColumn(AssignmentEditorPanel, 1);
+            AssignmentEditorPanel.Margin = new Thickness(0);
+        }
     }
 
     private void EmployeeName_PreviewMouseMove(object sender, MouseEventArgs e)
