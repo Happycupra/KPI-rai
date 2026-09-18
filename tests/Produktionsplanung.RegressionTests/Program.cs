@@ -20,6 +20,7 @@ internal static class Program
             ("Demo seeding preserves cleared data and disabled shift models", DemoSeederPreservesChanges),
             ("Day planning only offers shifts allowed for workstation and date", DayPlanningAllowedShifts),
             ("Order status edits preserve existing production run slots", OrderStatusKeepsRunSlots),
+            ("Job cards enforce skill matrix qualification levels", JobCardSkillValidation),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -171,6 +172,83 @@ internal static class Program
         Check(before.SequenceEqual(after), "Status-only order edit rebuilt production run slots");
         Check(check.ProductionOrders.Single(x => x.Id == orderId).Status == "Läuft",
             "Status-only order edit was not saved");
+    }
+
+    private static void JobCardSkillValidation()
+    {
+        int cardId;
+        int orderId;
+        int qualifiedEmployeeId;
+        int underqualifiedEmployeeId;
+
+        using (var db = new AppDbContext())
+        {
+            var qualification = db.Qualifications.Single(x => x.Name == "Linie 1");
+            var qualifiedEmployee = db.Employees.Single(x => x.PersonnelNumber == "1001"); // Level 3
+            var underqualifiedEmployee = db.Employees.Single(x => x.PersonnelNumber == "1002"); // Level 2
+            var order = db.ProductionOrders.OrderBy(x => x.Id).First();
+
+            orderId = order.Id;
+            qualifiedEmployeeId = qualifiedEmployee.Id;
+            underqualifiedEmployeeId = underqualifiedEmployee.Id;
+
+            var card = new JobCard
+            {
+                ProductionOrderId = order.Id,
+                SequenceNumber = 900,
+                OperationCode = "SKILL-TEST",
+                OperationName = "Skill-Prüfung",
+                WorkstationId = order.WorkstationId,
+                RequiredQualificationId = qualification.Id,
+                RequiredQualificationNameSnapshot = qualification.Name,
+                RequiredQualificationLevel = 3,
+                PlannedMinutes = 30,
+                RequiredStaff = 1,
+                Status = "Bereit"
+            };
+            db.JobCards.Add(card);
+            db.SaveChanges();
+            cardId = card.Id;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "regression-planner",
+            DisplayName = "Regression Planer",
+            Role = UserRoles.Planner,
+            IsActive = true
+        });
+
+        var vm = new ManufacturingControlViewModel();
+        vm.SelectedProductionOrder = vm.ProductionOrders.Single(x => x.Id == orderId);
+        vm.SelectedJobCard = vm.JobCards.Single(x => x.Id == cardId);
+
+        var underqualified = vm.JobCardEmployeeChoices.Single(x => x.EmployeeId == underqualifiedEmployeeId);
+        Check(!underqualified.IsQualified && underqualified.QualificationLevel == 2,
+            "Skill matrix did not mark level-2 employee as underqualified for level 3");
+        vm.SelectedJobCardEmployeeChoice = underqualified;
+        vm.StartJobCardCommand.Execute(null);
+
+        using (var check = new AppDbContext())
+        {
+            var blocked = check.JobCards.Single(x => x.Id == cardId);
+            Check(blocked.Status == "Bereit", "Underqualified employee was allowed to start job card");
+            Check(!blocked.EmployeeId.HasValue, "Blocked skill assignment was persisted");
+        }
+        Check(vm.StatusMessage.Contains("Level 2") && vm.StatusMessage.Contains("Level 3"),
+            "Skill block message does not explain actual and required level");
+
+        vm.SelectedJobCard = vm.JobCards.Single(x => x.Id == cardId);
+        var qualified = vm.JobCardEmployeeChoices.Single(x => x.EmployeeId == qualifiedEmployeeId);
+        Check(qualified.IsQualified && qualified.QualificationLevel == 3,
+            "Skill matrix did not mark level-3 employee as qualified");
+        vm.SelectedJobCardEmployeeChoice = qualified;
+        vm.StartJobCardCommand.Execute(null);
+
+        using var finalCheck = new AppDbContext();
+        var started = finalCheck.JobCards.Single(x => x.Id == cardId);
+        Check(started.Status == "In Produktion", "Qualified employee could not start job card");
+        Check(started.EmployeeId == qualifiedEmployeeId, "Qualified employee assignment was not persisted");
     }
 
     private static void CalendarWeekendFilter()

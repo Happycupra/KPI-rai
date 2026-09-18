@@ -202,6 +202,7 @@
                                         <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding OperationName}" Width="*"/>
                                         <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="130"/>
                                         <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="150"/>
+                                        <DataGridTextColumn Header="Skill-Pflicht" Binding="{Binding RequirementText}" Width="145"/>
                                         <DataGridTextColumn Header="Zeit" Binding="{Binding TimeText}" Width="110"/>
                                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="110"/>
                                     </DataGrid.Columns>
@@ -212,10 +213,39 @@
                                 <StackPanel>
                                     <TextBlock Text="Arbeitskarte rückmelden" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,14"/>
                                     <TextBlock Text="{Binding SelectedJobCard.OperationName}" FontSize="18" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding SelectedJobCard.WorkstationName}" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,14"/>
+                                    <TextBlock Text="{Binding SelectedJobCard.WorkstationName}" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,8"/>
+                                    <TextBlock Text="{Binding SelectedJobCard.RequirementText, StringFormat='Pflichtqualifikation: {0}'}"
+                                               FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,0,0,10"/>
+
                                     <TextBlock Text="Mitarbeiter" FontWeight="SemiBold"/>
-                                    <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedJobCardEmployee, Mode=TwoWay}"
-                                              DisplayMemberPath="LastName" Margin="0,5,0,12"/>
+                                    <ComboBox ItemsSource="{Binding JobCardEmployeeChoices}"
+                                              SelectedItem="{Binding SelectedJobCardEmployeeChoice, Mode=TwoWay}"
+                                              DisplayMemberPath="DisplayText" Margin="0,5,0,10"/>
+
+                                    <Border CornerRadius="8" Padding="10,8" Margin="0,0,0,12" BorderThickness="1">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource InfoSoftBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Success">
+                                                        <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Warning">
+                                                        <Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource WarningBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Danger">
+                                                        <Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding QualificationStatusText}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                    </Border>
+
                                     <WrapPanel Margin="0,0,0,14">
                                         <Button Content="▶ Start / Weiter" Command="{Binding StartJobCardCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,8"/>
                                         <Button Content="⏸ Pause" Command="{Binding PauseJobCardCommand}" Margin="0,0,8,8"/>

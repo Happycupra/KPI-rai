@@ -19,6 +19,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
     public ObservableCollection<Workstation> Workstations { get; } = new();
     public ObservableCollection<Qualification> Qualifications { get; } = new();
     public ObservableCollection<Employee> Employees { get; } = new();
+    public ObservableCollection<JobCardEmployeeChoice> JobCardEmployeeChoices { get; } = new();
 
     [ObservableProperty] private OperationDefinition? selectedOperation;
     [ObservableProperty] private string operationCode = string.Empty;
@@ -42,7 +43,9 @@ public partial class ManufacturingControlViewModel : ObservableObject
 
     [ObservableProperty] private ProductionOrderOption? selectedProductionOrder;
     [ObservableProperty] private JobCardRow? selectedJobCard;
-    [ObservableProperty] private Employee? selectedJobCardEmployee;
+    [ObservableProperty] private JobCardEmployeeChoice? selectedJobCardEmployeeChoice;
+    [ObservableProperty] private string qualificationStatusText = "Keine Arbeitskarte ausgewählt.";
+    [ObservableProperty] private string qualificationStatusKind = "Neutral";
     [ObservableProperty] private double finishGoodQuantity;
     [ObservableProperty] private double finishScrapQuantity;
     [ObservableProperty] private string jobCardComment = string.Empty;
@@ -105,10 +108,15 @@ public partial class ManufacturingControlViewModel : ObservableObject
 
     partial void OnSelectedJobCardChanged(JobCardRow? value)
     {
-        SelectedJobCardEmployee = value?.EmployeeId is int id ? Employees.FirstOrDefault(x => x.Id == id) : null;
+        LoadJobCardEmployeeChoices(value, value?.EmployeeId);
         FinishGoodQuantity = value?.GoodQuantity ?? 0;
         FinishScrapQuantity = value?.ScrapQuantity ?? 0;
         JobCardComment = value?.Comment ?? string.Empty;
+    }
+
+    partial void OnSelectedJobCardEmployeeChoiceChanged(JobCardEmployeeChoice? value)
+    {
+        UpdateQualificationStatus(SelectedJobCard, value);
     }
 
     [RelayCommand]
@@ -348,6 +356,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
 
         var steps = db.RoutingSteps.AsNoTracking()
             .Include(x => x.OperationDefinition)
+                .ThenInclude(x => x.RequiredQualification)
             .Where(x => x.ManufacturingRoutingId == routing.Id)
             .OrderBy(x => x.SequenceNumber)
             .ToList();
@@ -367,6 +376,11 @@ public partial class ManufacturingControlViewModel : ObservableObject
                 OperationCode = step.OperationDefinition.Code,
                 OperationName = step.OperationDefinition.Name,
                 WorkstationId = step.WorkstationId,
+                RequiredQualificationId = step.OperationDefinition.RequiredQualificationId,
+                RequiredQualificationNameSnapshot = step.OperationDefinition.RequiredQualification?.Name,
+                RequiredQualificationLevel = step.OperationDefinition.RequiredQualificationId.HasValue
+                    ? Math.Max(1, step.OperationDefinition.RequiredQualificationLevel)
+                    : 0,
                 PlannedMinutes = step.PlannedMinutes,
                 RequiredStaff = step.RequiredStaff,
                 Status = "Bereit"
@@ -399,7 +413,13 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return;
         }
 
-        card.EmployeeId = SelectedJobCardEmployee?.Id ?? card.EmployeeId;
+        if (!TryResolveQualifiedEmployee(db, card, out var employeeId, out var qualificationMessage))
+        {
+            StatusMessage = qualificationMessage;
+            return;
+        }
+
+        card.EmployeeId = employeeId;
         card.StartedAtUtc = DateTime.UtcNow;
         card.PauseStartedAtUtc = null;
         card.Status = "In Produktion";
@@ -452,12 +472,18 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return;
         }
 
+        if (!TryResolveQualifiedEmployee(db, card, out var employeeId, out var qualificationMessage))
+        {
+            StatusMessage = qualificationMessage;
+            return;
+        }
+
         if (card.Status == "In Produktion" && card.StartedAtUtc.HasValue)
             card.RunMinutes += Math.Max(0, (DateTime.UtcNow - card.StartedAtUtc.Value).TotalMinutes);
 
         card.StartedAtUtc = null;
         card.PauseStartedAtUtc = null;
-        card.EmployeeId = SelectedJobCardEmployee?.Id ?? card.EmployeeId;
+        card.EmployeeId = employeeId;
         card.GoodQuantity = FinishGoodQuantity;
         card.ScrapQuantity = FinishScrapQuantity;
         card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? null : JobCardComment.Trim();
@@ -521,7 +547,6 @@ public partial class ManufacturingControlViewModel : ObservableObject
         using var db = new AppDbContext();
         var workstationId = SelectedDefaultWorkstation?.Id;
         var qualificationId = SelectedRequiredQualification?.Id;
-        var employeeId = SelectedJobCardEmployee?.Id;
 
         Workstations.Clear();
         foreach (var x in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name))
@@ -537,7 +562,6 @@ public partial class ManufacturingControlViewModel : ObservableObject
 
         SelectedDefaultWorkstation = Workstations.FirstOrDefault(x => x.Id == workstationId) ?? Workstations.FirstOrDefault();
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == qualificationId);
-        SelectedJobCardEmployee = Employees.FirstOrDefault(x => x.Id == employeeId);
     }
 
     private void LoadOperations(int? selectId = null)
@@ -615,6 +639,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         var query = db.JobCards.AsNoTracking()
             .Include(x => x.Workstation)
             .Include(x => x.Employee)
+            .Include(x => x.RequiredQualification)
             .Include(x => x.ProductionOrder)
             .AsQueryable();
         if (orderId.HasValue)
@@ -640,6 +665,9 @@ public partial class ManufacturingControlViewModel : ObservableObject
                 WorkstationName = x.Workstation.Name,
                 EmployeeId = x.EmployeeId,
                 EmployeeName = x.Employee is null ? "–" : $"{x.Employee.LastName}, {x.Employee.FirstName}",
+                RequiredQualificationId = x.RequiredQualificationId,
+                RequiredQualificationName = x.RequiredQualificationNameSnapshot ?? x.RequiredQualification?.Name ?? string.Empty,
+                RequiredQualificationLevel = x.RequiredQualificationLevel,
                 PlannedMinutes = x.PlannedMinutes,
                 RunMinutes = x.RunMinutes,
                 RequiredStaff = x.RequiredStaff,
@@ -651,6 +679,165 @@ public partial class ManufacturingControlViewModel : ObservableObject
         }
 
         SelectedJobCard = selectId.HasValue ? JobCards.FirstOrDefault(x => x.Id == selectId.Value) : null;
+    }
+
+    private void LoadJobCardEmployeeChoices(JobCardRow? card, int? selectedEmployeeId)
+    {
+        JobCardEmployeeChoices.Clear();
+        SelectedJobCardEmployeeChoice = null;
+
+        if (card is null)
+        {
+            QualificationStatusKind = "Neutral";
+            QualificationStatusText = "Keine Arbeitskarte ausgewählt.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        var employees = db.Employees.AsNoTracking()
+            .Where(x => x.IsActive || x.Id == selectedEmployeeId)
+            .OrderBy(x => x.LastName)
+            .ThenBy(x => x.FirstName)
+            .ToList();
+
+        Dictionary<int, int> skillLevels = new();
+        if (card.RequiredQualificationId.HasValue)
+        {
+            skillLevels = db.EmployeeQualifications.AsNoTracking()
+                .Where(x => x.QualificationId == card.RequiredQualificationId.Value)
+                .ToDictionary(x => x.EmployeeId, x => x.Level);
+        }
+
+        var requirementMissing = card.HasSkillRequirement && !card.RequiredQualificationId.HasValue;
+        foreach (var employee in employees)
+        {
+            var level = card.RequiredQualificationId.HasValue && skillLevels.TryGetValue(employee.Id, out var foundLevel)
+                ? foundLevel
+                : 0;
+            var qualified = !card.HasSkillRequirement ||
+                            (!requirementMissing && level >= card.RequiredQualificationLevel);
+            var status = !card.HasSkillRequirement
+                ? "✅ keine Skillpflicht"
+                : requirementMissing
+                    ? $"❌ Pflichtqualifikation „{card.RequiredQualificationName}“ fehlt in den Stammdaten"
+                    : qualified
+                        ? $"✅ {card.RequiredQualificationName} L{level}"
+                        : level > 0
+                            ? $"⚠ {card.RequiredQualificationName} L{level} < L{card.RequiredQualificationLevel}"
+                            : $"❌ kein {card.RequiredQualificationName}-Skill";
+
+            JobCardEmployeeChoices.Add(new JobCardEmployeeChoice
+            {
+                EmployeeId = employee.Id,
+                DisplayName = $"{employee.LastName}, {employee.FirstName}",
+                PersonnelNumber = employee.PersonnelNumber,
+                QualificationLevel = level,
+                IsQualified = qualified,
+                StatusText = status
+            });
+        }
+
+        SelectedJobCardEmployeeChoice = selectedEmployeeId.HasValue
+            ? JobCardEmployeeChoices.FirstOrDefault(x => x.EmployeeId == selectedEmployeeId.Value)
+            : null;
+        UpdateQualificationStatus(card, SelectedJobCardEmployeeChoice);
+    }
+
+    private void UpdateQualificationStatus(JobCardRow? card, JobCardEmployeeChoice? choice)
+    {
+        if (card is null)
+        {
+            QualificationStatusKind = "Neutral";
+            QualificationStatusText = "Keine Arbeitskarte ausgewählt.";
+            return;
+        }
+
+        if (!card.HasSkillRequirement)
+        {
+            QualificationStatusKind = "Success";
+            QualificationStatusText = "✅ Für diesen Arbeitsgang ist keine Pflichtqualifikation hinterlegt.";
+            return;
+        }
+
+        if (!card.RequiredQualificationId.HasValue)
+        {
+            QualificationStatusKind = "Danger";
+            QualificationStatusText = $"❌ Pflichtqualifikation „{card.RequiredQualificationName}“ ist nicht mehr in den Stammdaten vorhanden.";
+            return;
+        }
+
+        if (choice is null)
+        {
+            QualificationStatusKind = "Warning";
+            QualificationStatusText = $"⚠ Benötigt: {card.RequiredQualificationName} Level {card.RequiredQualificationLevel}. Bitte Mitarbeiter auswählen.";
+            return;
+        }
+
+        if (choice.IsQualified)
+        {
+            QualificationStatusKind = "Success";
+            QualificationStatusText = $"✅ Qualifiziert: {card.RequiredQualificationName} Level {choice.QualificationLevel} · benötigt Level {card.RequiredQualificationLevel}.";
+        }
+        else if (choice.QualificationLevel > 0)
+        {
+            QualificationStatusKind = "Warning";
+            QualificationStatusText = $"⚠ Skill zu niedrig: {card.RequiredQualificationName} Level {choice.QualificationLevel} · benötigt Level {card.RequiredQualificationLevel}.";
+        }
+        else
+        {
+            QualificationStatusKind = "Danger";
+            QualificationStatusText = $"❌ Nicht qualifiziert: {choice.DisplayName} besitzt die Qualifikation „{card.RequiredQualificationName}“ nicht.";
+        }
+    }
+
+    private bool TryResolveQualifiedEmployee(AppDbContext db, JobCard card, out int? employeeId, out string message)
+    {
+        employeeId = SelectedJobCardEmployeeChoice?.EmployeeId ?? card.EmployeeId;
+        message = string.Empty;
+
+        var hasRequirement = card.RequiredQualificationLevel > 0 &&
+                             (!string.IsNullOrWhiteSpace(card.RequiredQualificationNameSnapshot) || card.RequiredQualificationId.HasValue);
+        if (!hasRequirement)
+            return true;
+
+        var requirementName = string.IsNullOrWhiteSpace(card.RequiredQualificationNameSnapshot)
+            ? "Pflichtqualifikation"
+            : card.RequiredQualificationNameSnapshot;
+
+        if (!card.RequiredQualificationId.HasValue)
+        {
+            message = $"Arbeitskarte gesperrt: Die Pflichtqualifikation „{requirementName}“ ist nicht mehr in den Stammdaten vorhanden.";
+            return false;
+        }
+
+        if (!employeeId.HasValue)
+        {
+            message = $"Arbeitskarte gesperrt: {requirementName} Level {card.RequiredQualificationLevel} ist erforderlich. Bitte einen Mitarbeiter auswählen.";
+            return false;
+        }
+
+        var resolvedEmployeeId = employeeId.Value;
+        var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == resolvedEmployeeId && x.IsActive);
+        if (employee is null)
+        {
+            message = "Arbeitskarte gesperrt: Der ausgewählte Mitarbeiter ist nicht aktiv.";
+            return false;
+        }
+
+        var level = db.EmployeeQualifications.AsNoTracking()
+            .Where(x => x.EmployeeId == resolvedEmployeeId && x.QualificationId == card.RequiredQualificationId.Value)
+            .Select(x => (int?)x.Level)
+            .FirstOrDefault() ?? 0;
+
+        if (level < card.RequiredQualificationLevel)
+        {
+            message = level == 0
+                ? $"Arbeitskarte gesperrt: {employee.FirstName} {employee.LastName} besitzt die Qualifikation „{requirementName}“ nicht."
+                : $"Arbeitskarte gesperrt: {employee.FirstName} {employee.LastName} hat {requirementName} Level {level}; benötigt wird Level {card.RequiredQualificationLevel}.";
+            return false;
+        }
+
+        return true;
     }
 
     private bool EnsurePlanner()
@@ -714,6 +901,13 @@ public sealed class JobCardRow
     public string WorkstationName { get; set; } = string.Empty;
     public int? EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
+    public int? RequiredQualificationId { get; set; }
+    public string RequiredQualificationName { get; set; } = string.Empty;
+    public int RequiredQualificationLevel { get; set; }
+    public bool HasSkillRequirement => RequiredQualificationLevel > 0 && (!string.IsNullOrWhiteSpace(RequiredQualificationName) || RequiredQualificationId.HasValue);
+    public string RequirementText => HasSkillRequirement
+        ? $"{RequiredQualificationName} L{RequiredQualificationLevel}"
+        : "Keine";
     public double PlannedMinutes { get; set; }
     public double RunMinutes { get; set; }
     public int RequiredStaff { get; set; }
@@ -722,6 +916,17 @@ public sealed class JobCardRow
     public double ScrapQuantity { get; set; }
     public string? Comment { get; set; }
     public string TimeText => $"{RunMinutes:N0} / {PlannedMinutes:N0} min";
+}
+
+public sealed class JobCardEmployeeChoice
+{
+    public int EmployeeId { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public string PersonnelNumber { get; set; } = string.Empty;
+    public int QualificationLevel { get; set; }
+    public bool IsQualified { get; set; }
+    public string StatusText { get; set; } = string.Empty;
+    public string DisplayText => $"{DisplayName} · {StatusText}";
 }
 
 public sealed class CapacityRow
