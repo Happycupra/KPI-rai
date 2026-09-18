@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
-    <Grid Margin="28">
+    <Grid Margin="28" SizeChanged="LayoutRoot_SizeChanged">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -26,13 +26,17 @@
             </StackPanel>
         </Grid>
 
-        <Grid Grid.Row="1">
+        <Grid x:Name="MasterDetailGrid" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="0" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="410" />
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
+            <ScrollViewer x:Name="PlanningOverviewPanel" Grid.Row="0" Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,18,0">
                 <StackPanel>
                     <Border Background="White" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                         <StackPanel>
@@ -40,11 +44,34 @@
                             <ItemsControl ItemsSource="{Binding Alerts}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#F8FAFC" CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                        <Border CornerRadius="8" Padding="10" Margin="0,0,0,6">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Gelb">
+                                                            <Setter Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Hinweis">
+                                                            <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold" Foreground="#B91C1C" />
-                                                <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="#334155" />
+                                                <TextBlock Text="{Binding Severity}" FontWeight="SemiBold">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="Gelb"><Setter Property="Foreground" Value="{StaticResource WarningBrush}" /></DataTrigger>
+                                                                <DataTrigger Binding="{Binding Severity}" Value="Hinweis"><Setter Property="Foreground" Value="{StaticResource InfoBrush}" /></DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1" Text="{Binding Message}" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -121,7 +148,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
+            <Border x:Name="AssignmentEditorPanel" Grid.Row="0" Grid.Column="1" Background="White" CornerRadius="12" Padding="22">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Zuweisung" FontSize="22" FontWeight="SemiBold" Foreground="#0F172A" />
@@ -167,7 +194,42 @@
                             <TextBlock Text="SolutionCompakt prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
                                        TextWrapping="Wrap" Foreground="#1E3A8A" />
                         </Border>
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="#B91C1C" TextWrapping="Wrap" MinHeight="42" Margin="0,0,0,10" />
+                        <Border CornerRadius="8" Padding="10,7" Margin="0,0,0,10">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                    <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Zuweisung gespeichert.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Zuweisung gelöscht.">
+                                            <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Planung aktualisiert.">
+                                            <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource InfoBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Zuweisung gespeichert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Zuweisung gelöscht."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Planung aktualisiert."><Setter Property="Foreground" Value="{StaticResource InfoBrush}" /></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
                         <Button Content="Speichern" Height="38" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
                         <Button Content="Neue Zuweisung" Height="38" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" />
                         <Button Content="Ausgewählte Zuweisung löschen" Height="38" Command="{Binding DeleteCommand}" />
