@@ -87,7 +87,7 @@
                                                     </Border>
                                                 </Grid>
                                                 <TextBlock Text="{Binding Product}" FontWeight="SemiBold" Margin="0,5,0,0"/>
-                                                <TextBlock Text="{Binding WorkstationName, StringFormat=Arbeitsplatz: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding WorkstationName, StringFormat='Arbeitsplatz: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
                                                 <TextBlock Text="{Binding CurrentOperation}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,8" TextWrapping="Wrap"/>
                                                 <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="7"/>
                                                 <Grid Margin="0,5,0,0">
@@ -197,9 +197,8 @@
                                                     </Border>
                                                     <StackPanel Grid.Column="1">
                                                         <TextBlock Text="{Binding OperationName}" FontWeight="SemiBold"/>
-                                                        <TextBlock Text="{Binding WorkstationName, StringFormat={}{0} · }" Style="{StaticResource SecondaryTextStyle}">
-                                                            <Run Text="{Binding EmployeeName}"/>
-                                                        </TextBlock>
+                                                        <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}"/>
+                                                        <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Border Grid.Column="2" x:Name="ProcessStatus" Style="{StaticResource StatusChipStyle}" HorizontalAlignment="Right">
                                                         <TextBlock x:Name="ProcessStatusText" Text="{Binding Status}" FontWeight="SemiBold" FontSize="11"/>
@@ -262,8 +261,8 @@
                                                         <StackPanel Grid.Column="1">
                                                             <TextBlock Text="{Binding OperationName}" FontSize="16" FontWeight="SemiBold"/>
                                                             <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
-                                                            <TextBlock Text="{Binding EmployeeName, StringFormat=Mitarbeiter: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
-                                                            <TextBlock Text="{Binding RequirementText, StringFormat=Skill: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                                            <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                                            <TextBlock Text="{Binding RequirementText, StringFormat='Skill: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                                             <Border x:Name="CardStatusChip" Style="{StaticResource StatusChipStyle}" HorizontalAlignment="Right">
@@ -284,7 +283,7 @@
                                 </ItemsControl>
                             </ScrollViewer>
 
-                            <Border Style="{StaticResource SectionCardStyle}">
+                            <Border>
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -393,8 +392,8 @@
                                                 <TextBlock Text="{Binding UtilizationText}" FontWeight="SemiBold"/>
                                                 <TextBlock Grid.Column="1" Text="{Binding DeltaText}" Style="{StaticResource SecondaryTextStyle}"/>
                                             </Grid>
-                                            <TextBlock Text="{Binding PlannedText, StringFormat=Geplant: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0"/>
-                                            <TextBlock Text="{Binding AvailableText, StringFormat=Verfügbar: {0}}" Style="{StaticResource SecondaryTextStyle}"/>
+                                            <TextBlock Text="{Binding PlannedText, StringFormat='Geplant: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0"/>
+                                            <TextBlock Text="{Binding AvailableText, StringFormat='Verfügbar: {0}'}" Style="{StaticResource SecondaryTextStyle}"/>
                                         </StackPanel>
                                     </Border>
                                     <DataTemplate.Triggers>
@@ -408,7 +407,7 @@
 
                         <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
                             <StackPanel>
-                                <TextBlock Text="{Binding SelectedCapacityRow.WorkstationName, StringFormat=Belastung durch Arbeitskarten · {0}}" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding SelectedCapacityRow.WorkstationName, StringFormat='Belastung durch Arbeitskarten · {0}'}" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
                                 <DataGrid ItemsSource="{Binding CapacityJobCards}" AutoGenerateColumns="False" IsReadOnly="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Datum" Binding="{Binding PlannedDate, StringFormat=dd.MM.}" Width="70"/>
