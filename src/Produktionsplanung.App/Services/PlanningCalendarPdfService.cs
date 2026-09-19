@@ -207,8 +207,8 @@ public static class PlanningCalendarPdfService
         int pageCount)
     {
         var page = document.AddPage();
-        page.Orientation = PdfSharp.PageOrientation.Landscape;
         page.Size = PdfSharp.PageSize.A4;
+        page.Orientation = PdfSharp.PageOrientation.Landscape;
         var graphics = XGraphics.FromPdfPage(page);
         var palette = CalendarPdfPalette.Create();
 
@@ -225,7 +225,7 @@ public static class PlanningCalendarPdfService
             : $"{settings.CompanyName} · {settings.SiteName}";
         graphics.DrawString($"{company} · Seite {pageNumber}/{pageCount}", palette.Tiny,
             new XSolidBrush(palette.Muted),
-            new XRect(580, 28, page.Width.Point - 604, 16), XStringFormats.TopRight);
+            new XRect(580, 28, Math.Max(80, page.Width.Point - 604), 16), XStringFormats.TopRight);
 
         return (page, graphics, palette);
     }
