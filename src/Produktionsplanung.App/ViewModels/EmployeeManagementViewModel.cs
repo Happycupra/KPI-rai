@@ -15,6 +15,9 @@ public partial class EmployeeManagementViewModel : ObservableObject
 
     public ObservableCollection<Employee> Employees { get; } = new();
     public ObservableCollection<EmployeeDirectoryRow> EmployeeRows { get; } = new();
+    public ObservableCollection<EmployeeSkillEditorRow> SkillEditorRows { get; } = new();
+    public ObservableCollection<Qualification> Qualifications { get; } = new();
+    public string[] GroupModeOptions { get; } = { "Keine", "Abteilung", "Funktion" };
 
     [ObservableProperty] private Employee? selectedEmployee;
     [ObservableProperty] private string searchText = string.Empty;
@@ -30,6 +33,9 @@ public partial class EmployeeManagementViewModel : ObservableObject
     [ObservableProperty] private bool isActive = true;
     [ObservableProperty] private bool isEditorOpen;
     [ObservableProperty] private string statusMessage = string.Empty;
+    [ObservableProperty] private string selectedGroupMode = "Abteilung";
+    [ObservableProperty] private string newQualificationName = string.Empty;
+    [ObservableProperty] private Qualification? selectedQualification;
 
     public string EditorTitle => EditingId == 0
         ? "Neuer Mitarbeiter"
@@ -44,6 +50,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
     partial void OnShowInactiveChanged(bool value) => ApplyFilter();
+    partial void OnSelectedGroupModeChanged(string value) => ApplyFilter();
 
     partial void OnSelectedEmployeeChanged(Employee? value)
     {
@@ -61,6 +68,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
         IsActive = value.IsActive;
         IsEditorOpen = true;
         StatusMessage = string.Empty;
+        LoadSkillEditor(value.Id);
         OnPropertyChanged(nameof(EditorTitle));
     }
 
@@ -79,6 +87,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
         IsActive = true;
         IsEditorOpen = true;
         StatusMessage = string.Empty;
+        LoadSkillEditor(null);
         OnPropertyChanged(nameof(EditorTitle));
     }
 
@@ -107,6 +116,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
         WeeklyTargetHours = 40;
         IsActive = true;
         IsEditorOpen = false;
+        SkillEditorRows.Clear();
         OnPropertyChanged(nameof(EditorTitle));
     }
 
@@ -168,6 +178,36 @@ public partial class EmployeeManagementViewModel : ObservableObject
 
         db.SaveChanges();
         var id = employee.Id;
+
+        var existingSkills = db.EmployeeQualifications
+            .Where(x => x.EmployeeId == id)
+            .ToList();
+
+        foreach (var skill in SkillEditorRows)
+        {
+            var level = Math.Clamp(skill.Level, 0, 3);
+            var existing = existingSkills.FirstOrDefault(x => x.QualificationId == skill.QualificationId);
+            if (level == 0)
+            {
+                if (existing is not null)
+                    db.EmployeeQualifications.Remove(existing);
+            }
+            else if (existing is null)
+            {
+                db.EmployeeQualifications.Add(new EmployeeQualification
+                {
+                    EmployeeId = id,
+                    QualificationId = skill.QualificationId,
+                    Level = level
+                });
+            }
+            else
+            {
+                existing.Level = level;
+            }
+        }
+
+        db.SaveChanges();
 
         LoadEmployees();
         StatusMessage = $"{FirstName} {LastName} gespeichert.";
@@ -271,11 +311,79 @@ public partial class EmployeeManagementViewModel : ObservableObject
     private void Refresh()
     {
         LoadEmployees();
+        if (IsEditorOpen)
+            LoadSkillEditor(EditingId > 0 ? EditingId : null);
         StatusMessage = "Mitarbeiterliste aktualisiert.";
+    }
+
+    [RelayCommand]
+    private void AddQualification()
+    {
+        var name = NewQualificationName.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            StatusMessage = "Bitte einen Namen für die Qualifikation eingeben.";
+            return;
+        }
+
+        using var db = new AppDbContext();
+        if (db.Qualifications.Any(x => x.Name.ToLower() == name.ToLower()))
+        {
+            StatusMessage = "Diese Qualifikation existiert bereits.";
+            return;
+        }
+
+        db.Qualifications.Add(new Qualification { Name = name });
+        db.SaveChanges();
+        NewQualificationName = string.Empty;
+        LoadQualifications();
+        LoadEmployees();
+        if (IsEditorOpen)
+            LoadSkillEditor(EditingId > 0 ? EditingId : null);
+        StatusMessage = $"Qualifikation „{name}“ hinzugefügt.";
+    }
+
+    [RelayCommand]
+    private void DeleteQualification()
+    {
+        if (SelectedQualification is null)
+            return;
+
+        var qualificationId = SelectedQualification.Id;
+        var qualificationName = SelectedQualification.Name;
+
+        if (MessageBox.Show(
+                $"Qualifikation „{qualificationName}“ inklusive aller Mitarbeiter-Zuordnungen löschen?",
+                "Qualifikation löschen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        using var db = new AppDbContext();
+        foreach (var workstation in db.Workstations.Where(x => x.RequiredQualificationId == qualificationId))
+        {
+            workstation.RequiredQualificationId = null;
+            workstation.RequiredQualificationLevel = 0;
+        }
+
+        db.EmployeeQualifications.RemoveRange(
+            db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId));
+        var qualification = db.Qualifications.FirstOrDefault(x => x.Id == qualificationId);
+        if (qualification is not null)
+            db.Qualifications.Remove(qualification);
+
+        db.SaveChanges();
+        SelectedQualification = null;
+        LoadQualifications();
+        LoadEmployees();
+        if (IsEditorOpen)
+            LoadSkillEditor(EditingId > 0 ? EditingId : null);
+        StatusMessage = $"Qualifikation „{qualificationName}“ gelöscht.";
     }
 
     private void LoadEmployees()
     {
+        LoadQualifications();
         using var db = new AppDbContext();
         _allEmployees = db.Employees
             .AsNoTracking()
@@ -327,6 +435,12 @@ public partial class EmployeeManagementViewModel : ObservableObject
                 WorkloadPercent = employee.WorkloadPercent,
                 WeeklyTargetHours = employee.WeeklyTargetHours,
                 IsActive = employee.IsActive,
+                GroupKey = SelectedGroupMode switch
+                {
+                    "Funktion" => string.IsNullOrWhiteSpace(employee.Role) ? "Ohne Funktion" : employee.Role,
+                    "Abteilung" => string.IsNullOrWhiteSpace(employee.Department) ? "Ohne Abteilung" : employee.Department,
+                    _ => string.Empty
+                },
                 QualificationSummary = employee.Qualifications.Count == 0
                     ? "Keine Qualifikationen hinterlegt"
                     : string.Join(" · ", employee.Qualifications
@@ -336,6 +450,42 @@ public partial class EmployeeManagementViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(VisibleEmployeeCount));
+    }
+
+    private void LoadQualifications()
+    {
+        using var db = new AppDbContext();
+        var selectedId = SelectedQualification?.Id;
+        Qualifications.Clear();
+        foreach (var qualification in db.Qualifications.AsNoTracking().OrderBy(x => x.Name))
+            Qualifications.Add(qualification);
+        SelectedQualification = selectedId.HasValue
+            ? Qualifications.FirstOrDefault(x => x.Id == selectedId.Value)
+            : null;
+    }
+
+    private void LoadSkillEditor(int? employeeId)
+    {
+        using var db = new AppDbContext();
+        var qualifications = db.Qualifications.AsNoTracking()
+            .OrderBy(x => x.Name)
+            .ToList();
+        var levels = employeeId.HasValue
+            ? db.EmployeeQualifications.AsNoTracking()
+                .Where(x => x.EmployeeId == employeeId.Value)
+                .ToDictionary(x => x.QualificationId, x => x.Level)
+            : new Dictionary<int, int>();
+
+        SkillEditorRows.Clear();
+        foreach (var qualification in qualifications)
+        {
+            SkillEditorRows.Add(new EmployeeSkillEditorRow
+            {
+                QualificationId = qualification.Id,
+                QualificationName = qualification.Name,
+                Level = levels.TryGetValue(qualification.Id, out var level) ? level : 0
+            });
+        }
     }
 }
 
@@ -352,6 +502,7 @@ public sealed class EmployeeDirectoryRow
     public int WorkloadPercent { get; set; }
     public double WeeklyTargetHours { get; set; }
     public bool IsActive { get; set; }
+    public string GroupKey { get; set; } = string.Empty;
     public string QualificationSummary { get; set; } = string.Empty;
 
     public string StatusText => IsActive ? "Aktiv" : "Inaktiv";
@@ -360,4 +511,26 @@ public sealed class EmployeeDirectoryRow
     public string RoleDepartmentText => string.Join(" · ",
         new[] { Role, Department }.Where(x => !string.IsNullOrWhiteSpace(x)));
     public string WorkloadText => $"{WorkloadPercent}% · {WeeklyTargetHours:0.#} h/Woche";
+}
+
+public sealed class EmployeeSkillEditorRow : ObservableObject
+{
+    public int QualificationId { get; set; }
+    public string QualificationName { get; set; } = string.Empty;
+
+    private int level;
+    public int Level
+    {
+        get => level;
+        set => SetProperty(ref level, Math.Clamp(value, 0, 3));
+    }
+
+    public string LevelText => Level switch
+    {
+        0 => "0 · keine",
+        1 => "1 · in Ausbildung",
+        2 => "2 · qualifiziert",
+        3 => "3 · Experte/Trainer",
+        _ => Level.ToString()
+    };
 }
