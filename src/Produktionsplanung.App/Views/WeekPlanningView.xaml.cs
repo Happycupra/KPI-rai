@@ -70,8 +70,9 @@ public partial class WeekPlanningView : UserControl
             if (dialog.ShowDialog() != true)
                 return;
 
-            var result = WeeklyPlanPdfService.Export(viewModel.WeekStart, dialog.FileName);
-            viewModel.StatusMessage = $"PDF-Wochenplan erstellt: {result.PageCount} Seite(n), {result.ProductionShiftCount} Produktionsschichten.";
+            var includeWeekends = ExportWeekendsCheckBox.IsChecked == true;
+            var result = WeeklyPlanPdfService.Export(viewModel.WeekStart, dialog.FileName, includeWeekends);
+            viewModel.StatusMessage = $"PDF-Wochenplan erstellt: {result.PageCount} Seite(n), {result.ProductionShiftCount} Produktionsschichten · {(includeWeekends ? "mit Wochenende" : "Mo–Fr")}.";
 
             Process.Start(new ProcessStartInfo(result.FilePath)
             {
