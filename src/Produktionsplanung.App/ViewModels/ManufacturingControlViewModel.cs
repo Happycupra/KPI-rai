@@ -492,6 +492,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
         LoadProductionOrders();
         LoadJobCards(order.Id);
         RefreshCapacity();
+        LoadCockpit();
+        UpdateOrderWorkflow();
         StatusMessage = $"{steps.Count} Arbeitskarte(n) aus dem Arbeitsplan erzeugt.";
     }
 
@@ -527,6 +529,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
         db.SaveChanges();
         LoadProductionOrders();
         LoadJobCards(card.ProductionOrderId, card.Id);
+        LoadCockpit();
+        UpdateOrderWorkflow();
         StatusMessage = "Arbeitskarte gestartet.";
     }
 
@@ -550,6 +554,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
         db.SaveChanges();
         LoadProductionOrders();
         LoadJobCards(card.ProductionOrderId, card.Id);
+        LoadCockpit();
+        UpdateOrderWorkflow();
         StatusMessage = "Arbeitskarte pausiert.";
     }
 
@@ -590,14 +596,29 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.Status = "Fertig";
         db.SaveChanges();
 
-        var remaining = db.JobCards.Any(x => x.ProductionOrderId == card.ProductionOrderId && x.Status != "Fertig");
+        var nextCardId = db.JobCards
+            .Where(x => x.ProductionOrderId == card.ProductionOrderId && x.Status != "Fertig" && x.SequenceNumber > card.SequenceNumber)
+            .OrderBy(x => x.SequenceNumber)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefault();
+        nextCardId ??= db.JobCards
+            .Where(x => x.ProductionOrderId == card.ProductionOrderId && x.Status != "Fertig")
+            .OrderBy(x => x.SequenceNumber)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefault();
+
+        var remaining = nextCardId.HasValue;
         db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = remaining ? "Läuft" : "Abgeschlossen";
         db.SaveChanges();
 
         LoadProductionOrders();
-        LoadJobCards(card.ProductionOrderId, card.Id);
+        LoadJobCards(card.ProductionOrderId, nextCardId);
         RefreshCapacity();
-        StatusMessage = "Arbeitskarte abgeschlossen.";
+        LoadCockpit();
+        UpdateOrderWorkflow();
+        StatusMessage = nextCardId.HasValue
+            ? $"Arbeitsgang abgeschlossen. Nächster Arbeitsgang: {SelectedJobCard?.OperationName ?? "bereit"}."
+            : "Arbeitsgang abgeschlossen. Auftrag vollständig fertig.";
     }
 
     [RelayCommand]
