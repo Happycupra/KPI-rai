@@ -26,6 +26,7 @@ internal static class Program
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
             ("Unified planning staffs production and uses three-letter initials", UnifiedPlanningStaffing),
             ("Planning side panels can be hidden and restored", PlanningPanelToggle),
+            ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
@@ -459,6 +460,30 @@ internal static class Program
         Check(leftColumn!.Width.Value == 0, "Left planning panel did not collapse");
         leftButton.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
         Check(leftColumn.Width.Value > 0, "Left planning panel could not be restored");
+    }
+
+    private static void CompactEmployeeDirectory()
+    {
+        var vm = new EmployeeManagementViewModel();
+        Check(!vm.IsEditorOpen, "Employee editor should be closed when directory opens");
+        Check(vm.EmployeeRows.Count > 0, "Compact employee directory is empty");
+
+        var row = vm.EmployeeRows.First();
+        Check(row.Initials.Length == 3,
+            $"Employee directory initials are not three letters: {row.Initials}");
+        Check(!string.IsNullOrWhiteSpace(row.FullName),
+            "Compact employee row does not show a name");
+
+        vm.EditEmployee(row.Id);
+        Check(vm.IsEditorOpen, "Right-click edit target did not open employee editor");
+        Check(vm.EditingId == row.Id, "Employee editor opened the wrong employee");
+        Check(vm.PersonnelNumber == row.PersonnelNumber &&
+              vm.FirstName == row.FirstName &&
+              vm.LastName == row.LastName,
+            "Employee editor did not load all base employee data");
+
+        vm.CloseEditor();
+        Check(!vm.IsEditorOpen, "Employee editor could not be closed");
     }
 
     private static void DragStaffToProduction()
