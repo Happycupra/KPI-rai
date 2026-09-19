@@ -180,6 +180,13 @@ public partial class ManufacturingControlViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SelectJobCard(JobCardRow? row)
+    {
+        if (row is not null)
+            SelectedJobCard = row;
+    }
+
+    [RelayCommand]
     private void AutoAssignBestEmployee()
     {
         if (SelectedJobCard is null)
