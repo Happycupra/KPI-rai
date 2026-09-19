@@ -21,6 +21,8 @@ internal static class Program
             ("Day planning only offers shifts allowed for workstation and date", DayPlanningAllowedShifts),
             ("Order status edits preserve existing production run slots", OrderStatusKeepsRunSlots),
             ("Job cards enforce skill matrix qualification levels", JobCardSkillValidation),
+            ("Manufacturing workflow advances to next job card", ManufacturingWorkflowAutoAdvance),
+            ("Routing steps can be reordered and renumbered", RoutingStepReorder),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -223,6 +225,10 @@ internal static class Program
         vm.SelectedProductionOrder = vm.ProductionOrders.Single(x => x.Id == orderId);
         vm.SelectedJobCard = vm.JobCards.Single(x => x.Id == cardId);
 
+        vm.AutoAssignBestEmployeeCommand.Execute(null);
+        Check(vm.SelectedJobCardEmployeeChoice is { IsQualified: true, IsAbsent: false },
+            "Automatic staffing did not choose an available qualified employee");
+
         var underqualified = vm.JobCardEmployeeChoices.Single(x => x.EmployeeId == underqualifiedEmployeeId);
         Check(!underqualified.IsQualified && underqualified.QualificationLevel == 2,
             "Skill matrix did not mark level-2 employee as underqualified for level 3");
@@ -249,6 +255,110 @@ internal static class Program
         var started = finalCheck.JobCards.Single(x => x.Id == cardId);
         Check(started.Status == "In Produktion", "Qualified employee could not start job card");
         Check(started.EmployeeId == qualifiedEmployeeId, "Qualified employee assignment was not persisted");
+    }
+
+    private static void ManufacturingWorkflowAutoAdvance()
+    {
+        int orderId;
+        int firstId;
+        int secondId;
+        using (var db = new AppDbContext())
+        {
+            var order = db.ProductionOrders.OrderBy(x => x.Id).First();
+            orderId = order.Id;
+            var first = new JobCard
+            {
+                ProductionOrderId = order.Id, SequenceNumber = 10, OperationCode = "A",
+                OperationName = "Vorbereitung", WorkstationId = order.WorkstationId,
+                PlannedMinutes = 20, RequiredStaff = 1, Status = "Bereit"
+            };
+            var second = new JobCard
+            {
+                ProductionOrderId = order.Id, SequenceNumber = 20, OperationCode = "B",
+                OperationName = "Montage", WorkstationId = order.WorkstationId,
+                PlannedMinutes = 30, RequiredStaff = 1, Status = "Bereit"
+            };
+            db.JobCards.AddRange(first, second);
+            db.SaveChanges();
+            firstId = first.Id;
+            secondId = second.Id;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "workflow-planner", DisplayName = "Workflow Planer",
+            Role = UserRoles.Planner, IsActive = true
+        });
+
+        var vm = new ManufacturingControlViewModel();
+        vm.SelectedProductionOrder = vm.ProductionOrders.Single(x => x.Id == orderId);
+        Check(vm.CockpitOrders.Any(x => x.Id == orderId), "Order cockpit does not contain production order");
+        vm.SelectedJobCard = vm.JobCards.Single(x => x.Id == firstId);
+        vm.FinishGoodQuantity = 1;
+        vm.FinishJobCardCommand.Execute(null);
+
+        using var check = new AppDbContext();
+        Check(check.JobCards.Single(x => x.Id == firstId).Status == "Fertig",
+            "Completed job card was not saved");
+        Check(vm.SelectedJobCard?.Id == secondId,
+            "Workflow did not advance to the next open job card");
+        Check(vm.CurrentOperationText.Contains("Montage"),
+            "Workflow cockpit did not update the current operation");
+    }
+
+    private static void RoutingStepReorder()
+    {
+        int routingId;
+        int firstId;
+        int secondId;
+        using (var db = new AppDbContext())
+        {
+            var workstation = db.Workstations.OrderBy(x => x.Id).First();
+            var op1 = new OperationDefinition
+            {
+                Code = "R-10", Name = "Schritt A", DefaultWorkstationId = workstation.Id,
+                DefaultMinutes = 10, RequiredStaff = 1
+            };
+            var op2 = new OperationDefinition
+            {
+                Code = "R-20", Name = "Schritt B", DefaultWorkstationId = workstation.Id,
+                DefaultMinutes = 20, RequiredStaff = 1
+            };
+            var routing = new ManufacturingRouting { Product = "Routing-Test", Name = "Testplan", IsActive = true };
+            db.AddRange(op1, op2, routing);
+            db.SaveChanges();
+            var first = new RoutingStep
+            {
+                ManufacturingRoutingId = routing.Id, OperationDefinitionId = op1.Id,
+                SequenceNumber = 10, WorkstationId = workstation.Id, PlannedMinutes = 10, RequiredStaff = 1
+            };
+            var second = new RoutingStep
+            {
+                ManufacturingRoutingId = routing.Id, OperationDefinitionId = op2.Id,
+                SequenceNumber = 20, WorkstationId = workstation.Id, PlannedMinutes = 20, RequiredStaff = 1
+            };
+            db.RoutingSteps.AddRange(first, second);
+            db.SaveChanges();
+            routingId = routing.Id;
+            firstId = first.Id;
+            secondId = second.Id;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "routing-planner", DisplayName = "Routing Planer",
+            Role = UserRoles.Planner, IsActive = true
+        });
+        var vm = new ManufacturingControlViewModel();
+        vm.SelectedRouting = vm.Routings.Single(x => x.Id == routingId);
+        vm.MoveRoutingStep(secondId, firstId);
+
+        using var check = new AppDbContext();
+        var ordered = check.RoutingSteps.Where(x => x.ManufacturingRoutingId == routingId)
+            .OrderBy(x => x.SequenceNumber).ToList();
+        Check(ordered.Count == 2 && ordered[0].Id == secondId && ordered[0].SequenceNumber == 10 &&
+              ordered[1].Id == firstId && ordered[1].SequenceNumber == 20,
+            "Routing drag/drop reorder did not persist or renumber steps");
     }
 
     private static void CalendarWeekendFilter()
