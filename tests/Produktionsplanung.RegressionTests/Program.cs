@@ -27,6 +27,8 @@ internal static class Program
             ("Unified planning staffs production and uses three-letter initials", UnifiedPlanningStaffing),
             ("Planning side panels can be hidden and restored", PlanningPanelToggle),
             ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
+            ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
+            ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
@@ -486,6 +488,101 @@ internal static class Program
         Check(!vm.IsEditorOpen, "Employee editor could not be closed");
     }
 
+    private static void EmployeeSkillsAndGrouping()
+    {
+        int employeeId;
+        int qualificationId;
+        using (var db = new AppDbContext())
+        {
+            var employee = db.Employees.OrderBy(x => x.Id).First();
+            employeeId = employee.Id;
+            var qualification = new Qualification { Name = "Regression Skill" };
+            db.Qualifications.Add(qualification);
+            db.SaveChanges();
+            qualificationId = qualification.Id;
+        }
+
+        var vm = new EmployeeManagementViewModel();
+        vm.EditEmployee(employeeId);
+        var skill = vm.SkillEditorRows.Single(x => x.QualificationId == qualificationId);
+        skill.Level = 3;
+        vm.SaveCommand.Execute(null);
+
+        using (var check = new AppDbContext())
+        {
+            var link = check.EmployeeQualifications.AsNoTracking()
+                .SingleOrDefault(x => x.EmployeeId == employeeId && x.QualificationId == qualificationId);
+            Check(link is not null && link.Level == 3,
+                "Inline employee skill editor did not persist qualification level");
+        }
+
+        vm.SelectedGroupMode = "Funktion";
+        Check(vm.EmployeeRows.All(x => !string.IsNullOrWhiteSpace(x.GroupKey)),
+            "Employee grouping by function produced empty group keys");
+        vm.SelectedGroupMode = "Abteilung";
+        Check(vm.EmployeeRows.All(x => !string.IsNullOrWhiteSpace(x.GroupKey)),
+            "Employee grouping by department produced empty group keys");
+    }
+
+    private static void PlanningTeamRemoval()
+    {
+        DateTime date;
+        int runSlotId;
+        int employeeId;
+
+        using (var db = new AppDbContext())
+        {
+            var slot = db.ProductionRunSlots
+                .Include(x => x.ProductionOrder)
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.Id)
+                .First();
+            date = slot.Date.Date;
+            runSlotId = slot.Id;
+
+            var suggestion = QualificationPlanningService
+                .Suggest(date, slot.ProductionOrder.WorkstationId, slot.ShiftId)
+                .FirstOrDefault();
+            Check(suggestion is not null, "No employee available for planning team removal test");
+            employeeId = suggestion!.EmployeeId;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "team-planner",
+            DisplayName = "Team Planner",
+            Role = UserRoles.Planner,
+            IsActive = true
+        });
+
+        var assign = ProductionStaffingService.AssignEmployeeToRunSlot(employeeId, runSlotId);
+        Check(assign.Success, $"Could not prepare production team: {assign.Message}");
+
+        var vm = new PlanningCalendarViewModel
+        {
+            SelectedDate = date,
+            SelectedViewIndex = 0
+        };
+
+        var slotEntry = vm.DayTimedEntries.Single(x => x.EntryType == "Auftrag" && x.RunSlotId == runSlotId);
+        Check(!vm.DayTimedEntries.Any(x => x.EntryType == "Einsatz" && x.EmployeeId == employeeId),
+            "Production staffing is still duplicated as a separate calendar assignment card");
+
+        vm.SelectEntry(slotEntry);
+        var member = vm.SelectedProductionTeam.Single(x => x.EmployeeId == employeeId);
+        vm.RemoveProductionTeamMemberCommand.Execute(member);
+
+        using var check = new AppDbContext();
+        Check(!check.PlanningAssignments.Any(x =>
+                x.EmployeeId == employeeId &&
+                x.Date.Date == date &&
+                x.WorkstationId == slotEntry.WorkstationId &&
+                x.ShiftId == slotEntry.ShiftId),
+            "Removing employee from production slot did not delete planning assignment");
+        Check(vm.SelectedProductionTeam.All(x => x.EmployeeId != employeeId),
+            "Removed employee is still shown in selected production team");
+    }
+
     private static void DragStaffToProduction()
     {
         DateTime date;
@@ -598,6 +695,7 @@ internal static class Program
         _ = new EmployeesView();
         _ = new WorkstationsView();
         _ = new ShiftsView();
+        _ = new WorkplacesShiftsView();
         _ = new AbsencesView();
         _ = new SkillMatrixView();
         _ = new SettingsView();

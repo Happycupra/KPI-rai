@@ -6,6 +6,42 @@ namespace Produktionsplanung.App.Services;
 
 public static class ProductionStaffingService
 {
+    public static ProductionStaffingResult RemoveEmployeeFromRunSlot(int employeeId, int runSlotId)
+    {
+        if (!SessionService.IsPlannerOrAdmin)
+            return new(false, "Diese Funktion ist nur für Planer und Administratoren verfügbar.", null);
+
+        using var db = new AppDbContext();
+        var slot = db.ProductionRunSlots
+            .Include(x => x.Shift)
+            .Include(x => x.ProductionOrder)
+                .ThenInclude(x => x.Workstation)
+            .FirstOrDefault(x => x.Id == runSlotId);
+        var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == employeeId);
+
+        if (slot is null || employee is null)
+            return new(false, "Mitarbeiter oder Produktionsschicht wurde nicht mehr gefunden.", null);
+
+        var assignments = db.PlanningAssignments
+            .Where(x =>
+                x.EmployeeId == employeeId &&
+                x.Date.Date == slot.Date.Date &&
+                x.WorkstationId == slot.ProductionOrder.WorkstationId &&
+                x.ShiftId == slot.ShiftId)
+            .ToList();
+
+        if (assignments.Count == 0)
+            return new(false, $"{employee.FirstName} {employee.LastName} ist in diesem Produktionsslot nicht eingeplant.", null);
+
+        db.PlanningAssignments.RemoveRange(assignments);
+        db.SaveChanges();
+
+        var initials = EmployeeInitialsService.Build3(employee.FirstName, employee.LastName);
+        return new(true,
+            $"{initials} · {employee.FirstName} {employee.LastName} aus {slot.ProductionOrder.OrderNumber} / {slot.Shift.Name} entfernt.",
+            initials);
+    }
+
     public static ProductionStaffingResult AssignEmployeeToRunSlot(int employeeId, int runSlotId)
     {
         if (!SessionService.IsPlannerOrAdmin)

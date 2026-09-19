@@ -228,7 +228,7 @@
                 <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="28"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="28"/>
-                <ColumnDefinition x:Name="CalendarDetailColumn" Width="292"/>
+                <ColumnDefinition x:Name="CalendarDetailColumn" Width="350"/>
             </Grid.ColumnDefinitions>
 
             <ScrollViewer x:Name="CalendarLeftPanel" Grid.Column="0" VerticalScrollBarVisibility="Auto">
@@ -241,7 +241,8 @@
                         <StackPanel>
                             <TextBlock Text="Suchen &amp; filtern" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
                             <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,10,0,10" Height="32" Padding="8,4" ToolTip="Name, Auftrag, Linie oder Notiz suchen"/>
-                            <CheckBox Content="Mitarbeiter-Einsätze" IsChecked="{Binding ShowAssignments}" Margin="0,2,0,6"/>
+                            <CheckBox Content="Sonstige Einsätze" IsChecked="{Binding ShowAssignments}" Margin="0,2,0,6"
+                                      ToolTip="Nur Einsätze ausserhalb eines Produktionsslots anzeigen"/>
                             <CheckBox Content="Produktionsaufträge" IsChecked="{Binding ShowOrders}" Margin="0,2,0,6"/>
                             <CheckBox Content="Abwesenheiten" IsChecked="{Binding ShowAbsences}" Margin="0,2,0,6"/>
                             <CheckBox Content="Betriebskalender" IsChecked="{Binding ShowOperatingCalendar}" Margin="0,2,0,6"/>
@@ -388,7 +389,79 @@
                                     <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
                                     <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                     <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,5,0,12"/>
-                                    <Button Content="Öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
+
+                                    <Border Background="#F8FBFF" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="8"
+                                            Padding="10" Margin="0,0,0,10">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedEntry.EntryType}" Value="Auftrag">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <Grid Margin="0,0,0,6">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="Eingeplantes Team" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{StaticResource TextBrush}"/>
+                                                <Border Grid.Column="1" Background="{StaticResource PrimarySoftBrush}" CornerRadius="10"
+                                                        Padding="7,2">
+                                                    <TextBlock Text="{Binding SelectedProductionTeam.Count}" FontSize="9.5"
+                                                               FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <ItemsControl ItemsSource="{Binding SelectedProductionTeam}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,3">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="34"/>
+                                                                <ColumnDefinition Width="8"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <Border Width="30" Height="30" CornerRadius="15"
+                                                                    Background="{StaticResource PrimarySoftBrush}">
+                                                                <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center" FontSize="8.5" FontWeight="Bold"
+                                                                           Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                                            </Border>
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding EmployeeName}" FontSize="10.5"
+                                                                           FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                                                <TextBlock Text="{Binding Role}" FontSize="9"
+                                                                           Foreground="{StaticResource MutedTextBrush}"/>
+                                                            </StackPanel>
+                                                            <Button Grid.Column="3" Content="Entfernen"
+                                                                    Command="{Binding DataContext.RemoveProductionTeamMemberCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                    CommandParameter="{Binding}" Padding="8,3" FontSize="9.5"
+                                                                    ToolTip="Mitarbeiter aus diesem Produktionsslot entfernen"/>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+
+                                            <TextBlock Text="Noch niemand eingeplant." FontSize="9.5"
+                                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedProductionTeam.Count}" Value="0">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button Content="Auftrag / Eintrag öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
                                     <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
                                 </StackPanel>
                             </Border>
@@ -397,7 +470,7 @@
                                     <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
                                 </StackPanel.Style>
                                 <TextBlock Text="Noch nichts ausgewählt" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                                <TextBlock Text="Klicke einen Einsatz, Auftrag oder eine Abwesenheit an. Doppelklick öffnet den Eintrag direkt." Foreground="{StaticResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Text="Klicke einen Produktionsauftrag an: rechts siehst du Details und das eingeplante Team." Foreground="{StaticResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
