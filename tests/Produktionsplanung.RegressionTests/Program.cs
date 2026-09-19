@@ -26,6 +26,7 @@ internal static class Program
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
             ("Unified planning staffs production and uses three-letter initials", UnifiedPlanningStaffing),
             ("Planning side panels can be hidden and restored", PlanningPanelToggle),
+            ("Planning sidebar is compact with filters collapsed by default", CompactPlanningSidebar),
             ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
@@ -462,6 +463,18 @@ internal static class Program
         Check(leftColumn!.Width.Value == 0, "Left planning panel did not collapse");
         leftButton.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
         Check(leftColumn.Width.Value > 0, "Left planning panel could not be restored");
+    }
+
+    private static void CompactPlanningSidebar()
+    {
+        var view = new PlanningCalendarView();
+        var leftColumn = view.FindName("CalendarLeftColumn") as ColumnDefinition;
+        var filter = view.FindName("PlanningFilterExpander") as Expander;
+
+        Check(leftColumn is not null && leftColumn.Width.Value <= 205,
+            $"Planning sidebar is not compact: {leftColumn?.Width.Value}");
+        Check(filter is not null && !filter.IsExpanded,
+            "Planning filters should be collapsed by default");
     }
 
     private static void CompactEmployeeDirectory()

@@ -102,7 +102,7 @@ public partial class PlanningCalendarView : UserControl
             CalendarLeftToggleButton is null || CalendarRightToggleButton is null)
             return;
 
-        CalendarLeftColumn.Width = leftPanelCollapsed ? new GridLength(0) : new GridLength(238);
+        CalendarLeftColumn.Width = leftPanelCollapsed ? new GridLength(0) : new GridLength(198);
         CalendarLeftPanel.Visibility = leftPanelCollapsed ? Visibility.Collapsed : Visibility.Visible;
         CalendarLeftToggleButton.Content = leftPanelCollapsed ? "›" : "‹";
         CalendarLeftToggleButton.ToolTip = leftPanelCollapsed ? "Linken Bereich einblenden" : "Linken Bereich ausblenden";
