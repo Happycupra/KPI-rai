@@ -53,6 +53,8 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
     public string SelectedDateText => SelectedDate.ToString("dddd, dd. MMMM", culture);
     public string SelectedDateShortText => SelectedDate.ToString("dd.MM.yyyy", culture);
+    public string SelectedDateCompactText => SelectedDate.ToString("ddd dd.MM.", culture);
+    public string VisibleEntryCompactText => $"{DayAllDayEntries.Count + DayTimedEntries.Count} Einträge";
     public int MonthColumnCount => ShowWeekends ? 7 : 5;
 
     public string DayCoverageText => UnderstaffedOrderCount == 0
@@ -75,6 +77,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
         OnPropertyChanged(nameof(HeaderText));
         OnPropertyChanged(nameof(SelectedDateText));
         OnPropertyChanged(nameof(SelectedDateShortText));
+        OnPropertyChanged(nameof(SelectedDateCompactText));
         ReloadData();
     }
 
@@ -303,6 +306,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         OnPropertyChanged(nameof(HeaderText));
         OnPropertyChanged(nameof(VisibleEntryText));
+        OnPropertyChanged(nameof(VisibleEntryCompactText));
     }
 
     private List<CalendarEntryRow> GetFilteredEntries(DateTime date)
