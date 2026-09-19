@@ -229,10 +229,17 @@ public partial class ManufacturingControlViewModel : ObservableObject
         steps.Remove(source);
         var targetIndex = steps.IndexOf(target);
         steps.Insert(Math.Max(0, targetIndex), source);
+
+        using var transaction = db.Database.BeginTransaction();
+        for (var i = 0; i < steps.Count; i++)
+            steps[i].SequenceNumber = -(i + 1);
+        db.SaveChanges();
+
         for (var i = 0; i < steps.Count; i++)
             steps[i].SequenceNumber = (i + 1) * 10;
-
         db.SaveChanges();
+        transaction.Commit();
+
         LoadRoutingSteps(SelectedRouting.Id);
         StatusMessage = "Arbeitsplan-Reihenfolge aktualisiert.";
     }
