@@ -272,12 +272,13 @@
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
                     <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0"
-                            BorderThickness="1" CornerRadius="9" Padding="5" Margin="0,0,0,7">
-                        <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
-                                  DisplayDate="{Binding SelectedDate, Mode=TwoWay}"
-                                  SelectionMode="SingleDate"
-                                  FontSize="10"
-                                  HorizontalAlignment="Center"/>
+                            BorderThickness="1" CornerRadius="9" Padding="4" Margin="0,0,0,7">
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" MaxHeight="182">
+                            <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
+                                      DisplayDate="{Binding SelectedDate, Mode=TwoWay}"
+                                      SelectionMode="SingleDate"
+                                      FontSize="10"/>
+                        </Viewbox>
                     </Border>
 
                     <Expander x:Name="PlanningFilterExpander" IsExpanded="False"
@@ -337,10 +338,10 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="{Binding SelectedDateText}" FontSize="10.5"
+                                <TextBlock Text="{Binding SelectedDateCompactText}" FontSize="10.5"
                                            FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"
                                            TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding VisibleEntryText}" FontSize="9.5"
+                                <TextBlock Text="{Binding VisibleEntryCompactText}" FontSize="9.5"
                                            Foreground="{StaticResource MutedTextBrush}"
                                            TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                             </StackPanel>
