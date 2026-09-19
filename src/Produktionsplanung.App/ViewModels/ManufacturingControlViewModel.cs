@@ -168,6 +168,69 @@ public partial class ManufacturingControlViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ShowProcess()
+    {
+        ShowProcessView = true;
+    }
+
+    [RelayCommand]
+    private void ShowTable()
+    {
+        ShowProcessView = false;
+    }
+
+    [RelayCommand]
+    private void AutoAssignBestEmployee()
+    {
+        if (SelectedJobCard is null)
+        {
+            StatusMessage = "Bitte zuerst eine Arbeitskarte auswählen.";
+            return;
+        }
+
+        var best = JobCardEmployeeChoices
+            .Where(x => x.IsQualified && !x.IsAbsent)
+            .OrderByDescending(x => x.IsPlannedAtWorkstation)
+            .ThenBy(x => x.ActiveJobCards)
+            .ThenByDescending(x => x.QualificationLevel)
+            .ThenBy(x => x.DisplayName)
+            .FirstOrDefault();
+
+        if (best is null)
+        {
+            StatusMessage = "Kein verfügbarer und ausreichend qualifizierter Mitarbeiter gefunden.";
+            return;
+        }
+
+        SelectedJobCardEmployeeChoice = best;
+        StatusMessage = $"Vorschlag: {best.DisplayName} wurde anhand Skill, Verfügbarkeit und Auslastung ausgewählt.";
+    }
+
+    public void MoveRoutingStep(int sourceId, int targetId)
+    {
+        if (!EnsurePlanner() || SelectedRouting is null || sourceId == targetId) return;
+
+        using var db = new AppDbContext();
+        var steps = db.RoutingSteps
+            .Where(x => x.ManufacturingRoutingId == SelectedRouting.Id)
+            .OrderBy(x => x.SequenceNumber)
+            .ToList();
+        var source = steps.FirstOrDefault(x => x.Id == sourceId);
+        var target = steps.FirstOrDefault(x => x.Id == targetId);
+        if (source is null || target is null) return;
+
+        steps.Remove(source);
+        var targetIndex = steps.IndexOf(target);
+        steps.Insert(Math.Max(0, targetIndex), source);
+        for (var i = 0; i < steps.Count; i++)
+            steps[i].SequenceNumber = (i + 1) * 10;
+
+        db.SaveChanges();
+        LoadRoutingSteps(SelectedRouting.Id);
+        StatusMessage = "Arbeitsplan-Reihenfolge aktualisiert.";
+    }
+
+    [RelayCommand]
     private void NewOperation()
     {
         SelectedOperation = null;
