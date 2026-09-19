@@ -17,7 +17,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
     public ObservableCollection<EmployeeDirectoryRow> EmployeeRows { get; } = new();
     public ObservableCollection<EmployeeSkillEditorRow> SkillEditorRows { get; } = new();
     public ObservableCollection<Qualification> Qualifications { get; } = new();
-    public string[] GroupModeOptions { get; } = { "Keine", "Abteilung", "Funktion" };
+    public string[] GroupModeOptions { get; } = new[] { "Keine", "Abteilung", "Funktion" };
 
     [ObservableProperty] private Employee? selectedEmployee;
     [ObservableProperty] private string searchText = string.Empty;
