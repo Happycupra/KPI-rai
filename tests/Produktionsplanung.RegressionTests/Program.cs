@@ -36,6 +36,7 @@ internal static class Program
             ("OEE aggregation is invariant under unit conversion", OeeUnits),
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
+            ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Failed restore preserves active session", FailedRestore),
             ("Successful restore invalidates old session", RestoreSession)
         };
@@ -700,6 +701,48 @@ internal static class Program
         Check(vm.NewPassword == "Temporary123", "Password not passed to VM");
         vm.NewUserCommand.Execute(null);
         Check(box.Password == string.Empty, "Password not cleared on new user");
+    }
+
+    private static void UserAdminCreatesUser()
+    {
+        UserAccount administrator;
+        using (var db = new AppDbContext())
+        {
+            var (hash, salt) = PasswordService.HashPassword("AdminTest123");
+            administrator = new UserAccount
+            {
+                Username = "admin-test",
+                DisplayName = "Admin Test",
+                Role = UserRoles.Administrator,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.UserAccounts.Add(administrator);
+            db.SaveChanges();
+        }
+
+        SessionService.SignIn(administrator);
+        var vm = new UserAdminViewModel();
+        vm.NewUserCommand.Execute(null);
+        vm.Username = "new-user";
+        vm.DisplayName = "New User";
+        vm.SelectedRole = UserRoles.Planner;
+        vm.IsActive = true;
+        vm.NewPassword = "Temporary123";
+        vm.SaveUserCommand.Execute(null);
+
+        Check(vm.StatusMessage == "Benutzer gespeichert.",
+            $"User creation did not report success: {vm.StatusMessage}");
+
+        using var check = new AppDbContext();
+        var user = check.UserAccounts.AsNoTracking().SingleOrDefault(x => x.Username == "new-user");
+        Check(user is not null, "New program user was not persisted");
+        Check(user!.DisplayName == "New User" && user.Role == UserRoles.Planner && user.IsActive,
+            "New program user fields were not persisted correctly");
+        Check(PasswordService.Verify("Temporary123", user.PasswordHash, user.PasswordSalt),
+            "New program user password was not hashed/persisted correctly");
     }
 
     private static void FailedRestore()
