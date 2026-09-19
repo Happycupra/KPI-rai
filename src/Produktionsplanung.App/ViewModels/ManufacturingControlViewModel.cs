@@ -830,7 +830,23 @@ public partial class ManufacturingControlViewModel : ObservableObject
                 .ToDictionary(x => x.EmployeeId, x => x.Level);
         }
 
+        var day = card.PlannedDate.Date;
+        var absences = db.Absences.AsNoTracking()
+            .Where(x => x.StartDate <= day && x.EndDate >= day)
+            .Select(x => x.EmployeeId)
+            .ToHashSet();
+        var plannedHere = db.PlanningAssignments.AsNoTracking()
+            .Where(x => x.Date == day && x.WorkstationId == card.WorkstationId)
+            .Select(x => x.EmployeeId)
+            .ToHashSet();
+        var activeCardCounts = db.JobCards.AsNoTracking()
+            .Where(x => x.Status == "In Produktion" && x.EmployeeId.HasValue)
+            .GroupBy(x => x.EmployeeId!.Value)
+            .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+            .ToDictionary(x => x.EmployeeId, x => x.Count);
+
         var requirementMissing = card.HasSkillRequirement && !card.RequiredQualificationId.HasValue;
+        var choices = new List<JobCardEmployeeChoice>();
         foreach (var employee in employees)
         {
             var level = card.RequiredQualificationId.HasValue && skillLevels.TryGetValue(employee.Id, out var foundLevel)
@@ -848,16 +864,28 @@ public partial class ManufacturingControlViewModel : ObservableObject
                             ? $"⚠ {card.RequiredQualificationName} L{level} < L{card.RequiredQualificationLevel}"
                             : $"❌ kein {card.RequiredQualificationName}-Skill";
 
-            JobCardEmployeeChoices.Add(new JobCardEmployeeChoice
+            choices.Add(new JobCardEmployeeChoice
             {
                 EmployeeId = employee.Id,
                 DisplayName = $"{employee.LastName}, {employee.FirstName}",
                 PersonnelNumber = employee.PersonnelNumber,
                 QualificationLevel = level,
                 IsQualified = qualified,
+                IsAbsent = absences.Contains(employee.Id),
+                IsPlannedAtWorkstation = plannedHere.Contains(employee.Id),
+                ActiveJobCards = activeCardCounts.TryGetValue(employee.Id, out var activeCount) ? activeCount : 0,
                 StatusText = status
             });
         }
+
+        foreach (var choice in choices
+                     .OrderByDescending(x => x.IsQualified)
+                     .ThenBy(x => x.IsAbsent)
+                     .ThenByDescending(x => x.IsPlannedAtWorkstation)
+                     .ThenBy(x => x.ActiveJobCards)
+                     .ThenByDescending(x => x.QualificationLevel)
+                     .ThenBy(x => x.DisplayName))
+            JobCardEmployeeChoices.Add(choice);
 
         SelectedJobCardEmployeeChoice = selectedEmployeeId.HasValue
             ? JobCardEmployeeChoices.FirstOrDefault(x => x.EmployeeId == selectedEmployeeId.Value)
