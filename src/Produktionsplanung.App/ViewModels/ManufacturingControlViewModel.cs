@@ -662,6 +662,209 @@ public partial class ManufacturingControlViewModel : ObservableObject
         }
     }
 
+    private void LoadCockpit()
+    {
+        using var db = new AppDbContext();
+        var selectedId = SelectedProductionOrder?.Id ?? SelectedCockpitOrder?.Id;
+        var orders = db.ProductionOrders.AsNoTracking()
+            .Include(x => x.Workstation)
+            .OrderBy(x => x.PlannedDate)
+            .ThenBy(x => x.OrderNumber)
+            .ToList();
+        var cards = db.JobCards.AsNoTracking()
+            .Include(x => x.RequiredQualification)
+            .ToList();
+        var activeEmployees = db.Employees.AsNoTracking().Where(x => x.IsActive).Select(x => x.Id).ToHashSet();
+        var qualifications = db.EmployeeQualifications.AsNoTracking().ToList();
+        var capacity = CapacityRows.ToDictionary(x => x.WorkstationId);
+
+        var rows = new List<OrderCockpitRow>();
+        foreach (var order in orders)
+        {
+            var orderCards = cards.Where(x => x.ProductionOrderId == order.Id).OrderBy(x => x.SequenceNumber).ToList();
+            var openCards = orderCards.Where(x => x.Status != "Fertig").ToList();
+            var completed = orderCards.Count(x => x.Status == "Fertig");
+            var total = orderCards.Count;
+            var progress = total == 0 ? 0 : (int)Math.Round(completed * 100d / total);
+            var missingSkill = openCards.Any(card =>
+                card.RequiredQualificationId.HasValue && card.RequiredQualificationLevel > 0 &&
+                !qualifications.Any(q => activeEmployees.Contains(q.EmployeeId) &&
+                                         q.QualificationId == card.RequiredQualificationId.Value &&
+                                         q.Level >= card.RequiredQualificationLevel));
+            var unassigned = openCards.Any(x => !x.EmployeeId.HasValue);
+            var paused = openCards.Any(x => x.Status == "Pausiert");
+            var noCards = total == 0;
+            var stationIds = openCards.Select(x => x.WorkstationId).Distinct().ToArray();
+            var highestUtilization = stationIds
+                .Where(capacity.ContainsKey)
+                .Select(id => capacity[id].UtilizationPercent)
+                .DefaultIfEmpty(0)
+                .Max();
+            var capacityCritical = highestUtilization >= 100;
+            var capacityTight = highestUtilization >= 85;
+            var issueCount = (noCards ? 1 : 0) + (missingSkill ? 1 : 0) + (unassigned ? 1 : 0) +
+                             (paused ? 1 : 0) + (capacityCritical ? 1 : capacityTight ? 1 : 0);
+            var readinessKind = noCards || missingSkill || capacityCritical
+                ? "Danger"
+                : unassigned || paused || capacityTight
+                    ? "Warning"
+                    : "Success";
+            var readinessText = readinessKind switch
+            {
+                "Danger" => "ROT · Handlungsbedarf",
+                "Warning" => "GELB · bedingt bereit",
+                _ => total > 0 && completed == total ? "GRÜN · abgeschlossen" : "GRÜN · bereit"
+            };
+            var current = orderCards.FirstOrDefault(x => x.Status == "In Produktion")
+                          ?? orderCards.FirstOrDefault(x => x.Status != "Fertig");
+
+            var row = new OrderCockpitRow
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                Product = order.Product,
+                PlannedDate = order.PlannedDate,
+                WorkstationName = order.Workstation.Name,
+                Status = order.Status,
+                ProgressPercent = progress,
+                CompletedSteps = completed,
+                TotalSteps = total,
+                IssueCount = issueCount,
+                ReadinessKind = readinessKind,
+                ReadinessText = readinessText,
+                CurrentOperation = current?.OperationName ?? (total > 0 ? "Alle Arbeitsgänge abgeschlossen" : "Arbeitskarten fehlen"),
+                WorkstationCheck = $"🟢 Arbeitsplatz · {order.Workstation.Name}",
+                CapacityCheck = capacityCritical
+                    ? $"🔴 Kapazität · {highestUtilization:N0} % überlastet"
+                    : capacityTight
+                        ? $"🟡 Kapazität · {highestUtilization:N0} %"
+                        : $"🟢 Kapazität · {highestUtilization:N0} %",
+                StaffCheck = unassigned ? "🟡 Personal · Zuweisung offen" : "🟢 Personal · zugewiesen",
+                SkillCheck = missingSkill ? "🔴 Skills · Qualifikation fehlt" : "🟢 Skills · verfügbar"
+            };
+            if (!ShowOnlyActionNeeded || row.IssueCount > 0)
+                rows.Add(row);
+        }
+
+        CockpitOrders.Clear();
+        foreach (var row in rows) CockpitOrders.Add(row);
+
+        SelectedCockpitOrder = selectedId.HasValue
+            ? CockpitOrders.FirstOrDefault(x => x.Id == selectedId.Value) ?? CockpitOrders.FirstOrDefault()
+            : CockpitOrders.FirstOrDefault();
+        UpdateOrderWorkflow();
+    }
+
+    private void UpdateOrderWorkflow()
+    {
+        if (SelectedProductionOrder is null)
+        {
+            OrderProgressPercent = 0;
+            OrderProgressText = "0 / 0 Arbeitsgänge";
+            WorkflowPlanState = WorkflowReadyState = WorkflowProductionState = WorkflowQualityState = WorkflowDoneState = "Pending";
+            ReadinessStatusKind = "Neutral";
+            ReadinessStatusText = "Kein Auftrag ausgewählt";
+            CurrentOperationText = "Kein aktiver Arbeitsgang";
+            NextOperationText = "–";
+            return;
+        }
+
+        var cards = JobCards.OrderBy(x => x.SequenceNumber).ToList();
+        var total = cards.Count;
+        var completed = cards.Count(x => x.Status == "Fertig");
+        var active = cards.FirstOrDefault(x => x.Status == "In Produktion")
+                     ?? cards.FirstOrDefault(x => x.Status == "Pausiert")
+                     ?? cards.FirstOrDefault(x => x.Status != "Fertig");
+        var quality = cards.FirstOrDefault(x =>
+            x.OperationName.Contains("qual", StringComparison.OrdinalIgnoreCase) ||
+            x.OperationName.Contains("prüf", StringComparison.OrdinalIgnoreCase) ||
+            x.OperationCode.Contains("QS", StringComparison.OrdinalIgnoreCase));
+
+        OrderProgressPercent = total == 0 ? 0 : (int)Math.Round(completed * 100d / total);
+        OrderProgressText = $"{completed} / {total} Arbeitsgänge";
+        WorkflowPlanState = "Done";
+        WorkflowReadyState = total > 0 ? "Done" : "Pending";
+        WorkflowProductionState = total == 0 ? "Pending"
+            : completed == total ? "Done"
+            : cards.Any(x => x.Status is "In Produktion" or "Pausiert") || completed > 0 ? "Active" : "Pending";
+        WorkflowQualityState = quality is null ? "Pending"
+            : quality.Status == "Fertig" ? "Done"
+            : quality.Status is "In Produktion" or "Pausiert" ? "Active" : "Pending";
+        WorkflowDoneState = total > 0 && completed == total ? "Done" : "Pending";
+
+        CurrentOperationText = active is null
+            ? total > 0 ? "Alle Arbeitsgänge abgeschlossen" : "Noch keine Arbeitskarten"
+            : $"{active.SequenceNumber} · {active.OperationName} · {active.Status}";
+        var next = active is null ? null : cards.FirstOrDefault(x => x.SequenceNumber > active.SequenceNumber && x.Status != "Fertig");
+        NextOperationText = next is null ? (completed == total && total > 0 ? "Auftrag fertig" : "–") : $"{next.SequenceNumber} · {next.OperationName}";
+
+        var cockpit = CockpitOrders.FirstOrDefault(x => x.Id == SelectedProductionOrder.Id);
+        if (cockpit is not null)
+        {
+            ReadinessStatusKind = cockpit.ReadinessKind;
+            ReadinessStatusText = cockpit.ReadinessText;
+            WorkstationReadinessText = cockpit.WorkstationCheck;
+            CapacityReadinessText = cockpit.CapacityCheck;
+            StaffReadinessText = cockpit.StaffCheck;
+            SkillReadinessText = cockpit.SkillCheck;
+        }
+
+        if (SelectedJobCard is null || SelectedJobCard.ProductionOrderId != SelectedProductionOrder.Id)
+            SelectedJobCard = cards.FirstOrDefault(x => x.Status != "Fertig") ?? cards.LastOrDefault();
+    }
+
+    private void LoadCapacityJobCards(int? workstationId)
+    {
+        CapacityJobCards.Clear();
+        if (!workstationId.HasValue) return;
+
+        using var db = new AppDbContext();
+        var start = DateTime.Today;
+        var end = start.AddDays(7);
+        var rows = db.JobCards.AsNoTracking()
+            .Include(x => x.Workstation)
+            .Include(x => x.Employee)
+            .Include(x => x.RequiredQualification)
+            .Include(x => x.ProductionOrder)
+            .Where(x => x.WorkstationId == workstationId.Value &&
+                        x.Status != "Fertig" &&
+                        x.ProductionOrder.PlannedDate >= start &&
+                        x.ProductionOrder.PlannedDate < end)
+            .OrderBy(x => x.ProductionOrder.PlannedDate)
+            .ThenBy(x => x.ProductionOrder.OrderNumber)
+            .ThenBy(x => x.SequenceNumber)
+            .ToList();
+
+        foreach (var x in rows)
+        {
+            CapacityJobCards.Add(new JobCardRow
+            {
+                Id = x.Id,
+                ProductionOrderId = x.ProductionOrderId,
+                OrderNumber = x.ProductionOrder.OrderNumber,
+                Product = x.ProductionOrder.Product,
+                SequenceNumber = x.SequenceNumber,
+                OperationCode = x.OperationCode,
+                OperationName = x.OperationName,
+                WorkstationId = x.WorkstationId,
+                WorkstationName = x.Workstation.Name,
+                PlannedDate = x.ProductionOrder.PlannedDate,
+                EmployeeId = x.EmployeeId,
+                EmployeeName = x.Employee is null ? "–" : $"{x.Employee.LastName}, {x.Employee.FirstName}",
+                RequiredQualificationId = x.RequiredQualificationId,
+                RequiredQualificationName = x.RequiredQualificationNameSnapshot ?? x.RequiredQualification?.Name ?? string.Empty,
+                RequiredQualificationLevel = x.RequiredQualificationLevel,
+                PlannedMinutes = x.PlannedMinutes,
+                RunMinutes = x.RunMinutes,
+                RequiredStaff = x.RequiredStaff,
+                Status = x.Status,
+                GoodQuantity = x.GoodQuantity,
+                ScrapQuantity = x.ScrapQuantity,
+                Comment = x.Comment
+            });
+        }
+    }
+
     private void LoadMasterData()
     {
         using var db = new AppDbContext();
