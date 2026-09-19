@@ -112,7 +112,7 @@ public static class ProductionOrderCoverageService
                 CoverageStatus = status,
                 Priority = order.Priority,
                 OrderStatus = order.Status,
-                TeamInitials = string.Join(" · ", matching.Select(x => BuildInitials(x.Employee.FirstName, x.Employee.LastName))),
+                TeamInitials = string.Join(" · ", matching.Select(x => EmployeeInitialsService.Build3(x.Employee.FirstName, x.Employee.LastName))),
                 TeamNames = string.Join(", ", matching.Select(x => $"{x.Employee.FirstName} {x.Employee.LastName}"))
             });
         }
@@ -120,16 +120,6 @@ public static class ProductionOrderCoverageService
         return rows;
     }
 
-    private static string BuildInitials(string firstName, string lastName)
-    {
-        var first = string.IsNullOrWhiteSpace(firstName)
-            ? string.Empty
-            : firstName.Trim()[0].ToString();
-        var last = string.IsNullOrWhiteSpace(lastName)
-            ? string.Empty
-            : lastName.Trim()[0].ToString();
-        return (first + last).ToUpperInvariant();
-    }
 }
 
 public class ProductionOrderCoverageRow

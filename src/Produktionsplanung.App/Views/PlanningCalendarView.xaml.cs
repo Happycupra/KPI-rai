@@ -16,13 +16,20 @@ public partial class PlanningCalendarView : UserControl
     private bool restoringPreferences;
     private bool leftPanelCollapsed;
     private bool rightPanelCollapsed;
+    private Point employeeDragStartPoint;
+    private CalendarEmployeeRow? draggedEmployee;
+    private bool suppressEmployeeClick;
 
-    public PlanningCalendarView()
+    public PlanningCalendarView(DateTime? initialDate = null, int? initialViewIndex = null)
     {
         InitializeComponent();
         viewModel = new PlanningCalendarViewModel();
         restoringPreferences = true;
         ApplySavedPreferences();
+        if (initialDate.HasValue)
+            viewModel.SelectedDate = initialDate.Value.Date;
+        if (initialViewIndex.HasValue)
+            viewModel.SelectedViewIndex = Math.Clamp(initialViewIndex.Value, 0, 2);
         restoringPreferences = false;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
@@ -73,12 +80,8 @@ public partial class PlanningCalendarView : UserControl
         });
     }
 
-    private void PlanningCalendarView_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        if (e.NewSize.Width < 950)
-            rightPanelCollapsed = true;
+    private void PlanningCalendarView_SizeChanged(object sender, SizeChangedEventArgs e) =>
         ApplyPanelLayout();
-    }
 
     private void ToggleLeftPanel_Click(object sender, RoutedEventArgs e)
     {
@@ -144,15 +147,15 @@ public partial class PlanningCalendarView : UserControl
 
     private void ClearSelection_Click(object sender, RoutedEventArgs e) => viewModel.SelectEntry(null);
 
-    private static void OpenEntry(CalendarEntryRow entry)
+    private void OpenEntry(CalendarEntryRow entry)
     {
         if (Application.Current.MainWindow is not MainWindow mainWindow)
             return;
 
         switch (entry.EntryType)
         {
-            case "Einsatz":
-                mainWindow.OpenDayPlanning(entry.Date);
+            case "Einsatz" when entry.EmployeeId.HasValue:
+                mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
                 return;
 
             case "Auftrag" when entry.ProductionOrderId.HasValue:
@@ -169,18 +172,81 @@ public partial class PlanningCalendarView : UserControl
         }
 
         if (entry.EmployeeId.HasValue)
+        {
             mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
-        else
-            mainWindow.OpenDayPlanning(entry.Date);
+            return;
+        }
+
+        viewModel.SelectDate(entry.Date);
+        viewModel.SelectedViewIndex = 0;
     }
 
     private void EmployeeRow_Click(object sender, RoutedEventArgs e)
     {
+        if (suppressEmployeeClick)
+        {
+            suppressEmployeeClick = false;
+            e.Handled = true;
+            return;
+        }
+
         if (sender is not FrameworkElement { DataContext: CalendarEmployeeRow employee })
             return;
 
         if (Application.Current.MainWindow is MainWindow mainWindow)
             mainWindow.OpenEmployeeQuickCard(employee.EmployeeId, viewModel.SelectedDate);
+    }
+
+    private void EmployeeRow_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        draggedEmployee = (sender as FrameworkElement)?.DataContext as CalendarEmployeeRow;
+        employeeDragStartPoint = e.GetPosition(this);
+        suppressEmployeeClick = false;
+    }
+
+    private void EmployeeRow_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || draggedEmployee is null)
+            return;
+
+        var current = e.GetPosition(this);
+        if (Math.Abs(current.X - employeeDragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(current.Y - employeeDragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        var employee = draggedEmployee;
+        draggedEmployee = null;
+        suppressEmployeeClick = true;
+        var data = new DataObject(typeof(CalendarEmployeeRow), employee);
+        DragDrop.DoDragDrop((DependencyObject)sender, data, DragDropEffects.Copy);
+        e.Handled = true;
+    }
+
+    private void CalendarEntry_PreviewDragOver(object sender, DragEventArgs e)
+    {
+        var isProduction = sender is FrameworkElement { DataContext: CalendarEntryRow entry } &&
+                           entry.EntryType == "Auftrag";
+        e.Effects = isProduction && e.Data.GetDataPresent(typeof(CalendarEmployeeRow))
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void CalendarEntry_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: CalendarEntryRow entry } ||
+            entry.EntryType != "Auftrag" ||
+            e.Data.GetData(typeof(CalendarEmployeeRow)) is not CalendarEmployeeRow employee)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        e.Effects = viewModel.AssignEmployeeToProduction(employee.EmployeeId, entry)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
     }
 
     private void SelectCalendarDate_Click(object sender, RoutedEventArgs e)
@@ -239,9 +305,4 @@ public partial class PlanningCalendarView : UserControl
         }
     }
 
-    private void OpenDayPlanning_Click(object sender, RoutedEventArgs e)
-    {
-        if (Application.Current.MainWindow is MainWindow mainWindow)
-            mainWindow.OpenDayPlanning(viewModel.SelectedDate);
-    }
 }
