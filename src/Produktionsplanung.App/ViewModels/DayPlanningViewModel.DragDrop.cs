@@ -119,14 +119,8 @@ public partial class DayPlanningViewModel
         RefreshOperatingCalendarAlert();
         RefreshEmployeeSuggestions();
 
-        StatusMessage = $"{BuildEmployeeInitials(employee.FirstName, employee.LastName)} · {employee.FirstName} {employee.LastName} → {coverage.OrderNumber} / {coverage.ShiftName} eingeplant.";
+        StatusMessage = $"{EmployeeInitialsService.Build3(employee.FirstName, employee.LastName)} · {employee.FirstName} {employee.LastName} → {coverage.OrderNumber} / {coverage.ShiftName} eingeplant.";
         return true;
     }
 
-    private static string BuildEmployeeInitials(string firstName, string lastName)
-    {
-        var first = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
-        var last = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
-        return (first + last).ToUpperInvariant();
-    }
 }
