@@ -153,6 +153,7 @@ public class ProductionOrderCoverageRow
     public string OrderStatus { get; set; } = string.Empty;
     public string TeamInitials { get; set; } = string.Empty;
     public string TeamNames { get; set; } = string.Empty;
+    public string TeamDisplay => string.IsNullOrWhiteSpace(TeamInitials) ? "—" : TeamInitials;
 
     public string CoverageText => PlannedStaff == AvailableQualifiedStaff
         ? $"{AvailableQualifiedStaff}/{RequiredStaff}"
