@@ -61,8 +61,8 @@ public partial class MainWindow : Window
         var canOperate = SessionService.IsPlannerOrAdmin;
         PlanningCalendarButton.IsEnabled = canOperate;
         WorkTimeCalendarButton.IsEnabled = canOperate; ProductionOrdersButton.IsEnabled = canOperate; ManufacturingControlButton.IsEnabled = canOperate; ProductionActualButton.IsEnabled = canOperate;
-        EmployeesButton.IsEnabled = canOperate; SkillsButton.IsEnabled = canOperate; WorkstationsButton.IsEnabled = canOperate;
-        ShiftsButton.IsEnabled = canOperate; AbsencesButton.IsEnabled = canOperate;
+        EmployeesButton.IsEnabled = canOperate; WorkstationsButton.IsEnabled = canOperate;
+        AbsencesButton.IsEnabled = canOperate;
         UserAdminButton.IsEnabled = SessionService.IsAdministrator; SettingsButton.IsEnabled = SessionService.IsAdministrator;
     }
 
@@ -82,9 +82,7 @@ public partial class MainWindow : Window
     private void ShowProductionActual_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual)); }
     private void ShowAnalytics_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Analytics));
     private void ShowEmployees_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees)); }
-    private void ShowSkills_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Skills)); }
     private void ShowWorkstations_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Workstations)); }
-    private void ShowShifts_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Shifts)); }
     private void ShowAbsences_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Absences)); }
     private void ShowUserAdmin_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.UserAdmin)); }
     private void ShowSettings_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.Settings)); }
@@ -118,11 +116,9 @@ public partial class MainWindow : Window
         NavigationRoute.ManufacturingControl => new(route, "Fertigungssteuerung", nameof(ManufacturingControlButton), () => new ManufacturingControlView()),
         NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView()),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
-        NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
-        NavigationRoute.Employees => new(route, "Mitarbeiter", nameof(EmployeesButton), () => new EmployeesView()),
-        NavigationRoute.Skills => new(route, "Skill-Matrix", nameof(SkillsButton), () => new SkillMatrixView()),
-        NavigationRoute.Workstations => new(route, "Arbeitsplätze", nameof(WorkstationsButton), () => new WorkstationsView()),
-        NavigationRoute.Shifts => new(route, "Schichten", nameof(ShiftsButton), () => new ShiftsView()),
+        NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
+        NavigationRoute.Employees => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView()),
+        NavigationRoute.Workstations => new(route, "Arbeitsplätze & Schichten", nameof(WorkstationsButton), () => new WorkplacesShiftsView()),
         NavigationRoute.Absences => new(route, "Abwesenheiten", nameof(AbsencesButton), () => new AbsencesView()),
         NavigationRoute.UserAdmin => new(route, "Benutzer / Audit", nameof(UserAdminButton), () => new UserAdminView()),
         NavigationRoute.Settings => new(route, "Einstellungen", nameof(SettingsButton), () => new SettingsView()),
@@ -309,7 +305,7 @@ public partial class MainWindow : Window
         ApplyGroup(ProductionGroupHeader, "PRODUKTION", productionGroupCollapsed,
             ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, AnalyticsButton);
         ApplyGroup(MasterDataGroupHeader, "STAMMDATEN", masterDataGroupCollapsed,
-            EmployeesButton, SkillsButton, WorkstationsButton, ShiftsButton, AbsencesButton);
+            EmployeesButton, WorkstationsButton, AbsencesButton);
         ApplyGroup(SystemGroupHeader, "SYSTEM", systemGroupCollapsed,
             UserAdminButton, SettingsButton);
     }
@@ -432,7 +428,7 @@ public partial class MainWindow : Window
     private enum NavigationRoute
     {
         Dashboard, PlanningCalendar, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
-        ProductionActual, Analytics, Employees, Skills, Workstations, Shifts, Absences, UserAdmin, Settings
+        ProductionActual, Analytics, Employees, Workstations, Absences, UserAdmin, Settings
     }
 
     private sealed record NavigationEntry(
