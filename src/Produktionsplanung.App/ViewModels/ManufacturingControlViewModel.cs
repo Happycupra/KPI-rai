@@ -1126,7 +1126,12 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return;
         }
 
-        if (choice.IsQualified)
+        if (choice.IsQualified && choice.IsAbsent)
+        {
+            QualificationStatusKind = "Warning";
+            QualificationStatusText = $"⚠ Qualifikation erfüllt, aber {choice.DisplayName} ist am {card.PlannedDate:dd.MM.yyyy} abwesend.";
+        }
+        else if (choice.IsQualified)
         {
             QualificationStatusKind = "Success";
             QualificationStatusText = $"✅ Qualifiziert: {card.RequiredQualificationName} Level {choice.QualificationLevel} · benötigt Level {card.RequiredQualificationLevel}.";
@@ -1147,6 +1152,31 @@ public partial class ManufacturingControlViewModel : ObservableObject
     {
         employeeId = SelectedJobCardEmployeeChoice?.EmployeeId ?? card.EmployeeId;
         message = string.Empty;
+
+        if (employeeId.HasValue)
+        {
+            var resolvedEmployeeId = employeeId.Value;
+            var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == resolvedEmployeeId && x.IsActive);
+            if (employee is null)
+            {
+                message = "Arbeitskarte gesperrt: Der ausgewählte Mitarbeiter ist nicht aktiv.";
+                return false;
+            }
+
+            var plannedDate = db.ProductionOrders.AsNoTracking()
+                .Where(x => x.Id == card.ProductionOrderId)
+                .Select(x => x.PlannedDate)
+                .First();
+            var absent = db.Absences.AsNoTracking().Any(x =>
+                x.EmployeeId == resolvedEmployeeId &&
+                x.StartDate <= plannedDate &&
+                x.EndDate >= plannedDate);
+            if (absent)
+            {
+                message = $"Arbeitskarte gesperrt: {employee.FirstName} {employee.LastName} ist am {plannedDate:dd.MM.yyyy} abwesend.";
+                return false;
+            }
+        }
 
         var hasRequirement = card.RequiredQualificationLevel > 0 &&
                              (!string.IsNullOrWhiteSpace(card.RequiredQualificationNameSnapshot) || card.RequiredQualificationId.HasValue);
@@ -1169,24 +1199,18 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return false;
         }
 
-        var resolvedEmployeeId = employeeId.Value;
-        var employee = db.Employees.AsNoTracking().FirstOrDefault(x => x.Id == resolvedEmployeeId && x.IsActive);
-        if (employee is null)
-        {
-            message = "Arbeitskarte gesperrt: Der ausgewählte Mitarbeiter ist nicht aktiv.";
-            return false;
-        }
-
+        var id = employeeId.Value;
+        var selectedEmployee = db.Employees.AsNoTracking().First(x => x.Id == id);
         var level = db.EmployeeQualifications.AsNoTracking()
-            .Where(x => x.EmployeeId == resolvedEmployeeId && x.QualificationId == card.RequiredQualificationId.Value)
+            .Where(x => x.EmployeeId == id && x.QualificationId == card.RequiredQualificationId.Value)
             .Select(x => (int?)x.Level)
             .FirstOrDefault() ?? 0;
 
         if (level < card.RequiredQualificationLevel)
         {
             message = level == 0
-                ? $"Arbeitskarte gesperrt: {employee.FirstName} {employee.LastName} besitzt die Qualifikation „{requirementName}“ nicht."
-                : $"Arbeitskarte gesperrt: {employee.FirstName} {employee.LastName} hat {requirementName} Level {level}; benötigt wird Level {card.RequiredQualificationLevel}.";
+                ? $"Arbeitskarte gesperrt: {selectedEmployee.FirstName} {selectedEmployee.LastName} besitzt die Qualifikation „{requirementName}“ nicht."
+                : $"Arbeitskarte gesperrt: {selectedEmployee.FirstName} {selectedEmployee.LastName} hat {requirementName} Level {level}; benötigt wird Level {card.RequiredQualificationLevel}.";
             return false;
         }
 
