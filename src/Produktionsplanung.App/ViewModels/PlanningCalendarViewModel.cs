@@ -398,7 +398,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
             {
                 EmployeeId = employee.Id,
                 EmployeeName = $"{employee.LastName}, {employee.FirstName}",
-                Initials = BuildInitials(employee.FirstName, employee.LastName),
+                Initials = EmployeeInitialsService.Build3(employee.FirstName, employee.LastName),
                 Role = employee.Role,
                 AssignmentText = assignmentText,
                 StatusText = first is null ? "Noch frei" : "Eingeplant",
@@ -448,12 +448,6 @@ public partial class PlanningCalendarViewModel : ObservableObject
         return (start, end);
     }
 
-    private static string BuildInitials(string firstName, string lastName)
-    {
-        var first = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
-        var last = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
-        return (first + last).ToUpperInvariant();
-    }
 
     private static DateTime GetMonday(DateTime date)
     {
