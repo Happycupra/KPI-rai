@@ -24,6 +24,8 @@ internal static class Program
             ("Manufacturing workflow advances to next job card", ManufacturingWorkflowAutoAdvance),
             ("Routing steps can be reordered and renumbered", RoutingStepReorder),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
+            ("Unified planning staffs production and uses three-letter initials", UnifiedPlanningStaffing),
+            ("Planning side panels can be hidden and restored", PlanningPanelToggle),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
@@ -378,6 +380,85 @@ internal static class Program
         Check(vm.WeekDays.Count == 7, "Week view did not restore weekends");
         Check(vm.MonthColumnCount == 7 && vm.MonthDays.Count == 42,
             "Month view did not restore the seven-column 42-day grid");
+    }
+
+    private static void UnifiedPlanningStaffing()
+    {
+        Check(EmployeeInitialsService.Build3("Irajet", "Ramadani") == "IRA",
+            "Three-letter initials are not first-name plus two surname letters");
+
+        DateTime date;
+        int runSlotId;
+        int employeeId;
+        using (var db = new AppDbContext())
+        {
+            var slot = db.ProductionRunSlots
+                .Include(x => x.ProductionOrder)
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.Id)
+                .First();
+            date = slot.Date.Date;
+            runSlotId = slot.Id;
+            var suggestion = QualificationPlanningService
+                .Suggest(date, slot.ProductionOrder.WorkstationId, slot.ShiftId)
+                .FirstOrDefault();
+            Check(suggestion is not null, "No employee available for unified planning staffing test");
+            employeeId = suggestion!.EmployeeId;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "unified-planner",
+            DisplayName = "Unified Planner",
+            Role = UserRoles.Planner,
+            IsActive = true
+        });
+
+        var vm = new PlanningCalendarViewModel
+        {
+            SelectedDate = date,
+            SelectedViewIndex = 0
+        };
+        var employee = vm.DayEmployees.Single(x => x.EmployeeId == employeeId);
+        Check(employee.Initials.Length == 3,
+            $"Planning employee initials are not three letters: {employee.Initials}");
+
+        var entry = vm.DayTimedEntries.Single(x => x.EntryType == "Auftrag" && x.EntryId == runSlotId);
+        Check(vm.AssignEmployeeToProduction(employeeId, entry),
+            $"Unified planning rejected valid staffing: {vm.StatusMessage}");
+
+        using var check = new AppDbContext();
+        Check(check.PlanningAssignments.Any(x =>
+                x.EmployeeId == employeeId &&
+                x.Date.Date == date &&
+                x.WorkstationId == entry.WorkstationId &&
+                x.ShiftId == entry.ShiftId),
+            "Unified planning did not persist employee assignment");
+
+        var refreshed = vm.DayTimedEntries.Single(x => x.EntryType == "Auftrag" && x.EntryId == runSlotId);
+        Check(refreshed.TeamText.Contains(employee.Initials, StringComparison.Ordinal),
+            "Unified planning did not refresh three-letter team initials");
+    }
+
+    private static void PlanningPanelToggle()
+    {
+        var view = new PlanningCalendarView();
+        var rightButton = view.FindName("CalendarRightToggleButton") as Button;
+        var rightColumn = view.FindName("CalendarDetailColumn") as ColumnDefinition;
+        var leftButton = view.FindName("CalendarLeftToggleButton") as Button;
+        var leftColumn = view.FindName("CalendarLeftColumn") as ColumnDefinition;
+        Check(rightButton is not null && rightColumn is not null && leftButton is not null && leftColumn is not null,
+            "Planning panel toggle controls are missing");
+
+        rightButton!.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+        Check(rightColumn!.Width.Value == 0, "Right planning panel did not collapse");
+        rightButton.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+        Check(rightColumn.Width.Value > 0, "Right planning panel could not be restored");
+
+        leftButton!.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+        Check(leftColumn!.Width.Value == 0, "Left planning panel did not collapse");
+        leftButton.RaiseEvent(new System.Windows.RoutedEventArgs(Button.ClickEvent));
+        Check(leftColumn.Width.Value > 0, "Left planning panel could not be restored");
     }
 
     private static void DragStaffToProduction()
