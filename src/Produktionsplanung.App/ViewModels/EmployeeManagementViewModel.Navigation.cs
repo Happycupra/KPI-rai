@@ -13,6 +13,6 @@ public partial class EmployeeManagementViewModel
             ShowInactive = true;
 
         ApplyFilter();
-        SelectedEmployee = Employees.FirstOrDefault(x => x.Id == employeeId);
+        EditEmployee(employeeId);
     }
 }
