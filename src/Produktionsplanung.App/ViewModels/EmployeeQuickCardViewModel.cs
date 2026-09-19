@@ -66,7 +66,7 @@ public partial class EmployeeQuickCardViewModel : ObservableObject
         }
 
         FullName = $"{employee.FirstName} {employee.LastName}";
-        Initials = BuildInitials(employee.FirstName, employee.LastName);
+        Initials = EmployeeInitialsService.Build3(employee.FirstName, employee.LastName);
         PersonnelNumber = employee.PersonnelNumber;
         Role = employee.Role;
         Department = employee.Department;
@@ -168,12 +168,6 @@ public partial class EmployeeQuickCardViewModel : ObservableObject
         return date.Date.AddDays(-days);
     }
 
-    private static string BuildInitials(string firstName, string lastName)
-    {
-        var first = string.IsNullOrWhiteSpace(firstName) ? string.Empty : firstName.Trim()[0].ToString();
-        var last = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim()[0].ToString();
-        return (first + last).ToUpperInvariant();
-    }
 }
 
 public sealed class EmployeeQuickSkillRow
