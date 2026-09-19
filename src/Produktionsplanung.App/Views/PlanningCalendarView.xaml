@@ -30,7 +30,10 @@
             <Button Style="{StaticResource CalendarCardButton}"
                     Click="CalendarEntry_Click"
                     MouseDoubleClick="CalendarEntry_DoubleClick"
-                    ToolTip="Einmal klicken: Details · Doppelklick: öffnen">
+                    AllowDrop="True"
+                    PreviewDragOver="CalendarEntry_PreviewDragOver"
+                    Drop="CalendarEntry_Drop"
+                    ToolTip="Klicken: Details · Mitarbeiter hier ablegen: direkt einplanen">
                 <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
                         CornerRadius="8" Padding="9,8" Margin="0,0,0,7">
                     <Grid>
@@ -51,6 +54,20 @@
                                        FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,1"/>
                             <TextBlock Text="{Binding Subtitle}" FontSize="10.5" Foreground="#526173"
                                        TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding TeamText, StringFormat='Team: {0}'}" FontSize="9.5"
+                                       FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"
+                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding TeamNames}" Margin="0,2,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TeamText}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                         <Border Grid.Column="3" Background="{StaticResource CardBrush}" BorderBrush="#D7E2EE" BorderThickness="1"
                                 CornerRadius="10" Padding="7,2" VerticalAlignment="Top" Margin="8,0,0,0">
@@ -74,7 +91,11 @@
         <DataTemplate x:Key="CompactCalendarEntryTemplate">
             <Button Style="{StaticResource CalendarCardButton}"
                     Click="CalendarEntry_Click"
-                    MouseDoubleClick="CalendarEntry_DoubleClick">
+                    MouseDoubleClick="CalendarEntry_DoubleClick"
+                    AllowDrop="True"
+                    PreviewDragOver="CalendarEntry_PreviewDragOver"
+                    Drop="CalendarEntry_Drop"
+                    ToolTip="Mitarbeiter hier ablegen">
                 <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
                         CornerRadius="5" Padding="5,3" Margin="0,0,0,3">
                     <Grid>
@@ -84,8 +105,24 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         <Border Background="{Binding Accent}" CornerRadius="2"/>
-                        <TextBlock Grid.Column="2" Text="{Binding Title}" FontSize="9.5" Foreground="#243447"
-                                   TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="{Binding Title}" FontSize="9.5" Foreground="#243447"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding TeamText}" FontSize="8.5" FontWeight="SemiBold"
+                                       Foreground="{StaticResource PrimaryDarkBrush}" TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding TeamNames}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TeamText}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
                     </Grid>
                 </Border>
             </Button>
@@ -105,7 +142,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Planungskalender" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
+                <TextBlock Text="Planung" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
                 <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
@@ -149,10 +186,9 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="PDF Export" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
+                <Button Content="Aktuelle Ansicht als PDF" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
                         ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren"/>
-                <Button Content="+ Einsatz planen" Height="34" Padding="15,0" Margin="8,0,0,0"
-                        Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenDayPlanning_Click"/>
+
             </WrapPanel>
         </Grid>
 
@@ -189,9 +225,9 @@
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="CalendarLeftColumn" Width="238"/>
-                <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="20"/>
+                <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="28"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="20"/>
+                <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="28"/>
                 <ColumnDefinition x:Name="CalendarDetailColumn" Width="292"/>
             </Grid.ColumnDefinitions>
 
@@ -225,10 +261,10 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Button x:Name="CalendarLeftToggleButton" Grid.Column="1" Content="‹" Width="18" Height="42"
-                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+            <Button x:Name="CalendarLeftToggleButton" Grid.Column="1" Content="‹" Width="24" Height="46"
+                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="20"
                     Click="ToggleLeftPanel_Click" ToolTip="Linken Bereich ein-/ausblenden"
-                    Background="#F8FBFF" BorderBrush="#DCE6F0" Foreground="#64748B"/>
+                    Background="#FFFFFF" BorderBrush="#CBD8E6" Foreground="#526173" FontWeight="Bold"/>
 
             <Grid Grid.Column="2">
                 <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
@@ -239,8 +275,7 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Tagesagenda" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Ganztägige Ereignisse und zeitlich geplante Einsätze" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
-                                <Button Grid.Column="1" Content="Tagesplanung" Padding="13,6" Click="OpenDayPlanning_Click"/>
+                                <StackPanel><TextBlock Text="Tagesplan" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende rechts greifen und direkt auf Produktionsaufträge ziehen." FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
                             </Grid>
                             <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
@@ -333,10 +368,10 @@
                 </Border>
             </Grid>
 
-            <Button x:Name="CalendarRightToggleButton" Grid.Column="3" Content="›" Width="18" Height="42"
-                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+            <Button x:Name="CalendarRightToggleButton" Grid.Column="3" Content="›" Width="24" Height="46"
+                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="20"
                     Click="ToggleRightPanel_Click" ToolTip="Rechten Bereich ein-/ausblenden"
-                    Background="#F8FBFF" BorderBrush="#DCE6F0" Foreground="#64748B"/>
+                    Background="#FFFFFF" BorderBrush="#CBD8E6" Foreground="#526173" FontWeight="Bold"/>
 
             <ScrollViewer x:Name="CalendarDetailPanel" Grid.Column="4" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
@@ -371,17 +406,20 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Mitarbeiter am Tag" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="Nicht abwesende Mitarbeitende" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+                                <StackPanel><TextBlock Text="Mitarbeiter" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="Greifen und auf eine Produktion ziehen · Kürzel mit 3 Buchstaben" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"/></StackPanel>
                                 <Border Grid.Column="1" Background="#EDF6FF" CornerRadius="10" Padding="7,2" VerticalAlignment="Top"><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold"/></Border>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding DayEmployees}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource CalendarCardButton}" Click="EmployeeRow_Click">
+                                        <Button Style="{StaticResource CalendarCardButton}" Click="EmployeeRow_Click"
+                                                PreviewMouseLeftButtonDown="EmployeeRow_PreviewMouseLeftButtonDown"
+                                                PreviewMouseMove="EmployeeRow_PreviewMouseMove"
+                                                Cursor="Hand" ToolTip="Greifen: auf Produktion ziehen · Klicken: Mitarbeiterdetails">
                                             <Border BorderBrush="#E1EAF2" BorderThickness="0,0,0,1" Padding="0,8">
                                                 <Grid>
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                    <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PrimarySoftBrush}"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"/></Border>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="36"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <Border Width="34" Height="34" CornerRadius="17" Background="{StaticResource PrimarySoftBrush}"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}"/></Border>
                                                     <StackPanel Grid.Column="2">
                                                         <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
                                                         <TextBlock Text="{Binding AssignmentText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" TextTrimming="CharacterEllipsis"/>
