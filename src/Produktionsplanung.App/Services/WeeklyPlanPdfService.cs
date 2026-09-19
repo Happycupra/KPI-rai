@@ -176,8 +176,8 @@ public static class WeeklyPlanPdfService
         int pageCount)
     {
         var page = document.AddPage();
-        page.Orientation = PdfSharp.PageOrientation.Landscape;
         page.Size = PdfSharp.PageSize.A4;
+        page.Orientation = PdfSharp.PageOrientation.Landscape;
 
         using var graphics = XGraphics.FromPdfPage(page);
 
