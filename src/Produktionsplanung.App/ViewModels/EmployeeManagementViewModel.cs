@@ -411,7 +411,9 @@ public partial class EmployeeManagementViewModel : ObservableObject
                 x.FirstName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 x.LastName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 x.Role.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                x.Department.Contains(term, StringComparison.OrdinalIgnoreCase));
+                x.Department.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                x.Qualifications.Any(q =>
+                    q.Qualification.Name.Contains(term, StringComparison.OrdinalIgnoreCase)));
         }
 
         var filtered = query.ToList();
