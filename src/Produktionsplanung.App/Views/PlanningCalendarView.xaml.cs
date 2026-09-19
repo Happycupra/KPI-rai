@@ -1,7 +1,10 @@
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
@@ -11,6 +14,8 @@ public partial class PlanningCalendarView : UserControl
 {
     private readonly PlanningCalendarViewModel viewModel;
     private bool restoringPreferences;
+    private bool leftPanelCollapsed;
+    private bool rightPanelCollapsed;
 
     public PlanningCalendarView()
     {
@@ -21,7 +26,12 @@ public partial class PlanningCalendarView : UserControl
         restoringPreferences = false;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
-        Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
+        Loaded += (_, _) =>
+        {
+            if (ActualWidth < 1150)
+                rightPanelCollapsed = true;
+            ApplyPanelLayout();
+        };
     }
 
     private void ApplySavedPreferences()
@@ -63,18 +73,41 @@ public partial class PlanningCalendarView : UserControl
         });
     }
 
-    private void PlanningCalendarView_SizeChanged(object sender, SizeChangedEventArgs e) =>
-        UpdateResponsiveLayout(e.NewSize.Width);
-
-    private void UpdateResponsiveLayout(double width)
+    private void PlanningCalendarView_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (CalendarDetailColumn is null || CalendarDetailGapColumn is null || CalendarDetailPanel is null)
+        if (e.NewSize.Width < 950)
+            rightPanelCollapsed = true;
+        ApplyPanelLayout();
+    }
+
+    private void ToggleLeftPanel_Click(object sender, RoutedEventArgs e)
+    {
+        leftPanelCollapsed = !leftPanelCollapsed;
+        ApplyPanelLayout();
+    }
+
+    private void ToggleRightPanel_Click(object sender, RoutedEventArgs e)
+    {
+        rightPanelCollapsed = !rightPanelCollapsed;
+        ApplyPanelLayout();
+    }
+
+    private void ApplyPanelLayout()
+    {
+        if (CalendarLeftColumn is null || CalendarLeftPanel is null ||
+            CalendarDetailColumn is null || CalendarDetailPanel is null ||
+            CalendarLeftToggleButton is null || CalendarRightToggleButton is null)
             return;
 
-        var compact = width < 1150;
-        CalendarDetailColumn.Width = compact ? new GridLength(0) : new GridLength(292);
-        CalendarDetailGapColumn.Width = compact ? new GridLength(0) : new GridLength(12);
-        CalendarDetailPanel.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
+        CalendarLeftColumn.Width = leftPanelCollapsed ? new GridLength(0) : new GridLength(238);
+        CalendarLeftPanel.Visibility = leftPanelCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        CalendarLeftToggleButton.Content = leftPanelCollapsed ? "›" : "‹";
+        CalendarLeftToggleButton.ToolTip = leftPanelCollapsed ? "Linken Bereich einblenden" : "Linken Bereich ausblenden";
+
+        CalendarDetailColumn.Width = rightPanelCollapsed ? new GridLength(0) : new GridLength(292);
+        CalendarDetailPanel.Visibility = rightPanelCollapsed ? Visibility.Collapsed : Visibility.Visible;
+        CalendarRightToggleButton.Content = rightPanelCollapsed ? "‹" : "›";
+        CalendarRightToggleButton.ToolTip = rightPanelCollapsed ? "Rechten Bereich einblenden" : "Rechten Bereich ausblenden";
     }
 
     private void CalendarEntry_Click(object sender, RoutedEventArgs e)
@@ -166,6 +199,44 @@ public partial class PlanningCalendarView : UserControl
         viewModel.SelectDate(date);
         viewModel.SelectedViewIndex = 0;
         e.Handled = true;
+    }
+
+    private void ExportCalendarPdf_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var settings = AppSettingsService.Load();
+            var exportDirectory = string.IsNullOrWhiteSpace(settings.DefaultExportDirectory)
+                ? AppPaths.ExportsDirectory
+                : settings.DefaultExportDirectory;
+            Directory.CreateDirectory(exportDirectory);
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Planungskalender als PDF exportieren",
+                Filter = "PDF-Dokument (*.pdf)|*.pdf",
+                AddExtension = true,
+                DefaultExt = ".pdf",
+                FileName = PlanningCalendarPdfService.BuildFileName(viewModel),
+                InitialDirectory = exportDirectory
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            var result = PlanningCalendarPdfService.Export(viewModel, dialog.FileName);
+            viewModel.StatusMessage = $"Kalender-PDF erstellt: {result.PageCount} Seite(n).";
+
+            Process.Start(new ProcessStartInfo(result.FilePath)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            viewModel.StatusMessage = $"PDF-Export fehlgeschlagen: {ex.Message}";
+            MessageBox.Show(ex.Message, "PDF-Export", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void OpenDayPlanning_Click(object sender, RoutedEventArgs e)

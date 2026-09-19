@@ -30,6 +30,7 @@
                 <Button Content="Diese Woche" Height="34" Padding="14,0" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" />
                 <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="34" Margin="0,0,8,0" />
                 <Button Content="›" Width="38" Height="34" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" />
+                <CheckBox x:Name="ExportWeekendsCheckBox" Content="WE im PDF" IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="Samstag und Sonntag im PDF einschliessen" />
                 <Button Content="PDF Wochenplan" Height="34" Padding="14,0" Margin="0,0,8,0" Click="ExportWeeklyPlanPdf_Click" />
                 <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
             </StackPanel>

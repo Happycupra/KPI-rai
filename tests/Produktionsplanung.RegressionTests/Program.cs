@@ -24,6 +24,7 @@ internal static class Program
             ("Manufacturing workflow advances to next job card", ManufacturingWorkflowAutoAdvance),
             ("Routing steps can be reordered and renumbered", RoutingStepReorder),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
+            ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
             ("Workstation with orders cannot be deleted", WorkstationDeletion),
@@ -375,6 +376,29 @@ internal static class Program
         Check(vm.WeekDays.Count == 7, "Week view did not restore weekends");
         Check(vm.MonthColumnCount == 7 && vm.MonthDays.Count == 42,
             "Month view did not restore the seven-column 42-day grid");
+    }
+
+    private static void CalendarPdfExports()
+    {
+        var weeklyPath = Path.Combine(AppPaths.RootDirectory, "weekly-no-weekend.pdf");
+        var weekly = WeeklyPlanPdfService.Export(new DateTime(2030, 1, 14), weeklyPath, includeWeekends: false);
+        Check(File.Exists(weeklyPath) && new FileInfo(weeklyPath).Length > 0,
+            "Weekly PDF export did not create a file");
+        Check(weekly.PageCount > 0 && !weekly.IncludesWeekends,
+            "Weekly PDF export did not preserve the weekend option");
+
+        var calendar = new PlanningCalendarViewModel
+        {
+            SelectedDate = new DateTime(2030, 1, 14),
+            SelectedViewIndex = 1,
+            ShowWeekends = false
+        };
+        var calendarPath = Path.Combine(AppPaths.RootDirectory, "planning-calendar.pdf");
+        var calendarResult = PlanningCalendarPdfService.Export(calendar, calendarPath);
+        Check(File.Exists(calendarPath) && new FileInfo(calendarPath).Length > 0,
+            "Planning calendar PDF export did not create a file");
+        Check(calendarResult.PageCount > 0 && !calendarResult.IncludesWeekends,
+            "Planning calendar PDF did not preserve the visible weekend setting");
     }
 
     private static void QuerySmoke()
