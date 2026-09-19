@@ -20,6 +20,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
     public ObservableCollection<Qualification> Qualifications { get; } = new();
     public ObservableCollection<Employee> Employees { get; } = new();
     public ObservableCollection<JobCardEmployeeChoice> JobCardEmployeeChoices { get; } = new();
+    public ObservableCollection<OrderCockpitRow> CockpitOrders { get; } = new();
+    public ObservableCollection<JobCardRow> CapacityJobCards { get; } = new();
 
     [ObservableProperty] private OperationDefinition? selectedOperation;
     [ObservableProperty] private string operationCode = string.Empty;
@@ -49,6 +51,26 @@ public partial class ManufacturingControlViewModel : ObservableObject
     [ObservableProperty] private double finishGoodQuantity;
     [ObservableProperty] private double finishScrapQuantity;
     [ObservableProperty] private string jobCardComment = string.Empty;
+    [ObservableProperty] private OrderCockpitRow? selectedCockpitOrder;
+    [ObservableProperty] private bool showOnlyActionNeeded;
+    [ObservableProperty] private bool showProcessView = true;
+    [ObservableProperty] private CapacityRow? selectedCapacityRow;
+    [ObservableProperty] private int orderProgressPercent;
+    [ObservableProperty] private string orderProgressText = "0 / 0 Arbeitsgänge";
+    [ObservableProperty] private string workflowPlanState = "Pending";
+    [ObservableProperty] private string workflowReadyState = "Pending";
+    [ObservableProperty] private string workflowProductionState = "Pending";
+    [ObservableProperty] private string workflowQualityState = "Pending";
+    [ObservableProperty] private string workflowDoneState = "Pending";
+    [ObservableProperty] private string readinessStatusText = "Kein Auftrag ausgewählt";
+    [ObservableProperty] private string readinessStatusKind = "Neutral";
+    [ObservableProperty] private string workstationReadinessText = "⚪ Arbeitsplatz · –";
+    [ObservableProperty] private string capacityReadinessText = "⚪ Kapazität · –";
+    [ObservableProperty] private string staffReadinessText = "⚪ Personal · –";
+    [ObservableProperty] private string skillReadinessText = "⚪ Skills · –";
+    [ObservableProperty] private string materialReadinessText = "⚪ Material · nicht in KPI-rai geführt";
+    [ObservableProperty] private string currentOperationText = "Kein aktiver Arbeitsgang";
+    [ObservableProperty] private string nextOperationText = "–";
 
     [ObservableProperty] private string statusMessage = string.Empty;
 
@@ -60,6 +82,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         LoadProductionOrders();
         LoadJobCards();
         RefreshCapacity();
+        LoadCockpit();
         NewOperation();
         NewRouting();
     }
@@ -104,7 +127,18 @@ public partial class ManufacturingControlViewModel : ObservableObject
             if (routing is not null)
                 SelectedRouting = routing;
         }
+        UpdateOrderWorkflow();
     }
+
+    partial void OnSelectedCockpitOrderChanged(OrderCockpitRow? value)
+    {
+        if (value is null) return;
+        SelectedProductionOrder = ProductionOrders.FirstOrDefault(x => x.Id == value.Id);
+    }
+
+    partial void OnShowOnlyActionNeededChanged(bool value) => LoadCockpit();
+
+    partial void OnSelectedCapacityRowChanged(CapacityRow? value) => LoadCapacityJobCards(value?.WorkstationId);
 
     partial void OnSelectedJobCardChanged(JobCardRow? value)
     {
@@ -128,6 +162,8 @@ public partial class ManufacturingControlViewModel : ObservableObject
         LoadProductionOrders();
         LoadJobCards(SelectedProductionOrder?.Id);
         RefreshCapacity();
+        LoadCockpit();
+        UpdateOrderWorkflow();
         StatusMessage = "Fertigungssteuerung aktualisiert.";
     }
 
