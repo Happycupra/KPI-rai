@@ -28,8 +28,13 @@ public partial class UserAdminViewModel : ObservableObject
         NewUser();
     }
 
+    public string EditorTitle => SelectedUser is null
+        ? "Neuen Benutzer anlegen"
+        : $"Benutzer bearbeiten · {SelectedUser.Username}";
+
     partial void OnSelectedUserChanged(UserAdminRow? value)
     {
+        OnPropertyChanged(nameof(EditorTitle));
         if (value is null) return;
         Username = value.Username;
         DisplayName = value.DisplayName;
@@ -49,6 +54,7 @@ public partial class UserAdminViewModel : ObservableObject
         IsActive = true;
         NewPassword = string.Empty;
         StatusMessage = string.Empty;
+        OnPropertyChanged(nameof(EditorTitle));
     }
 
     [RelayCommand]
@@ -139,11 +145,22 @@ public partial class UserAdminViewModel : ObservableObject
             }
         }
 
-        db.SaveChanges();
-        LoadUsers();
-        LoadAudit();
-        StatusMessage = "Benutzer gespeichert.";
-        NewPassword = string.Empty;
+        try
+        {
+            db.SaveChanges();
+            var savedUsername = normalizedUsername;
+            LoadUsers();
+            SelectedUser = Users.FirstOrDefault(x =>
+                string.Equals(x.Username, savedUsername, StringComparison.Ordinal));
+            LoadAudit();
+            StatusMessage = "Benutzer gespeichert.";
+            NewPassword = string.Empty;
+            OnPropertyChanged(nameof(EditorTitle));
+        }
+        catch (DbUpdateException ex)
+        {
+            StatusMessage = $"Benutzer konnte nicht gespeichert werden: {ex.GetBaseException().Message}";
+        }
     }
 
     [RelayCommand]
