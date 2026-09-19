@@ -111,7 +111,7 @@ public partial class MainWindow : Window
     {
         NavigationRoute.Dashboard => new(route, "Dashboard", nameof(DashboardButton), () => new DashboardView()),
         NavigationRoute.PlanningCalendar => new(route, "Planung", nameof(PlanningCalendarButton),
-            () => new PlanningCalendarView(date?.Date, date.HasValue ? 0 : null), Date: date?.Date),
+            () => new PlanningCalendarView(date?.Date, date.HasValue ? (int?)0 : null), Date: date?.Date),
         NavigationRoute.WorkTimeCalendar => new(route, "Arbeitszeit / Betrieb", nameof(WorkTimeCalendarButton), () => new WorkTimeCalendarView()),
         NavigationRoute.ProductionOrders when productionOrderId.HasValue => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView(productionOrderId.Value), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
