@@ -24,6 +24,7 @@ internal static class Program
             ("Manufacturing workflow advances to next job card", ManufacturingWorkflowAutoAdvance),
             ("Routing steps can be reordered and renumbered", RoutingStepReorder),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
+            ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -376,6 +377,58 @@ internal static class Program
         Check(vm.WeekDays.Count == 7, "Week view did not restore weekends");
         Check(vm.MonthColumnCount == 7 && vm.MonthDays.Count == 42,
             "Month view did not restore the seven-column 42-day grid");
+    }
+
+    private static void DragStaffToProduction()
+    {
+        DateTime date;
+        int runSlotId;
+        int employeeId;
+
+        using (var db = new AppDbContext())
+        {
+            var slot = db.ProductionRunSlots
+                .Include(x => x.ProductionOrder)
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.Id)
+                .First();
+            date = slot.Date.Date;
+            runSlotId = slot.Id;
+
+            var suggestion = QualificationPlanningService
+                .Suggest(date, slot.ProductionOrder.WorkstationId, slot.ShiftId)
+                .FirstOrDefault();
+            Check(suggestion is not null, "No employee available for drag/drop staffing regression test");
+            employeeId = suggestion!.EmployeeId;
+        }
+
+        SessionService.SignIn(new UserAccount
+        {
+            Username = "drag-planner",
+            DisplayName = "Drag Planner",
+            Role = UserRoles.Planner,
+            IsActive = true
+        });
+
+        var vm = new DayPlanningViewModel { SelectedDate = date };
+        vm.RefreshProductionOrderCoverage();
+        var coverage = vm.ProductionOrderCoverage.Single(x => x.RunSlotId == runSlotId);
+        var employee = vm.Employees.Single(x => x.Id == employeeId);
+
+        Check(vm.AssignEmployeeToProduction(employeeId, coverage),
+            "Drag/drop staffing was rejected for a valid available employee");
+
+        using var check = new AppDbContext();
+        Check(check.PlanningAssignments.Any(x =>
+                x.EmployeeId == employeeId &&
+                x.Date.Date == date &&
+                x.WorkstationId == coverage.WorkstationId &&
+                x.ShiftId == coverage.ShiftId),
+            "Drag/drop staffing did not persist the planning assignment");
+
+        var refreshed = vm.ProductionOrderCoverage.Single(x => x.RunSlotId == runSlotId);
+        Check(refreshed.TeamInitials.Contains(employee.Initials, StringComparison.Ordinal),
+            "Production team initials were not refreshed after drag/drop staffing");
     }
 
     private static void CalendarPdfExports()

@@ -91,22 +91,75 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBlock Text="Auftragsabdeckung" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                <Button Grid.Column="1" Content="Auto besetzen" Padding="12,5" Command="{Binding AutoStaffSelectedOrderCommand}"/>
+                                <StackPanel>
+                                    <TextBlock Text="Produktion besetzen" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                    <TextBlock Text="Mitarbeiter greifen und direkt auf die gewünschte Produktion ziehen."
+                                               Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Auto besetzen" Padding="12,5" Command="{Binding AutoStaffSelectedOrderCommand}" VerticalAlignment="Center"/>
                             </Grid>
-                            <TextBlock Text="Auftrag markieren und automatisch mit verfügbaren, passenden Mitarbeitenden auffüllen."
-                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,10" />
-                            <DataGrid ItemsSource="{Binding ProductionOrderCoverage}" SelectedItem="{Binding SelectedProductionOrderCoverage, Mode=TwoWay}"
-                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="130" MaxHeight="240">
+
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,10,0,10">
+                                <ItemsControl ItemsSource="{Binding Employees}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                                    BorderThickness="1" CornerRadius="14" Padding="7,4" Margin="0,0,6,2"
+                                                    Cursor="Hand" ToolTip="{Binding DisplayName}"
+                                                    PreviewMouseLeftButtonDown="EmployeeChip_PreviewMouseLeftButtonDown"
+                                                    PreviewMouseMove="EmployeeChip_PreviewMouseMove">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Border Width="24" Height="24" CornerRadius="12" Background="{StaticResource PrimaryBrush}">
+                                                        <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="9.5" FontWeight="Bold"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding ShortName}" Margin="6,0,2,0" VerticalAlignment="Center"
+                                                               Foreground="{StaticResource TextBrush}" FontSize="11.5" FontWeight="SemiBold"
+                                                               MaxWidth="82" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <DataGrid x:Name="ProductionCoverageGrid"
+                                      ItemsSource="{Binding ProductionOrderCoverage}"
+                                      SelectedItem="{Binding SelectedProductionOrderCoverage, Mode=TwoWay}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                      HeadersVisibility="Column" MinHeight="145" MaxHeight="255"
+                                      AllowDrop="True"
+                                      PreviewDragOver="ProductionCoverageGrid_PreviewDragOver"
+                                      Drop="ProductionCoverageGrid_Drop">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="ToolTip" Value="Mitarbeiter hier ablegen"/>
+                                        <Setter Property="MinHeight" Value="32"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
-                                    <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.2*" />
-                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.1*" />
-                                    <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="105" />
-                                    <DataGridTextColumn Header="Bedarf" Binding="{Binding RequiredStaff}" Width="60" />
-                                    <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedStaff}" Width="65" />
-                                    <DataGridTextColumn Header="Diff." Binding="{Binding DifferenceText}" Width="55" />
-                                    <DataGridTextColumn Header="Status" Binding="{Binding CoverageStatus}" Width="105" />
+                                    <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="82" />
+                                    <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.05*" />
+                                    <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="0.95*" />
+                                    <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="92" />
+                                    <DataGridTemplateColumn Header="Team" Width="125">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding TeamDisplay}" ToolTip="{Binding TeamNames}"
+                                                           FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"
+                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Soll" Binding="{Binding RequiredStaff}" Width="48" />
+                                    <DataGridTextColumn Header="Ist" Binding="{Binding PlannedStaff}" Width="44" />
+                                    <DataGridTextColumn Header="Diff." Binding="{Binding DifferenceText}" Width="50" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding CoverageStatus}" Width="92" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>
