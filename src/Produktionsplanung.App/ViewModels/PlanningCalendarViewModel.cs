@@ -24,6 +24,7 @@ public partial class PlanningCalendarViewModel : ObservableObject
     public ObservableCollection<CalendarDayColumn> WeekDays { get; } = new();
     public ObservableCollection<CalendarMonthDay> MonthDays { get; } = new();
     public ObservableCollection<CalendarEmployeeRow> DayEmployees { get; } = new();
+    public ObservableCollection<PlanningTeamMemberRow> SelectedProductionTeam { get; } = new();
 
     [ObservableProperty] private DateTime selectedDate = DateTime.Today;
     [ObservableProperty] private int selectedViewIndex = 1;
@@ -94,6 +95,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
         OnPropertyChanged(nameof(MonthColumnCount));
         RebuildViews();
     }
+
+    partial void OnSelectedEntryChanged(CalendarEntryRow? value) =>
+        RebuildSelectedProductionTeam();
 
     [RelayCommand] private void ShowDay() => SelectedViewIndex = 0;
     [RelayCommand] private void ShowWeek() => SelectedViewIndex = 1;
@@ -166,7 +170,29 @@ public partial class PlanningCalendarViewModel : ObservableObject
         ReloadData();
         SelectedEntry = GetFilteredEntries(entry.Date)
             .FirstOrDefault(x => x.EntryType == "Auftrag" && x.EntryId == entry.EntryId);
+        RebuildSelectedProductionTeam();
         return true;
+    }
+
+    [RelayCommand]
+    private void RemoveProductionTeamMember(PlanningTeamMemberRow? member)
+    {
+        if (member is null || SelectedEntry is null || SelectedEntry.EntryType != "Auftrag")
+            return;
+
+        var result = ProductionStaffingService.RemoveEmployeeFromRunSlot(
+            member.EmployeeId,
+            SelectedEntry.RunSlotId > 0 ? SelectedEntry.RunSlotId : SelectedEntry.EntryId);
+        StatusMessage = result.Message;
+        if (!result.Success)
+            return;
+
+        var entryId = SelectedEntry.EntryId;
+        var entryDate = SelectedEntry.Date;
+        ReloadData();
+        SelectedEntry = GetFilteredEntries(entryDate)
+            .FirstOrDefault(x => x.EntryType == "Auftrag" && x.EntryId == entryId);
+        RebuildSelectedProductionTeam();
     }
 
     private void ReloadData()
@@ -324,6 +350,13 @@ public partial class PlanningCalendarViewModel : ObservableObject
 
         foreach (var x in assignments.Where(x => x.Date.Date == date.Date))
         {
+            var belongsToProductionSlot = x.ShiftId.HasValue && runSlots.Any(slot =>
+                slot.Date.Date == x.Date.Date &&
+                slot.ProductionOrder.WorkstationId == x.WorkstationId &&
+                slot.ShiftId == x.ShiftId.Value);
+            if (belongsToProductionSlot)
+                continue;
+
             result.Add(new CalendarEntryRow
             {
                 Date = date.Date,
@@ -394,6 +427,36 @@ public partial class PlanningCalendarViewModel : ObservableObject
         }
 
         return result;
+    }
+
+    private void RebuildSelectedProductionTeam()
+    {
+        SelectedProductionTeam.Clear();
+        var entry = SelectedEntry;
+        if (entry is null || entry.EntryType != "Auftrag" || !entry.ShiftId.HasValue)
+            return;
+
+        var team = assignments
+            .Where(x =>
+                x.Date.Date == entry.Date.Date &&
+                x.WorkstationId == entry.WorkstationId &&
+                x.ShiftId == entry.ShiftId)
+            .GroupBy(x => x.EmployeeId)
+            .Select(x => x.First())
+            .OrderBy(x => x.Employee.LastName)
+            .ThenBy(x => x.Employee.FirstName)
+            .ToList();
+
+        foreach (var assignment in team)
+        {
+            SelectedProductionTeam.Add(new PlanningTeamMemberRow
+            {
+                EmployeeId = assignment.EmployeeId,
+                Initials = EmployeeInitialsService.Build3(assignment.Employee.FirstName, assignment.Employee.LastName),
+                EmployeeName = $"{assignment.Employee.LastName}, {assignment.Employee.FirstName}",
+                Role = assignment.Employee.Role
+            });
+        }
     }
 
     private void RebuildDayEmployees()
@@ -532,6 +595,14 @@ public sealed class CalendarMonthDay
     public List<CalendarEntryRow> Entries { get; set; } = new();
     public int HiddenEntryCount { get; set; }
     public string MoreText => HiddenEntryCount > 0 ? $"+ {HiddenEntryCount} weitere" : string.Empty;
+}
+
+public sealed class PlanningTeamMemberRow
+{
+    public int EmployeeId { get; set; }
+    public string Initials { get; set; } = string.Empty;
+    public string EmployeeName { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
 }
 
 public sealed class CalendarEmployeeRow
