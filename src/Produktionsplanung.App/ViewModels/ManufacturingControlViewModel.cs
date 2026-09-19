@@ -782,7 +782,9 @@ public partial class ManufacturingControlViewModel : ObservableObject
                 SequenceNumber = x.SequenceNumber,
                 OperationCode = x.OperationCode,
                 OperationName = x.OperationName,
+                WorkstationId = x.WorkstationId,
                 WorkstationName = x.Workstation.Name,
+                PlannedDate = x.ProductionOrder.PlannedDate,
                 EmployeeId = x.EmployeeId,
                 EmployeeName = x.Employee is null ? "–" : $"{x.Employee.LastName}, {x.Employee.FirstName}",
                 RequiredQualificationId = x.RequiredQualificationId,
@@ -1018,7 +1020,9 @@ public sealed class JobCardRow
     public int SequenceNumber { get; set; }
     public string OperationCode { get; set; } = string.Empty;
     public string OperationName { get; set; } = string.Empty;
+    public int WorkstationId { get; set; }
     public string WorkstationName { get; set; } = string.Empty;
+    public DateTime PlannedDate { get; set; }
     public int? EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
     public int? RequiredQualificationId { get; set; }
@@ -1045,8 +1049,12 @@ public sealed class JobCardEmployeeChoice
     public string PersonnelNumber { get; set; } = string.Empty;
     public int QualificationLevel { get; set; }
     public bool IsQualified { get; set; }
+    public bool IsAbsent { get; set; }
+    public bool IsPlannedAtWorkstation { get; set; }
+    public int ActiveJobCards { get; set; }
     public string StatusText { get; set; } = string.Empty;
-    public string DisplayText => $"{DisplayName} · {StatusText}";
+    public string AvailabilityText => IsAbsent ? "abwesend" : IsPlannedAtWorkstation ? "am Arbeitsplatz geplant" : ActiveJobCards > 0 ? $"{ActiveJobCards} aktive Karte(n)" : "verfügbar";
+    public string DisplayText => $"{DisplayName} · {StatusText} · {AvailabilityText}";
 }
 
 public sealed class CapacityRow
