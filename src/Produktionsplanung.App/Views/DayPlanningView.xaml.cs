@@ -11,6 +11,8 @@ namespace Produktionsplanung.App.Views;
 public partial class DayPlanningView : UserControl
 {
     private bool? compactLayout;
+    private Point employeeDragStartPoint;
+    private EmployeeOption? draggedEmployee;
 
     public DayPlanningView() : this(DateTime.Today)
     {
@@ -72,6 +74,58 @@ public partial class DayPlanningView : UserControl
             Grid.SetColumn(AssignmentEditorPanel, 1);
             AssignmentEditorPanel.Margin = new Thickness(0);
         }
+    }
+
+    private void EmployeeChip_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        draggedEmployee = (sender as FrameworkElement)?.DataContext as EmployeeOption;
+        employeeDragStartPoint = e.GetPosition(this);
+    }
+
+    private void EmployeeChip_PreviewMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || draggedEmployee is null)
+            return;
+
+        var current = e.GetPosition(this);
+        if (Math.Abs(current.X - employeeDragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(current.Y - employeeDragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+            return;
+
+        var employee = draggedEmployee;
+        draggedEmployee = null;
+        var data = new DataObject(typeof(EmployeeOption), employee);
+        DragDrop.DoDragDrop((DependencyObject)sender, data, DragDropEffects.Copy);
+        e.Handled = true;
+    }
+
+    private void ProductionCoverageGrid_PreviewDragOver(object sender, DragEventArgs e)
+    {
+        var row = FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject);
+        e.Effects = row?.Item is ProductionOrderCoverageRow &&
+                    e.Data.GetDataPresent(typeof(EmployeeOption))
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void ProductionCoverageGrid_Drop(object sender, DragEventArgs e)
+    {
+        var row = FindAncestor<DataGridRow>(e.OriginalSource as DependencyObject);
+        if (row?.Item is not ProductionOrderCoverageRow coverage ||
+            e.Data.GetData(typeof(EmployeeOption)) is not EmployeeOption employee ||
+            DataContext is not DayPlanningViewModel viewModel)
+        {
+            e.Effects = DragDropEffects.None;
+            e.Handled = true;
+            return;
+        }
+
+        viewModel.SelectedProductionOrderCoverage = coverage;
+        e.Effects = viewModel.AssignEmployeeToProduction(employee.Id, coverage)
+            ? DragDropEffects.Copy
+            : DragDropEffects.None;
+        e.Handled = true;
     }
 
     private void EmployeeName_PreviewMouseMove(object sender, MouseEventArgs e)
