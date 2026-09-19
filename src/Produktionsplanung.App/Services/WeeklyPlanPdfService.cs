@@ -256,7 +256,7 @@ public static class WeeklyPlanPdfService
         {
             x = margin;
             Cell($"{row.Key.WorkstationName}\n{row.Key.Area}", workstationWidth, XColors.White, boldFont);
-            Cell($"{row.Key.ShiftName}\n{row.Key.ShiftStart:hh\:mm}–{row.Key.ShiftEnd:hh\:mm}", shiftWidth, XColors.White, boldFont);
+            Cell($"{row.Key.ShiftName}\n{row.Key.ShiftStart:hh\\:mm}–{row.Key.ShiftEnd:hh\\:mm}", shiftWidth, XColors.White, boldFont);
 
             foreach (var index in dayIndexes)
             {
