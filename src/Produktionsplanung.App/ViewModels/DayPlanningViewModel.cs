@@ -198,7 +198,7 @@ public partial class DayPlanningViewModel : ObservableObject
                 Id = employee.Id,
                 DisplayName = $"{employee.LastName}, {employee.FirstName}",
                 ShortName = employee.LastName,
-                Initials = BuildEmployeeInitials(employee.FirstName, employee.LastName),
+                Initials = EmployeeInitialsService.Build3(employee.FirstName, employee.LastName),
                 Role = employee.Role
             });
         }
