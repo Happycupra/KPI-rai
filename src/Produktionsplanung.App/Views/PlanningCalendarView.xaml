@@ -149,6 +149,8 @@
                         </Style>
                     </Button.Style>
                 </Button>
+                <Button Content="PDF Export" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
+                        ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren"/>
                 <Button Content="+ Einsatz planen" Height="34" Padding="15,0" Margin="8,0,0,0"
                         Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenDayPlanning_Click"/>
             </WrapPanel>
@@ -186,14 +188,14 @@
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="238"/>
-                <ColumnDefinition Width="12"/>
+                <ColumnDefinition x:Name="CalendarLeftColumn" Width="238"/>
+                <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="20"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition x:Name="CalendarDetailGapColumn" Width="12"/>
+                <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="20"/>
                 <ColumnDefinition x:Name="CalendarDetailColumn" Width="292"/>
             </Grid.ColumnDefinitions>
 
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="CalendarLeftPanel" Grid.Column="0" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
                     <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="10" Margin="0,0,0,10">
                         <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}" DisplayDate="{Binding SelectedDate, Mode=TwoWay}" SelectionMode="SingleDate"/>
@@ -222,6 +224,11 @@
                     </Border>
                 </StackPanel>
             </ScrollViewer>
+
+            <Button x:Name="CalendarLeftToggleButton" Grid.Column="1" Content="‹" Width="18" Height="42"
+                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Click="ToggleLeftPanel_Click" ToolTip="Linken Bereich ein-/ausblenden"
+                    Background="#F8FBFF" BorderBrush="#DCE6F0" Foreground="#64748B"/>
 
             <Grid Grid.Column="2">
                 <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
@@ -325,6 +332,11 @@
                     </Grid>
                 </Border>
             </Grid>
+
+            <Button x:Name="CalendarRightToggleButton" Grid.Column="3" Content="›" Width="18" Height="42"
+                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Click="ToggleRightPanel_Click" ToolTip="Rechten Bereich ein-/ausblenden"
+                    Background="#F8FBFF" BorderBrush="#DCE6F0" Foreground="#64748B"/>
 
             <ScrollViewer x:Name="CalendarDetailPanel" Grid.Column="4" VerticalScrollBarVisibility="Auto">
                 <StackPanel>
