@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
@@ -24,6 +25,7 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
 
         DataContext = viewModel;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        ApplyGrouping();
         CaptureBaseline();
     }
 
@@ -47,6 +49,9 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(EmployeeManagementViewModel.SelectedGroupMode))
+            ApplyGrouping();
+
         if (e.PropertyName is nameof(EmployeeManagementViewModel.SelectedEmployee) or
             nameof(EmployeeManagementViewModel.EditingId) or
             nameof(EmployeeManagementViewModel.IsEditorOpen))
@@ -115,6 +120,14 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
         return true;
     }
 
+    private void ApplyGrouping()
+    {
+        var view = CollectionViewSource.GetDefaultView(viewModel.EmployeeRows);
+        view.GroupDescriptions.Clear();
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(EmployeeDirectoryRow.GroupKey)));
+        view.Refresh();
+    }
+
     private void CaptureBaseline() => baseline = BuildSnapshot();
 
     private string BuildSnapshot() => string.Join("\u001f",
@@ -127,5 +140,6 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
         viewModel.Department,
         viewModel.WorkloadPercent,
         viewModel.WeeklyTargetHours,
-        viewModel.IsActive);
+        viewModel.IsActive,
+        string.Join(",", viewModel.SkillEditorRows.Select(x => $"{x.QualificationId}:{x.Level}")));
 }
