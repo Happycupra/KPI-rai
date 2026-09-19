@@ -207,8 +207,8 @@ public static class PlanningCalendarPdfService
         int pageCount)
     {
         var page = document.AddPage();
-        page.Orientation = PageOrientation.Landscape;
-        page.Size = PageSize.A4;
+        page.Orientation = PdfSharp.PageOrientation.Landscape;
+        page.Size = PdfSharp.PageSize.A4;
         var graphics = XGraphics.FromPdfPage(page);
         var palette = CalendarPdfPalette.Create();
 
