@@ -150,6 +150,25 @@ public partial class PlanningCalendarViewModel : ObservableObject
             StatusMessage = $"Ausgewählt: {entry.Title}";
     }
 
+    public bool AssignEmployeeToProduction(int employeeId, CalendarEntryRow? entry)
+    {
+        if (entry is null || entry.EntryType != "Auftrag")
+        {
+            StatusMessage = "Mitarbeiter bitte direkt auf einen Produktionsauftrag ziehen.";
+            return false;
+        }
+
+        var result = ProductionStaffingService.AssignEmployeeToRunSlot(employeeId, entry.RunSlotId > 0 ? entry.RunSlotId : entry.EntryId);
+        StatusMessage = result.Message;
+        if (!result.Success)
+            return false;
+
+        ReloadData();
+        SelectedEntry = GetFilteredEntries(entry.Date)
+            .FirstOrDefault(x => x.EntryType == "Auftrag" && x.EntryId == entry.EntryId);
+        return true;
+    }
+
     private void ReloadData()
     {
         var (rangeStart, rangeEnd) = GetLoadRange();
@@ -334,7 +353,10 @@ public partial class PlanningCalendarViewModel : ObservableObject
             {
                 Date = date.Date,
                 EntryId = slot.Id,
+                RunSlotId = slot.Id,
                 ProductionOrderId = order.Id,
+                WorkstationId = order.WorkstationId,
+                ShiftId = slot.ShiftId,
                 EntryType = "Auftrag",
                 TypeLabel = isUnderstaffed ? "AUFTRAG · PERSONAL FEHLT" : "AUFTRAG",
                 Accent = isUnderstaffed ? "#D97706" : "#0F766E",
@@ -345,7 +367,9 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 Title = $"{order.OrderNumber} · {order.Product}",
                 Subtitle = $"{order.Workstation.Name} · {slot.Shift.Name} · Lauf {slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}",
                 BadgeText = coverage?.CoverageText ?? $"0/{order.RequiredStaff}",
-                Detail = $"{order.Status} · Priorität {order.Priority} · Personal {coverage?.CoverageText ?? $"0/{order.RequiredStaff}"} · Produktionsschicht {slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}"
+                TeamText = coverage?.TeamDisplay ?? "—",
+                TeamNames = coverage?.TeamNames ?? string.Empty,
+                Detail = $"{order.Status} · Priorität {order.Priority} · Personal {coverage?.CoverageText ?? $"0/{order.RequiredStaff}"} · Team {coverage?.TeamDisplay ?? "—"} · Produktionsschicht {slot.SequenceNumber}/{Math.Max(1, order.PlannedShiftCount)}"
             });
         }
 
@@ -381,18 +405,21 @@ public partial class PlanningCalendarViewModel : ObservableObject
             .Select(x => x.EmployeeId)
             .ToHashSet();
 
-        foreach (var employee in employees.Where(x => !absentEmployeeIds.Contains(x.Id)))
+        foreach (var employee in employees)
         {
+            var isAbsent = absentEmployeeIds.Contains(employee.Id);
             var employeeAssignments = assignments
                 .Where(x => x.EmployeeId == employee.Id && x.Date.Date == date)
                 .OrderBy(x => x.StartTime)
                 .ToList();
 
             var first = employeeAssignments.FirstOrDefault();
-            var assignmentText = first is null
-                ? "Noch ohne Einsatz"
-                : $"{first.Workstation.Name} · {first.Shift?.Name ?? "Individuell"}" +
-                  (employeeAssignments.Count > 1 ? $" · +{employeeAssignments.Count - 1}" : string.Empty);
+            var assignmentText = isAbsent
+                ? "Am gewählten Tag abwesend"
+                : first is null
+                    ? "Noch ohne Einsatz"
+                    : $"{first.Workstation.Name} · {first.Shift?.Name ?? "Individuell"}" +
+                      (employeeAssignments.Count > 1 ? $" · +{employeeAssignments.Count - 1}" : string.Empty);
 
             DayEmployees.Add(new CalendarEmployeeRow
             {
@@ -401,9 +428,10 @@ public partial class PlanningCalendarViewModel : ObservableObject
                 Initials = EmployeeInitialsService.Build3(employee.FirstName, employee.LastName),
                 Role = employee.Role,
                 AssignmentText = assignmentText,
-                StatusText = first is null ? "Noch frei" : "Eingeplant",
-                StatusBrush = first is null ? "#16A34A" : "#2563EB",
-                SortBucket = first is null ? 0 : 1
+                IsAbsent = isAbsent,
+                StatusText = isAbsent ? "Abwesend" : first is null ? "Frei" : "Eingeplant",
+                StatusBrush = isAbsent ? "#DC2626" : first is null ? "#16A34A" : "#2563EB",
+                SortBucket = isAbsent ? 2 : first is null ? 0 : 1
             });
         }
 
@@ -460,8 +488,11 @@ public sealed class CalendarEntryRow
 {
     public DateTime Date { get; set; }
     public int EntryId { get; set; }
+    public int RunSlotId { get; set; }
     public int? EmployeeId { get; set; }
     public int? ProductionOrderId { get; set; }
+    public int WorkstationId { get; set; }
+    public int? ShiftId { get; set; }
     public string EntryType { get; set; } = string.Empty;
     public string TypeLabel { get; set; } = string.Empty;
     public string Accent { get; set; } = "#2563EB";
@@ -474,6 +505,8 @@ public sealed class CalendarEntryRow
     public string Subtitle { get; set; } = string.Empty;
     public string Detail { get; set; } = string.Empty;
     public string BadgeText { get; set; } = string.Empty;
+    public string TeamText { get; set; } = string.Empty;
+    public string TeamNames { get; set; } = string.Empty;
 }
 
 public sealed class CalendarDayColumn
@@ -508,6 +541,7 @@ public sealed class CalendarEmployeeRow
     public string Initials { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public string AssignmentText { get; set; } = string.Empty;
+    public bool IsAbsent { get; set; }
     public string StatusText { get; set; } = string.Empty;
     public string StatusBrush { get; set; } = "#64748B";
     public int SortBucket { get; set; }
