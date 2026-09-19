@@ -17,14 +17,14 @@ public static class PlanningCalendarPdfService
             1 => $"Woche-KW{ISOWeek.GetWeekOfYear(viewModel.SelectedDate):00}-{viewModel.SelectedDate:yyyy}",
             _ => $"Monat-{viewModel.SelectedDate:yyyy-MM}"
         };
-        return $"SolutionCompakt-Planungskalender-{suffix}.pdf";
+        return $"SolutionCompakt-Planung-{suffix}.pdf";
     }
 
     public static PlanningCalendarPdfResult Export(PlanningCalendarViewModel viewModel, string filePath)
     {
         var document = new PdfDocument();
         var settings = AppSettingsService.Load();
-        document.Info.Title = $"SolutionCompakt Planungskalender · {viewModel.HeaderText}";
+        document.Info.Title = $"SolutionCompakt Planung · {viewModel.HeaderText}";
         document.Info.Subject = "Planungskalender";
         document.Info.Author = settings.CompanyName;
 
@@ -82,7 +82,10 @@ public static class PlanningCalendarPdfService
                         new XRect(140, y + 4, 90, 10), XStringFormats.TopLeft);
                     graphics.DrawString(entry.Title, palette.BodyBold, new XSolidBrush(palette.Navy),
                         new XRect(35, y + 14, 260, 11), XStringFormats.TopLeft);
-                    graphics.DrawString(entry.Subtitle, palette.Tiny, new XSolidBrush(palette.Muted),
+                    var subtitle = string.IsNullOrWhiteSpace(entry.TeamText)
+                        ? entry.Subtitle
+                        : $"{entry.Subtitle} · Team {entry.TeamText}";
+                    graphics.DrawString(subtitle, palette.Tiny, new XSolidBrush(palette.Muted),
                         new XRect(305, y + 14, page.Width.Point - 330, 11), XStringFormats.TopLeft);
                     y += 31;
                 }
@@ -129,7 +132,10 @@ public static class PlanningCalendarPdfService
                         new XRect(x + 7, y + 4, width - 14, 9));
                     DrawClipped(graphics, entry.Title, palette.SmallBold, palette.Navy,
                         new XRect(x + 7, y + 14, width - 14, 11));
-                    DrawClipped(graphics, entry.Subtitle, palette.Tiny, palette.Muted,
+                    var subtitle = string.IsNullOrWhiteSpace(entry.TeamText)
+                        ? entry.Subtitle
+                        : $"{entry.Subtitle} · {entry.TeamText}";
+                    DrawClipped(graphics, subtitle, palette.Tiny, palette.Muted,
                         new XRect(x + 7, y + 24, width - 14, 9));
                     y += 37;
                     if (y + 38 > top + height)
@@ -186,7 +192,10 @@ public static class PlanningCalendarPdfService
                 {
                     var accent = ParseColor(entry.Accent, palette.Blue);
                     graphics.DrawRectangle(new XSolidBrush(accent), x + 6, entryY + 2, 3, 10);
-                    DrawClipped(graphics, entry.Title, palette.Tiny, palette.Navy,
+                    var title = string.IsNullOrWhiteSpace(entry.TeamText)
+                        ? entry.Title
+                        : $"{entry.Title} · {entry.TeamText}";
+                    DrawClipped(graphics, title, palette.Tiny, palette.Navy,
                         new XRect(x + 13, entryY, cellWidth - 18, 12));
                     entryY += 14;
                 }
