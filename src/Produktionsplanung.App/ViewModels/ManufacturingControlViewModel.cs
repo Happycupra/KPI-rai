@@ -625,6 +625,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
     private void RefreshCapacity()
     {
         using var db = new AppDbContext();
+        var selectedId = SelectedCapacityRow?.WorkstationId;
         var start = DateTime.Today;
         var end = start.AddDays(7);
         var workstations = db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name).ToList();
@@ -660,6 +661,10 @@ public partial class ManufacturingControlViewModel : ObservableObject
                 Status = utilization >= 100 ? "Überlastet" : utilization >= 85 ? "Knapp" : "Frei"
             });
         }
+
+        SelectedCapacityRow = selectedId.HasValue
+            ? CapacityRows.FirstOrDefault(x => x.WorkstationId == selectedId.Value)
+            : CapacityRows.FirstOrDefault();
     }
 
     private void LoadCockpit()
@@ -1312,6 +1317,29 @@ public sealed class JobCardEmployeeChoice
     public string DisplayText => $"{DisplayName} · {StatusText} · {AvailabilityText}";
 }
 
+public sealed class OrderCockpitRow
+{
+    public int Id { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public string Product { get; set; } = string.Empty;
+    public DateTime PlannedDate { get; set; }
+    public string WorkstationName { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int ProgressPercent { get; set; }
+    public int CompletedSteps { get; set; }
+    public int TotalSteps { get; set; }
+    public int IssueCount { get; set; }
+    public string ReadinessKind { get; set; } = "Neutral";
+    public string ReadinessText { get; set; } = string.Empty;
+    public string CurrentOperation { get; set; } = string.Empty;
+    public string WorkstationCheck { get; set; } = string.Empty;
+    public string CapacityCheck { get; set; } = string.Empty;
+    public string StaffCheck { get; set; } = string.Empty;
+    public string SkillCheck { get; set; } = string.Empty;
+    public string ProgressText => TotalSteps == 0 ? "keine Arbeitskarten" : $"{CompletedSteps}/{TotalSteps} · {ProgressPercent} %";
+    public string IssueText => IssueCount == 0 ? "kein Handlungsbedarf" : $"{IssueCount} Punkt(e) offen";
+}
+
 public sealed class CapacityRow
 {
     public int WorkstationId { get; set; }
@@ -1325,4 +1353,8 @@ public sealed class CapacityRow
     public string AvailableText => $"{AvailableMinutes / 60d:N1} h";
     public string PlannedText => $"{PlannedMinutes / 60d:N1} h";
     public string UtilizationText => UtilizationPercent >= 999 ? ">999 %" : $"{UtilizationPercent:N0} %";
+    public double BarValue => Math.Min(120, UtilizationPercent);
+    public string DeltaText => UtilizationPercent > 100
+        ? $"+{Math.Max(0, PlannedMinutes - AvailableMinutes) / 60d:N1} h Überlastung"
+        : $"{Math.Max(0, AvailableMinutes - PlannedMinutes) / 60d:N1} h frei";
 }
