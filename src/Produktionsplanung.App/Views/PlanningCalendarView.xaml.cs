@@ -147,15 +147,15 @@ public partial class PlanningCalendarView : UserControl
 
     private void ClearSelection_Click(object sender, RoutedEventArgs e) => viewModel.SelectEntry(null);
 
-    private static void OpenEntry(CalendarEntryRow entry)
+    private void OpenEntry(CalendarEntryRow entry)
     {
         if (Application.Current.MainWindow is not MainWindow mainWindow)
             return;
 
         switch (entry.EntryType)
         {
-            case "Einsatz":
-                mainWindow.OpenDayPlanning(entry.Date);
+            case "Einsatz" when entry.EmployeeId.HasValue:
+                mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
                 return;
 
             case "Auftrag" when entry.ProductionOrderId.HasValue:
@@ -172,9 +172,13 @@ public partial class PlanningCalendarView : UserControl
         }
 
         if (entry.EmployeeId.HasValue)
+        {
             mainWindow.OpenEmployeeQuickCard(entry.EmployeeId.Value, entry.Date);
-        else
-            mainWindow.OpenDayPlanning(entry.Date);
+            return;
+        }
+
+        viewModel.SelectDate(entry.Date);
+        viewModel.SelectedViewIndex = 0;
     }
 
     private void EmployeeRow_Click(object sender, RoutedEventArgs e)
@@ -301,9 +305,4 @@ public partial class PlanningCalendarView : UserControl
         }
     }
 
-    private void OpenDayPlanning_Click(object sender, RoutedEventArgs e)
-    {
-        if (Application.Current.MainWindow is MainWindow mainWindow)
-            mainWindow.OpenDayPlanning(viewModel.SelectedDate);
-    }
 }
