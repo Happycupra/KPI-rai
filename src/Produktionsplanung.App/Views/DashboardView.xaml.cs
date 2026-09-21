@@ -1,6 +1,5 @@
 using System.Windows;
 using System.Windows.Controls;
-using Produktionsplanung.App.ViewModels;
 using Produktionsplanung.App;
 using Produktionsplanung.App.ViewModels;
 
