@@ -48,7 +48,7 @@
         <TabControl Grid.Row="2">
 
             <!-- 1. AUFTRAGS-COCKPIT -->
-            <TabItem Header="Übersicht">
+            <TabItem Header="Statusboard &amp; Übersicht">
                 <Grid Margin="14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="340"/>
