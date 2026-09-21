@@ -125,7 +125,7 @@
                     </Style>
                 </Border.Style>
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource CardBrush}" Margin="0,0,12,0">
                         <TextBlock Text="↥" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock.Style>
@@ -152,8 +152,8 @@
                     <Grid Margin="0,0,0,12">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Handlungsbedarf" Style="{StaticResource SectionHeaderTextStyle}" />
-                            <TextBlock Text="Konkrete Hinweise für die nächsten Arbeitsschritte" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
+                            <TextBlock Text="Konfliktzentrale" Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock Text="Engpässe, Qualifikationen, Abwesenheiten und überfällige Aufträge" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
                         </StackPanel>
                         <Border Grid.Column="1" Style="{StaticResource DangerChipStyle}" VerticalAlignment="Top">
                             <TextBlock Text="{Binding OpenProblems, StringFormat=⚠ {0} offen}" Foreground="{StaticResource DangerBrush}" FontSize="11" FontWeight="SemiBold" />
@@ -180,6 +180,7 @@
                                             <TextBlock Text="{Binding Title}" Style="{StaticResource CardTitleTextStyle}" />
                                             <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,3,0,0" />
                                         </StackPanel>
+                                        <Button Grid.Column="2" Content="Öffnen" Style="{StaticResource SecondaryButtonStyle}" Click="OpenIssue_Click" Margin="12,0,0,0" VerticalAlignment="Top" />
                                     </Grid>
                                 </Border>
                                 <DataTemplate.Triggers>
