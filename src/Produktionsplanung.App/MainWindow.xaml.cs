@@ -88,6 +88,10 @@ public partial class MainWindow : Window
     private void ShowSettings_Click(object sender, RoutedEventArgs e) { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.Settings)); }
 
     public void OpenDayPlanning(DateTime date) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar, date: date.Date)); }
+    public void OpenPlanningCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar)); }
+    public void OpenProductionOrders() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders)); }
+    public void OpenManufacturingControl() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl)); }
+    public void OpenProductionActual() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual)); }
     public void OpenWorkTimeCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
     public void OpenEmployee(int employeeId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees, employeeId: employeeId)); }
     public void OpenProductionOrder(int productionOrderId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders, productionOrderId: productionOrderId)); }
