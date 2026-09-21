@@ -59,8 +59,12 @@
 
                 <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,16,0">
                     <StackPanel>
-                        <TextBlock Text="Erfasste Ist-Produktion" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
-                        <DataGrid ItemsSource="{Binding Actuals}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
+                            <TextBlock Text="Erfasste Ist-Produktion" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="32" VerticalContentAlignment="Center" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" />
+                        </Grid>
+                        <DataGrid ItemsSource="{Binding ActualsView}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                                   HeadersVisibility="Column" MinHeight="420" MaxHeight="560">
                             <DataGrid.Columns>
