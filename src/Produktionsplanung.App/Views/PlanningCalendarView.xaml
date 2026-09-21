@@ -179,7 +179,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Planung" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
+                <TextBlock Text="Planungskalender" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
                 <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
@@ -223,7 +223,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="Aktuelle Ansicht als PDF" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
+                <Button Content="Ansicht als PDF exportieren" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
                         ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren"/>
 
             </WrapPanel>
@@ -370,7 +370,7 @@
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Tagesplan" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende rechts greifen und direkt auf Produktionsaufträge ziehen." FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+                                <StackPanel><TextBlock Text="Tagesplan" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Aufträge, Personal und Betriebskalender in einer Ansicht koordinieren." FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
                             </Grid>
                             <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,6"/>
                             <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
