@@ -15,7 +15,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Produktionsaufträge" Style="{StaticResource PageTitleTextStyle}" />
-                <TextBlock Text="Produkte über eine oder mehrere Schichten planen und Personalbedarf mit Maschine / Ort verknüpfen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
+                <TextBlock Text="Aufträge anlegen, planen, besetzen und bis zum Abschluss verfolgen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Content="+ Neuer Auftrag" Height="34" Padding="14,0" Command="{Binding NewOrderCommand}" Margin="0,0,8,0" />
@@ -74,7 +74,37 @@
                                             <DataGridTextColumn Header="Lauf" Binding="{Binding RunText}" Width="95" />
                                             <DataGridTextColumn Header="Menge" Binding="{Binding QuantityText}" Width="95" />
                                             <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="66" />
-                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                            <DataGridTemplateColumn Header="Status" Width="125">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Border x:Name="StatusChip" Background="{StaticResource SubtleSurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="8,3" HorizontalAlignment="Left">
+                                                            <TextBlock x:Name="StatusText" Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" />
+                                                        </Border>
+                                                        <DataTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Geplant">
+                                                                <Setter TargetName="StatusChip" Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                                                <Setter TargetName="StatusChip" Property="BorderBrush" Value="{StaticResource InfoBrush}" />
+                                                                <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource InfoBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="In Produktion">
+                                                                <Setter TargetName="StatusChip" Property="Background" Value="{StaticResource WarningSoftBrush}" />
+                                                                <Setter TargetName="StatusChip" Property="BorderBrush" Value="{StaticResource WarningBrush}" />
+                                                                <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource WarningBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Fertig">
+                                                                <Setter TargetName="StatusChip" Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                                                                <Setter TargetName="StatusChip" Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
+                                                                <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Storniert">
+                                                                <Setter TargetName="StatusChip" Property="Background" Value="{StaticResource DangerSoftBrush}" />
+                                                                <Setter TargetName="StatusChip" Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                                                                <Setter TargetName="StatusText" Property="Foreground" Value="{StaticResource DangerBrush}" />
+                                                            </DataTrigger>
+                                                        </DataTemplate.Triggers>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
                 </Grid>
