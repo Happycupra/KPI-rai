@@ -117,7 +117,7 @@ public partial class MainWindow : Window
         NavigationRoute.WorkTimeCalendar => new(route, "Arbeitszeit / Betrieb", nameof(WorkTimeCalendarButton), () => new WorkTimeCalendarView()),
         NavigationRoute.ProductionOrders when productionOrderId.HasValue => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView(productionOrderId.Value), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
-        NavigationRoute.ManufacturingControl => new(route, "Fertigungssteuerung", nameof(ManufacturingControlButton), () => new ManufacturingControlView()),
+        NavigationRoute.ManufacturingControl => new(route, "Auftragscockpit", nameof(ManufacturingControlButton), () => new ManufacturingControlView()),
         NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView()),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
         NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
