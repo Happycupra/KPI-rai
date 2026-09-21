@@ -159,7 +159,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     private void NewOrder()
     {
         SelectedOrder = null;
-        OrderNumber = Product = Description = string.Empty;
+        OrderNumber = Product = ArticleNumber = BatchNumber = Description = string.Empty;
         Quantity = 1;
         Unit = "Stück";
         Priority = "Normal";
@@ -267,6 +267,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 
             entity.OrderNumber = orderNumber;
             entity.Product = product;
+            entity.ArticleNumber = ArticleNumber.Trim();
+            entity.BatchNumber = BatchNumber.Trim();
             entity.Description = string.IsNullOrWhiteSpace(Description) ? null : Description.Trim();
             entity.Quantity = Quantity;
             entity.Unit = Unit;
