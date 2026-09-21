@@ -133,22 +133,22 @@
                     <StackPanel x:Name="NavigationPanel">
                         <Button x:Name="PlanningGroupHeader" Content="▾  PLANUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
                         <Button x:Name="DashboardButton" Tag="&#xE80F;" Content="Dashboard" ToolTip="Dashboard" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
-                        <Button x:Name="PlanningCalendarButton" Tag="&#xE787;" Content="Planung" ToolTip="Planung · Tag / Woche / Monat" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
+                        <Button x:Name="PlanningCalendarButton" Tag="&#xE787;" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
                         <Button x:Name="WorkTimeCalendarButton" Tag="&#xE916;" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
 
                         <Button x:Name="ProductionGroupHeader" Content="▾  PRODUKTION" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
                         <Button x:Name="ProductionOrdersButton" Tag="&#xE8A5;" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
                         <Button x:Name="ManufacturingControlButton" Tag="&#xE7C3;" Content="Fertigungssteuerung" ToolTip="Fertigungssteuerung" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
-                        <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion / OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
+                        <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
                         <Button x:Name="AnalyticsButton" Tag="&#xE9D9;" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
-                        <Button x:Name="MasterDataGroupHeader" Content="▾  STAMMDATEN" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="EmployeesButton" Tag="&#xE77B;" Content="Mitarbeiter &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
-                        <Button x:Name="WorkstationsButton" Tag="&#xE90F;" Content="Arbeitsplätze &amp; Schichten" ToolTip="Arbeitsplätze &amp; Schichten" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
+                        <Button x:Name="MasterDataGroupHeader" Content="▾  PERSONAL" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="EmployeesButton" Tag="&#xE77B;" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
+                        <Button x:Name="WorkstationsButton" Tag="&#xE90F;" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
                         <Button x:Name="AbsencesButton" Tag="&#xE711;" Content="Abwesenheiten" ToolTip="Abwesenheiten" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
 
-                        <Button x:Name="SystemGroupHeader" Content="▾  SYSTEM" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="UserAdminButton" Tag="&#xE716;" Content="Benutzer / Audit" ToolTip="Benutzer / Audit" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
+                        <Button x:Name="SystemGroupHeader" Content="▾  VERWALTUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="UserAdminButton" Tag="&#xE716;" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
                         <Button x:Name="SettingsButton" Tag="&#xE713;" Content="Einstellungen" ToolTip="Einstellungen" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
                     </StackPanel>
                 </ScrollViewer>
@@ -175,7 +175,7 @@
                             Click="Back_Click" IsEnabled="False" Margin="0,0,14,0" />
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <TextBlock x:Name="CurrentPageTitle" Text="Dashboard" Foreground="{StaticResource TextBrush}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="SolutionCompakt · Operations" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                        <TextBlock Text="SolutionCompakt · Produktionsplanung" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="NotificationButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
