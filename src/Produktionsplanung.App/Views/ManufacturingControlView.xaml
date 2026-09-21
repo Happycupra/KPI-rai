@@ -23,7 +23,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="28">
+    <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="14"/>
@@ -37,8 +37,8 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Fertigungssteuerung" Style="{StaticResource PageTitleTextStyle}"/>
-                <TextBlock Text="Auftrag → Planung → Personal &amp; Skills → Produktion → Kapazität → Abschluss"
+                <TextBlock Text="Auftragscockpit" Style="{StaticResource PageTitleTextStyle}"/>
+                <TextBlock Text="Auftrag → Planung → Besetzung → Arbeitsgänge → Produktion → Qualität → Abschluss"
                            Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0"/>
             </StackPanel>
             <Button Grid.Column="1" Content="↻ Aktualisieren" Command="{Binding RefreshCommand}"
@@ -66,8 +66,8 @@
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="Produktionsaufträge" Style="{StaticResource SectionHeaderTextStyle}"/>
-                                    <TextBlock Text="Status, Fortschritt und Handlungsbedarf" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Aufträge im Cockpit" Style="{StaticResource SectionHeaderTextStyle}"/>
+                                    <TextBlock Text="Status, Fortschritt und nächster Arbeitsschritt" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
                                 </StackPanel>
                                 <CheckBox Grid.Column="1" Content="Nur Handlungsbedarf" IsChecked="{Binding ShowOnlyActionNeeded}" VerticalAlignment="Center"/>
                             </Grid>
