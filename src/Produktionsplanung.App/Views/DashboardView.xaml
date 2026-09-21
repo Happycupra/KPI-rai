@@ -172,7 +172,7 @@
                             <DataTemplate>
                                 <Border Style="{StaticResource AlertCardStyle}" Background="{StaticResource SubtleSurfaceBrush}" Margin="0,0,0,8">
                                     <Grid>
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <Border x:Name="SeverityChip" Style="{StaticResource DangerChipStyle}" Margin="0,0,12,0" VerticalAlignment="Top">
                                             <TextBlock x:Name="SeverityText" Text="KRITISCH" Foreground="{StaticResource DangerBrush}" FontSize="10" FontWeight="Bold" />
                                         </Border>
