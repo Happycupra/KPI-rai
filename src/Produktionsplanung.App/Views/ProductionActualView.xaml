@@ -66,7 +66,9 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="90" />
                                 <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
+                                <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="110" />
                                 <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.2*" />
+                                <DataGridTextColumn Header="Charge" Binding="{Binding BatchNumber}" Width="110" />
                                 <DataGridTextColumn Header="Linie" Binding="{Binding WorkstationName}" Width="1*" />
                                 <DataGridTextColumn Header="Schicht" Binding="{Binding ShiftName}" Width="1*" />
                                 <DataGridTextColumn Header="Menge" Binding="{Binding QuantityText}" Width="90" />
@@ -81,11 +83,23 @@
                 <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="20">
                     <StackPanel>
                         <TextBlock Text="Ist-Erfassung" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Die Sollrate wird historisch mit der Erfassung gespeichert." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,16" />
+                        <TextBlock Text="Artikel und Charge werden lokal gespeichert und stehen für Suche, OEE und Berichte zur Verfügung." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,16" />
 
                         <TextBlock Text="Produktionsauftrag" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
                                   DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,12" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
