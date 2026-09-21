@@ -1,14 +1,10 @@
-# SolutionCompakt – aktuelle Downloads
+# SolutionCompakt – Downloads
 
-Dieser Ordner wird bei jedem Release automatisch mit den aktuellsten Windows-Dateien aktualisiert.
+Im Hauptordner `downloads/` liegen die vier aktuellen Windows-Build-Artefakte als ZIP-Dateien:
 
-Geplante Dateien:
+- `SolutionCompakt-Setup-0.1.0-win-x64.zip` – Windows-Installer
+- `SolutionCompakt-Portable-0.1.0-win-x64.zip` – portable Single-EXE-Version
+- `SolutionCompakt-USB-Portable-0.1.0-win-x64.zip` – USB-/Portable-Paket mit `portable.mode`
+- `SolutionCompakt-Windows-0.1.0-win-x64.zip` – vollständiger Windows-x64-Build
 
-- `SolutionCompakt-Setup-latest.exe` – Windows-Installer
-- `SolutionCompakt-portable-latest.zip` – portable Version als ZIP
-- `SolutionCompakt-USB-portable-latest.zip` – USB-/Portable-Paket mit `portable.mode`
-- `VERSION.txt` – aktuell veröffentlichte Version
-
-> Hinweis: Die eigentlichen Binärdateien werden beim nächsten Release-Tag (`v*`) durch den GitHub-Actions-Release-Workflow erzeugt und hier abgelegt. Historische Dateien mit dem früheren Namen OpsCompact bleiben als ältere Release-Artefakte unverändert erhalten.
-
-Zusätzlich werden die versionierten Dateien weiterhin als GitHub-Release-Assets veröffentlicht.
+Der Workflow `.github/workflows/windows-build.yml` erzeugt diese vier Pakete bei einem erfolgreichen Build auf `main` und aktualisiert die Dateien in diesem Ordner.
