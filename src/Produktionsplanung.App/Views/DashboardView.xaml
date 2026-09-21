@@ -31,6 +31,26 @@
                 </StackPanel>
             </Grid>
 
+            <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,16" Padding="14,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
+                        <TextBlock Text="Schnellzugriff" Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock Text="Direkt zum nächsten Arbeitsschritt" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="Planung öffnen" Style="{StaticResource SecondaryButtonStyle}" Click="OpenPlanning_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="2" Content="Aufträge" Style="{StaticResource SecondaryButtonStyle}" Click="OpenOrders_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="3" Content="Fertigungssteuerung" Style="{StaticResource SecondaryButtonStyle}" Click="OpenControl_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="4" Content="Ist-Produktion / OEE" Style="{StaticResource PrimaryButtonStyle}" Click="OpenActual_Click" />
+                </Grid>
+            </Border>
+
             <!-- Primary operational KPIs. OEE is intentionally not shown here because DashboardViewModel does not expose a dashboard OEE value. -->
             <UniformGrid Columns="4" Margin="0,0,0,16">
                 <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,12,0">
