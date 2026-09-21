@@ -22,8 +22,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Produktions-Dashboard" Style="{StaticResource PageTitleTextStyle}" />
-                    <TextBlock Text="{Binding TodayText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
+                    <TextBlock Text="Betriebsübersicht" Style="{StaticResource PageTitleTextStyle}" />
+                    <TextBlock Text="Heute: Personal, Aufträge, Linien und Handlungsbedarf auf einen Blick." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding LastUpdatedText}" Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" Margin="0,0,12,0" />
@@ -76,9 +76,9 @@
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Produktionsschichten" Style="{StaticResource DashboardMetricLabel}" />
+                            <TextBlock Text="Aufträge heute" Style="{StaticResource DashboardMetricLabel}" />
                             <TextBlock Text="{Binding OrdersToday}" Style="{StaticResource DashboardMetricValue}" />
-                            <TextBlock Text="geplante Läufe heute" Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" />
+                            <TextBlock Text="geplante Aufträge" Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" />
                         </StackPanel>
                         <Border Grid.Column="1" Width="36" Height="36" Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8">
                             <TextBlock Text="▤" Foreground="{StaticResource MutedTextBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -133,7 +133,7 @@
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="Handlungsbedarf" Style="{StaticResource SectionHeaderTextStyle}" />
-                            <TextBlock Text="Personalengpässe, Konflikte und auffällige Aufträge" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
+                            <TextBlock Text="Konkrete Hinweise für die nächsten Arbeitsschritte" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
                         </StackPanel>
                         <Border Grid.Column="1" Style="{StaticResource DangerChipStyle}" VerticalAlignment="Top">
                             <TextBlock Text="{Binding OpenProblems, StringFormat=⚠ {0} offen}" Foreground="{StaticResource DangerBrush}" FontSize="11" FontWeight="SemiBold" />
@@ -200,7 +200,7 @@
                 <Grid.ColumnDefinitions><ColumnDefinition Width="1.05*"/><ColumnDefinition Width="1.35*"/></Grid.ColumnDefinitions>
                 <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,12,0">
                     <StackPanel>
-                        <TextBlock Text="Linienstatus heute" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                        <TextBlock Text="Arbeitsplatzstatus heute" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
                         <DataGrid ItemsSource="{Binding WorkstationStatuses}" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="220" MaxHeight="340">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.25*" />
@@ -229,8 +229,8 @@
 
                 <Border Grid.Column="1" Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Produktionsschichten heute" Style="{StaticResource SectionHeaderTextStyle}" />
-                        <TextBlock Text="Produkt, Linie, Schicht und aktuelle Personalabdeckung" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,10" />
+                        <TextBlock Text="Aufträge heute" Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock Text="Produkt, Arbeitsplatz, Schicht und aktuelle Personalabdeckung" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,10" />
                         <DataGrid ItemsSource="{Binding TodayOrders}" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="220" MaxHeight="340">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
