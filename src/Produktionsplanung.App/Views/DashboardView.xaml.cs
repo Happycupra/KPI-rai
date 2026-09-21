@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using Produktionsplanung.App.ViewModels;
 using Produktionsplanung.App;
 using Produktionsplanung.App.ViewModels;
 
@@ -18,4 +19,22 @@ public partial class DashboardView : UserControl
     private void OpenOrders_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenProductionOrders();
     private void OpenControl_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenManufacturingControl();
     private void OpenActual_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenProductionActual();
+
+    private void OpenIssue_Click(object sender, RoutedEventArgs e)
+    {
+        if (HostWindow is null || (sender as FrameworkElement)?.DataContext is not DashboardIssue issue) return;
+        if (issue.Route == "DayPlanning")
+        {
+            HostWindow.OpenDayPlanning(issue.Date ?? DateTime.Today);
+        }
+        else if (issue.Route == "ProductionOrders")
+        {
+            if (issue.EntityId.HasValue) HostWindow.OpenProductionOrder(issue.EntityId.Value);
+            else HostWindow.OpenProductionOrders();
+        }
+        else if (issue.Route == "Settings")
+        {
+            HostWindow.OpenSettings();
+        }
+    }
 }
