@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28">
+        <StackPanel Margin="{StaticResource PagePadding}">
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -11,8 +11,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Auswertungen / KPIs" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                    <TextBlock Text="{Binding PeriodText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
+                    <TextBlock Text="Auswertungen / KPIs" Style="{StaticResource PageTitleTextStyle}" />
+                    <TextBlock Text="{Binding PeriodText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
