@@ -13,6 +13,11 @@ on:
 permissions:
   contents: write
 
+# Only the newest main build may publish artifacts. This prevents concurrent runs from racing on downloads/.
+concurrency:
+  group: windows-build-main
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: windows-latest
