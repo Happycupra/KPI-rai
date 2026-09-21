@@ -131,7 +131,7 @@
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="NavigationPanel">
-                        <Button x:Name="PlanningGroupHeader" Content="▾  PLANUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
+                        <Button x:Name="PlanningGroupHeader" Content="▾  ÜBERSICHT &amp; PLANUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
                         <Button x:Name="DashboardButton" Tag="&#xE80F;" Content="Dashboard" ToolTip="Dashboard" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
                         <Button x:Name="PlanningCalendarButton" Tag="&#xE787;" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
                         <Button x:Name="WorkTimeCalendarButton" Tag="&#xE916;" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
