@@ -67,7 +67,9 @@
                                               AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="100" />
+                                            <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="105" />
                                             <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="1.25*" />
+                                            <DataGridTextColumn Header="Charge" Binding="{Binding BatchNumber}" Width="105" />
                                             <DataGridTextColumn Header="Start" Binding="{Binding PlannedDate, StringFormat=dd.MM.yyyy}" Width="96" />
                                             <DataGridTextColumn Header="Maschine / Ort" Binding="{Binding WorkstationName}" Width="1.25*" />
                                             <DataGridTextColumn Header="Startschicht" Binding="{Binding ShiftName}" Width="110" />
@@ -122,6 +124,18 @@
 
                         <TextBlock Text="Produkt" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                            </StackPanel>
+                        </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
