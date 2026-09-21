@@ -26,6 +26,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     [ObservableProperty] private ProductionOrderRow? selectedOrder;
     [ObservableProperty] private string orderNumber = string.Empty;
     [ObservableProperty] private string product = string.Empty;
+    [ObservableProperty] private string articleNumber = string.Empty;
+    [ObservableProperty] private string batchNumber = string.Empty;
     [ObservableProperty] private string description = string.Empty;
     [ObservableProperty] private double quantity = 1;
     [ObservableProperty] private string unit = "Stück";
@@ -110,6 +112,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 
         OrderNumber = value.OrderNumber;
         Product = value.Product;
+        ArticleNumber = value.ArticleNumber;
+        BatchNumber = value.BatchNumber;
         Description = value.Description ?? string.Empty;
         Quantity = value.Quantity;
         Unit = value.Unit;
@@ -486,6 +490,8 @@ public class ProductionOrderRow
     public int Id { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string Product { get; set; } = string.Empty;
+    public string ArticleNumber { get; set; } = string.Empty;
+    public string BatchNumber { get; set; } = string.Empty;
     public string? Description { get; set; }
     public double Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
