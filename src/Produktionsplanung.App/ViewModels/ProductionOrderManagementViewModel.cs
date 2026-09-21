@@ -98,6 +98,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             return true;
 
         return row.OrderNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.ArticleNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+               row.BatchNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                row.Product.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                row.WorkstationName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                row.ShiftName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
@@ -464,6 +466,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
                 Id = item.Id,
                 OrderNumber = item.OrderNumber,
                 Product = item.Product,
+                ArticleNumber = item.ArticleNumber,
+                BatchNumber = item.BatchNumber,
                 Description = item.Description,
                 Quantity = item.Quantity,
                 Unit = item.Unit,
