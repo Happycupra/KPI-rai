@@ -4,9 +4,14 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'downloads/**'
   pull_request:
     branches:
       - main
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -97,3 +102,33 @@ jobs:
         with:
           name: SolutionCompakt-Setup-0.1.0-win-x64
           path: artifacts/installer/*.exe
+
+      - name: Mirror all four artifact ZIPs into downloads on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        run: |
+          $downloadStage = Join-Path $env:RUNNER_TEMP "solutioncompakt-downloads"
+          New-Item -ItemType Directory -Path $downloadStage -Force | Out-Null
+
+          $setup = Get-ChildItem artifacts/installer/*.exe | Select-Object -First 1
+          if (-not $setup) { throw "Installer executable not found." }
+
+          Compress-Archive -Path $setup.FullName -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Setup-0.1.0-win-x64.zip") -Force
+          Compress-Archive -Path "artifacts/single-file/SolutionCompakt.exe" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Portable-0.1.0-win-x64.zip") -Force
+          Compress-Archive -Path "artifacts/usb-portable/*" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-USB-Portable-0.1.0-win-x64.zip") -Force
+          Compress-Archive -Path "artifacts/win-x64/*" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Windows-0.1.0-win-x64.zip") -Force
+
+          git fetch origin main
+          git checkout -B main origin/main
+
+          New-Item -ItemType Directory -Path downloads -Force | Out-Null
+          Copy-Item (Join-Path $downloadStage "*.zip") downloads -Force
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/*.zip
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Add latest Windows build archives to downloads [skip ci]"
+            git push origin main
+          }
