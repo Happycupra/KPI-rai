@@ -386,7 +386,7 @@
                                                     <TextBlock x:Name="CapacityChipText" Text="{Binding Status}" FontWeight="SemiBold"/>
                                                 </Border>
                                             </Grid>
-                                            <ProgressBar Minimum="0" Maximum="120" Value="{Binding BarValue}" Height="10" Margin="0,12,0,5"/>
+                                            <ProgressBar Minimum="0" Maximum="120" Value="{Binding BarValue, Mode=OneWay}" Height="10" Margin="0,12,0,5"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding UtilizationText}" FontWeight="SemiBold"/>
@@ -527,3 +527,4 @@
         </Border>
     </Grid>
 </UserControl>
+
