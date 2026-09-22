@@ -11,10 +11,12 @@ public partial class ManufacturingControlView : UserControl
     private Point dragStartPoint;
     private RoutingStepRow? draggedRoutingStep;
 
-    public ManufacturingControlView()
+    public ManufacturingControlView(int? orderId = null)
     {
         InitializeComponent();
-        DataContext = new ManufacturingControlViewModel();
+        var vm = new ManufacturingControlViewModel();
+        DataContext = vm;
+        if (orderId.HasValue) vm.SelectedProductionOrder = vm.ProductionOrders.FirstOrDefault(x => x.Id == orderId.Value);
     }
 
     private void RoutingStepsGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)

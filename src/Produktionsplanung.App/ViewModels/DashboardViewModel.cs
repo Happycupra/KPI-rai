@@ -74,9 +74,11 @@ public partial class DashboardViewModel : ObservableObject
             .ThenBy(x => x.ProductionOrder.OrderNumber)
             .ToList();
 
-        OrdersToday = runSlots.Count;
-        RunningOrders = runSlots.Count(x => x.ProductionOrder.Status == "Läuft");
-        CompletedOrdersToday = runSlots.Count(x => x.ProductionOrder.Status == "Abgeschlossen");
+        OrdersToday = runSlots.Select(x => x.ProductionOrderId).Distinct().Count();
+        RunningOrders = db.ProductionOrders.Count(x => x.Status == "Läuft");
+        var utcStart = today.ToUniversalTime();
+        var utcEnd = today.AddDays(1).ToUniversalTime();
+        CompletedOrdersToday = db.ProductionOrders.Count(x => x.Status == "Abgeschlossen" && x.CompletedAtUtc >= utcStart && x.CompletedAtUtc < utcEnd);
 
         var coverage = ProductionOrderCoverageService.Load(today, today);
         UnderstaffedOrders = coverage.Count(x => x.CoverageStatus == "Unterbesetzt");

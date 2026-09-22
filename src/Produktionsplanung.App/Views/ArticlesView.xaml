@@ -1,0 +1,28 @@
+<UserControl x:Class="Produktionsplanung.App.Views.ArticlesView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource SurfaceBrush}">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20">
+  <TextBlock Text="Artikel &amp; Chargenhistorie" Style="{StaticResource PageTitleTextStyle}"/>
+  <TextBlock Text="Wiederkehrende Artikel einmal hinterlegen – jede Herstellung als eigene Charge verfolgen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16"/>
+  <WrapPanel Margin="0,0,0,12">
+   <TextBlock Text="Suche" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBox x:Name="Search" Width="220" TextChanged="Filter_Changed" Margin="0,0,12,0" AutomationProperties.Name="Artikel suchen"/>
+   <CheckBox x:Name="ActiveOnly" Content="Nur aktive Artikel" IsChecked="True" Checked="Active_Changed" Unchecked="Active_Changed" VerticalAlignment="Center" Margin="0,0,12,0"/>
+   <Button Content="Aktualisieren" Click="Refresh_Click"/>
+  </WrapPanel>
+  <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
+   <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0"/>
+   <Button Content="Artikel bearbeiten" Click="Edit_Click" Margin="0,0,8,0"/>
+   <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0"/>
+   <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryButtonStyle}"/>
+  </WrapPanel>
+  <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
+  <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220"><DataGrid.Columns>
+   <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>
+   <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="240"/>
+   <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="85"/>
+   <DataGridTextColumn Header="Standardmenge" Binding="{Binding DefaultQuantity}" Width="125"/>
+   <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
+  </DataGrid.Columns></DataGrid>
+  <TextBlock x:Name="HistoryTitle" Text="Artikel auswählen, um die Chargenhistorie zu sehen." Style="{StaticResource SectionHeaderTextStyle}" Margin="0,20,0,6"/>
+  <ContentControl x:Name="History"/>
+ </StackPanel></ScrollViewer>
+</UserControl>

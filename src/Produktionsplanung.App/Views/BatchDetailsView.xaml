@@ -1,0 +1,53 @@
+<UserControl x:Class="Produktionsplanung.App.Views.BatchDetailsView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource SurfaceBrush}">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20">
+  <TextBlock Text="{Binding Batch.ArticleText}" Style="{StaticResource PageTitleTextStyle}"/>
+  <TextBlock Text="{Binding Batch.BatchLabel, StringFormat=Charge: {0}}" FontSize="20" Margin="0,8"/>
+  <WrapPanel><TextBlock Text="{Binding Batch.OrderNumber, StringFormat=Auftrag: {0}}" Margin="0,0,20,0"/><TextBlock Text="{Binding Batch.Status}" FontWeight="Bold"/><TextBlock Text="{Binding Batch.AssignmentText}" Margin="20,0"/></WrapPanel>
+  <Border Style="{StaticResource SectionCardStyle}" Margin="0,16" Padding="16"><StackPanel>
+   <TextBlock Text="{Binding Batch.QuantityText, StringFormat=Sollmenge: {0}}"/>
+   <TextBlock Text="{Binding Batch.PlannedDate, StringFormat=Geplant: {0:dd.MM.yyyy}}"/>
+   <TextBlock Text="{Binding Batch.Workstation, StringFormat=Arbeitsplatz: {0}}"/>
+   <TextBlock Text="{Binding Batch.StartedText, StringFormat=Produktionsbeginn: {0}}"/>
+   <TextBlock Text="{Binding Batch.CompletedText, StringFormat=Abschluss: {0}}"/>
+   <TextBlock Text="{Binding Batch.ProgressText}" FontWeight="SemiBold" Margin="0,8,0,0"/>
+  </StackPanel></Border>
+  <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
+   <Button Content="Auftrag bearbeiten" Click="Edit_Click" Margin="0,0,8,8"/>
+   <Button Content="Fertigungssteuerung" Click="Control_Click" Margin="0,0,8,8"/>
+   <Button Content="Ist-Produktion" Click="Actual_Click" Margin="0,0,8,8"/>
+   <Button Content="Charge abschliessen" Click="Complete_Click" Margin="0,0,8,8"/>
+  </WrapPanel>
+  <StackPanel x:Name="ReopenActions" Margin="0,0,0,12">
+   <TextBlock Text="Abgeschlossene Charge · schreibgeschützt. Für Korrekturen eine Begründung eingeben." TextWrapping="Wrap"/>
+   <TextBox x:Name="Reason" MaxLength="2000" Margin="0,6" AutomationProperties.Name="Begründung für Wiederöffnung"/>
+   <Button Content="Wieder öffnen" Click="Reopen_Click" HorizontalAlignment="Left"/>
+  </StackPanel>
+  <TextBlock x:Name="Message" TextWrapping="Wrap" Margin="0,0,0,10"/>
+  <TextBlock Text="Arbeitsgänge" Style="{StaticResource SectionHeaderTextStyle}"/>
+  <TextBlock x:Name="CardsEmpty" Text="Nicht erfasst" Margin="0,6"/>
+  <DataGrid ItemsSource="{Binding JobCards}" IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="300" Margin="0,8,0,18"><DataGrid.Columns>
+   <DataGridTextColumn Header="Nr." Binding="{Binding SequenceNumber}"/>
+   <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding OperationName}" Width="180"/>
+   <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding Workstation.Name}" Width="140"/>
+   <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding Employee.LastName, TargetNullValue=Nicht erfasst}" Width="120"/>
+   <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="115"/>
+   <DataGridTextColumn Header="Soll min" Binding="{Binding PlannedMinutes}"/>
+   <DataGridTextColumn Header="Ist min" Binding="{Binding RunMinutes, StringFormat=N1}"/>
+   <DataGridTextColumn Header="Gutmenge" Binding="{Binding GoodQuantity}"/>
+   <DataGridTextColumn Header="Ausschuss" Binding="{Binding ScrapQuantity}"/>
+  </DataGrid.Columns></DataGrid>
+  <TextBlock Text="Ist-Produktion" Style="{StaticResource SectionHeaderTextStyle}"/>
+  <TextBlock Text="Erfassungen separat von Arbeitskartenmengen; keine Addition über beide Quellen." TextWrapping="Wrap" Margin="0,6"/>
+  <TextBlock x:Name="ActualsEmpty" Text="Nicht erfasst"/>
+  <DataGrid x:Name="ActualsGrid" IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="300" Margin="0,8"><DataGrid.Columns>
+   <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="105"/>
+   <DataGridTextColumn Header="Artikel" Binding="{Binding Article}" Width="110"/>
+   <DataGridTextColumn Header="Charge (historisch)" Binding="{Binding Batch}" Width="160"/>
+   <DataGridTextColumn Header="Gutmenge" Binding="{Binding Good}"/>
+   <DataGridTextColumn Header="Ausschuss" Binding="{Binding Scrap}"/>
+   <DataGridTextColumn Header="Stillstand min" Binding="{Binding Downtime}"/>
+   <DataGridTextColumn Header="Hinweis" Binding="{Binding Note}" Width="220"/>
+  </DataGrid.Columns></DataGrid>
+ </StackPanel></ScrollViewer>
+</UserControl>
