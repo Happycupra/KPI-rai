@@ -23,6 +23,7 @@
    <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
   </DataGrid.Columns></DataGrid>
   <TextBlock x:Name="HistoryTitle" Text="Artikel auswählen, um die Chargenhistorie zu sehen." Style="{StaticResource SectionHeaderTextStyle}" Margin="0,20,0,6"/>
+  <ContentControl x:Name="Comparison"/>
   <ContentControl x:Name="History"/>
  </StackPanel></ScrollViewer>
 </UserControl>

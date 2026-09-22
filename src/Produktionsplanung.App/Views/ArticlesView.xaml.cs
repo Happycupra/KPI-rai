@@ -18,6 +18,7 @@ public partial class ArticlesView : UserControl
     {
         if (!IsInitialized) return;
         var previousHistory = History.Content as BatchBrowserView;
+        var previousComparison = Comparison.Content as BatchComparisonView;
         var previousId = Selected?.Id;
         var id = select ?? previousId;
         var rows = ArticleService.Search(Search.Text, ActiveOnly.IsChecked == true);
@@ -27,6 +28,7 @@ public partial class ArticlesView : UserControl
         {
             History.Content = previousHistory;
             ((Produktionsplanung.App.ViewModels.BatchBrowserViewModel)previousHistory.DataContext).Refresh();
+            if (previousComparison is not null) { Comparison.Content = previousComparison; previousComparison.Refresh(); }
         }
         Message.Text = rows.Count == 0 ? "Noch keine passenden Artikel. Mit „Artikel anlegen“ beginnen." : $"{rows.Count} Artikel";
     }
@@ -53,8 +55,9 @@ public partial class ArticlesView : UserControl
     }
     private void Selection_Changed(object sender, SelectionChangedEventArgs e)
     {
-        if (Selected is not { } a) { History.Content = null; return; }
+        if (Selected is not { } a) { History.Content = null; Comparison.Content = null; return; }
         HistoryTitle.Text = $"Chargen · {a.ArticleNumber} – {a.Name}";
+        Comparison.Content = new BatchComparisonView(a.Id);
         History.Content = new BatchBrowserView("Alle", a.Id);
     }
 }

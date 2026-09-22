@@ -10,6 +10,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        MessageBox.Show(
+            "Eigentum von Irajet Ramadani - nur zu Testzwecken zu verwenden",
+            "SolutionCompakt - Nutzungshinweis",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+
         AppPaths.InitializeStorageMode(e.Args);
         if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
         {

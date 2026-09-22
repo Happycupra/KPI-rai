@@ -32,6 +32,21 @@ public partial class BatchDetailsView : UserControl
         catch (Exception ex) { Message.Text = ex.Message; EditActions.IsEnabled = ReopenActions.IsEnabled = false; }
     }
     private MainWindow? Host => Window.GetWindow(this) as MainWindow;
+    private void ExportPdf_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Chargenbericht speichern", Filter = "PDF-Dokument (*.pdf)|*.pdf", DefaultExt = ".pdf",
+            AddExtension = true, OverwritePrompt = true, FileName = BatchReportPdfService.BuildFileName(id)
+        };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try
+        {
+            var result = BatchReportPdfService.Export(id, dialog.FileName);
+            Message.Text = $"PDF gespeichert ({result.PageCount} Seite(n)): {result.FilePath}";
+        }
+        catch (Exception ex) { Message.Text = $"PDF konnte nicht gespeichert werden: {ex.Message}"; }
+    }
     private void Edit_Click(object sender, RoutedEventArgs e) => Host?.OpenProductionOrder(id);
     private void Control_Click(object sender, RoutedEventArgs e) => Host?.OpenManufacturingControl(id);
     private void Actual_Click(object sender, RoutedEventArgs e) => Host?.OpenProductionActual(id);

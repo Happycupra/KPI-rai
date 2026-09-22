@@ -12,6 +12,7 @@
    <TextBlock Text="{Binding Batch.CompletedText, StringFormat=Abschluss: {0}}"/>
    <TextBlock Text="{Binding Batch.ProgressText}" FontWeight="SemiBold" Margin="0,8,0,0"/>
   </StackPanel></Border>
+  <Button Content="Chargenbericht als PDF speichern" Click="ExportPdf_Click" HorizontalAlignment="Left" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,0,12"/>
   <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
    <Button Content="Auftrag bearbeiten" Click="Edit_Click" Margin="0,0,8,8"/>
    <Button Content="Fertigungssteuerung" Click="Control_Click" Margin="0,0,8,8"/>
