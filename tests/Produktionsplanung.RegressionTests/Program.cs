@@ -6,6 +6,7 @@ using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 using Produktionsplanung.App.Views;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
 
 internal static partial class Program
@@ -43,6 +44,7 @@ internal static partial class Program
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
+            ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
             ("Workstation with orders cannot be deleted", WorkstationDeletion),
             ("Order history protected in UI and database", OrderDeletion),
@@ -727,6 +729,43 @@ internal static partial class Program
         _ = new SettingsView();
         _ = new Produktionsplanung.App.LoginWindow();
         _ = new Produktionsplanung.App.ChangePasswordWindow();
+    }
+
+    private static void ManufacturingCapacityTabRenders()
+    {
+        var view = new ManufacturingControlView
+        {
+            Width = 1280,
+            Height = 900
+        };
+        var capacityTab = LogicalDescendants<TabItem>(view)
+            .Single(x => string.Equals(x.Header?.ToString(), "Kapazität", StringComparison.Ordinal));
+        capacityTab.IsSelected = true;
+
+        view.Measure(new Size(1280, 900));
+        view.Arrange(new Rect(0, 0, 1280, 900));
+        view.UpdateLayout();
+
+        Check(capacityTab.IsSelected, "Capacity tab could not be rendered");
+
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("KPI_BATCH_PREVIEW_DIRECTORY")))
+        {
+            Planner();
+            var mainWindow = new Produktionsplanung.App.MainWindow();
+            RenderPreview((FrameworkElement)mainWindow.Content, "navigation");
+            mainWindow.Close();
+        }
+    }
+
+    private static IEnumerable<T> LogicalDescendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        foreach (var child in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())
+        {
+            if (child is T match)
+                yield return match;
+            foreach (var descendant in LogicalDescendants<T>(child))
+                yield return descendant;
+        }
     }
 
     private static void ProductionActualOrdering()

@@ -317,19 +317,20 @@ public partial class MainWindow : Window
 
     private void ApplyGroupVisibility()
     {
-        ApplyGroup(PlanningGroupHeader, "PLANUNG", planningGroupCollapsed,
+        ApplyGroup(PlanningGroupHeader, "ÜBERSICHT & PLANUNG", planningGroupCollapsed,
             DashboardButton, PlanningCalendarButton, WorkTimeCalendarButton);
         ApplyGroup(ProductionGroupHeader, "PRODUKTION", productionGroupCollapsed,
             ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, AnalyticsButton, BatchesButton);
-        ApplyGroup(MasterDataGroupHeader, "STAMMDATEN", masterDataGroupCollapsed,
+        ApplyGroup(MasterDataGroupHeader, "STAMMDATEN & PERSONAL", masterDataGroupCollapsed,
             EmployeesButton, WorkstationsButton, AbsencesButton, ArticlesButton);
-        ApplyGroup(SystemGroupHeader, "SYSTEM", systemGroupCollapsed,
+        ApplyGroup(SystemGroupHeader, "VERWALTUNG", systemGroupCollapsed,
             UserAdminButton, SettingsButton);
     }
 
     private void ApplyGroup(Button header, string title, bool collapsed, params Button[] buttons)
     {
-        header.Content = $"{(collapsed ? "▸" : "▾")}  {title}";
+        header.Content = title;
+        header.Tag = collapsed ? "▸" : "▾";
         var visibility = sidebarCollapsed || !collapsed ? Visibility.Visible : Visibility.Collapsed;
         foreach (var button in buttons)
             button.Visibility = visibility;

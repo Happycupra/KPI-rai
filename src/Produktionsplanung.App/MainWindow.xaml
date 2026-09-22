@@ -11,42 +11,55 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="42" />
-            <Setter Property="Margin" Value="0,2" />
-            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Height" Value="46" />
+            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="Padding" Value="0" />
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="NavChrome" Background="{TemplateBinding Background}" CornerRadius="8">
+                        <Border x:Name="NavChrome" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="9">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3" />
-                                    <ColumnDefinition Width="31" />
+                                    <ColumnDefinition Width="42" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="26" />
                                 </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" Width="3" Margin="0,7,0,7" CornerRadius="0,3,3,0"
+                                <Border x:Name="ActiveRail" Grid.Column="0" Width="3" Margin="0,8,0,8"
+                                        CornerRadius="0,3,3,0" HorizontalAlignment="Left"
                                         Background="{TemplateBinding BorderBrush}" />
-                                <TextBlock x:Name="NavIcon" Grid.Column="1" Text="{TemplateBinding Tag}" FontFamily="Segoe MDL2 Assets"
-                                           FontSize="16" Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                                <TextBlock x:Name="NavLabel" Grid.Column="2" Text="{TemplateBinding Content}" Margin="5,0,8,0"
+                                <Border x:Name="IconChrome" Grid.Column="0" Width="30" Height="30" CornerRadius="7"
+                                        Background="#173B56" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock x:Name="NavIcon" Text="{TemplateBinding Tag}" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16" Foreground="{TemplateBinding Foreground}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                </Border>
+                                <TextBlock x:Name="NavLabel" Grid.Column="1" Text="{TemplateBinding Content}" Margin="6,0,6,0"
                                            Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
                                            FontWeight="{TemplateBinding FontWeight}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="NavChevron" Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="10" Foreground="#7794AA" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="HorizontalContentAlignment" Value="Center">
                                 <Setter TargetName="NavLabel" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="NavChevron" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="NavIcon" Property="Grid.Column" Value="0" />
-                                <Setter TargetName="NavIcon" Property="Grid.ColumnSpan" Value="3" />
+                                <Setter TargetName="IconChrome" Property="Grid.ColumnSpan" Value="3" />
+                                <Setter TargetName="IconChrome" Property="HorizontalAlignment" Value="Center" />
                                 <Setter TargetName="NavIcon" Property="FontSize" Value="18" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="NavChrome" Property="Background" Value="{StaticResource SidebarHoverBrush}" />
+                                <Setter TargetName="IconChrome" Property="Background" Value="#24506F" />
+                                <Setter TargetName="NavChevron" Property="Foreground" Value="#D9E6F2" />
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -67,17 +80,26 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="Padding" Value="10,0,8,0" />
             <Setter Property="FontSize" Value="10" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="GroupChrome" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{TemplateBinding Tag}" FontSize="12"
+                                           Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" />
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -131,25 +153,25 @@
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="NavigationPanel">
-                        <Button x:Name="PlanningGroupHeader" Content="▾  ÜBERSICHT &amp; PLANUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
+                        <Button x:Name="PlanningGroupHeader" Content="ÜBERSICHT &amp; PLANUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
                         <Button x:Name="DashboardButton" Tag="&#xE80F;" Content="Dashboard" ToolTip="Dashboard" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
                         <Button x:Name="PlanningCalendarButton" Tag="&#xE787;" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
                         <Button x:Name="WorkTimeCalendarButton" Tag="&#xE916;" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
 
-                        <Button x:Name="ProductionGroupHeader" Content="▾  PRODUKTION" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="ProductionGroupHeader" Content="PRODUKTION" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
                         <Button x:Name="BatchesButton" Tag="&#xE8B7;" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
                         <Button x:Name="ProductionOrdersButton" Tag="&#xE8A5;" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
                         <Button x:Name="ManufacturingControlButton" Tag="&#xE7C3;" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
                         <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
                         <Button x:Name="AnalyticsButton" Tag="&#xE9D9;" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
-                        <Button x:Name="MasterDataGroupHeader" Content="▾  PERSONAL" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="MasterDataGroupHeader" Content="STAMMDATEN &amp; PERSONAL" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
                         <Button x:Name="ArticlesButton" Tag="&#xE8A5;" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
                         <Button x:Name="EmployeesButton" Tag="&#xE77B;" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
                         <Button x:Name="WorkstationsButton" Tag="&#xE90F;" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
                         <Button x:Name="AbsencesButton" Tag="&#xE711;" Content="Abwesenheiten" ToolTip="Abwesenheiten" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
 
-                        <Button x:Name="SystemGroupHeader" Content="▾  VERWALTUNG" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="SystemGroupHeader" Content="VERWALTUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
                         <Button x:Name="UserAdminButton" Tag="&#xE716;" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
                         <Button x:Name="SettingsButton" Tag="&#xE713;" Content="Einstellungen" ToolTip="Einstellungen" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
                     </StackPanel>
