@@ -137,12 +137,14 @@
                         <Button x:Name="WorkTimeCalendarButton" Tag="&#xE916;" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
 
                         <Button x:Name="ProductionGroupHeader" Content="▾  PRODUKTION" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="BatchesButton" Tag="&#xE8B7;" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
                         <Button x:Name="ProductionOrdersButton" Tag="&#xE8A5;" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
                         <Button x:Name="ManufacturingControlButton" Tag="&#xE7C3;" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
                         <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
                         <Button x:Name="AnalyticsButton" Tag="&#xE9D9;" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
                         <Button x:Name="MasterDataGroupHeader" Content="▾  PERSONAL" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
+                        <Button x:Name="ArticlesButton" Tag="&#xE8A5;" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
                         <Button x:Name="EmployeesButton" Tag="&#xE77B;" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
                         <Button x:Name="WorkstationsButton" Tag="&#xE90F;" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
                         <Button x:Name="AbsencesButton" Tag="&#xE711;" Content="Abwesenheiten" ToolTip="Abwesenheiten" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />

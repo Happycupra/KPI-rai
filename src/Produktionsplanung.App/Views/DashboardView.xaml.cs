@@ -11,8 +11,12 @@ public partial class DashboardView : UserControl
     {
         InitializeComponent();
         DataContext = new DashboardViewModel();
+        Loaded += (_, _) => ((DashboardViewModel)DataContext).RefreshCommand.Execute(null);
     }
 
+    private void RefreshBatches_Click(object sender, RoutedEventArgs e) => ((BatchBrowserViewModel)Batches.DataContext).Refresh();
+    private void OpenArticles_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenArticles();
+    private void OpenArchive_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenBatchArchive();
     private MainWindow? HostWindow => Window.GetWindow(this) as MainWindow;
     private void OpenPlanning_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenPlanningCalendar();
     private void OpenOrders_Click(object sender, RoutedEventArgs e) => HostWindow?.OpenProductionOrders();

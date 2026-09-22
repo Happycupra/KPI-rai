@@ -90,8 +90,8 @@ public partial class MainWindow : Window
     public void OpenDayPlanning(DateTime date) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar, date: date.Date)); }
     public void OpenPlanningCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar)); }
     public void OpenProductionOrders() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders)); }
-    public void OpenManufacturingControl() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl)); }
-    public void OpenProductionActual() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual)); }
+    public void OpenManufacturingControl(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl, productionOrderId: id)); }
+    public void OpenProductionActual(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual, productionOrderId: id)); }
     public void OpenSettings() { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.Settings)); }
     public void OpenWorkTimeCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
     public void OpenEmployee(int employeeId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees, employeeId: employeeId)); }
@@ -106,6 +106,18 @@ public partial class MainWindow : Window
         employeeQuickCardWindow.Show();
     }
 
+    public void OpenBatch(int id) => Navigate(new(NavigationRoute.Batch, "Chargendetails", nameof(BatchesButton), () => new BatchDetailsView(id), ProductionOrderId: id));
+    public void OpenArticles() => Navigate(new(NavigationRoute.Articles, "Artikel & Chargenhistorie", nameof(ArticlesButton), () => new ArticlesView()));
+    public void OpenBatchArchive() => Navigate(new(NavigationRoute.BatchArchive, "Abgeschlossene Chargen", nameof(BatchesButton), () => new BatchBrowserView("Abgeschlossen", archive: true)));
+    public void CreateBatch(int? articleId = null)
+    {
+        if (!SessionService.IsPlannerOrAdmin || !CanLeaveCurrentContent()) return;
+        var dialog = new NewBatchWindow(articleId) { Owner = this };
+        if (dialog.ShowDialog() == true) OpenBatch(dialog.CreatedId);
+    }
+    private void ShowArticles_Click(object sender, RoutedEventArgs e) => OpenArticles();
+    private void ShowBatches_Click(object sender, RoutedEventArgs e) => OpenBatchArchive();
+
     private NavigationEntry CreateEntry(
         NavigationRoute route,
         DateTime? date = null,
@@ -118,8 +130,8 @@ public partial class MainWindow : Window
         NavigationRoute.WorkTimeCalendar => new(route, "Arbeitszeit / Betrieb", nameof(WorkTimeCalendarButton), () => new WorkTimeCalendarView()),
         NavigationRoute.ProductionOrders when productionOrderId.HasValue => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView(productionOrderId.Value), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
-        NavigationRoute.ManufacturingControl => new(route, "Auftragscockpit", nameof(ManufacturingControlButton), () => new ManufacturingControlView()),
-        NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView()),
+        NavigationRoute.ManufacturingControl => new(route, "Auftragscockpit", nameof(ManufacturingControlButton), () => new ManufacturingControlView(productionOrderId), ProductionOrderId: productionOrderId),
+        NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView(productionOrderId), ProductionOrderId: productionOrderId),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
         NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
         NavigationRoute.Employees => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView()),
@@ -308,9 +320,9 @@ public partial class MainWindow : Window
         ApplyGroup(PlanningGroupHeader, "PLANUNG", planningGroupCollapsed,
             DashboardButton, PlanningCalendarButton, WorkTimeCalendarButton);
         ApplyGroup(ProductionGroupHeader, "PRODUKTION", productionGroupCollapsed,
-            ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, AnalyticsButton);
+            ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, AnalyticsButton, BatchesButton);
         ApplyGroup(MasterDataGroupHeader, "STAMMDATEN", masterDataGroupCollapsed,
-            EmployeesButton, WorkstationsButton, AbsencesButton);
+            EmployeesButton, WorkstationsButton, AbsencesButton, ArticlesButton);
         ApplyGroup(SystemGroupHeader, "SYSTEM", systemGroupCollapsed,
             UserAdminButton, SettingsButton);
     }
@@ -432,7 +444,7 @@ public partial class MainWindow : Window
 
     private enum NavigationRoute
     {
-        Dashboard, PlanningCalendar, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
+        Batch, Articles, BatchArchive, Dashboard, PlanningCalendar, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
         ProductionActual, Analytics, Employees, Workstations, Absences, UserAdmin, Settings
     }
 

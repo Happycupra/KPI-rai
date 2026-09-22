@@ -8,7 +8,7 @@ using Produktionsplanung.App.Views;
 using System.IO;
 using System.Windows.Controls;
 
-internal static class Program
+internal static partial class Program
 {
     [STAThread]
     private static int Main()
@@ -17,6 +17,13 @@ internal static class Program
         app.InitializeComponent();
         var tests = new (string Name, Action Run)[]
         {
+            ("Articles create independent batches and preserve identity", ArticleBatchCreation),
+            ("Batch lifecycle completes and reopens with audit", BatchLifecycle),
+            ("Batch roles and historical actual snapshots", BatchRolesAndActuals),
+            ("Batch counts, filters and detail navigation", BatchCountsAndViews),
+            ("Batch backup, export and repeat migration", BatchBackupExportMigration),
+            ("Legacy batch migration preserves ambiguous data", LegacyBatchMigration),
+            ("Explicit batch routing and archive date filters", BatchRoutingAndArchiveFilters),
             ("Demo seeding preserves cleared data and disabled shift models", DemoSeederPreservesChanges),
             ("Day planning only offers shifts allowed for workstation and date", DayPlanningAllowedShifts),
             ("Order status edits preserve existing production run slots", OrderStatusKeepsRunSlots),
@@ -52,6 +59,8 @@ internal static class Program
             var path = Path.Combine(Path.GetTempPath(), "kpi-rai-test-" + Guid.NewGuid().ToString("N"));
             AppPaths.RootDirectoryOverride = path;
             SessionService.SignOut();
+            // Each fixture represents a fresh process; restore deliberately makes this flag sticky.
+            typeof(SessionService).GetProperty(nameof(SessionService.RequiresRestart))!.SetValue(null, false);
             try
             {
                 using (var db = new AppDbContext())
@@ -152,6 +161,7 @@ internal static class Program
 
     private static void OrderStatusKeepsRunSlots()
     {
+        Planner();
         int orderId;
         List<(int Id, int Sequence, DateTime Date, int ShiftId)> before;
         using (var db = new AppDbContext())
@@ -777,6 +787,7 @@ internal static class Program
 
     private static void OrderDeletion()
     {
+        Planner();
         var actualId = AddActual();
         using var db = new AppDbContext();
         var orderId = db.ProductionActuals.Single(x => x.Id == actualId).ProductionOrderId;
@@ -793,6 +804,7 @@ internal static class Program
 
     private static void DowntimeEdit()
     {
+        Planner();
         var id = AddActual();
         var vm = new ProductionActualViewModel();
         vm.SelectedActual = vm.Actuals.Single(x => x.Id == id);
@@ -809,6 +821,7 @@ internal static class Program
 
     private static void DowntimeAddition()
     {
+        Planner();
         var id = AddActual();
         var vm = new ProductionActualViewModel();
         vm.SelectedActual = vm.Actuals.Single(x => x.Id == id);

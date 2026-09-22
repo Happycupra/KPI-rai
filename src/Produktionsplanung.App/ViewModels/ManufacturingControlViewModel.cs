@@ -122,8 +122,11 @@ public partial class ManufacturingControlViewModel : ObservableObject
         LoadJobCards(value?.Id);
         if (value is not null)
         {
-            var routing = Routings.FirstOrDefault(x =>
-                x.IsActive && string.Equals(x.Product.Trim(), value.Product.Trim(), StringComparison.OrdinalIgnoreCase));
+            using var db = new AppDbContext();
+            var order = db.ProductionOrders.AsNoTracking().Single(x => x.Id == value.Id);
+            var routing = order.ArticleMasterId.HasValue
+                ? Routings.FirstOrDefault(x => x.Id == order.ManufacturingRoutingId)
+                : Routings.FirstOrDefault(x => x.IsActive && string.Equals(x.Product.Trim(), value.Product.Trim(), StringComparison.OrdinalIgnoreCase));
             if (routing is not null)
                 SelectedRouting = routing;
         }
@@ -457,10 +460,11 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return;
         }
 
-        var routing = db.ManufacturingRoutings.AsNoTracking()
-            .Where(x => x.IsActive)
-            .AsEnumerable()
-            .FirstOrDefault(x => string.Equals(x.Product.Trim(), order.Product.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (!BatchService.CanEdit(db, order.Id, out var editError)) { StatusMessage = editError; return; }
+        var routing = order.ArticleMasterId.HasValue
+            ? db.ManufacturingRoutings.AsNoTracking().FirstOrDefault(x => x.Id == order.ManufacturingRoutingId && x.IsActive)
+            : db.ManufacturingRoutings.AsNoTracking().Where(x => x.IsActive).AsEnumerable()
+                .FirstOrDefault(x => string.Equals(x.Product.Trim(), order.Product.Trim(), StringComparison.OrdinalIgnoreCase));
         if (routing is null)
         {
             StatusMessage = $"Kein aktiver Arbeitsplan für Produkt „{order.Product}“ gefunden.";
@@ -479,6 +483,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
             return;
         }
 
+        using var transaction = db.Database.BeginTransaction();
         foreach (var step in steps)
         {
             db.JobCards.Add(new JobCard
@@ -503,6 +508,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         var trackedOrder = db.ProductionOrders.First(x => x.Id == order.Id);
         trackedOrder.Status = "Bereit";
         db.SaveChanges();
+        transaction.Commit();
         LoadProductionOrders();
         LoadJobCards(order.Id);
         RefreshCapacity();
@@ -517,6 +523,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         if (!EnsurePlanner() || SelectedJobCard is null) return;
         using var db = new AppDbContext();
         var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (!BatchService.CanEdit(db, card.ProductionOrderId, out var editError)) { StatusMessage = editError; return; }
         if (card.Status == "Fertig")
         {
             StatusMessage = "Die Arbeitskarte ist bereits abgeschlossen.";
@@ -539,7 +546,9 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.PauseStartedAtUtc = null;
         card.Status = "In Produktion";
         card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? card.Comment : JobCardComment.Trim();
-        db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = "Läuft";
+        var startedOrder = db.ProductionOrders.First(x => x.Id == card.ProductionOrderId);
+        startedOrder.Status = "Läuft";
+        startedOrder.StartedAtUtc ??= DateTime.UtcNow;
         db.SaveChanges();
         LoadProductionOrders();
         LoadJobCards(card.ProductionOrderId, card.Id);
@@ -554,6 +563,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         if (!EnsurePlanner() || SelectedJobCard is null) return;
         using var db = new AppDbContext();
         var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (!BatchService.CanEdit(db, card.ProductionOrderId, out var editError)) { StatusMessage = editError; return; }
         if (card.Status != "In Produktion" || !card.StartedAtUtc.HasValue)
         {
             StatusMessage = "Nur eine laufende Arbeitskarte kann pausiert werden.";
@@ -577,7 +587,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
     private void FinishJobCard()
     {
         if (!EnsurePlanner() || SelectedJobCard is null) return;
-        if (FinishGoodQuantity < 0 || FinishScrapQuantity < 0)
+        if (!double.IsFinite(FinishGoodQuantity) || !double.IsFinite(FinishScrapQuantity) || FinishGoodQuantity < 0 || FinishScrapQuantity < 0)
         {
             StatusMessage = "Gut- und Ausschussmenge dürfen nicht negativ sein.";
             return;
@@ -585,6 +595,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
 
         using var db = new AppDbContext();
         var card = db.JobCards.First(x => x.Id == SelectedJobCard.Id);
+        if (!BatchService.CanEdit(db, card.ProductionOrderId, out var editError)) { StatusMessage = editError; return; }
         if (card.Status == "Fertig")
         {
             StatusMessage = "Die Arbeitskarte ist bereits abgeschlossen.";
@@ -606,6 +617,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         card.GoodQuantity = FinishGoodQuantity;
         card.ScrapQuantity = FinishScrapQuantity;
         card.Comment = string.IsNullOrWhiteSpace(JobCardComment) ? null : JobCardComment.Trim();
+        using var transaction = db.Database.BeginTransaction();
         card.CompletedAtUtc = DateTime.UtcNow;
         card.Status = "Fertig";
         db.SaveChanges();
@@ -622,8 +634,11 @@ public partial class ManufacturingControlViewModel : ObservableObject
             .FirstOrDefault();
 
         var remaining = nextCardId.HasValue;
-        db.ProductionOrders.First(x => x.Id == card.ProductionOrderId).Status = remaining ? "Läuft" : "Abgeschlossen";
+        var finishedOrder = db.ProductionOrders.First(x => x.Id == card.ProductionOrderId);
+        finishedOrder.Status = remaining ? "Läuft" : "Abgeschlossen";
+        if (!remaining) finishedOrder.CompletedAtUtc = card.CompletedAtUtc;
         db.SaveChanges();
+        transaction.Commit();
 
         LoadProductionOrders();
         LoadJobCards(card.ProductionOrderId, nextCardId);

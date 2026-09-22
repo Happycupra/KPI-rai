@@ -22,9 +22,16 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
             viewModel.SelectedOrder = viewModel.Orders.FirstOrDefault(x => x.Id == selectedOrderId.Value);
 
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
+        OrderEditorPanel.IsEnabled = viewModel.SelectedOrder?.Status != "Abgeschlossen";
         CaptureBaseline();
         Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
     }
+
+    private void Details_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewModel.SelectedOrder is { } order) (Window.GetWindow(this) as MainWindow)?.OpenBatch(order.Id);
+    }
+    private void NewBatch_Click(object sender, RoutedEventArgs e) => (Window.GetWindow(this) as MainWindow)?.CreateBatch();
 
     private void LayoutRoot_SizeChanged(object sender, SizeChangedEventArgs e) =>
         UpdateResponsiveLayout(e.NewSize.Width);
@@ -95,7 +102,10 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ProductionOrderManagementViewModel.SelectedOrder))
+        {
+            OrderEditorPanel.IsEnabled = viewModel.SelectedOrder?.Status != "Abgeschlossen";
             CaptureBaseline();
+        }
     }
 
     private void CaptureBaseline() => baseline = BuildSnapshot();
@@ -104,6 +114,8 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
         viewModel.SelectedOrder?.Id ?? 0,
         viewModel.OrderNumber,
         viewModel.Product,
+        viewModel.ArticleNumber,
+        viewModel.BatchNumber,
         viewModel.Description,
         viewModel.Quantity,
         viewModel.Unit,

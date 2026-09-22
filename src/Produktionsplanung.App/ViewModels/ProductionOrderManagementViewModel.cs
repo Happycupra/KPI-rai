@@ -178,6 +178,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     [RelayCommand]
     private void Save()
     {
+        if (!SessionService.IsPlannerOrAdmin) { StatusMessage = "Nur Planer oder Administratoren dürfen Produktionsdaten ändern."; return; }
+        if (SelectedOrder is null) { StatusMessage = "Bitte „Neue Charge“ verwenden und einen Artikel auswählen."; return; }
         var orderNumber = OrderNumber.Trim();
         var product = Product.Trim();
         if (string.IsNullOrWhiteSpace(orderNumber))
@@ -224,6 +226,17 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         var existing = editingId.HasValue
             ? db.ProductionOrders.AsNoTracking().FirstOrDefault(x => x.Id == editingId.Value)
             : null;
+        if (!BatchService.CanEdit(db, editingId!.Value, out var editError)) { StatusMessage = editError; return; }
+        if (!Statuses.Contains(Status) || !Priorities.Contains(Priority)) { StatusMessage = "Ungültiger Status oder Priorität."; return; }
+        if (Status == "Abgeschlossen" && db.JobCards.Any(x => x.ProductionOrderId == editingId && x.Status != "Fertig"))
+        { StatusMessage = "Zuerst alle Arbeitsgänge abschliessen."; return; }
+        if (existing is null) { StatusMessage = "Der Auftrag existiert nicht mehr."; return; }
+        var hasProduction = existing.StartedAtUtc.HasValue || db.JobCards.Any(x => x.ProductionOrderId == editingId && (x.Status != "Bereit" || x.RunMinutes > 0)) || db.ProductionActuals.Any(x => x.ProductionOrderId == editingId);
+        if ((hasProduction || existing.ArticleMasterId.HasValue) && (existing.ArticleNumber != ArticleNumber.Trim() || existing.Product != product || existing.Unit != Unit) ||
+            hasProduction && existing.BatchNumber != BatchNumber.Trim())
+        { StatusMessage = "Artikelidentität und historische Chargennummer sind gesperrt."; return; }
+        if (existing.ArticleMasterId.HasValue && (string.IsNullOrWhiteSpace(BatchNumber) || db.ProductionOrders.Any(x => x.Id != editingId && (x.ArticleMasterId == existing.ArticleMasterId || x.ArticleNumber == existing.ArticleNumber) && x.BatchNumber == BatchNumber.Trim())))
+        { StatusMessage = "Chargennummer fehlt oder ist für diesen Artikel bereits vergeben."; return; }
         var hasActuals = editingId.HasValue &&
                          db.ProductionActuals.AsNoTracking().Any(x => x.ProductionOrderId == editingId.Value);
         var schedulingChanged = existing is null ||
@@ -283,6 +296,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             entity.PlannedShiftCount = PlannedShiftCount;
             entity.RequiredStaff = RequiredStaff;
             entity.Status = Status;
+            if (Status == "Läuft") entity.StartedAtUtc ??= DateTime.UtcNow;
+            if (Status == "Abgeschlossen") entity.CompletedAtUtc = DateTime.UtcNow;
             entity.Comment = string.IsNullOrWhiteSpace(Comment) ? null : Comment.Trim();
             db.SaveChanges();
 
@@ -329,7 +344,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             return;
         }
 
-        if (db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id))
+        if (!BatchService.CanEdit(db, entity.Id, out var editError)) { StatusMessage = editError; return; }
+        if (entity.StartedAtUtc.HasValue || db.JobCards.Any(x => x.ProductionOrderId == entity.Id) || db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id))
         {
             StatusMessage = "Aufträge mit Ist-Produktion können nicht gelöscht werden. Bitte abschliessen, damit die Produktionshistorie erhalten bleibt.";
             return;
