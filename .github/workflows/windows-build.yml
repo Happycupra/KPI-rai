@@ -13,6 +13,10 @@ on:
 permissions:
   contents: write
 
+env:
+  WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+  WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+
 # Only the newest main build may publish artifacts. This prevents concurrent runs from racing on downloads/.
 concurrency:
   group: windows-build-main
@@ -50,6 +54,25 @@ jobs:
           $exe = Join-Path $PWD "artifacts/single-file/SolutionCompakt.exe"
           if (-not (Test-Path $exe)) { throw "Single-file executable not found: $exe" }
 
+      - name: Sign application executables
+        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
+            ./scripts/Sign-WindowsArtifacts.ps1 `
+              -CertificatePath $certPath `
+              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
+              -Paths @(
+                "artifacts/win-x64/SolutionCompakt.exe",
+                "artifacts/single-file/SolutionCompakt.exe"
+              )
+          }
+          finally {
+            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Prepare USB portable package
         shell: pwsh
         run: |
@@ -83,6 +106,22 @@ jobs:
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
           & $iscc "/DMyAppVersion=0.1.0" "installer\SolutionCompakt.iss"
+
+      - name: Sign installer
+        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
+            ./scripts/Sign-WindowsArtifacts.ps1 `
+              -CertificatePath $certPath `
+              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
+              -Paths @("artifacts/installer/*.exe")
+          }
+          finally {
+            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Upload portable build
         uses: actions/upload-artifact@v4

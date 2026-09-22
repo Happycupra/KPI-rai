@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+env:
+  WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+  WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+
 jobs:
   release:
     runs-on: windows-latest
@@ -51,6 +55,27 @@ jobs:
           if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
           Copy-Item $source $target -Force
 
+      - name: Sign application executables
+        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
+            ./scripts/Sign-WindowsArtifacts.ps1 `
+              -CertificatePath $certPath `
+              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
+              -Paths @(
+                "artifacts/win-x64/SolutionCompakt.exe",
+                "artifacts/single-file/SolutionCompakt.exe",
+                "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
+              )
+          }
+          finally {
+            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+          }
+
       - name: Prepare USB portable package
         shell: pwsh
         run: |
@@ -86,6 +111,22 @@ jobs:
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
           & $iscc "/DMyAppVersion=$version" "installer\SolutionCompakt.iss"
+
+      - name: Sign installer
+        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
+          try {
+            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
+            ./scripts/Sign-WindowsArtifacts.ps1 `
+              -CertificatePath $certPath `
+              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
+              -Paths @("artifacts/installer/*.exe")
+          }
+          finally {
+            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+          }
 
       - name: Create portable zip
         shell: pwsh
