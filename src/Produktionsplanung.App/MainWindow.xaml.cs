@@ -462,4 +462,3 @@ public partial class MainWindow : Window
         public object GetContent() => content ??= CreateContent();
     }
 }
-

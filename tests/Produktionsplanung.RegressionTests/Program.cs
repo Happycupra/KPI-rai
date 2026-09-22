@@ -1035,4 +1035,3 @@ internal static partial class Program
             "Old administrator remains authenticated after restore");
     }
 }
-
