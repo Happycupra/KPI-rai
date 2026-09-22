@@ -1,0 +1,28 @@
+<UserControl x:Class="Produktionsplanung.App.Views.BatchComparisonView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Background="{StaticResource SurfaceBrush}">
+ <StackPanel Margin="0,12">
+  <TextBlock Text="Abgeschlossene Chargen vergleichen" Style="{StaticResource SectionHeaderTextStyle}"/>
+  <TextBlock Text="Gutmenge, Ausschuss und Zeiten aus Ist-Erfassungen. Arbeitskartenmengen werden nicht addiert." TextWrapping="Wrap" Margin="0,6"/>
+  <WrapPanel Margin="0,6,0,10">
+   <TextBlock Text="Letzte" VerticalAlignment="Center" Margin="0,0,8,0"/>
+   <ComboBox x:Name="Limit" Width="75" SelectionChanged="Limit_Changed" AutomationProperties.Name="Anzahl Chargen im Vergleich"/>
+   <TextBlock Text="abgeschlossene Chargen" VerticalAlignment="Center" Margin="8,0,12,0"/>
+   <Button Content="Aktualisieren" Click="Refresh_Click"/>
+  </WrapPanel>
+  <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
+  <DataGrid x:Name="ComparisonGrid" IsReadOnly="True" AutoGenerateColumns="False" SelectionMode="Single" MinHeight="120" MaxHeight="360" PreviewKeyDown="Grid_KeyDown"><DataGrid.Columns>
+   <DataGridTemplateColumn Header="Charge" Width="135"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="{Binding Batch.BatchLabel}" Click="Open_Click" Padding="5" ToolTip="Chargendetails und PDF-Bericht öffnen"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+   <DataGridTextColumn Header="Abschluss" Binding="{Binding Batch.CompletedText}" Width="155"/>
+   <DataGridTextColumn Header="Sollmenge" Binding="{Binding Batch.QuantityText}" Width="115"/>
+   <DataGridTextColumn Header="Gutmenge" Binding="{Binding GoodText}" Width="115"/>
+   <DataGridTextColumn Header="Ausschuss" Binding="{Binding ScrapText}" Width="115"/>
+   <DataGridTextColumn Header="Ausschuss %" Binding="{Binding ScrapPercentText}" Width="110"/>
+   <DataGridTextColumn Header="Laufzeit" Binding="{Binding RunText}" Width="110"/>
+   <DataGridTextColumn Header="Stillstand" Binding="{Binding DowntimeText}" Width="110"/>
+   <DataGridTextColumn Header="Gutmenge/h" Binding="{Binding RateText}" Width="120"/>
+   <DataGridTextColumn Header="Datenstand" Binding="{Binding DataNote}" Width="400"/>
+  </DataGrid.Columns></DataGrid>
+  <TextBlock Text="Unvollständige Schichten und abweichende Altdaten sind gekennzeichnet. Unterschiedliche Einheiten nicht direkt vergleichen. Ohne Abschlussdatum stehen Chargen am Ende der Liste." TextWrapping="Wrap" Style="{StaticResource SecondaryTextStyle}" Margin="0,8,0,0"/>
+ </StackPanel>
+</UserControl>

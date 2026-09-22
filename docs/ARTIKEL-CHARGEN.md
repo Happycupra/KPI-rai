@@ -34,6 +34,24 @@ Der CSV-Komplettexport enthält zusätzlich `artikel.csv`, `chargen.csv` und `ch
 
 Die Anwendung bleibt eine lokale WPF-/SQLite-Anwendung. Eine gemeinsame Netzwerkdatenbank oder ein HTTP-Server sind nicht Bestandteil dieses Ausbaus. `ArticleService` und `BatchService` bündeln die Fachlogik für eine spätere Trennung.
 
+## Chargenvergleich und PDF-Bericht
+
+Bei Auswahl eines Artikels zeigt **Abgeschlossene Chargen vergleichen** die letzten 10 abgeschlossenen Chargen; 25 oder 50 sind auswählbar. Die Liste sortiert nach Abschlussdatum, unbekannte Abschlussdaten stehen am Ende. Ein Klick auf die Charge öffnet ihre Details.
+
+Sollmenge, Gutmenge, Ausschuss, Ausschussquote, Laufzeit, erfasste Stillstände und Gutmenge pro Laufstunde stehen nebeneinander. Ausschussquote = Ausschuss / (Gutmenge + Ausschuss); Gutmenge pro Stunde = Gutmenge / Laufstunden. Die Mengen und Zeiten kommen ausschliesslich aus Ist-Erfassungen. Arbeitskarten werden nicht hinzuaddiert. Mehrere Erfassungen pro Schicht werden als einzelne Erfassungen addiert und entsprechend gekennzeichnet.
+
+Fehlende Erfassungen erscheinen als **Nicht erfasst**, echte Nullwerte bleiben null. Teilweise erfasste Produktionsschichten werden als unvollständig markiert. Bei widersprüchlichen historischen Chargen-, Artikel- oder Einheitenangaben sowie ungültigen Zahlen werden keine scheinbar vergleichbaren Summen ausgegeben. Unterschiedliche Einheiten verschiedener Chargen sind nicht automatisch umgerechnet. Erfasste Stillstände von 0 Minuten bedeuten nicht zwingend, dass keine Stillstände aufgetreten sind.
+
+**Chargenbericht als PDF speichern** in den Chargendetails exportiert Artikel, Charge, Auftragsnummer, Produktionszeitraum, Planmenge, Kennzahlen, Arbeitsgänge, Ist-Erfassungen, Stillstandsgründe und Bemerkungen. Offene Chargen erhalten die Kennzeichnung **Zwischenbericht**. Lange Texte werden umgebrochen und bei Bedarf auf mehrere A4-Seiten verteilt. Beobachter dürfen bestehende Chargen ebenfalls vergleichen und exportieren; der Export ändert keine Produktionsdaten.
+
+## Hinweis beim Programmstart
+
+Bei jedem Programmstart erscheint vor der Anmeldung ein Informationsdialog mit dem unveränderten Text:
+
+> Eigentum von Irajet Ramadani - nur zu Testzwecken zu verwenden
+
+Der Dialog wird mit **OK** geschlossen. Es gibt keine gespeicherte Bestätigung und keine Option zum dauerhaften Ausblenden.
+
 ## Prüfung
 
 ```powershell

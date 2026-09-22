@@ -17,6 +17,9 @@ internal static partial class Program
         app.InitializeComponent();
         var tests = new (string Name, Action Run)[]
         {
+            ("Batch comparison uses actuals without double counting", BatchComparisonMetrics),
+            ("Batch comparison marks missing, partial and inconsistent data", BatchComparisonMissingData),
+            ("Batch reports export multipage and missing-data PDFs", BatchReportExports),
             ("Articles create independent batches and preserve identity", ArticleBatchCreation),
             ("Batch lifecycle completes and reopens with audit", BatchLifecycle),
             ("Batch roles and historical actual snapshots", BatchRolesAndActuals),
