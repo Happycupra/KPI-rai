@@ -18,11 +18,11 @@
                 <TextBlock Text="{Binding SelectedDateText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" />
-                <Button Content="Heute" Height="34" Padding="14,0" Command="{Binding TodayCommand}" Margin="0,0,8,0" />
-                <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Width="145" Height="34" Margin="0,0,8,0" />
-                <Button Content="›" Width="38" Height="34" Command="{Binding NextDayCommand}" Margin="0,0,8,0" />
-                <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Width="145" Height="36" Margin="0,0,8,0" />
+                <Button Content="›" Width="38" Height="36" Command="{Binding NextDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
             </StackPanel>
         </Grid>
 
@@ -96,7 +96,7 @@
                                     <TextBlock Text="Mitarbeiter greifen und direkt auf die gewünschte Produktion ziehen."
                                                Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="Auto besetzen" Padding="12,5" Command="{Binding AutoStaffSelectedOrderCommand}" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" Content="Auto besetzen" Command="{Binding AutoStaffSelectedOrderCommand}" VerticalAlignment="Center" Style="{StaticResource ActionButtonStyle}"/>
                             </Grid>
 
                             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,10,0,10">
@@ -290,9 +290,9 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </Border>
-                        <Button Content="Speichern" Height="38" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
-                        <Button Content="Neue Zuweisung" Height="38" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" />
-                        <Button Content="Ausgewählte Zuweisung löschen" Height="38" Command="{Binding DeleteCommand}" />
+                        <Button Content="Speichern" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
+                        <Button Content="Neue Zuweisung" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
+                        <Button Content="Ausgewählte Zuweisung löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>
