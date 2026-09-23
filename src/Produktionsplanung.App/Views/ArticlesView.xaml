@@ -12,11 +12,11 @@
    <Button Content="Stammdaten-Import" Click="ImportMasterData_Click" Margin="0,0,8,0"/>
    <Button Content="Stammdaten-Vorlage" Click="SaveMasterDataTemplate_Click"/>
   </WrapPanel>
-  <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
-   <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0"/>
-   <Button Content="Artikel bearbeiten" Click="Edit_Click" Margin="0,0,8,0"/>
-   <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0"/>
-   <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryButtonStyle}"/>
+  <WrapPanel x:Name="EditActions" Margin="0,0,0,12" HorizontalAlignment="Center">
+   <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+   <Button Content="Artikel bearbeiten" Click="Edit_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+   <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0" Style="{StaticResource DangerActionButtonStyle}"/>
+   <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
   </WrapPanel>
   <TextBlock Text="Excel: Artikelimport separat oder Stammdaten-Vorlage mit Mitarbeitenden, Arbeitsplätzen, Schichten, Arbeitsplatz-Schichten und Produktionsaufträgen. Jeder Stammdatenimport startet mit Vorschau/Testlauf. Skill-Level 5 = Admin." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
