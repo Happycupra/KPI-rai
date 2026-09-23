@@ -1,6 +1,7 @@
 using System.Windows.Controls;
 using System.Windows.Data;
 using Produktionsplanung.App.ViewModels;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.Views;
 
@@ -50,8 +51,10 @@ public partial class SkillMatrixView : UserControl
             MatrixGrid.Columns.Add(new DataGridComboBoxColumn
             {
                 Header = qualification.Name,
-                ItemsSource = new[] { 0, 1, 2, 3 },
-                SelectedItemBinding = new Binding($"Levels[{qualification.Id}]")
+                ItemsSource = QualificationLevelCatalog.EmployeeChoices,
+                DisplayMemberPath = nameof(QualificationLevelOption.Name),
+                SelectedValuePath = nameof(QualificationLevelOption.Level),
+                SelectedValueBinding = new Binding($"Levels[{qualification.Id}]")
                 {
                     Mode = BindingMode.TwoWay,
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
