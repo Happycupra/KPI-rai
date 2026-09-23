@@ -21,7 +21,7 @@
             </StackPanel>
             <Button Grid.Column="1" Content="Einstellungen speichern"
                     VerticalAlignment="Center" Command="{Binding SaveSettingsCommand}"
-                    Style="{StaticResource PrimaryButtonStyle}" />
+                    Style="{StaticResource PrimaryActionButtonStyle}" />
         </Grid>
 
         <TabControl Grid.Row="1">
@@ -56,8 +56,8 @@
                                     <TextBlock Text="{Binding DatabasePath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,3,0,10" />
                                     <TextBlock Text="Einstellungen" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding SettingsPath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,3,0,14" />
-                                    <Button Content="Datenordner öffnen" HorizontalAlignment="Left"
-                                            Command="{Binding OpenDataDirectoryCommand}" />
+                                    <Button Content="Datenordner öffnen" HorizontalAlignment="Center"
+                                            Command="{Binding OpenDataDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -108,11 +108,11 @@
                                                Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </Grid>
 
-                                <WrapPanel>
+                                <WrapPanel HorizontalAlignment="Center">
                                     <Button Content="Backup jetzt erstellen" Command="{Binding CreateBackupCommand}" Margin="0,0,8,8"
-                                            Style="{StaticResource PrimaryButtonStyle}" />
-                                    <Button Content="Backup wiederherstellen" Command="{Binding RestoreBackupCommand}" Margin="0,0,8,8" />
-                                    <Button Content="SolutionCompakt neu starten" Command="{Binding RestartApplicationCommand}" Margin="0,0,0,8" />
+                                            Style="{StaticResource PrimaryActionButtonStyle}" />
+                                    <Button Content="Backup wiederherstellen" Command="{Binding RestoreBackupCommand}" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}" />
+                                    <Button Content="SolutionCompakt neu starten" Command="{Binding RestartApplicationCommand}" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
@@ -138,7 +138,7 @@
                                                Foreground="{StaticResource WarningBrush}" TextWrapping="Wrap" Margin="0,6,20,0" />
                                 </StackPanel>
                                 <Button Grid.Column="1" Content="Recovery-Code erneuern" VerticalAlignment="Center"
-                                        Command="{Binding ManageRecoveryCodeCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+                                        Command="{Binding ManageRecoveryCodeCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                             </Grid>
                         </Border>
 
@@ -203,8 +203,8 @@
                                                Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center" />
                                 </Grid>
 
-                                <Button Content="Alle Daten als CSV exportieren" HorizontalAlignment="Left"
-                                        Command="{Binding ExportAllCommand}" Style="{StaticResource PrimaryButtonStyle}" />
+                                <Button Content="Alle Daten als CSV exportieren" HorizontalAlignment="Center"
+                                        Command="{Binding ExportAllCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -224,8 +224,8 @@
                                     <TextBlock Text="Mit Zurücksetzen werden Navigation und Kalenderfilter auf die Standardansicht gestellt. Die vollständige Navigation wird beim nächsten Anmelden neu geladen."
                                                Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <Button Content="Persönliche Ansicht zurücksetzen" HorizontalAlignment="Left"
-                                        Command="{Binding ResetUiPreferencesCommand}" />
+                                <Button Content="Persönliche Ansicht zurücksetzen" HorizontalAlignment="Center"
+                                        Command="{Binding ResetUiPreferencesCommand}" Style="{StaticResource ActionButtonStyle}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
