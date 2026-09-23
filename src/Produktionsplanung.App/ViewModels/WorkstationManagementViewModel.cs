@@ -14,12 +14,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
     public ObservableCollection<Workstation> Workstations { get; } = new();
     public ObservableCollection<WorkstationQualificationOption> Qualifications { get; } = new();
     public ObservableCollection<WorkstationShiftRuleRow> ShiftRules { get; } = new();
-    public IReadOnlyList<SkillLevelChoice> SkillLevels { get; } = new[]
-    {
-        new SkillLevelChoice(1, "Level 1 · In Einarbeitung"),
-        new SkillLevelChoice(2, "Level 2 · Qualifiziert"),
-        new SkillLevelChoice(3, "Level 3 · Experte")
-    };
+    public IReadOnlyList<QualificationLevelOption> SkillLevels { get; } = QualificationLevelCatalog.RequirementChoices;
 
     [ObservableProperty] private Workstation? selectedWorkstation;
     [ObservableProperty] private string name = string.Empty;
@@ -28,7 +23,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
     [ObservableProperty] private int optimalStaff = 1;
     [ObservableProperty] private int maximumStaff = 1;
     [ObservableProperty] private WorkstationQualificationOption? selectedRequiredQualification;
-    [ObservableProperty] private SkillLevelChoice? selectedRequiredQualificationLevel;
+    [ObservableProperty] private QualificationLevelOption? selectedRequiredQualificationLevel;
     [ObservableProperty] private bool isActive = true;
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string shiftModelText = "Nicht konfiguriert";
@@ -45,8 +40,8 @@ public partial class WorkstationManagementViewModel : ObservableObject
         MaximumStaff = value.MaximumStaff;
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == value.RequiredQualificationId)
                                         ?? Qualifications.FirstOrDefault(x => x.Id is null);
-        SelectedRequiredQualificationLevel = SkillLevels.FirstOrDefault(x => x.Level == Math.Clamp(value.RequiredQualificationLevel, 1, 3))
-                                             ?? SkillLevels[1];
+        SelectedRequiredQualificationLevel = SkillLevels.FirstOrDefault(x => x.Level == Math.Clamp(value.RequiredQualificationLevel, 1, QualificationLevelCatalog.MaxLevel))
+                                             ?? SkillLevels.First(x => x.Level == QualificationLevelCatalog.Qualified);
         IsActive = value.IsActive;
         LoadShiftRules(value.Id);
         StatusMessage = string.Empty;
@@ -62,7 +57,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
         OptimalStaff = 1;
         MaximumStaff = 1;
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id is null);
-        SelectedRequiredQualificationLevel = SkillLevels[1];
+        SelectedRequiredQualificationLevel = SkillLevels.First(x => x.Level == QualificationLevelCatalog.Qualified);
         IsActive = true;
         LoadShiftRules(null);
         ApplyShiftPreset("1");
@@ -284,7 +279,7 @@ public partial class WorkstationManagementViewModel : ObservableObject
 
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == qualificationId)
                                         ?? Qualifications.FirstOrDefault(x => x.Id is null);
-        SelectedRequiredQualificationLevel ??= SkillLevels[1];
+        SelectedRequiredQualificationLevel ??= SkillLevels.First(x => x.Level == QualificationLevelCatalog.Qualified);
         SelectedWorkstation = selectId is null ? null : Workstations.FirstOrDefault(x => x.Id == selectId);
         if (selectId is null && ShiftRules.Count == 0)
             LoadShiftRules(null);
@@ -408,7 +403,6 @@ public partial class WorkstationManagementViewModel : ObservableObject
 }
 
 public sealed record WorkstationQualificationOption(int? Id, string Name);
-public sealed record SkillLevelChoice(int Level, string Name);
 
 public partial class WorkstationShiftRuleRow : ObservableObject
 {
