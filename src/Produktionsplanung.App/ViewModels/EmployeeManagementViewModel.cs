@@ -149,6 +149,13 @@ public partial class EmployeeManagementViewModel : ObservableObject
             return;
         }
 
+        var invalidSkill = SkillEditorRows.FirstOrDefault(x => !QualificationLevelCatalog.IsSupportedEmployeeLevel(x.Level));
+        if (invalidSkill is not null)
+        {
+            MessageBox.Show($"Ungültiges Skill-Level bei „{invalidSkill.QualificationName}“. Erlaubt sind 0, 1, 2, 3 und 5 (Admin).", "Eingabe prüfen");
+            return;
+        }
+
         using var db = new AppDbContext();
         if (db.Employees.Any(x => x.PersonnelNumber == PersonnelNumber && x.Id != EditingId))
         {
@@ -185,7 +192,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
 
         foreach (var skill in SkillEditorRows)
         {
-            var level = Math.Clamp(skill.Level, 0, 3);
+            var level = skill.Level;
             var existing = existingSkills.FirstOrDefault(x => x.QualificationId == skill.QualificationId);
             if (level == 0)
             {
@@ -520,19 +527,14 @@ public sealed class EmployeeSkillEditorRow : ObservableObject
     public int QualificationId { get; set; }
     public string QualificationName { get; set; } = string.Empty;
 
+    public IReadOnlyList<QualificationLevelOption> LevelChoices => QualificationLevelCatalog.EmployeeChoices;
+
     private int level;
     public int Level
     {
         get => level;
-        set => SetProperty(ref level, Math.Clamp(value, 0, 3));
+        set => SetProperty(ref level, QualificationLevelCatalog.IsSupportedEmployeeLevel(value) ? value : QualificationLevelCatalog.None);
     }
 
-    public string LevelText => Level switch
-    {
-        0 => "0 · keine",
-        1 => "1 · in Ausbildung",
-        2 => "2 · qualifiziert",
-        3 => "3 · Experte/Trainer",
-        _ => Level.ToString()
-    };
+    public string LevelText => QualificationLevelCatalog.DisplayName(Level);
 }
