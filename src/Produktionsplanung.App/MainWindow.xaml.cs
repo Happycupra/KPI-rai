@@ -112,8 +112,21 @@ public partial class MainWindow : Window
     public void CreateBatch(int? articleId = null)
     {
         if (!SessionService.IsPlannerOrAdmin || !CanLeaveCurrentContent()) return;
-        var dialog = new NewBatchWindow(articleId) { Owner = this };
-        if (dialog.ShowDialog() == true) OpenBatch(dialog.CreatedId);
+        try
+        {
+            var dialog = new NewBatchWindow(articleId) { Owner = this };
+            if (dialog.ShowDialog() == true && dialog.CreatedId > 0)
+                OpenBatch(dialog.CreatedId);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                this,
+                "Die Chargenerfassung konnte nicht geöffnet werden.\n\n" + ex.Message,
+                "Neue Charge",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
     private void ShowArticles_Click(object sender, RoutedEventArgs e) => OpenArticles();
     private void ShowBatches_Click(object sender, RoutedEventArgs e) => OpenBatchArchive();
