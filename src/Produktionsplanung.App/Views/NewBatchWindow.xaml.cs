@@ -10,12 +10,20 @@ namespace Produktionsplanung.App.Views;
 
 public partial class NewBatchWindow : Window
 {
-    private readonly ProductionOrderManagementViewModel plan = new();
+    private readonly ProductionOrderManagementViewModel plan;
     public int CreatedId { get; private set; }
     public NewBatchWindow(int? articleId = null)
     {
         InitializeComponent();
-        DataContext = plan;
+        try
+        {
+            plan = new ProductionOrderManagementViewModel();
+            DataContext = plan;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Planungsdaten für die neue Charge konnten nicht geladen werden. " + ex.Message, ex);
+        }
         using var db = new AppDbContext();
         var routings = db.ManufacturingRoutings.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name).ToList();
         routings.Insert(0, new ManufacturingRouting { Id = 0, Name = "Artikelvorgabe / ohne Arbeitsplan" });
