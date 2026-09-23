@@ -145,10 +145,10 @@
                         </Grid>
 
                         <CheckBox Content="Arbeitsplatz aktiv" IsChecked="{Binding IsActive}" Margin="0,2,0,14"/>
-                        <WrapPanel>
-                            <Button Content="Neu" Command="{Binding NewWorkstationCommand}" Padding="14,7" Margin="0,0,8,0"/>
-                            <Button Content="Speichern" Command="{Binding SaveCommand}" Padding="16,7" Margin="0,0,8,0" Style="{StaticResource PrimaryButtonStyle}"/>
-                            <Button Content="Löschen" Command="{Binding DeleteCommand}" Padding="14,7"/>
+                        <WrapPanel HorizontalAlignment="Center">
+                            <Button Content="Neu" Command="{Binding NewWorkstationCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+                            <Button Content="Speichern" Command="{Binding SaveCommand}" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                            <Button Content="Löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
                         </WrapPanel>
                         <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="#B45309" Margin="0,14,0,0"/>
                     </StackPanel>
