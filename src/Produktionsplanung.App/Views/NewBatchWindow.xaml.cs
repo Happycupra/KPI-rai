@@ -17,7 +17,7 @@ public partial class NewBatchWindow : Window
         InitializeComponent();
         try
         {
-            plan = new ProductionOrderManagementViewModel();
+            plan = new ProductionOrderManagementViewModel(loadExistingOrders: false);
             DataContext = plan;
         }
         catch (Exception ex)
