@@ -34,10 +34,11 @@
                                 <Border x:Name="ActiveRail" Grid.Column="0" Width="3" Margin="0,8,0,8"
                                         CornerRadius="0,3,3,0" HorizontalAlignment="Left"
                                         Background="{TemplateBinding BorderBrush}" />
-                                <Border x:Name="IconChrome" Grid.Column="0" Width="30" Height="30" CornerRadius="7"
-                                        Background="#173B56" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border x:Name="IconChrome" Grid.Column="0" Width="32" Height="32" CornerRadius="8"
+                                        Background="{Binding CommandParameter, RelativeSource={RelativeSource TemplatedParent}}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <TextBlock x:Name="NavIcon" Text="{TemplateBinding Tag}" FontFamily="Segoe UI Emoji"
-                                               FontSize="17" Foreground="{TemplateBinding Foreground}"
+                                               FontSize="17" Foreground="White"
                                                VerticalAlignment="Center" HorizontalAlignment="Center" />
                                 </Border>
                                 <TextBlock x:Name="NavLabel" Grid.Column="1" Text="{TemplateBinding Content}" Margin="6,0,6,0"
@@ -58,7 +59,6 @@
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="NavChrome" Property="Background" Value="{StaticResource SidebarHoverBrush}" />
-                                <Setter TargetName="IconChrome" Property="Background" Value="#24506F" />
                                 <Setter TargetName="NavChevron" Property="Foreground" Value="#D9E6F2" />
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
@@ -154,26 +154,26 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="NavigationPanel">
                         <Button x:Name="PlanningGroupHeader" Content="ÜBERSICHT &amp; PLANUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
-                        <Button x:Name="DashboardButton" Tag="🏠" Content="Dashboard" ToolTip="Dashboard" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
-                        <Button x:Name="PlanningCalendarButton" Tag="📅" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
-                        <Button x:Name="WorkTimeCalendarButton" Tag="🕒" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
+                        <Button x:Name="DashboardButton" Tag="🏠" Content="Dashboard" ToolTip="Dashboard" CommandParameter="#3B82F6" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
+                        <Button x:Name="PlanningCalendarButton" Tag="📅" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" CommandParameter="#8B5CF6" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
+                        <Button x:Name="WorkTimeCalendarButton" Tag="🕒" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" CommandParameter="#06B6D4" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
 
                         <Button x:Name="ProductionGroupHeader" Content="PRODUKTION" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="BatchesButton" Tag="📦" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
-                        <Button x:Name="ProductionOrdersButton" Tag="📋" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
-                        <Button x:Name="ManufacturingControlButton" Tag="🏭" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
-                        <Button x:Name="ProductionActualButton" Tag="📈" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
-                        <Button x:Name="AnalyticsButton" Tag="📊" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
+                        <Button x:Name="BatchesButton" Tag="📦" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" CommandParameter="#F59E0B" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
+                        <Button x:Name="ProductionOrdersButton" Tag="📋" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" CommandParameter="#F97316" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
+                        <Button x:Name="ManufacturingControlButton" Tag="🏭" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" CommandParameter="#EF4444" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
+                        <Button x:Name="ProductionActualButton" Tag="📈" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" CommandParameter="#10B981" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
+                        <Button x:Name="AnalyticsButton" Tag="📊" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" CommandParameter="#6366F1" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
                         <Button x:Name="MasterDataGroupHeader" Content="STAMMDATEN &amp; PERSONAL" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="ArticlesButton" Tag="🏷️" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
-                        <Button x:Name="EmployeesButton" Tag="👥" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
-                        <Button x:Name="WorkstationsButton" Tag="⚙️" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
-                        <Button x:Name="AbsencesButton" Tag="📆" Content="Abwesenheiten" ToolTip="Abwesenheiten" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
+                        <Button x:Name="ArticlesButton" Tag="🏷️" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" CommandParameter="#14B8A6" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
+                        <Button x:Name="EmployeesButton" Tag="👥" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" CommandParameter="#EC4899" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
+                        <Button x:Name="WorkstationsButton" Tag="⚙️" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" CommandParameter="#0EA5E9" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
+                        <Button x:Name="AbsencesButton" Tag="📆" Content="Abwesenheiten" ToolTip="Abwesenheiten" CommandParameter="#A855F7" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
 
                         <Button x:Name="SystemGroupHeader" Content="VERWALTUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="UserAdminButton" Tag="👤" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
-                        <Button x:Name="SettingsButton" Tag="🔧" Content="Einstellungen" ToolTip="Einstellungen" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
+                        <Button x:Name="UserAdminButton" Tag="👤" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" CommandParameter="#EAB308" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
+                        <Button x:Name="SettingsButton" Tag="🔧" Content="Einstellungen" ToolTip="Einstellungen" CommandParameter="#94A3B8" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
