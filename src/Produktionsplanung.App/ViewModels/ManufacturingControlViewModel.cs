@@ -18,6 +18,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
     public ObservableCollection<CapacityRow> CapacityRows { get; } = new();
     public ObservableCollection<Workstation> Workstations { get; } = new();
     public ObservableCollection<Qualification> Qualifications { get; } = new();
+    public IReadOnlyList<QualificationLevelOption> QualificationLevelChoices { get; } = QualificationLevelCatalog.RequirementChoices;
     public ObservableCollection<Employee> Employees { get; } = new();
     public ObservableCollection<JobCardEmployeeChoice> JobCardEmployeeChoices { get; } = new();
     public ObservableCollection<OrderCockpitRow> CockpitOrders { get; } = new();
@@ -97,7 +98,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         DefaultMinutes = value.DefaultMinutes;
         OperationRequiredStaff = value.RequiredStaff;
         SelectedRequiredQualification = Qualifications.FirstOrDefault(x => x.Id == value.RequiredQualificationId);
-        RequiredQualificationLevel = value.RequiredQualificationLevel <= 0 ? 1 : value.RequiredQualificationLevel;
+        RequiredQualificationLevel = value.RequiredQualificationLevel <= 0 ? QualificationLevelCatalog.Training : Math.Clamp(value.RequiredQualificationLevel, QualificationLevelCatalog.Training, QualificationLevelCatalog.MaxLevel);
         OperationIsActive = value.IsActive;
         StatusMessage = string.Empty;
     }
@@ -285,6 +286,11 @@ public partial class ManufacturingControlViewModel : ObservableObject
             StatusMessage = "Der Personalbedarf muss zwischen 1 und 100 liegen.";
             return;
         }
+        if (SelectedRequiredQualification is not null && !QualificationLevelCatalog.IsSupportedRequirementLevel(RequiredQualificationLevel))
+        {
+            StatusMessage = "Das Mindest-Level muss zwischen 1 und 5 liegen.";
+            return;
+        }
 
         using var db = new AppDbContext();
         var id = SelectedOperation?.Id ?? 0;
@@ -312,7 +318,7 @@ public partial class ManufacturingControlViewModel : ObservableObject
         entity.DefaultMinutes = DefaultMinutes;
         entity.RequiredStaff = OperationRequiredStaff;
         entity.RequiredQualificationId = SelectedRequiredQualification?.Id;
-        entity.RequiredQualificationLevel = SelectedRequiredQualification is null ? 0 : Math.Max(1, RequiredQualificationLevel);
+        entity.RequiredQualificationLevel = SelectedRequiredQualification is null ? 0 : RequiredQualificationLevel;
         entity.IsActive = OperationIsActive;
         db.SaveChanges();
 
