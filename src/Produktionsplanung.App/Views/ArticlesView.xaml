@@ -8,7 +8,9 @@
    <CheckBox x:Name="ActiveOnly" Content="Nur aktive Artikel" IsChecked="True" Checked="Active_Changed" Unchecked="Active_Changed" VerticalAlignment="Center" Margin="0,0,12,0"/>
    <Button Content="Aktualisieren" Click="Refresh_Click" Margin="0,0,8,0"/>
    <Button Content="Excel importieren" Click="ImportExcel_Click" Margin="0,0,8,0"/>
-   <Button Content="Excel-Vorlage" Click="SaveExcelTemplate_Click"/>
+   <Button Content="Excel-Vorlage" Click="SaveExcelTemplate_Click" Margin="0,0,8,0"/>
+   <Button Content="Stammdaten-Import" Click="ImportMasterData_Click" Margin="0,0,8,0"/>
+   <Button Content="Stammdaten-Vorlage" Click="SaveMasterDataTemplate_Click"/>
   </WrapPanel>
   <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
    <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0"/>
