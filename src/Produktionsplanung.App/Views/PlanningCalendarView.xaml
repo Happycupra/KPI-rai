@@ -297,11 +297,11 @@
                                         <TextBlock Text="  ▾" FontSize="9" Foreground="{StaticResource MutedTextBrush}"
                                                    VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" Content="↺" Width="25" Height="23" Padding="0"
+                                    <Button Grid.Column="1" Content="↺" Width="28" Height="28" Padding="0"
                                             Command="{Binding ResetFiltersCommand}"
                                             ToolTip="Filter zurücksetzen"
                                             Foreground="{StaticResource MutedTextBrush}"
-                                            Background="Transparent" BorderThickness="0"/>
+                                            Background="Transparent" BorderThickness="0" Style="{StaticResource CompactButtonStyle}"/>
                                 </Grid>
                             </Border>
                         </Expander.Header>
