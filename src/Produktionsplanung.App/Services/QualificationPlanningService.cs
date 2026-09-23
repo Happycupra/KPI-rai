@@ -12,7 +12,7 @@ public static class QualificationPlanningService
         if (!workstation.RequiredQualificationId.HasValue || workstation.RequiredQualificationLevel <= 0)
             return new SkillCheckResult(true, false, null, 0, 0, "Keine Pflichtqualifikation hinterlegt.");
         var employeeLevel = db.EmployeeQualifications.AsNoTracking().Where(x => x.EmployeeId == employeeId && x.QualificationId == workstation.RequiredQualificationId.Value).Select(x => (int?)x.Level).FirstOrDefault() ?? 0;
-        var requiredLevel = Math.Clamp(workstation.RequiredQualificationLevel, 1, 3);
+        var requiredLevel = Math.Clamp(workstation.RequiredQualificationLevel, 1, QualificationLevelCatalog.MaxLevel);
         var qualified = employeeLevel >= requiredLevel;
         var qualificationName = workstation.RequiredQualification?.Name ?? "Qualifikation";
         var message = qualified ? $"{qualificationName}: Level {employeeLevel} erfüllt Mindestlevel {requiredLevel}." : $"{qualificationName}: benötigt Level {requiredLevel}, Mitarbeiter hat Level {employeeLevel}.";
