@@ -8,6 +8,7 @@ using Produktionsplanung.App.Views;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 internal static partial class Program
 {
@@ -40,6 +41,7 @@ internal static partial class Program
             ("Unified planning staffs production and uses three-letter initials", UnifiedPlanningStaffing),
             ("Planning side panels can be hidden and restored", PlanningPanelToggle),
             ("Planning sidebar is compact with filters collapsed by default", CompactPlanningSidebar),
+            ("Sidebar modules keep distinct colors and active-state highlighting", ColoredNavigationActiveState),
             ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
@@ -618,6 +620,53 @@ internal static partial class Program
             $"Planning sidebar is not compact: {leftColumn?.Width.Value}");
         Check(filter is not null && !filter.IsExpanded,
             "Planning filters should be collapsed by default");
+    }
+
+    private static void ColoredNavigationActiveState()
+    {
+        Planner();
+        var window = new Produktionsplanung.App.MainWindow();
+        try
+        {
+            var names = new[]
+            {
+                "DashboardButton", "PlanningCalendarButton", "WorkTimeCalendarButton",
+                "BatchesButton", "ProductionOrdersButton", "ManufacturingControlButton",
+                "ProductionActualButton", "AnalyticsButton", "ArticlesButton", "EmployeesButton",
+                "WorkstationsButton", "AbsencesButton", "UserAdminButton", "SettingsButton"
+            };
+            var buttons = names.Select(name => (Button?)window.FindName(name))
+                .Where(x => x is not null)
+                .Cast<Button>()
+                .ToArray();
+
+            Check(buttons.Length == names.Length, "Not all navigation buttons were found.");
+            Check(buttons.All(x => x.CommandParameter is not null),
+                "A navigation module is missing its persistent accent color.");
+            Check(buttons.Select(x => x.CommandParameter!.ToString()).Distinct().Count() == buttons.Length,
+                "Navigation module accent colors are not unique.");
+
+            var dashboard = (Button)window.FindName("DashboardButton");
+            var orders = (Button)window.FindName("ProductionOrdersButton");
+
+            Check(dashboard.BorderBrush is SolidColorBrush activeDashboard && activeDashboard.Color.A > 0,
+                "Dashboard is not visibly marked as the active area after startup.");
+            Check(orders.BorderBrush is SolidColorBrush inactiveOrders && inactiveOrders.Color.A == 0,
+                "Inactive navigation area should not show an active border.");
+
+            orders.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+            Check(orders.BorderBrush is SolidColorBrush activeOrders && activeOrders.Color.A > 0,
+                "Selected production orders area did not receive its active accent.");
+            Check(orders.Background is SolidColorBrush activeBackground && activeBackground.Color.A > 0,
+                "Selected production orders area did not receive a tinted active background.");
+            Check(dashboard.BorderBrush is SolidColorBrush inactiveDashboard && inactiveDashboard.Color.A == 0,
+                "Previous navigation area stayed active after switching modules.");
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 
     private static void CompactEmployeeDirectory()
