@@ -15,8 +15,8 @@
                                FontSize="15" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="+ Neue Erfassung" Height="34" Padding="14,0" Command="{Binding NewActualCommand}" Margin="0,0,8,0" />
-                    <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+                    <Button Content="+ Neue Erfassung" Command="{Binding NewActualCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                    <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
                 </StackPanel>
             </Grid>
 
@@ -156,8 +156,8 @@
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="62" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
 
                         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,8" />
-                        <Button Content="Ist-Erfassung speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" />
-                        <Button Content="Ausgewählte Erfassung löschen" Height="36" Command="{Binding DeleteActualCommand}" />
+                        <Button Content="Ist-Erfassung speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
+                        <Button Content="Ausgewählte Erfassung löschen" Command="{Binding DeleteActualCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -182,7 +182,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <Button Content="Ausgewählten Stillstand löschen" Command="{Binding DeleteDowntimeCommand}"
-                                Width="210" Height="34" HorizontalAlignment="Left" Margin="0,10,0,0" />
+                                HorizontalAlignment="Center" Margin="0,10,0,0" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
@@ -193,7 +193,7 @@
                         <TextBox Text="{Binding DowntimeMinutes, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Margin="0,0,0,12" />
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding DowntimeComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
-                        <Button Content="Stillstand erfassen" Height="36" Command="{Binding AddDowntimeCommand}" />
+                        <Button Content="Stillstand erfassen" Command="{Binding AddDowntimeCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                     </StackPanel>
                 </Grid>
             </Border>
