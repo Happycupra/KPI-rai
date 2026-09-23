@@ -40,18 +40,17 @@
                                  TextAlignment="Center" Height="42" VerticalContentAlignment="Center" />
                     </StackPanel>
                 </Border>
-                <Button Content="In Zwischenablage kopieren" Height="36" Padding="16,0" HorizontalAlignment="Left"
-                        Click="Copy_Click" />
+                <Button Content="In Zwischenablage kopieren" HorizontalAlignment="Center" Click="Copy_Click" Style="{StaticResource ActionButtonStyle}" />
                 <TextBlock x:Name="CopyStatusBlock" Foreground="#15803D" Margin="0,8,0,0" />
             </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button x:Name="CancelButton" Content="Abbrechen" Width="100" Height="36" IsCancel="True" Margin="0,0,8,0" />
-            <Button x:Name="GenerateButton" Content="Neuen Code erzeugen" Width="150" Height="36" IsDefault="True"
-                    Click="Generate_Click" Style="{StaticResource PrimaryButtonStyle}" />
-            <Button x:Name="DoneButton" Content="Fertig" Width="100" Height="36" Visibility="Collapsed"
-                    Click="Done_Click" Style="{StaticResource PrimaryButtonStyle}" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+            <Button x:Name="CancelButton" Content="Abbrechen" Width="104" IsCancel="True" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+            <Button x:Name="GenerateButton" Content="Neuen Code erzeugen" Width="160" IsDefault="True"
+                    Click="Generate_Click" Style="{StaticResource PrimaryActionButtonStyle}" />
+            <Button x:Name="DoneButton" Content="Fertig" Width="104" Visibility="Collapsed"
+                    Click="Done_Click" Style="{StaticResource PrimaryActionButtonStyle}" />
         </StackPanel>
     </Grid>
 </Window>
