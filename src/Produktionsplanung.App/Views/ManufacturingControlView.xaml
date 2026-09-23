@@ -454,7 +454,7 @@
                                             <StackPanel Grid.Column="2"><TextBlock Text="Personalbedarf" FontWeight="SemiBold"/><TextBox Text="{Binding OperationRequiredStaff}" Margin="0,5,0,0"/></StackPanel>
                                         </Grid>
                                         <TextBlock Text="Pflichtqualifikation" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,10"/>
-                                        <TextBlock Text="Mindest-Level" FontWeight="SemiBold"/><TextBox Text="{Binding RequiredQualificationLevel}" Margin="0,5,0,10"/>
+                                        <TextBlock Text="Mindest-Level" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding QualificationLevelChoices}" DisplayMemberPath="Name" SelectedValuePath="Level" SelectedValue="{Binding RequiredQualificationLevel, Mode=TwoWay}" Margin="0,5,0,10"/>
                                         <CheckBox Content="Arbeitsgang aktiv" IsChecked="{Binding OperationIsActive}" Margin="0,0,0,16"/>
                                         <WrapPanel><Button Content="Neu" Command="{Binding NewOperationCommand}" Margin="0,0,8,0"/><Button Content="Speichern" Command="{Binding SaveOperationCommand}" Style="{StaticResource PrimaryButtonStyle}"/></WrapPanel>
                                     </StackPanel>
