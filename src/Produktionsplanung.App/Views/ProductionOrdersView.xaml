@@ -18,9 +18,9 @@
                 <TextBlock Text="Aufträge anlegen, planen, besetzen und bis zum Abschluss verfolgen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="Chargendetails" Click="Details_Click" Margin="0,0,8,0"/>
-                <Button Content="+ Neue Charge" Height="34" Padding="14,0" Click="NewBatch_Click" Margin="0,0,8,0" />
-                <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+                <Button Content="Chargendetails" Click="Details_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+                <Button Content="+ Neue Charge" Click="NewBatch_Click" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}" />
+                <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
             </StackPanel>
         </Grid>
 
@@ -276,9 +276,9 @@
                                 </TextBlock.Style>
                             </TextBlock>
                         </Border>
-                        <Button Content="Speichern" Height="38" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryButtonStyle}" />
-                        <Button Content="Neue Charge" Height="38" Click="NewBatch_Click" Margin="0,0,0,8" />
-                        <Button Content="Ausgewählten Auftrag löschen" Height="38" Command="{Binding DeleteCommand}" />
+                        <Button Content="Speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
+                        <Button Content="Neue Charge" Click="NewBatch_Click" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
+                        <Button Content="Ausgewählten Auftrag löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

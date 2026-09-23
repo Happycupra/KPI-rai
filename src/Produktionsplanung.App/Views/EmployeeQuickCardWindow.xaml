@@ -31,7 +31,7 @@
                     </TextBlock>
                 </StackPanel>
                 <Button Grid.Column="2" Content="✕" Width="32" Height="32" Click="Close_Click"
-                        Background="Transparent" BorderThickness="0" FontSize="15"/>
+                        Background="Transparent" BorderThickness="0" FontSize="15" Style="{StaticResource CompactButtonStyle}"/>
             </Grid>
         </Border>
 
@@ -137,10 +137,10 @@
         </ScrollViewer>
 
         <Border Grid.Row="2" Background="{StaticResource CardBrush}" Padding="14" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0">
-            <WrapPanel HorizontalAlignment="Right">
-                <Button Content="Aktualisieren" Padding="12,7" Margin="0,0,8,0" Click="Refresh_Click"/>
-                <Button Content="Tagesplan öffnen" Padding="14,7" Margin="0,0,8,0" Click="OpenDayPlan_Click"/>
-                <Button Content="Stammdaten öffnen" Padding="14,7" Click="OpenEmployee_Click"/>
+            <WrapPanel HorizontalAlignment="Center">
+                <Button Content="Aktualisieren" Margin="0,0,8,0" Click="Refresh_Click" Style="{StaticResource ActionButtonStyle}"/>
+                <Button Content="Tagesplan öffnen" Margin="0,0,8,0" Click="OpenDayPlan_Click" Style="{StaticResource ActionButtonStyle}"/>
+                <Button Content="Stammdaten öffnen" Click="OpenEmployee_Click" Style="{StaticResource ActionButtonStyle}"/>
             </WrapPanel>
         </Border>
     </Grid>

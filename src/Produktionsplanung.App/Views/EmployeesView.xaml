@@ -281,7 +281,7 @@
                         <Button Grid.Column="1" Content="×" Width="32" Height="32"
                                 FontSize="17" Padding="0"
                                 ToolTip="Bearbeitung schliessen"
-                                Click="CloseEditor_Click"/>
+                                Click="CloseEditor_Click" Style="{StaticResource CompactButtonStyle}"/>
                     </Grid>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
@@ -343,7 +343,7 @@
                                 <StackPanel>
                                     <TextBlock Text="Skills / Qualifikationen" FontWeight="SemiBold"
                                                Foreground="{StaticResource TextBrush}"/>
-                                    <TextBlock Text="0 = keine · 1 = Ausbildung · 2 = qualifiziert · 3 = Experte/Trainer"
+                                    <TextBlock Text="0 = keine · 1 = Ausbildung · 2 = qualifiziert · 3 = Experte/Trainer · 4 = Level 4 · 5 = Admin"
                                                FontSize="9" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,8"/>
                                     <ItemsControl ItemsSource="{Binding SkillEditorRows}">
                                         <ItemsControl.ItemTemplate>
@@ -382,24 +382,16 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Grid Grid.Row="2" Margin="0,12,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <WrapPanel>
-                            <Button Content="Deaktivieren" Command="{Binding DeactivateCommand}"
-                                    Padding="11,6" Margin="0,0,6,0"/>
-                            <Button Content="Aktivieren" Command="{Binding ActivateCommand}"
-                                    Padding="11,6" Margin="0,0,6,0"/>
-                            <Button Content="Löschen" Command="{Binding DeleteCommand}"
-                                    Padding="11,6"/>
-                        </WrapPanel>
-                        <Button Grid.Column="1" Content="Speichern"
-                                Command="{Binding SaveCommand}"
-                                Background="{StaticResource PrimaryBrush}" Foreground="White"
-                                Padding="18,7" Margin="10,0,0,0"/>
-                    </Grid>
+                    <WrapPanel Grid.Row="2" Margin="0,12,0,0" HorizontalAlignment="Center">
+                        <Button Content="Deaktivieren" Command="{Binding DeactivateCommand}"
+                                Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
+                        <Button Content="Aktivieren" Command="{Binding ActivateCommand}"
+                                Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
+                        <Button Content="Löschen" Command="{Binding DeleteCommand}"
+                                Margin="0,0,6,0" Style="{StaticResource DangerActionButtonStyle}"/>
+                        <Button Content="Speichern" Command="{Binding SaveCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}"/>
+                    </WrapPanel>
                 </Grid>
             </Border>
         </Grid>

@@ -8,7 +8,7 @@
    <TextBlock Text="Letzte" VerticalAlignment="Center" Margin="0,0,8,0"/>
    <ComboBox x:Name="Limit" Width="75" SelectionChanged="Limit_Changed" AutomationProperties.Name="Anzahl Chargen im Vergleich"/>
    <TextBlock Text="abgeschlossene Chargen" VerticalAlignment="Center" Margin="8,0,12,0"/>
-   <Button Content="Aktualisieren" Click="Refresh_Click"/>
+   <Button Content="Aktualisieren" Click="Refresh_Click" Style="{StaticResource ActionButtonStyle}"/>
   </WrapPanel>
   <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <DataGrid x:Name="ComparisonGrid" IsReadOnly="True" AutoGenerateColumns="False" SelectionMode="Single" MinHeight="120" MaxHeight="360" PreviewKeyDown="Grid_KeyDown"><DataGrid.Columns>

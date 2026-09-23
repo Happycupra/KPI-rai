@@ -33,8 +33,8 @@
 
             <TextBlock x:Name="StatusBlock" Foreground="#DC2626" TextWrapping="Wrap" MinHeight="22" Margin="0,0,0,10" />
 
-            <Button x:Name="SubmitButton" Content="Anmelden" Height="40" Click="Submit_Click" IsDefault="True" Style="{StaticResource PrimaryButtonStyle}" />
-            <Button Content="Abbrechen" Height="34" Margin="0,8,0,0" Click="Cancel_Click" IsCancel="True" />
+            <Button x:Name="SubmitButton" Content="Anmelden" Height="40" Click="Submit_Click" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}" />
+            <Button Content="Abbrechen" Margin="0,8,0,0" Click="Cancel_Click" IsCancel="True" Style="{StaticResource ActionButtonStyle}" />
         </StackPanel>
     </Grid>
 </Window>

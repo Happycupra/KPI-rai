@@ -26,13 +26,13 @@
                 <TextBlock Text="{Binding WeekRangeText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" />
-                <Button Content="Diese Woche" Height="34" Padding="14,0" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" />
-                <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="34" Margin="0,0,8,0" />
-                <Button Content="›" Width="38" Height="34" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" />
+                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <Button Content="Diese Woche" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="36" Margin="0,0,8,0" />
+                <Button Content="›" Width="38" Height="36" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
                 <CheckBox x:Name="ExportWeekendsCheckBox" Content="WE im PDF" IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="Samstag und Sonntag im PDF einschliessen" />
-                <Button Content="PDF Wochenplan" Height="34" Padding="14,0" Margin="0,0,8,0" Click="ExportWeeklyPlanPdf_Click" />
-                <Button Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" />
+                <Button Content="PDF Wochenplan" Margin="0,0,8,0" Click="ExportWeeklyPlanPdf_Click" Style="{StaticResource ActionButtonStyle}" />
+                <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
             </StackPanel>
         </Grid>
 
@@ -47,8 +47,8 @@
                                        Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,0" />
                             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,8,0,0" />
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Vorwoche kopieren" Padding="18,8" Margin="18,0,0,0"
-                                VerticalAlignment="Center" Command="{Binding CopyPreviousWeekCommand}" />
+                        <Button Grid.Column="1" Content="Vorwoche kopieren" Margin="18,0,0,0"
+                                VerticalAlignment="Center" Command="{Binding CopyPreviousWeekCommand}" Style="{StaticResource ActionButtonStyle}" />
                     </Grid>
                 </Border>
 

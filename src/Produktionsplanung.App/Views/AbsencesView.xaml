@@ -29,10 +29,10 @@
                     <TextBlock Text="Startdatum"/><DatePicker SelectedDate="{Binding StartDate}" Margin="0,4,0,10"/>
                     <TextBlock Text="Enddatum"/><DatePicker SelectedDate="{Binding EndDate}" Margin="0,4,0,10"/>
                     <TextBlock Text="Kommentar"/><TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" Height="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,16"/>
-                    <WrapPanel>
-                        <Button Content="Neu" Command="{Binding NewAbsenceCommand}" Padding="14,7" Margin="0,0,8,0"/>
-                        <Button Content="Speichern" Command="{Binding SaveCommand}" Padding="14,7" Margin="0,0,8,0"/>
-                        <Button Content="Löschen" Command="{Binding DeleteCommand}" Padding="14,7"/>
+                    <WrapPanel HorizontalAlignment="Center">
+                        <Button Content="Neu" Command="{Binding NewAbsenceCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+                        <Button Content="Speichern" Command="{Binding SaveCommand}" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                        <Button Content="Löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
                     </WrapPanel>
                     <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Foreground="#B45309" Margin="0,14,0,0"/>
                 </StackPanel>

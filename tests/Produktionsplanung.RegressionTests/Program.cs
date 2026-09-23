@@ -42,6 +42,7 @@ internal static partial class Program
             ("Planning side panels can be hidden and restored", PlanningPanelToggle),
             ("Planning sidebar is compact with filters collapsed by default", CompactPlanningSidebar),
             ("Sidebar modules keep distinct colors and active-state highlighting", ColoredNavigationActiveState),
+            ("Standard action buttons are centered and consistently sized", StandardActionButtons),
             ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
@@ -620,6 +621,62 @@ internal static partial class Program
             $"Planning sidebar is not compact: {leftColumn?.Width.Value}");
         Check(filter is not null && !filter.IsExpanded,
             "Planning filters should be collapsed by default");
+    }
+
+    private static void StandardActionButtons()
+    {
+        var actionStyle = (Style)Application.Current.FindResource("ActionButtonStyle");
+        var primaryStyle = (Style)Application.Current.FindResource("PrimaryActionButtonStyle");
+        var dangerStyle = (Style)Application.Current.FindResource("DangerActionButtonStyle");
+        var compactStyle = (Style)Application.Current.FindResource("CompactButtonStyle");
+
+        static object? SetterValue(Style style, DependencyProperty property) =>
+            style.Setters.OfType<Setter>().LastOrDefault(x => x.Property == property)?.Value;
+
+        foreach (var style in new[] { actionStyle, primaryStyle, dangerStyle })
+        {
+            Check(Equals(SetterValue(style, Control.HorizontalContentAlignmentProperty), HorizontalAlignment.Center),
+                "Action button style is not horizontally centered.");
+            Check(Equals(SetterValue(style, Control.VerticalContentAlignmentProperty), VerticalAlignment.Center),
+                "Action button style is not vertically centered.");
+            Check(Convert.ToDouble(SetterValue(style, FrameworkElement.MinHeightProperty)) >= 38,
+                "Action button minimum height is below the UI standard.");
+            Check(Convert.ToDouble(SetterValue(style, FrameworkElement.MinWidthProperty)) >= 104,
+                "Action button minimum width is below the UI standard.");
+        }
+
+        Check(Equals(SetterValue(compactStyle, Control.HorizontalContentAlignmentProperty), HorizontalAlignment.Center),
+            "Compact icon button style is not horizontally centered.");
+        Check(Equals(SetterValue(compactStyle, Control.VerticalContentAlignmentProperty), VerticalAlignment.Center),
+            "Compact icon button style is not vertically centered.");
+
+        var views = new FrameworkElement[]
+        {
+            new ShiftsView(),
+            new AbsencesView(),
+            new WorkstationsView(),
+            new ArticlesView(),
+            new ProductionOrdersView(),
+            new ProductionActualView(),
+            new SkillMatrixView(),
+            new DashboardView()
+        };
+
+        foreach (var view in views)
+        {
+            foreach (var button in LogicalDescendants<Button>(view))
+            {
+                if (button.Style == actionStyle || button.Style == primaryStyle || button.Style == dangerStyle)
+                {
+                    Check(button.HorizontalContentAlignment == HorizontalAlignment.Center,
+                        $"Button '{button.Content}' in {view.GetType().Name} is not horizontally centered.");
+                    Check(button.VerticalContentAlignment == VerticalAlignment.Center,
+                        $"Button '{button.Content}' in {view.GetType().Name} is not vertically centered.");
+                    Check(button.MinHeight >= 38,
+                        $"Button '{button.Content}' in {view.GetType().Name} is below the standard height.");
+                }
+            }
+        }
     }
 
     private static void ColoredNavigationActiveState()

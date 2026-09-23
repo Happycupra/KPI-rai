@@ -5,7 +5,7 @@
              SizeChanged="PlanningCalendarView_SizeChanged">
     <UserControl.Resources>
         <Style x:Key="CalendarModeButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="MinWidth" Value="72"/>
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
@@ -183,9 +183,9 @@
                 <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="34" Command="{Binding PreviousCommand}" Margin="0,0,6,0"/>
-                <Button Content="Heute" Height="34" Padding="14,0" Command="{Binding TodayCommand}" Margin="0,0,6,0"/>
-                <Button Content="›" Width="38" Height="34" Command="{Binding NextCommand}" Margin="0,0,14,0"/>
+                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousCommand}" Margin="0,0,6,0" Style="{StaticResource CompactButtonStyle}"/>
+                <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
+                <Button Content="›" Width="38" Height="36" Command="{Binding NextCommand}" Margin="0,0,14,0" Style="{StaticResource CompactButtonStyle}"/>
 
                 <Button Content="Tag" Command="{Binding ShowDayCommand}">
                     <Button.Style>
@@ -223,8 +223,8 @@
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="Ansicht als PDF exportieren" Height="34" Padding="14,0" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
-                        ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren"/>
+                <Button Content="Ansicht als PDF exportieren" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
+                        ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren" Style="{StaticResource ActionButtonStyle}"/>
 
             </WrapPanel>
         </Grid>
@@ -297,11 +297,11 @@
                                         <TextBlock Text="  ▾" FontSize="9" Foreground="{StaticResource MutedTextBrush}"
                                                    VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" Content="↺" Width="25" Height="23" Padding="0"
+                                    <Button Grid.Column="1" Content="↺" Width="28" Height="28" Padding="0"
                                             Command="{Binding ResetFiltersCommand}"
                                             ToolTip="Filter zurücksetzen"
                                             Foreground="{StaticResource MutedTextBrush}"
-                                            Background="Transparent" BorderThickness="0"/>
+                                            Background="Transparent" BorderThickness="0" Style="{StaticResource CompactButtonStyle}"/>
                                 </Grid>
                             </Border>
                         </Expander.Header>
@@ -346,7 +346,7 @@
                                            TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                             </StackPanel>
                             <Button Grid.Column="1" Content="↻" Width="28" Height="28" Padding="0"
-                                    Command="{Binding RefreshCommand}" Margin="7,0,0,0"
+                                    Command="{Binding RefreshCommand}" Style="{StaticResource CompactButtonStyle}" Margin="7,0,0,0"
                                     ToolTip="Aktualisieren"
                                     Foreground="{StaticResource PrimaryDarkBrush}"
                                     Background="{StaticResource PrimarySoftBrush}"
@@ -447,7 +447,7 @@
                                     <Border Margin="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
                                         <DockPanel>
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
-                                                    Width="28" Height="26" HorizontalAlignment="Left" Padding="0" Margin="0,0,0,4">
+                                                    Width="28" Height="28" HorizontalAlignment="Center" Padding="0" Margin="0,0,0,4" Style="{StaticResource CompactButtonStyle}">
                                                 <TextBlock Text="{Binding DayNumber}" FontSize="11" FontWeight="SemiBold"/>
                                             </Button>
                                             <StackPanel>
@@ -532,7 +532,7 @@
                                                             </StackPanel>
                                                             <Button Grid.Column="3" Content="Entfernen"
                                                                     Command="{Binding DataContext.RemoveProductionTeamMemberCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}" Padding="8,3" FontSize="9.5"
+                                                                    CommandParameter="{Binding}" FontSize="9.5" Style="{StaticResource CompactButtonStyle}"
                                                                     ToolTip="Mitarbeiter aus diesem Produktionsslot entfernen"/>
                                                         </Grid>
                                                     </DataTemplate>
@@ -555,8 +555,8 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <Button Content="Auftrag / Eintrag öffnen" Height="32" Background="{StaticResource PrimaryBrush}" Foreground="White" Click="OpenSelectedEntry_Click"/>
-                                    <Button Content="Auswahl aufheben" Height="30" Margin="0,6,0,0" Click="ClearSelection_Click"/>
+                                    <Button Content="Auftrag / Eintrag öffnen" Click="OpenSelectedEntry_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                    <Button Content="Auswahl aufheben" Margin="0,6,0,0" Click="ClearSelection_Click" Style="{StaticResource ActionButtonStyle}"/>
                                 </StackPanel>
                             </Border>
                             <StackPanel Margin="0,14,0,4">

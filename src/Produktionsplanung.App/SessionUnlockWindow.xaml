@@ -37,7 +37,7 @@
             </Border>
 
             <Button Content="Entsperren" Height="38"
-                    Style="{StaticResource PrimaryButtonStyle}"
+                    Style="{StaticResource PrimaryActionButtonStyle}"
                     Click="Unlock_Click" />
         </StackPanel>
     </Grid>

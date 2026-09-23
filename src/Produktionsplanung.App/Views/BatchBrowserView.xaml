@@ -5,8 +5,8 @@
    <WrapPanel Margin="0,0,0,8">
     <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}" IsEnabled="{Binding CanChooseMode}" Width="150" Margin="0,0,8,0" AutomationProperties.Name="Chargenansicht"/>
     <TextBlock Text="Suche" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Width="180" Margin="0,0,8,0" ToolTip="Artikel, Charge oder Auftrag suchen" AutomationProperties.Name="Chargen suchen"/>
-    <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0"/>
-    <Button Content="Neue Charge" Click="NewBatch_Click" IsEnabled="{Binding CanEdit}" Style="{StaticResource PrimaryButtonStyle}"/>
+    <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+    <Button Content="Neue Charge" Click="NewBatch_Click" IsEnabled="{Binding CanEdit}" Style="{StaticResource PrimaryActionButtonStyle}"/>
    </WrapPanel>
    <WrapPanel x:Name="ArchiveFilters" Margin="0,0,0,8" Visibility="Collapsed">
     <TextBlock Text="Artikel" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -18,7 +18,7 @@
   </StackPanel>
   <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedBatch}" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="160" MaxHeight="460" SelectionMode="Single" PreviewKeyDown="Grid_KeyDown">
    <DataGrid.Columns>
-    <DataGridTemplateColumn Header="Charge" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="{Binding BatchLabel}" Click="Open_Click" ToolTip="Charge öffnen" Padding="5" HorizontalContentAlignment="Left"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+    <DataGridTemplateColumn Header="Charge" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="{Binding BatchLabel}" Click="Open_Click" ToolTip="Charge öffnen" Padding="5" HorizontalContentAlignment="Center"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
     <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="90"/>
     <DataGridTextColumn Header="Name" Binding="{Binding Product}" Width="160"/>
     <DataGridTextColumn Header="Sollmenge" Binding="{Binding QuantityText}" Width="115"/>
