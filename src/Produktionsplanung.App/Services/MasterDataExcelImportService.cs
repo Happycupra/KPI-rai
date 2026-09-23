@@ -55,8 +55,16 @@ public static class MasterDataExcelImportService
         var o = wb.Worksheets.Add("Produktionsaufträge");
         Header(o, "Auftragsnummer", "Artikelnummer", "Chargennummer", "Menge", "Datum", "Arbeitsplatz", "Schicht", "AnzahlSchichten", "Personalbedarf", "Priorität", "Kommentar");
         o.Cell(2, 1).Value = "IMPORT-AUF-001"; o.Cell(2, 2).Value = "0001"; o.Cell(2, 3).Value = "IMPORT-CH-001";
-        o.Cell(2, 4).Value = 1000; o.Cell(2, 5).Value = DateTime.Today; o.Cell(2, 6).Value = "Import Linie";
+        o.Cell(2, 4).Value = 1000; o.Cell(2, 5).Value = NextMonday(DateTime.Today); o.Cell(2, 6).Value = "Import Linie";
         o.Cell(2, 7).Value = "Import Früh"; o.Cell(2, 8).Value = 1; o.Cell(2, 9).Value = 2; o.Cell(2, 10).Value = "Normal";
+
+        var info = wb.Worksheets.Add("Hinweise");
+        info.Cell(1, 1).Value = "SolutionCompakt Stammdaten-Import";
+        info.Cell(2, 1).Value = "Beispielzeilen vor dem Import durch eigene Daten ersetzen oder löschen.";
+        info.Cell(3, 1).Value = "Qualifikations-Level: 0 = keine, 1 = Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer, 4 = Level 4, 5 = Admin.";
+        info.Cell(4, 1).Value = "Qualifikationen bei Mitarbeitenden: Name:Level;Name:Level, z. B. Abfüllung:2;Reinigung:5.";
+        info.Cell(5, 1).Value = "Produktionsaufträge benötigen eine passende Freigabe im Blatt ArbeitsplatzSchichten.";
+        info.Cell(6, 1).Value = "Vor dem echten Import zeigt SolutionCompakt immer eine Vorschau/Testlauf an.";
 
         foreach (var ws in wb.Worksheets)
         {
@@ -445,6 +453,12 @@ public static class MasterDataExcelImportService
             result.Add((name, level));
         }
         return result;
+    }
+
+    private static DateTime NextMonday(DateTime date)
+    {
+        var days = ((int)DayOfWeek.Monday - (int)date.DayOfWeek + 7) % 7;
+        return date.Date.AddDays(days);
     }
 
     private static void CreateSavepoint(AppDbContext db, string name) => db.Database.CurrentTransaction?.CreateSavepoint(name);
