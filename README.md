@@ -29,7 +29,7 @@
 ### Mitarbeiter & Qualifikationen
 - Mitarbeiterverwaltung
 - frei definierbare Qualifikationen
-- Skill-Matrix mit Level 0–3
+- Skill-Matrix mit Level 0–5 (Level 5 = Admin)
 - Pflichtqualifikationen je Arbeitsplatz
 - qualifikationsbasierte Mitarbeitervorschläge
 - Berücksichtigung der Qualifikation bei der Fertigungssteuerung
