@@ -8,6 +8,7 @@ public static class QualificationLevelCatalog
     public const int Training = 1;
     public const int Qualified = 2;
     public const int Expert = 3;
+    public const int Advanced = 4;
     public const int Administrator = 5;
     public const int MaxLevel = Administrator;
 
@@ -17,6 +18,7 @@ public static class QualificationLevelCatalog
         new QualificationLevelOption(Training, "1 · in Ausbildung"),
         new QualificationLevelOption(Qualified, "2 · qualifiziert"),
         new QualificationLevelOption(Expert, "3 · Experte/Trainer"),
+        new QualificationLevelOption(Advanced, "4 · Level 4"),
         new QualificationLevelOption(Administrator, "5 · Admin")
     };
 
@@ -25,10 +27,10 @@ public static class QualificationLevelCatalog
         .ToArray();
 
     public static bool IsSupportedEmployeeLevel(int level) =>
-        level is None or Training or Qualified or Expert or Administrator;
+        level is >= None and <= Administrator;
 
     public static bool IsSupportedRequirementLevel(int level) =>
-        level is Training or Qualified or Expert or Administrator;
+        level is >= Training and <= Administrator;
 
     public static string DisplayName(int level) =>
         EmployeeChoices.FirstOrDefault(x => x.Level == level)?.Name ?? $"Level {level}";
