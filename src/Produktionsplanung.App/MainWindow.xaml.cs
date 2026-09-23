@@ -288,7 +288,7 @@ public partial class MainWindow : Window
         MasterDataGroupHeader.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
         SystemGroupHeader.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
 
-        foreach (var button in NavigationPanel.Children.OfType<Button>().Where(x => x.Tag is not null))
+        foreach (var button in NavigationButtons())
         {
             button.Content = collapsed ? string.Empty : button.ToolTip?.ToString() ?? string.Empty;
             button.HorizontalContentAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Left;
@@ -349,18 +349,39 @@ public partial class MainWindow : Window
             button.Visibility = visibility;
     }
 
+    private IEnumerable<Button> NavigationButtons() =>
+        NavigationPanel.Children.OfType<Button>().Where(x => x.CommandParameter is not null);
+
+    private static Color GetNavigationAccent(Button button)
+    {
+        if (button.CommandParameter is SolidColorBrush brush)
+            return brush.Color;
+
+        if (button.CommandParameter is string value &&
+            ColorConverter.ConvertFromString(value) is Color color)
+            return color;
+
+        return Color.FromRgb(59, 130, 246);
+    }
+
     private void SetActiveNavigation(Button? active)
     {
-        foreach (var button in NavigationPanel.Children.OfType<Button>().Where(x => x.Tag is not null))
+        foreach (var button in NavigationButtons())
         {
             button.Background = Brushes.Transparent;
             button.BorderBrush = Brushes.Transparent;
-            button.Foreground = new SolidColorBrush(Color.FromRgb(217, 230, 242));
+            button.Foreground = new SolidColorBrush(Color.FromRgb(200, 216, 230));
             button.FontWeight = FontWeights.Medium;
         }
-        if (active is null) return;
-        active.Background = (Brush)FindResource("SidebarActiveBrush");
-        active.BorderBrush = (Brush)FindResource("PrimaryBrush");
+
+        if (active is null)
+            return;
+
+        var accent = GetNavigationAccent(active);
+        var accentBrush = new SolidColorBrush(accent);
+        var activeBackground = new SolidColorBrush(Color.FromArgb(52, accent.R, accent.G, accent.B));
+        active.Background = activeBackground;
+        active.BorderBrush = accentBrush;
         active.Foreground = Brushes.White;
         active.FontWeight = FontWeights.SemiBold;
     }
