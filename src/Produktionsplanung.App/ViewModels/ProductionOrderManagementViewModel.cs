@@ -47,12 +47,13 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         ? "1 Schicht"
         : $"{PlannedShiftCount} aufeinanderfolgende Schichten";
 
-    public ProductionOrderManagementViewModel()
+    public ProductionOrderManagementViewModel(bool loadExistingOrders = true)
     {
         OrdersView = CollectionViewSource.GetDefaultView(Orders);
         OrdersView.Filter = MatchesOrderFilter;
         LoadReferenceData();
-        LoadOrders();
+        if (loadExistingOrders)
+            LoadOrders();
         NewOrder();
     }
 
@@ -490,7 +491,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
                 Priority = item.Priority,
                 PlannedDate = item.PlannedDate,
                 WorkstationId = item.WorkstationId,
-                WorkstationName = item.Workstation.Name,
+                WorkstationName = item.Workstation?.Name ?? "Arbeitsplatz nicht mehr vorhanden",
                 ShiftId = item.ShiftId,
                 ShiftName = item.Shift?.Name ?? "Individuell",
                 PlannedShiftCount = Math.Max(1, item.PlannedShiftCount),
