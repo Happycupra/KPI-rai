@@ -60,3 +60,15 @@ dotnet run --project tests/Produktionsplanung.RegressionTests -c Release --no-bu
 ```
 
 Die Regressionstests decken Erstellung, Dubletten, unveränderte historische Daten, Arbeitsplanzuordnung, automatischen/manuellen Abschluss, Wiederöffnung/Audit, Rollenrechte, Datumsfilter, eindeutige Dashboard-Zählung, Navigation, Migration alter Tabellen und Backup/Restore ab. Mit `KPI_BATCH_PREVIEW_DIRECTORY` kann der Testlauf zusätzlich WPF-Ansichten in PNG-Dateien rendern; die Tests arbeiten ausschliesslich mit temporären Datenbanken.
+
+
+## Excel-Import
+
+Unter **Artikel & Chargen** stehen zwei Importwege zur Verfügung:
+
+- **Artikelimport** für Artikelnummer, Name, Einheit, Standardmenge, Sollrate, Aktiv-Status und Notiz.
+- **Stammdaten-Import** mit den Tabellenblättern `Mitarbeitende`, `Arbeitsplätze`, `Schichten`, `ArbeitsplatzSchichten` und `Produktionsaufträge`.
+
+Der Stammdaten-Import führt zuerst einen vollständigen Testlauf aus. Erst nach Bestätigung werden gültige Zeilen übernommen. Fehlerhafte Zeilen werden mit Zeilennummer ausgewiesen; jede Zeile wird transaktional verarbeitet.
+
+Qualifikationen bei Mitarbeitenden werden als `Name:Level;Name:Level` angegeben, z. B. `Abfüllung:2;Reinigung:5`. Die Skala reicht von 0 bis 5; **Level 5 = Admin**. Produktionsaufträge werden nur importiert, wenn Artikel, Arbeitsplatz, Schicht und die Arbeitsplatz-Schicht-Freigabe gültig sind. Bestehende Auftragsnummern werden aus Sicherheitsgründen übersprungen und nicht automatisch überschrieben.

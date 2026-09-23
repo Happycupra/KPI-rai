@@ -18,7 +18,7 @@
    <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0"/>
    <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryButtonStyle}"/>
   </WrapPanel>
-  <TextBlock Text="Excel: Pflichtspalten Artikelnummer, Name, Einheit, Sollrate_pro_Stunde. Optional: Standardmenge, Aktiv, Notiz. Artikelnummern mit führenden Nullen bleiben erhalten." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+  <TextBlock Text="Excel: Artikelimport separat oder Stammdaten-Vorlage mit Mitarbeitenden, Arbeitsplätzen, Schichten, Arbeitsplatz-Schichten und Produktionsaufträgen. Jeder Stammdatenimport startet mit Vorschau/Testlauf. Skill-Level 5 = Admin." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220"><DataGrid.Columns>
    <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>

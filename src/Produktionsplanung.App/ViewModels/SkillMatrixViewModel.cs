@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -111,6 +112,12 @@ public partial class SkillMatrixViewModel : ObservableObject
             workstation.RequiredQualificationLevel = 0;
         }
 
+        foreach (var operation in db.OperationDefinitions.Where(x => x.RequiredQualificationId == qualificationId))
+        {
+            operation.RequiredQualificationId = null;
+            operation.RequiredQualificationLevel = 0;
+        }
+
         var links = db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId);
         db.EmployeeQualifications.RemoveRange(links);
         var qualification = db.Qualifications.First(x => x.Id == qualificationId);
@@ -130,7 +137,12 @@ public partial class SkillMatrixViewModel : ObservableObject
         {
             foreach (var qualification in Qualifications)
             {
-                var desiredLevel = row.Levels.TryGetValue(qualification.Id, out var level) ? Math.Clamp(level, 0, 3) : 0;
+                var desiredLevel = row.Levels.TryGetValue(qualification.Id, out var level) ? level : 0;
+                if (!QualificationLevelCatalog.IsSupportedEmployeeLevel(desiredLevel))
+                {
+                    MessageBox.Show($"Ungültiges Skill-Level {desiredLevel} bei {row.Name} / {qualification.Name}. Erlaubt sind 0 bis 5.", "Skill-Matrix", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 var link = existing.FirstOrDefault(x =>
                     x.EmployeeId == row.EmployeeId && x.QualificationId == qualification.Id);
 
