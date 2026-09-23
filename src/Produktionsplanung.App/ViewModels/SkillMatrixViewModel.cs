@@ -133,7 +133,10 @@ public partial class SkillMatrixViewModel : ObservableObject
             {
                 var desiredLevel = row.Levels.TryGetValue(qualification.Id, out var level) ? level : 0;
                 if (!QualificationLevelCatalog.IsSupportedEmployeeLevel(desiredLevel))
-                    throw new InvalidOperationException($"Ungültiges Skill-Level {desiredLevel} bei {row.Name} / {qualification.Name}.");
+                {
+                    MessageBox.Show($"Ungültiges Skill-Level {desiredLevel} bei {row.Name} / {qualification.Name}. Erlaubt sind 0 bis 5.", "Skill-Matrix", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 var link = existing.FirstOrDefault(x =>
                     x.EmployeeId == row.EmployeeId && x.QualificationId == qualification.Id);
 
