@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using Produktionsplanung.App.Models;
 using Produktionsplanung.App.Services;
 
@@ -36,6 +37,49 @@ public partial class ArticlesView : UserControl
     private void Active_Changed(object sender, RoutedEventArgs e) { if (IsLoaded) Refresh(); }
     private void Refresh_Click(object sender, RoutedEventArgs e) => Refresh();
     private void New_Click(object sender, RoutedEventArgs e) => Edit(null);
+    private void ImportExcel_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Title = "Artikel aus Excel importieren", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try
+        {
+            var result = ArticleExcelImportService.Import(dialog.FileName);
+            Refresh();
+            Message.Text = result.Summary + (result.Errors.Count > 0 ? "\n" + string.Join("\n", result.Errors.Take(8)) + (result.Errors.Count > 8 ? $"\n… {result.Errors.Count - 8} weitere Fehler" : "") : "");
+        }
+        catch (Exception ex) { Message.Text = "Excel-Import nicht möglich: " + ex.Message; }
+    }
+    private void ImportMasterData_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Title = "Stammdaten / Produktionsaufträge importieren", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try
+        {
+            var preview = MasterDataExcelImportService.Import(dialog.FileName, dryRun: true);
+            var text = string.Join("\n", preview.Select(x => x.Summary));
+            if (preview.SelectMany(x => x.Errors).Any())
+                text += "\n\nFehler:\n" + string.Join("\n", preview.SelectMany(x => x.Errors).Take(10));
+            if (MessageBox.Show(Window.GetWindow(this), text + "\n\nImport jetzt übernehmen?", "Import-Vorschau", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) { Message.Text = "Import abgebrochen; es wurden keine Daten geändert."; return; }
+            var result = MasterDataExcelImportService.Import(dialog.FileName, dryRun: false);
+            Message.Text = string.Join("  ·  ", result.Select(x => x.Summary));
+            Refresh();
+        }
+        catch (Exception ex) { Message.Text = "Stammdaten-Import nicht möglich: " + ex.Message; }
+    }
+    private void SaveMasterDataTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog { Title = "Stammdaten-Importvorlage speichern", FileName = "SolutionCompakt_Stammdatenimport.xlsx", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try { MasterDataExcelImportService.CreateTemplate(dialog.FileName); Message.Text = "Stammdaten-Vorlage gespeichert."; }
+        catch (Exception ex) { Message.Text = "Vorlage konnte nicht gespeichert werden: " + ex.Message; }
+    }
+    private void SaveExcelTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog { Title = "SolutionCompakt Excel-Vorlage speichern", FileName = "SolutionCompakt_Artikelimport.xlsx", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try { ArticleExcelImportService.CreateTemplate(dialog.FileName); Message.Text = "Excel-Vorlage gespeichert."; }
+        catch (Exception ex) { Message.Text = "Vorlage konnte nicht gespeichert werden: " + ex.Message; }
+    }
     private void Edit_Click(object sender, RoutedEventArgs e) { if (Selected is { } a) Edit(a.Id); }
     private void Edit(int? id)
     {

@@ -6,7 +6,11 @@
   <WrapPanel Margin="0,0,0,12">
    <TextBlock Text="Suche" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBox x:Name="Search" Width="220" TextChanged="Filter_Changed" Margin="0,0,12,0" AutomationProperties.Name="Artikel suchen"/>
    <CheckBox x:Name="ActiveOnly" Content="Nur aktive Artikel" IsChecked="True" Checked="Active_Changed" Unchecked="Active_Changed" VerticalAlignment="Center" Margin="0,0,12,0"/>
-   <Button Content="Aktualisieren" Click="Refresh_Click"/>
+   <Button Content="Aktualisieren" Click="Refresh_Click" Margin="0,0,8,0"/>
+   <Button Content="Excel importieren" Click="ImportExcel_Click" Margin="0,0,8,0"/>
+   <Button Content="Excel-Vorlage" Click="SaveExcelTemplate_Click" Margin="0,0,8,0"/>
+   <Button Content="Stammdaten-Import" Click="ImportMasterData_Click" Margin="0,0,8,0"/>
+   <Button Content="Stammdaten-Vorlage" Click="SaveMasterDataTemplate_Click"/>
   </WrapPanel>
   <WrapPanel x:Name="EditActions" Margin="0,0,0,12">
    <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0"/>
@@ -14,6 +18,7 @@
    <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0"/>
    <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryButtonStyle}"/>
   </WrapPanel>
+  <TextBlock Text="Excel: Pflichtspalten Artikelnummer, Name, Einheit, Sollrate_pro_Stunde. Optional: Standardmenge, Aktiv, Notiz. Artikelnummern mit führenden Nullen bleiben erhalten." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
   <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220"><DataGrid.Columns>
    <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>
