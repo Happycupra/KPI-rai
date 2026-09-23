@@ -42,7 +42,7 @@
                            Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0"/>
             </StackPanel>
             <Button Grid.Column="1" Content="↻ Aktualisieren" Command="{Binding RefreshCommand}"
-                    Height="36" Padding="14,0" VerticalAlignment="Center"/>
+                    VerticalAlignment="Center" Style="{StaticResource ActionButtonStyle}"/>
         </Grid>
 
         <TabControl Grid.Row="2">
@@ -232,7 +232,7 @@
                                 <Button Content="Prozess" Command="{Binding ShowProcessCommand}" Margin="0,0,6,0"/>
                                 <Button Content="Tabelle" Command="{Binding ShowTableCommand}"/>
                             </StackPanel>
-                            <Button Grid.Column="3" Content="Arbeitskarten erzeugen" Command="{Binding GenerateJobCardsCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                            <Button Grid.Column="3" Content="Arbeitskarten erzeugen" Command="{Binding GenerateJobCardsCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/>
                         </Grid>
                     </Border>
 
@@ -456,7 +456,7 @@
                                         <TextBlock Text="Pflichtqualifikation" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,10"/>
                                         <TextBlock Text="Mindest-Level" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding QualificationLevelChoices}" DisplayMemberPath="Name" SelectedValuePath="Level" SelectedValue="{Binding RequiredQualificationLevel, Mode=TwoWay}" Margin="0,5,0,10"/>
                                         <CheckBox Content="Arbeitsgang aktiv" IsChecked="{Binding OperationIsActive}" Margin="0,0,0,16"/>
-                                        <WrapPanel><Button Content="Neu" Command="{Binding NewOperationCommand}" Margin="0,0,8,0"/><Button Content="Speichern" Command="{Binding SaveOperationCommand}" Style="{StaticResource PrimaryButtonStyle}"/></WrapPanel>
+                                        <WrapPanel HorizontalAlignment="Center"><Button Content="Neu" Command="{Binding NewOperationCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="Speichern" Command="{Binding SaveOperationCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></WrapPanel>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Border>
@@ -472,7 +472,7 @@
                                     <DataGrid ItemsSource="{Binding Routings}" SelectedItem="{Binding SelectedRouting, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
                                         <DataGrid.Columns><DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="*"/><DataGridTextColumn Header="Arbeitsplan" Binding="{Binding Name}" Width="*"/></DataGrid.Columns>
                                     </DataGrid>
-                                    <Button Grid.Row="1" Content="+ Neuer Arbeitsplan" Command="{Binding NewRoutingCommand}" Margin="0,10,0,0"/>
+                                    <Button Grid.Row="1" Content="+ Neuer Arbeitsplan" Command="{Binding NewRoutingCommand}" Margin="0,10,0,0" Style="{StaticResource ActionButtonStyle}"/>
                                 </Grid>
                             </Border>
 
@@ -483,7 +483,7 @@
                                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <StackPanel><TextBlock Text="Produkt" FontWeight="SemiBold"/><TextBox Text="{Binding RoutingProduct, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0"/></StackPanel>
                                         <StackPanel Grid.Column="2"><TextBlock Text="Name des Arbeitsplans" FontWeight="SemiBold"/><TextBox Text="{Binding RoutingName, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0"/></StackPanel>
-                                        <StackPanel Grid.Column="4" VerticalAlignment="Bottom"><CheckBox Content="Aktiv" IsChecked="{Binding RoutingIsActive}" Margin="0,0,0,8"/><Button Content="Speichern" Command="{Binding SaveRoutingCommand}" Style="{StaticResource PrimaryButtonStyle}"/></StackPanel>
+                                        <StackPanel Grid.Column="4" VerticalAlignment="Bottom"><CheckBox Content="Aktiv" IsChecked="{Binding RoutingIsActive}" Margin="0,0,0,8"/><Button Content="Speichern" Command="{Binding SaveRoutingCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></StackPanel>
                                     </Grid>
 
                                     <DataGrid x:Name="RoutingStepsGrid" Grid.Row="2" ItemsSource="{Binding RoutingSteps}" AutoGenerateColumns="False" IsReadOnly="True"
@@ -498,7 +498,7 @@
                                             <DataGridTextColumn Header="Soll min" Binding="{Binding PlannedMinutes, StringFormat=N0}" Width="75"/>
                                             <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70"/>
                                             <DataGridTemplateColumn Header="" Width="70">
-                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Löschen" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Padding="7,3"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Löschen" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource CompactButtonStyle}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
@@ -510,7 +510,7 @@
                                             <ComboBox Grid.Column="2" ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedStepWorkstation, Mode=TwoWay}" DisplayMemberPath="Name"/>
                                             <TextBox Grid.Column="4" Text="{Binding StepMinutes}" ToolTip="Sollzeit in Minuten"/>
                                             <TextBox Grid.Column="6" Text="{Binding StepRequiredStaff}" ToolTip="Personalbedarf"/>
-                                            <StackPanel Grid.Column="8" Orientation="Horizontal"><Button Content="Standard" Command="{Binding UseOperationDefaultsCommand}" Margin="0,0,8,0"/><Button Content="+ Schritt" Command="{Binding AddRoutingStepCommand}" Style="{StaticResource PrimaryButtonStyle}"/></StackPanel>
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal"><Button Content="Standard" Command="{Binding UseOperationDefaultsCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="+ Schritt" Command="{Binding AddRoutingStepCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></StackPanel>
                                         </Grid>
                                     </Border>
                                 </Grid>
