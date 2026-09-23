@@ -49,6 +49,30 @@ public partial class ArticlesView : UserControl
         }
         catch (Exception ex) { Message.Text = "Excel-Import nicht möglich: " + ex.Message; }
     }
+    private void ImportMasterData_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog { Title = "Stammdaten / Produktionsaufträge importieren", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try
+        {
+            var preview = MasterDataExcelImportService.Import(dialog.FileName, dryRun: true);
+            var text = string.Join("\n", preview.Select(x => x.Summary));
+            if (preview.SelectMany(x => x.Errors).Any())
+                text += "\n\nFehler:\n" + string.Join("\n", preview.SelectMany(x => x.Errors).Take(10));
+            if (MessageBox.Show(Window.GetWindow(this), text + "\n\nImport jetzt übernehmen?", "Import-Vorschau", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) { Message.Text = "Import abgebrochen; es wurden keine Daten geändert."; return; }
+            var result = MasterDataExcelImportService.Import(dialog.FileName, dryRun: false);
+            Message.Text = string.Join("  ·  ", result.Select(x => x.Summary));
+            Refresh();
+        }
+        catch (Exception ex) { Message.Text = "Stammdaten-Import nicht möglich: " + ex.Message; }
+    }
+    private void SaveMasterDataTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog { Title = "Stammdaten-Importvorlage speichern", FileName = "SolutionCompakt_Stammdatenimport.xlsx", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
+        try { MasterDataExcelImportService.CreateTemplate(dialog.FileName); Message.Text = "Stammdaten-Vorlage gespeichert."; }
+        catch (Exception ex) { Message.Text = "Vorlage konnte nicht gespeichert werden: " + ex.Message; }
+    }
     private void SaveExcelTemplate_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new SaveFileDialog { Title = "SolutionCompakt Excel-Vorlage speichern", FileName = "SolutionCompakt_Artikelimport.xlsx", Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx" };
