@@ -2,7 +2,7 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  Title="Artikel bearbeiten" Width="520" Height="680" MinWidth="420" MinHeight="450" WindowStartupLocation="CenterOwner">
  <DockPanel Margin="20">
-  <StackPanel DockPanel.Dock="Bottom"><TextBlock x:Name="Message" TextWrapping="Wrap" Margin="0,8"/><WrapPanel HorizontalAlignment="Right"><Button Content="Abbrechen" IsCancel="True" Margin="0,0,8,0"/><Button Content="Speichern" Click="Save_Click" Style="{StaticResource PrimaryButtonStyle}"/></WrapPanel></StackPanel>
+  <StackPanel DockPanel.Dock="Bottom"><TextBlock x:Name="Message" TextWrapping="Wrap" Margin="0,8"/><WrapPanel HorizontalAlignment="Center"><Button Content="Abbrechen" IsCancel="True" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="Speichern" Click="Save_Click" Style="{StaticResource PrimaryActionButtonStyle}"/></WrapPanel></StackPanel>
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
    <TextBlock Text="Artikelstammdaten" Style="{StaticResource PageTitleTextStyle}" Margin="0,0,0,16"/>
    <TextBlock Text="Artikelnummer"/><TextBox x:Name="Number" Margin="0,4,0,10"/>
