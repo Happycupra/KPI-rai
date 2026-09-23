@@ -19,7 +19,7 @@
                 <TextBlock Text="Benutzer &amp; Audit" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
                 <TextBlock Text="Lokale Benutzer, Rollen und die letzten 500 Audit-Einträge verwalten." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
             </StackPanel>
-            <Button Grid.Column="1" Content="Aktualisieren" Height="34" Padding="14,0" Command="{Binding RefreshCommand}" VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="Aktualisieren" Command="{Binding RefreshCommand}" VerticalAlignment="Center" Style="{StaticResource ActionButtonStyle}" />
         </Grid>
 
         <Grid Grid.Row="1">
@@ -82,12 +82,9 @@
                     </ScrollViewer>
 
                     <StackPanel Grid.Row="2" Margin="0,8,0,0">
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="+ Neuer Benutzer" Height="34" Padding="12,0"
-                                    Command="{Binding NewUserCommand}" Margin="0,0,8,0" />
-                            <Button Content="Speichern" Width="110" Height="34"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    Command="{Binding SaveUserCommand}" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="+ Neuer Benutzer" Command="{Binding NewUserCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                            <Button Content="Speichern" Style="{StaticResource PrimaryActionButtonStyle}" Command="{Binding SaveUserCommand}" />
                         </StackPanel>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource PrimaryDarkBrush}"
                                    TextWrapping="Wrap" Margin="0,8,0,0" />
