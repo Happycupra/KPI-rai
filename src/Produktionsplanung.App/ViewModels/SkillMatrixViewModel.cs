@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -130,7 +131,9 @@ public partial class SkillMatrixViewModel : ObservableObject
         {
             foreach (var qualification in Qualifications)
             {
-                var desiredLevel = row.Levels.TryGetValue(qualification.Id, out var level) ? Math.Clamp(level, 0, 3) : 0;
+                var desiredLevel = row.Levels.TryGetValue(qualification.Id, out var level) ? level : 0;
+                if (!QualificationLevelCatalog.IsSupportedEmployeeLevel(desiredLevel))
+                    throw new InvalidOperationException($"Ungültiges Skill-Level {desiredLevel} bei {row.Name} / {qualification.Name}.");
                 var link = existing.FirstOrDefault(x =>
                     x.EmployeeId == row.EmployeeId && x.QualificationId == qualification.Id);
 
