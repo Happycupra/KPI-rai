@@ -372,6 +372,11 @@ public partial class EmployeeManagementViewModel : ObservableObject
             workstation.RequiredQualificationId = null;
             workstation.RequiredQualificationLevel = 0;
         }
+        foreach (var operation in db.OperationDefinitions.Where(x => x.RequiredQualificationId == qualificationId))
+        {
+            operation.RequiredQualificationId = null;
+            operation.RequiredQualificationLevel = 0;
+        }
 
         db.EmployeeQualifications.RemoveRange(
             db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId));
