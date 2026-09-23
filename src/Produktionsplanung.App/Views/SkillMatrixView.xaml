@@ -25,10 +25,10 @@
             </Grid.ColumnDefinitions>
 
             <TextBox Grid.Column="0" Height="36" Padding="10,6" Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neue Qualifikation" />
-            <Button Grid.Column="1" Content="+ Qualifikation" Command="{Binding AddQualificationCommand}" Padding="14,7" Margin="8,0,0,0" />
+            <Button Grid.Column="1" Content="+ Qualifikation" Command="{Binding AddQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource ActionButtonStyle}" />
 
             <ComboBox Grid.Column="3" Height="36" ItemsSource="{Binding Qualifications}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}" />
-            <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Padding="14,7" Margin="8,0,0,0" />
+            <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource DangerActionButtonStyle}" />
         </Grid>
 
         <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
@@ -41,11 +41,13 @@
                       FrozenColumnCount="3" />
         </Border>
 
-        <Grid Grid.Row="3" Margin="0,16,0,0">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
-            <Button Grid.Column="1" Content="Neu laden" Command="{Binding LoadCommand}" Padding="16,8" Margin="0,0,8,0" />
-            <Button Grid.Column="2" Content="Skill-Matrix speichern" Command="{Binding SaveMatrixCommand}" Padding="18,8" />
-        </Grid>
+        <StackPanel Grid.Row="3" Margin="0,16,0,0">
+            <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
+                       Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
+            <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
+                <Button Content="Neu laden" Command="{Binding LoadCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                <Button Content="Skill-Matrix speichern" Command="{Binding SaveMatrixCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
+            </WrapPanel>
+        </StackPanel>
     </Grid>
 </UserControl>
