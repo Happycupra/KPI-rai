@@ -27,7 +27,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="{Binding LastUpdatedText}" Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                    <Button Content="↻  Aktualisieren" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding RefreshCommand}" Click="RefreshBatches_Click" />
+                    <Button Content="↻  Aktualisieren" Style="{StaticResource ActionButtonStyle}" Command="{Binding RefreshCommand}" Click="RefreshBatches_Click" />
                 </StackPanel>
             </Grid>
 
@@ -44,10 +44,10 @@
                         <TextBlock Text="Schnellzugriff" Style="{StaticResource SectionHeaderTextStyle}" />
                         <TextBlock Text="Direkt zum nächsten Arbeitsschritt" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,2,0,0" />
                     </StackPanel>
-                    <Button Grid.Column="1" Content="Planung öffnen" Style="{StaticResource SecondaryButtonStyle}" Click="OpenPlanning_Click" Margin="0,0,8,0" />
-                    <Button Grid.Column="2" Content="Aufträge" Style="{StaticResource SecondaryButtonStyle}" Click="OpenOrders_Click" Margin="0,0,8,0" />
-                    <Button Grid.Column="3" Content="Fertigungssteuerung" Style="{StaticResource SecondaryButtonStyle}" Click="OpenControl_Click" Margin="0,0,8,0" />
-                    <Button Grid.Column="4" Content="Ist-Produktion / OEE" Style="{StaticResource PrimaryButtonStyle}" Click="OpenActual_Click" />
+                    <Button Grid.Column="1" Content="Planung öffnen" Style="{StaticResource ActionButtonStyle}" Click="OpenPlanning_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="2" Content="Aufträge" Style="{StaticResource ActionButtonStyle}" Click="OpenOrders_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="3" Content="Fertigungssteuerung" Style="{StaticResource ActionButtonStyle}" Click="OpenControl_Click" Margin="0,0,8,0" />
+                    <Button Grid.Column="4" Content="Ist-Produktion / OEE" Style="{StaticResource PrimaryActionButtonStyle}" Click="OpenActual_Click" />
                 </Grid>
             </Border>
 
@@ -109,7 +109,7 @@
 
             <Border Style="{StaticResource SectionCardStyle}" Padding="16" Margin="0,0,0,16">
                 <StackPanel>
-                    <DockPanel><WrapPanel DockPanel.Dock="Right"><Button Content="Artikel" Click="OpenArticles_Click" Margin="0,0,8,0"/><Button Content="Abgeschlossene Chargen" Click="OpenArchive_Click"/></WrapPanel><TextBlock Text="Chargenübersicht" Style="{StaticResource SectionHeaderTextStyle}"/></DockPanel>
+                    <DockPanel><WrapPanel DockPanel.Dock="Right"><Button Content="Artikel" Click="OpenArticles_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="Abgeschlossene Chargen" Click="OpenArchive_Click" Style="{StaticResource ActionButtonStyle}"/></WrapPanel><TextBlock Text="Chargenübersicht" Style="{StaticResource SectionHeaderTextStyle}"/></DockPanel>
                     <views:BatchBrowserView x:Name="Batches"/>
                 </StackPanel>
             </Border>
