@@ -100,6 +100,8 @@ public static class MasterDataExcelImportService
             var number = Cell(ws, row, map, "Personalnummer");
             if (number.Length == 0) { skipped++; continue; }
 
+            var savepoint = $"employee_{row}";
+            CreateSavepoint(db, savepoint);
             try
             {
                 var first = Required(Cell(ws, row, map, "Vorname"), "Vorname");
@@ -154,10 +156,11 @@ public static class MasterDataExcelImportService
                 }
                 db.SaveChanges();
                 if (isNew) added++; else updated++;
+                ReleaseSavepoint(db, savepoint);
             }
             catch (Exception ex)
             {
-                db.ChangeTracker.Clear();
+                RollbackSavepoint(db, savepoint);
                 errors.Add($"Zeile {row} ({number}): {ex.Message}");
             }
         }
@@ -176,6 +179,8 @@ public static class MasterDataExcelImportService
             var name = Cell(ws, row, map, "Name");
             if (name.Length == 0) { skipped++; continue; }
 
+            var savepoint = $"workstation_{row}";
+            CreateSavepoint(db, savepoint);
             try
             {
                 var minimum = Int(Cell(ws, row, map, "Minimum"), 1);
@@ -220,10 +225,11 @@ public static class MasterDataExcelImportService
 
                 db.SaveChanges();
                 if (isNew) added++; else updated++;
+                ReleaseSavepoint(db, savepoint);
             }
             catch (Exception ex)
             {
-                db.ChangeTracker.Clear();
+                RollbackSavepoint(db, savepoint);
                 errors.Add($"Zeile {row} ({name}): {ex.Message}");
             }
         }
@@ -242,6 +248,8 @@ public static class MasterDataExcelImportService
             var name = Cell(ws, row, map, "Name");
             if (name.Length == 0) { skipped++; continue; }
 
+            var savepoint = $"shift_{row}";
+            CreateSavepoint(db, savepoint);
             try
             {
                 var start = Time(Cell(ws, row, map, "Start"), "Start");
@@ -259,10 +267,11 @@ public static class MasterDataExcelImportService
                 shift.BreakMinutes = breakMinutes;
                 db.SaveChanges();
                 if (isNew) added++; else updated++;
+                ReleaseSavepoint(db, savepoint);
             }
             catch (Exception ex)
             {
-                db.ChangeTracker.Clear();
+                RollbackSavepoint(db, savepoint);
                 errors.Add($"Zeile {row} ({name}): {ex.Message}");
             }
         }
@@ -282,6 +291,8 @@ public static class MasterDataExcelImportService
             var shiftName = Cell(ws, row, map, "Schicht");
             if (workstationName.Length == 0 && shiftName.Length == 0) { skipped++; continue; }
 
+            var savepoint = $"rule_{row}";
+            CreateSavepoint(db, savepoint);
             try
             {
                 workstationName = Required(workstationName, "Arbeitsplatz");
@@ -308,10 +319,11 @@ public static class MasterDataExcelImportService
 
                 db.SaveChanges();
                 if (isNew) added++; else updated++;
+                ReleaseSavepoint(db, savepoint);
             }
             catch (Exception ex)
             {
-                db.ChangeTracker.Clear();
+                RollbackSavepoint(db, savepoint);
                 errors.Add($"Zeile {row} ({workstationName} / {shiftName}): {ex.Message}");
             }
         }
@@ -330,11 +342,14 @@ public static class MasterDataExcelImportService
             var orderNumber = Cell(ws, row, map, "Auftragsnummer");
             if (orderNumber.Length == 0) { skipped++; continue; }
 
+            var savepoint = $"order_{row}";
+            CreateSavepoint(db, savepoint);
             try
             {
                 if (db.ProductionOrders.Any(x => x.OrderNumber == orderNumber))
                 {
                     skipped++;
+                    ReleaseSavepoint(db, savepoint);
                     continue;
                 }
 
@@ -404,10 +419,11 @@ public static class MasterDataExcelImportService
                 if (db.ProductionRunSlots.Count(x => x.ProductionOrderId == order.Id) != shiftCount)
                     throw new InvalidOperationException("Produktionsschichten konnten nicht vollständig erzeugt werden.");
                 added++;
+                ReleaseSavepoint(db, savepoint);
             }
             catch (Exception ex)
             {
-                db.ChangeTracker.Clear();
+                RollbackSavepoint(db, savepoint);
                 errors.Add($"Zeile {row} ({orderNumber}): {ex.Message}");
             }
         }
@@ -429,6 +445,17 @@ public static class MasterDataExcelImportService
             result.Add((name, level));
         }
         return result;
+    }
+
+    private static void CreateSavepoint(AppDbContext db, string name) => db.Database.CurrentTransaction?.CreateSavepoint(name);
+
+    private static void ReleaseSavepoint(AppDbContext db, string name) => db.Database.CurrentTransaction?.ReleaseSavepoint(name);
+
+    private static void RollbackSavepoint(AppDbContext db, string name)
+    {
+        db.Database.CurrentTransaction?.RollbackToSavepoint(name);
+        db.Database.CurrentTransaction?.ReleaseSavepoint(name);
+        db.ChangeTracker.Clear();
     }
 
     private static void Header(IXLWorksheet ws, params string[] headers)
