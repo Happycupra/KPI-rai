@@ -11,7 +11,7 @@
 
         <StackPanel>
             <TextBlock Text="Skill-Matrix" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer, 5 = Admin" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,18" />
+            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer, 4 = Level 4, 5 = Admin" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,18" />
         </StackPanel>
 
         <Grid Grid.Row="1" Margin="0,0,0,16">
