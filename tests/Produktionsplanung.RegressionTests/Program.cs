@@ -32,6 +32,8 @@ internal static partial class Program
             ("Day planning only offers shifts allowed for workstation and date", DayPlanningAllowedShifts),
             ("Order status edits preserve existing production run slots", OrderStatusKeepsRunSlots),
             ("Job cards enforce skill matrix qualification levels", JobCardSkillValidation),
+            ("Qualification level 5 admin is persisted and enforced", QualificationAdminLevelFive),
+            ("Master-data Excel import previews, commits and schedules safely", MasterDataExcelImport),
             ("Manufacturing workflow advances to next job card", ManufacturingWorkflowAutoAdvance),
             ("Routing steps can be reordered and renumbered", RoutingStepReorder),
             ("Calendar weekend filter applies to week and month", CalendarWeekendFilter),
@@ -198,6 +200,132 @@ internal static partial class Program
         Check(before.SequenceEqual(after), "Status-only order edit rebuilt production run slots");
         Check(check.ProductionOrders.Single(x => x.Id == orderId).Status == "Läuft",
             "Status-only order edit was not saved");
+    }
+
+    private static void QualificationAdminLevelFive()
+    {
+        Planner();
+        int qualificationId;
+        int workstationId;
+        int adminEmployeeId;
+        int expertEmployeeId;
+
+        using (var db = new AppDbContext())
+        {
+            var qualification = db.Qualifications.Single(x => x.Name == "Linie 1");
+            var workstation = db.Workstations.Single(x => x.Name == "Linie 1");
+            var admin = db.Employees.Single(x => x.PersonnelNumber == "1001");
+            var expert = db.Employees.Single(x => x.PersonnelNumber == "1002");
+
+            qualificationId = qualification.Id;
+            workstationId = workstation.Id;
+            adminEmployeeId = admin.Id;
+            expertEmployeeId = expert.Id;
+
+            workstation.RequiredQualificationId = qualification.Id;
+            workstation.RequiredQualificationLevel = QualificationLevelCatalog.Administrator;
+
+            var adminLink = db.EmployeeQualifications.Single(x => x.EmployeeId == admin.Id && x.QualificationId == qualification.Id);
+            adminLink.Level = QualificationLevelCatalog.Administrator;
+            var expertLink = db.EmployeeQualifications.Single(x => x.EmployeeId == expert.Id && x.QualificationId == qualification.Id);
+            expertLink.Level = QualificationLevelCatalog.Expert;
+            db.SaveChanges();
+        }
+
+        using (var db = new AppDbContext())
+        {
+            var adminCheck = QualificationPlanningService.CheckEmployee(db, adminEmployeeId, workstationId);
+            var expertCheck = QualificationPlanningService.CheckEmployee(db, expertEmployeeId, workstationId);
+            Check(adminCheck.IsQualified && adminCheck.EmployeeLevel == 5 && adminCheck.RequiredLevel == 5,
+                "Admin level 5 was not accepted for a level 5 requirement");
+            Check(!expertCheck.IsQualified && expertCheck.EmployeeLevel == 3 && expertCheck.RequiredLevel == 5,
+                "Level 3 incorrectly satisfied a level 5 requirement");
+        }
+
+        var employeeVm = new EmployeeManagementViewModel();
+        employeeVm.EditEmployee(adminEmployeeId);
+        var skill = employeeVm.SkillEditorRows.Single(x => x.QualificationId == qualificationId);
+        skill.Level = QualificationLevelCatalog.Administrator;
+        employeeVm.SaveCommand.Execute(null);
+        using (var db = new AppDbContext())
+            Check(db.EmployeeQualifications.Single(x => x.EmployeeId == adminEmployeeId && x.QualificationId == qualificationId).Level == 5,
+                "Employee editor did not persist admin level 5");
+
+        var workstationVm = new WorkstationManagementViewModel();
+        workstationVm.SelectedWorkstation = workstationVm.Workstations.Single(x => x.Id == workstationId);
+        Check(workstationVm.SkillLevels.Any(x => x.Level == 5 && x.Name.Contains("Admin")),
+            "Workstation qualification choices do not expose admin level 5");
+        Check(workstationVm.SelectedRequiredQualificationLevel?.Level == 5,
+            "Workstation editor did not load an existing level 5 requirement");
+
+        var manufacturingVm = new ManufacturingControlViewModel();
+        Check(manufacturingVm.QualificationLevelChoices.Any(x => x.Level == 5 && x.Name.Contains("Admin")),
+            "Manufacturing operation editor does not expose admin level 5");
+
+        var matrix = new SkillMatrixView();
+        var grid = (DataGrid)matrix.FindName("MatrixGrid");
+        var qualificationColumn = grid.Columns.OfType<DataGridComboBoxColumn>().FirstOrDefault();
+        Check(qualificationColumn?.ItemsSource is IEnumerable<QualificationLevelOption> options &&
+              options.Any(x => x.Level == 5 && x.Name.Contains("Admin")),
+            "Skill matrix does not expose admin level 5");
+    }
+
+    private static void MasterDataExcelImport()
+    {
+        Planner();
+        ArticleService.Save(new ArticleMaster
+        {
+            ArticleNumber = "0001",
+            Name = "Import Testartikel",
+            Unit = "Stück",
+            DefaultQuantity = 1000,
+            DefaultIdealRatePerHour = 120,
+            IsActive = true
+        });
+
+        var path = Path.Combine(AppPaths.RootDirectory, "masterdata-import.xlsx");
+        MasterDataExcelImportService.CreateTemplate(path);
+
+        var preview = MasterDataExcelImportService.Import(path, dryRun: true);
+        Check(preview.Count >= 5 && preview.All(x => x.Errors.Count == 0),
+            "Master-data dry-run reported unexpected errors");
+
+        using (var db = new AppDbContext())
+        {
+            Check(!db.Employees.Any(x => x.PersonnelNumber == "P001"), "Dry-run persisted employee data");
+            Check(!db.Workstations.Any(x => x.Name == "Import Linie"), "Dry-run persisted workstation data");
+            Check(!db.Shifts.Any(x => x.Name == "Import Früh"), "Dry-run persisted shift data");
+            Check(!db.ProductionOrders.Any(x => x.OrderNumber == "IMPORT-AUF-001"), "Dry-run persisted production order data");
+        }
+
+        var imported = MasterDataExcelImportService.Import(path, dryRun: false);
+        Check(imported.All(x => x.Errors.Count == 0), "Master-data import reported unexpected errors");
+
+        using (var db = new AppDbContext())
+        {
+            var employee = db.Employees.Single(x => x.PersonnelNumber == "P001");
+            var adminQualification = db.Qualifications.Single(x => x.Name == "Reinigung");
+            Check(db.EmployeeQualifications.Single(x => x.EmployeeId == employee.Id && x.QualificationId == adminQualification.Id).Level == 5,
+                "Excel import reduced admin qualification level 5");
+
+            var workstation = db.Workstations.Single(x => x.Name == "Import Linie");
+            var shift = db.Shifts.Single(x => x.Name == "Import Früh");
+            Check(db.WorkstationShiftRules.Any(x => x.WorkstationId == workstation.Id && x.ShiftId == shift.Id && x.Monday && x.Friday),
+                "Excel import did not create workstation-shift rules");
+
+            var order = db.ProductionOrders.Single(x => x.OrderNumber == "IMPORT-AUF-001");
+            Check(order.ArticleMasterId.HasValue && order.BatchNumber == "IMPORT-CH-001",
+                "Excel order import did not preserve article/batch identity");
+            Check(db.ProductionRunSlots.Count(x => x.ProductionOrderId == order.Id) == order.PlannedShiftCount,
+                "Excel order import did not generate production run slots");
+        }
+
+        var repeated = MasterDataExcelImportService.Import(path, dryRun: false);
+        var orderResult = repeated.Single(x => x.Area == "Produktionsaufträge");
+        Check(orderResult.SkippedCount >= 1, "Duplicate order was not reported as skipped");
+        using var check = new AppDbContext();
+        Check(check.ProductionOrders.Count(x => x.OrderNumber == "IMPORT-AUF-001") == 1,
+            "Repeated Excel import duplicated the production order");
     }
 
     private static void JobCardSkillValidation()
