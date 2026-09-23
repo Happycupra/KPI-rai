@@ -8,10 +8,6 @@ on:
 permissions:
   contents: write
 
-env:
-  WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
-  WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
-
 jobs:
   release:
     runs-on: windows-latest
@@ -55,26 +51,125 @@ jobs:
           if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
           Copy-Item $source $target -Force
 
-      - name: Sign application executables
-        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+      - name: Sign published executables
+        if: ${{ secrets.CODE_SIGNING_CERT_BASE64 != '' && secrets.CODE_SIGNING_CERT_PASSWORD != '' }}
+        shell: pwsh
+        env:
+          CERT_BASE64: ${{ secrets.CODE_SIGNING_CERT_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.CODE_SIGNING_CERT_PASSWORD }}
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-codesign.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:CERT_BASE64))
+          $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\\Windows Kits\\10\\bin" -Filter signtool.exe -Recurse | Where-Object { $_.FullName -match '\\x64\\signtool.exe
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
-          try {
-            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
-            ./scripts/Sign-WindowsArtifacts.ps1 `
-              -CertificatePath $certPath `
-              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
-              -Paths @(
-                "artifacts/win-x64/SolutionCompakt.exe",
-                "artifacts/single-file/SolutionCompakt.exe",
-                "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
-              )
+          $usb = Join-Path $PWD "artifacts/usb-portable"
+          New-Item -ItemType Directory -Path $usb -Force | Out-Null
+          Copy-Item "artifacts/SolutionCompakt-$version-win-x64-portable.exe" (Join-Path $usb "SolutionCompakt.exe") -Force
+          Set-Content -Path (Join-Path $usb "portable.mode") -Value "SolutionCompakt USB portable mode" -Encoding UTF8
+          @"
+          SolutionCompakt USB / Portable
+          ==============================
+
+          Gesamten Ordner auf einen USB-Stick oder in einen beschreibbaren Ordner kopieren und SolutionCompakt.exe starten.
+          Die Datei portable.mode aktiviert den USB-Modus und darf nicht gelöscht werden.
+
+          Im USB-Modus bleiben die Daten beim Programm:
+          - produktionsplanung.db direkt neben SolutionCompakt.exe
+          - settings.json direkt neben SolutionCompakt.exe
+          - Backups im Unterordner Backups
+          - Exporte im Unterordner Exports
+          "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
+          $versioned = "artifacts/SolutionCompakt-$version-win-x64-USB-portable.zip"
+          Compress-Archive -Path "$usb/*" -DestinationPath $versioned -Force
+          Copy-Item $versioned "artifacts/SolutionCompakt-USB-portable-latest.zip" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
+          & $iscc "/DMyAppVersion=$version" "installer\SolutionCompakt.iss"
+
+      - name: Sign and verify installer
+        if: ${{ secrets.CODE_SIGNING_CERT_BASE64 != '' && secrets.CODE_SIGNING_CERT_PASSWORD != '' }}
+        shell: pwsh
+        env:
+          CERT_BASE64: ${{ secrets.CODE_SIGNING_CERT_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.CODE_SIGNING_CERT_PASSWORD }}
+        run: |
+          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-codesign.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:CERT_BASE64))
+          $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}\\Windows Kits\\10\\bin" -Filter signtool.exe -Recurse | Where-Object { $_.FullName -match '\\x64\\signtool.exe
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/SolutionCompakt-$version-win-x64-portable.zip" -Force
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $portableExe = "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
+          $usbPortable = "artifacts/SolutionCompakt-$version-win-x64-USB-portable.zip"
+          $usbLatest = "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe $usbPortable $usbLatest --generate-notes --title "SolutionCompakt ${{ github.ref_name }}"
+
+      - name: Update latest downloads folder on main
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = Resolve-Path "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $usbZip = Resolve-Path "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          $installerCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-Setup-latest.exe"
+          $portableCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-portable-latest.zip"
+          $usbCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-USB-portable-latest.zip"
+          Copy-Item $installer.FullName $installerCopy -Force
+          Copy-Item $portableZip $portableCopy -Force
+          Copy-Item $usbZip $usbCopy -Force
+
+          git fetch origin main
+          git checkout -B main origin/main
+          New-Item -ItemType Directory -Path downloads -Force | Out-Null
+          Copy-Item $installerCopy "downloads/SolutionCompakt-Setup-latest.exe" -Force
+          Copy-Item $portableCopy "downloads/SolutionCompakt-portable-latest.zip" -Force
+          Copy-Item $usbCopy "downloads/SolutionCompakt-USB-portable-latest.zip" -Force
+          Set-Content -Path "downloads/VERSION.txt" -Value "$version`nBuilt from tag ${{ github.ref_name }}" -Encoding UTF8
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/SolutionCompakt-Setup-latest.exe downloads/SolutionCompakt-portable-latest.zip downloads/SolutionCompakt-USB-portable-latest.zip downloads/VERSION.txt
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Update latest downloads to ${{ github.ref_name }}"
+            git push origin main
           }
-          finally {
-            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+ } | Select-Object -Last 1).FullName
+          if (-not $signtool) { throw "signtool.exe not found" }
+          Get-ChildItem "artifacts/win-x64" -Filter *.exe -Recurse | ForEach-Object {
+            & $signtool sign /f $certPath /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $_.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signing failed: $($_.FullName)" }
+            & $signtool verify /pa /v $_.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed: $($_.FullName)" }
           }
+          $portableExe = Get-ChildItem "artifacts" -Filter "SolutionCompakt-*-win-x64-portable.exe" | Select-Object -First 1
+          if ($portableExe) {
+            & $signtool sign /f $certPath /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $portableExe.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signing failed: $($portableExe.FullName)" }
+            & $signtool verify /pa /v $portableExe.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed: $($portableExe.FullName)" }
+          }
+          Remove-Item $certPath -Force
 
       - name: Prepare USB portable package
         shell: pwsh
@@ -112,21 +207,166 @@ jobs:
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
           & $iscc "/DMyAppVersion=$version" "installer\SolutionCompakt.iss"
 
-      - name: Sign installer
-        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
+      - name: Create portable zip
         shell: pwsh
         run: |
-          $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
-          try {
-            [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
-            ./scripts/Sign-WindowsArtifacts.ps1 `
-              -CertificatePath $certPath `
-              -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
-              -Paths @("artifacts/installer/*.exe")
+          $version = "${{ steps.version.outputs.version }}"
+          Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/SolutionCompakt-$version-win-x64-portable.zip" -Force
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $portableExe = "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
+          $usbPortable = "artifacts/SolutionCompakt-$version-win-x64-USB-portable.zip"
+          $usbLatest = "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe $usbPortable $usbLatest --generate-notes --title "SolutionCompakt ${{ github.ref_name }}"
+
+      - name: Update latest downloads folder on main
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = Resolve-Path "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $usbZip = Resolve-Path "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          $installerCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-Setup-latest.exe"
+          $portableCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-portable-latest.zip"
+          $usbCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-USB-portable-latest.zip"
+          Copy-Item $installer.FullName $installerCopy -Force
+          Copy-Item $portableZip $portableCopy -Force
+          Copy-Item $usbZip $usbCopy -Force
+
+          git fetch origin main
+          git checkout -B main origin/main
+          New-Item -ItemType Directory -Path downloads -Force | Out-Null
+          Copy-Item $installerCopy "downloads/SolutionCompakt-Setup-latest.exe" -Force
+          Copy-Item $portableCopy "downloads/SolutionCompakt-portable-latest.zip" -Force
+          Copy-Item $usbCopy "downloads/SolutionCompakt-USB-portable-latest.zip" -Force
+          Set-Content -Path "downloads/VERSION.txt" -Value "$version`nBuilt from tag ${{ github.ref_name }}" -Encoding UTF8
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/SolutionCompakt-Setup-latest.exe downloads/SolutionCompakt-portable-latest.zip downloads/SolutionCompakt-USB-portable-latest.zip downloads/VERSION.txt
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Update latest downloads to ${{ github.ref_name }}"
+            git push origin main
           }
-          finally {
-            Remove-Item $certPath -Force -ErrorAction SilentlyContinue
+ } | Select-Object -Last 1).FullName
+          if (-not $signtool) { throw "signtool.exe not found" }
+          $installer = Get-ChildItem "artifacts/installer" -Filter "SolutionCompakt-Setup-*.exe" | Select-Object -First 1
+          if (-not $installer) { throw "Installer not found" }
+          & $signtool sign /f $certPath /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $installer.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Installer signing failed" }
+          & $signtool verify /pa /v $installer.FullName
+          if ($LASTEXITCODE -ne 0) { throw "Installer signature verification failed" }
+          Remove-Item $certPath -Force
+
+      - name: Create portable zip
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/SolutionCompakt-$version-win-x64-portable.zip" -Force
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $portableExe = "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
+          $usbPortable = "artifacts/SolutionCompakt-$version-win-x64-USB-portable.zip"
+          $usbLatest = "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          gh release create "${{ github.ref_name }}" $installer.FullName $portableZip $portableExe $usbPortable $usbLatest --generate-notes --title "SolutionCompakt ${{ github.ref_name }}"
+
+      - name: Update latest downloads folder on main
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installer = Get-ChildItem artifacts/installer/SolutionCompakt-Setup-*.exe | Select-Object -First 1
+          $portableZip = Resolve-Path "artifacts/SolutionCompakt-$version-win-x64-portable.zip"
+          $usbZip = Resolve-Path "artifacts/SolutionCompakt-USB-portable-latest.zip"
+          $installerCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-Setup-latest.exe"
+          $portableCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-portable-latest.zip"
+          $usbCopy = Join-Path $env:RUNNER_TEMP "SolutionCompakt-USB-portable-latest.zip"
+          Copy-Item $installer.FullName $installerCopy -Force
+          Copy-Item $portableZip $portableCopy -Force
+          Copy-Item $usbZip $usbCopy -Force
+
+          git fetch origin main
+          git checkout -B main origin/main
+          New-Item -ItemType Directory -Path downloads -Force | Out-Null
+          Copy-Item $installerCopy "downloads/SolutionCompakt-Setup-latest.exe" -Force
+          Copy-Item $portableCopy "downloads/SolutionCompakt-portable-latest.zip" -Force
+          Copy-Item $usbCopy "downloads/SolutionCompakt-USB-portable-latest.zip" -Force
+          Set-Content -Path "downloads/VERSION.txt" -Value "$version`nBuilt from tag ${{ github.ref_name }}" -Encoding UTF8
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/SolutionCompakt-Setup-latest.exe downloads/SolutionCompakt-portable-latest.zip downloads/SolutionCompakt-USB-portable-latest.zip downloads/VERSION.txt
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Update latest downloads to ${{ github.ref_name }}"
+            git push origin main
           }
+ } | Select-Object -Last 1).FullName
+          if (-not $signtool) { throw "signtool.exe not found" }
+          Get-ChildItem "artifacts/win-x64" -Filter *.exe -Recurse | ForEach-Object {
+            & $signtool sign /f $certPath /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $_.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signing failed: $($_.FullName)" }
+            & $signtool verify /pa /v $_.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed: $($_.FullName)" }
+          }
+          $portableExe = Get-ChildItem "artifacts" -Filter "SolutionCompakt-*-win-x64-portable.exe" | Select-Object -First 1
+          if ($portableExe) {
+            & $signtool sign /f $certPath /p $env:CERT_PASSWORD /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $portableExe.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signing failed: $($portableExe.FullName)" }
+            & $signtool verify /pa /v $portableExe.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Signature verification failed: $($portableExe.FullName)" }
+          }
+          Remove-Item $certPath -Force
+
+      - name: Prepare USB portable package
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $usb = Join-Path $PWD "artifacts/usb-portable"
+          New-Item -ItemType Directory -Path $usb -Force | Out-Null
+          Copy-Item "artifacts/SolutionCompakt-$version-win-x64-portable.exe" (Join-Path $usb "SolutionCompakt.exe") -Force
+          Set-Content -Path (Join-Path $usb "portable.mode") -Value "SolutionCompakt USB portable mode" -Encoding UTF8
+          @"
+          SolutionCompakt USB / Portable
+          ==============================
+
+          Gesamten Ordner auf einen USB-Stick oder in einen beschreibbaren Ordner kopieren und SolutionCompakt.exe starten.
+          Die Datei portable.mode aktiviert den USB-Modus und darf nicht gelöscht werden.
+
+          Im USB-Modus bleiben die Daten beim Programm:
+          - produktionsplanung.db direkt neben SolutionCompakt.exe
+          - settings.json direkt neben SolutionCompakt.exe
+          - Backups im Unterordner Backups
+          - Exporte im Unterordner Exports
+          "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
+          $versioned = "artifacts/SolutionCompakt-$version-win-x64-USB-portable.zip"
+          Compress-Archive -Path "$usb/*" -DestinationPath $versioned -Force
+          Copy-Item $versioned "artifacts/SolutionCompakt-USB-portable-latest.zip" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
+          & $iscc "/DMyAppVersion=$version" "installer\SolutionCompakt.iss"
 
       - name: Create portable zip
         shell: pwsh
