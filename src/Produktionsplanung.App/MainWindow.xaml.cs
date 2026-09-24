@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer messageTimer = new() { Interval = TimeSpan.FromSeconds(15) };
     private readonly HashSet<int> deferredMessageIds = new();
     private MessageCenterWindow? messageCenterWindow;
+    private AppTourWindow? appTourWindow;
     private bool messagePopupOpen;
     private DateTime lastActivityUtc = DateTime.UtcNow;
     private bool sessionLocked;
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
         ApplyRolePermissions();
 
         var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        CurrentPageHint.Visibility = preferences.ShowContextHints ? Visibility.Visible : Visibility.Collapsed;
         planningGroupCollapsed = preferences.PlanningGroupCollapsed;
         productionGroupCollapsed = preferences.ProductionGroupCollapsed;
         masterDataGroupCollapsed = preferences.MasterDataGroupCollapsed;
@@ -51,6 +53,7 @@ public partial class MainWindow : Window
         InputManager.Current.PreProcessInput += InputManager_PreProcessInput;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
+        Loaded += MainWindow_Loaded;
 
         Navigate(CreateEntry(NavigationRoute.Dashboard), addToHistory: false);
         RefreshNotifications();
@@ -80,6 +83,85 @@ public partial class MainWindow : Window
         var parts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
         return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        if (preferences.AppTourLastShownVersion < AppTourCatalog.CurrentVersion)
+            Dispatcher.BeginInvoke(new Action(() => StartGuidedTour(automatic: true)), DispatcherPriority.Background);
+    }
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => StartGuidedTour();
+
+    public void StartGuidedTour(bool automatic = false)
+    {
+        if (!SessionService.IsAuthenticated)
+            return;
+
+        var initialIndex = AppTourCatalog.FindStepIndex(currentNavigation?.ButtonName);
+        if (appTourWindow is not null)
+        {
+            appTourWindow.ShowStepForNavigation(currentNavigation?.ButtonName);
+            appTourWindow.Activate();
+            return;
+        }
+
+        appTourWindow = new AppTourWindow(this, initialIndex, automatic);
+        appTourWindow.Closed += (_, _) => appTourWindow = null;
+        appTourWindow.Show();
+    }
+
+    public void OpenTourArea(string areaKey)
+    {
+        switch (areaKey)
+        {
+            case "dashboard":
+                Navigate(CreateEntry(NavigationRoute.Dashboard));
+                break;
+            case "planning":
+                if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar));
+                break;
+            case "worktime":
+                OpenWorkTimeCalendar();
+                break;
+            case "orders":
+                OpenProductionOrders();
+                break;
+            case "cockpit":
+                OpenManufacturingControl();
+                break;
+            case "actual":
+                OpenProductionActual();
+                break;
+            case "analytics":
+                Navigate(CreateEntry(NavigationRoute.Analytics));
+                break;
+            case "articles":
+                OpenArticles();
+                break;
+            case "employees":
+                if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees));
+                break;
+            case "workstations":
+                if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Workstations));
+                break;
+            case "absences":
+                if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Absences));
+                break;
+            case "messages":
+                MessageButton_Click(this, new RoutedEventArgs());
+                break;
+            case "notifications":
+                NotificationButton_Click(this, new RoutedEventArgs());
+                break;
+            case "users":
+                if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.UserAdmin));
+                break;
+            case "settings":
+                OpenSettings();
+                break;
+        }
     }
 
     private void ShowDashboard_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Dashboard));
@@ -177,6 +259,9 @@ public partial class MainWindow : Window
         ContentHost.Content = entry.GetContent();
         currentNavigation = entry;
         CurrentPageTitle.Text = entry.Title;
+        var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        CurrentPageHint.Text = AppTourCatalog.GetContextHint(entry.ButtonName);
+        CurrentPageHint.Visibility = preferences.ShowContextHints ? Visibility.Visible : Visibility.Collapsed;
         SetActiveNavigation(FindName(entry.ButtonName) as Button);
         BackButton.IsEnabled = navigationHistory.Count > 0;
         RefreshNotifications();
@@ -226,6 +311,7 @@ public partial class MainWindow : Window
         inactivityTimer.Stop();
         messageTimer.Stop();
         messageCenterWindow?.Close();
+        appTourWindow?.Close();
         InputManager.Current.PreProcessInput -= InputManager_PreProcessInput;
     }
 
