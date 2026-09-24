@@ -127,7 +127,8 @@ public static class OnlineWeekPlanService
         !string.IsNullOrWhiteSpace(settings.FirebaseProjectId) &&
         !string.IsNullOrWhiteSpace(settings.FirebaseWebApiKey) &&
         Uri.TryCreate(settings.FirebaseAuthEndpoint, UriKind.Absolute, out _) &&
-        Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out _);
+        Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out _) &&
+        Uri.TryCreate(settings.FirebasePublishEndpoint, UriKind.Absolute, out _);
 
     public static string FirebaseStatusText(AppSettings settings)
     {
