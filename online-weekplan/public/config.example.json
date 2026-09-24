@@ -1,0 +1,10 @@
+{
+  "firebase": {
+    "apiKey": "FIREBASE_WEB_API_KEY",
+    "authDomain": "PROJECT_ID.firebaseapp.com",
+    "projectId": "PROJECT_ID",
+    "appId": "FIREBASE_WEB_APP_ID"
+  },
+  "authEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/login",
+  "publishEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/publishWeekPlan"
+}
