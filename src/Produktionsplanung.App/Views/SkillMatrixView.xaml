@@ -24,10 +24,10 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0" Height="36" Padding="10,6" Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neue Qualifikation" />
+            <TextBox Grid.Column="0" Height="38" Padding="10,6" Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neue Qualifikation" />
             <Button Grid.Column="1" Content="+ Qualifikation" Command="{Binding AddQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource ActionButtonStyle}" />
 
-            <ComboBox Grid.Column="3" Height="36" ItemsSource="{Binding Qualifications}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}" />
+            <ComboBox Grid.Column="3" Height="38" ItemsSource="{Binding Qualifications}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}" />
             <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource DangerActionButtonStyle}" />
         </Grid>
 
