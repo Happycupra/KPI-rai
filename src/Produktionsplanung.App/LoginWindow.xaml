@@ -16,24 +16,24 @@
                                Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap"/>
                 </Border>
                 <TextBlock Text="Firmenname" FontWeight="SemiBold" Margin="0,0,0,5" />
-                <TextBox x:Name="CompanyNameBox" Height="36" Margin="0,0,0,14" TextChanged="CompanyNameBox_TextChanged" />
+                <TextBox x:Name="CompanyNameBox" Height="38" Margin="0,0,0,14" TextChanged="CompanyNameBox_TextChanged" />
 
                 <TextBlock Text="Firmen-Code" FontWeight="SemiBold" Margin="0,0,0,5" />
-                <TextBox x:Name="CompanyCodeBox" Height="36" Margin="0,0,0,5" TextChanged="CompanyCodeBox_TextChanged" />
+                <TextBox x:Name="CompanyCodeBox" Height="38" Margin="0,0,0,5" TextChanged="CompanyCodeBox_TextChanged" />
                 <TextBlock Text="3–24 Zeichen · Buchstaben, Zahlen und Bindestriche. Beispiel: MUSTER-AG"
                            Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,0,0,14" />
             </StackPanel>
 
             <StackPanel x:Name="DisplayNamePanel" Visibility="Collapsed">
                 <TextBlock Text="Anzeigename" FontWeight="SemiBold" Margin="0,0,0,5" />
-                <TextBox x:Name="DisplayNameBox" Height="36" Margin="0,0,0,14" />
+                <TextBox x:Name="DisplayNameBox" Height="38" Margin="0,0,0,14" />
             </StackPanel>
 
             <TextBlock Text="Benutzername" FontWeight="SemiBold" Margin="0,0,0,5" />
-            <TextBox x:Name="UsernameBox" Height="36" Margin="0,0,0,14" />
+            <TextBox x:Name="UsernameBox" Height="38" Margin="0,0,0,14" />
 
             <TextBlock Text="Passwort" FontWeight="SemiBold" Margin="0,0,0,5" />
-            <PasswordBox x:Name="PasswordBox" Height="36" Margin="0,0,0,10" />
+            <PasswordBox x:Name="PasswordBox" Height="38" Margin="0,0,0,10" />
 
             <Button x:Name="ForgotPasswordButton" Content="Passwort vergessen?" Click="ForgotPassword_Click"
                     Background="Transparent" BorderThickness="0" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold"
@@ -41,13 +41,13 @@
 
             <StackPanel x:Name="ConfirmPasswordPanel" Visibility="Collapsed">
                 <TextBlock Text="Passwort bestätigen" FontWeight="SemiBold" Margin="0,0,0,5" />
-                <PasswordBox x:Name="ConfirmPasswordBox" Height="36" Margin="0,0,0,6" />
+                <PasswordBox x:Name="ConfirmPasswordBox" Height="38" Margin="0,0,0,6" />
                 <TextBlock Text="Mindestens 10 Zeichen, Gross-/Kleinbuchstaben und eine Zahl." Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,0,0,12" />
             </StackPanel>
 
             <TextBlock x:Name="StatusBlock" Foreground="#DC2626" TextWrapping="Wrap" MinHeight="22" Margin="0,0,0,10" />
 
-            <Button x:Name="SubmitButton" Content="Anmelden" Height="40" Click="Submit_Click" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}" />
+            <Button x:Name="SubmitButton" Content="Anmelden" Height="38" Click="Submit_Click" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}" />
             <Button Content="Abbrechen" Margin="0,8,0,0" Click="Cancel_Click" IsCancel="True" Style="{StaticResource ActionButtonStyle}" />
         </StackPanel>
     </Grid>
