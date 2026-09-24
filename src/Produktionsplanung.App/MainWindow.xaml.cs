@@ -102,12 +102,12 @@ public partial class MainWindow : Window
             CurrentPageHint.Text = AppTourCatalog.GetContextHint(currentNavigation.ButtonName);
     }
 
-    public void StartGuidedTour(bool automatic = false)
+    public void StartGuidedTour(bool automatic = false, bool fromBeginning = false)
     {
         if (!SessionService.IsAuthenticated)
             return;
 
-        var initialIndex = AppTourCatalog.FindStepIndex(currentNavigation?.ButtonName);
+        var initialIndex = automatic || fromBeginning ? 0 : AppTourCatalog.FindStepIndex(currentNavigation?.ButtonName);
         if (appTourWindow is not null)
         {
             appTourWindow.ShowStepForNavigation(currentNavigation?.ButtonName);
