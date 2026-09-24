@@ -25,6 +25,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private int autoLockMinutes = 30;
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string recoveryCodeStatus = "Nicht eingerichtet";
+    [ObservableProperty] private bool showContextHints = true;
 
     public IReadOnlyList<int> AutoLockOptions { get; } = new[] { 15, 30, 60 };
     public string DatabasePath => AppPaths.DatabasePath;
@@ -47,6 +48,18 @@ public partial class SettingsViewModel : ObservableObject
         {
             StatusMessage = $"Einstellungen konnten nicht gespeichert werden: {ex.Message}";
         }
+    }
+
+    partial void OnShowContextHintsChanged(bool value)
+    {
+        AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.ShowContextHints = value);
+    }
+
+    [RelayCommand]
+    private void StartGuidedTour()
+    {
+        if (Application.Current.MainWindow is Produktionsplanung.App.MainWindow mainWindow)
+            mainWindow.StartGuidedTour();
     }
 
     [RelayCommand]
@@ -257,6 +270,7 @@ public partial class SettingsViewModel : ObservableObject
         var settings = AppSettingsService.Load();
         ApplySettings(settings);
         RefreshRecoveryCodeStatus(settings);
+        ShowContextHints = AppSettingsService.LoadCurrentUserPreferences().ShowContextHints;
         StatusMessage = settings.LastSuccessfulBackupAtLocal.HasValue
             ? $"Letztes erfolgreiches Backup: {settings.LastSuccessfulBackupAtLocal:g} · {settings.LastSuccessfulBackupPath}"
             : "Noch kein erfolgreiches Backup protokolliert.";
