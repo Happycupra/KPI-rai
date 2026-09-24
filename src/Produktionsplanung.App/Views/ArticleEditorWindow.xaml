@@ -12,7 +12,7 @@
    <TextBlock Text="Sollrate pro Stunde"/><TextBox x:Name="Rate" Margin="0,4,0,10"/>
    <TextBlock Text="Standard-Arbeitsplan (optional)"/><ComboBox x:Name="Routing" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,4,0,10"/>
    <CheckBox x:Name="Active" Content="Artikel aktiv" Margin="0,4,0,10"/>
-   <TextBlock Text="Notizen"/><TextBox x:Name="Notes" AcceptsReturn="True" Height="75" TextWrapping="Wrap" Margin="0,4,0,10"/>
+   <TextBlock Text="Notizen"/><TextBox x:Name="Notes" AcceptsReturn="True" Height="75" TextWrapping="Wrap" Margin="0,4,0,10" VerticalScrollBarVisibility="Auto"/>
   </StackPanel></ScrollViewer>
  </DockPanel>
 </Window>
