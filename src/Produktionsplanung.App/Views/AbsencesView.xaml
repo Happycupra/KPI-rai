@@ -28,7 +28,7 @@
                     <TextBlock Text="Art"/><ComboBox ItemsSource="{Binding AbsenceTypes}" SelectedItem="{Binding AbsenceType}" Margin="0,4,0,10"/>
                     <TextBlock Text="Startdatum"/><DatePicker SelectedDate="{Binding StartDate}" Margin="0,4,0,10"/>
                     <TextBlock Text="Enddatum"/><DatePicker SelectedDate="{Binding EndDate}" Margin="0,4,0,10"/>
-                    <TextBlock Text="Kommentar"/><TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" Height="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,16"/>
+                    <TextBlock Text="Kommentar"/><TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" Height="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,16" VerticalScrollBarVisibility="Auto"/>
                     <WrapPanel HorizontalAlignment="Center">
                         <Button Content="Neu" Command="{Binding NewAbsenceCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
                         <Button Content="Speichern" Command="{Binding SaveCommand}" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}"/>
