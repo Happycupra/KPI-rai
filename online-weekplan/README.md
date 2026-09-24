@@ -1,6 +1,6 @@
 # SolutionCompakt Online-Wochenplan
 
-Dieses Verzeichnis ist die vorbereitete Firebase-Webanwendung für den SolutionCompakt-Wochenplan. **Firebase-Projektdaten sind für den Quellcode noch nicht nötig.** Ohne `public/config.json` zeigt die Web-App nur den Einrichtungsstatus.
+Dieses Verzeichnis enthält die Firebase-Webanwendung für den SolutionCompakt-Wochenplan. Das produktive Web-Projekt `solution-compact` ist in `public/config.json` hinterlegt. Firebase-Webkonfigurationen sind Client-Konfiguration und keine Service-Account-Geheimnisse; Zugriffsschutz erfolgt über Authentication, Security Rules und später App Check.
 
 ## Zielbild
 
@@ -11,15 +11,26 @@ Dieses Verzeichnis ist die vorbereitete Firebase-Webanwendung für den SolutionC
 - Online-Korrekturen liegen separat in `weekPlans/{weekId}/overrides` und verändern die Desktop-Daten nicht
 - Benutzername und Passwort können später identisch zur Desktop-App bleiben: der Cloud-Function-Endpunkt prüft die bestehenden PBKDF2-SHA256-Hashes (150000 Iterationen) und erzeugt ein Firebase Custom Token mit Firma und Rolle als Claims
 
-## Wenn das Firebase-Projekt später vorhanden ist
+## Produktiver Firebase-Stand
 
-1. Firebase-Projekt anlegen und Firestore, Authentication, Hosting und Functions aktivieren.
-2. Firebase CLI installieren und im Ordner `online-weekplan` initialisieren/zuordnen.
-3. `public/config.example.json` nach `public/config.json` kopieren und Project ID, Web API Key, App ID sowie die beiden Function-URLs eintragen.
-4. `firebase deploy` ausführen.
-5. In SolutionCompakt unter Wochenplanung → **Firebase konfigurieren** dieselben öffentlichen Projektwerte/URLs eintragen.
-6. Die Firma unter `companies/{companyId}` und mindestens einen Administrator unter `companies/{companyId}/authUsers` bereitstellen.
-7. In SolutionCompakt als Administrator **Online-Paket vorbereiten** und die erzeugte JSON-Datei im Web-Adminbereich veröffentlichen.
+Das Firebase-Webprojekt ist bereits konfiguriert:
+
+- Project ID: `solution-compact`
+- Auth Domain: `solution-compact.firebaseapp.com`
+- Hosting-Ziel: `https://solution-compact.web.app`
+- Functions-Region: `europe-west1`
+- Login-Function: `login`
+- Publish-Function: `publishWeekPlan`
+
+Für den tatsächlichen Deploy fehlt nur noch eine berechtigte Firebase/Google-Cloud-Anmeldung. Im Repository ist dafür `.github/workflows/firebase-deploy.yml` vorbereitet. Der Workflow erwartet das GitHub Secret `FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT`. Dieses Secret darf niemals in Quellcode, Chat oder öffentliche Dateien kopiert werden.
+
+Nach dem ersten Deploy:
+
+1. Firestore, Authentication, Hosting und Functions im Projekt müssen aktiviert sein.
+2. Die Firma wird unter `companies/{companyId}` provisioniert.
+3. Mindestens der erste Firmen-Administrator wird unter `companies/{companyId}/authUsers` synchronisiert.
+4. In SolutionCompakt wird **Online-Wochenplan aktivieren** eingeschaltet.
+5. Ein Wochenplan-Paket kann veröffentlicht werden.
 
 ## Firmen- und Benutzerstruktur
 
@@ -78,3 +89,10 @@ Die lokale App ist bereits auf einen stabilen Firmenmandanten vorbereitet. Aktue
 5. Sobald Internet vorhanden ist, werden freigegebene Benutzer-/Wochenplanänderungen synchronisiert.
 
 Eine Offline-Aktivierungsdatei sollte erst produktiv aktiviert werden, wenn der Verkäufer-Signaturschlüssel eingerichtet ist. Ein im Programm eingebetteter gemeinsamer Geheimcode wäre kein ausreichender Manipulationsschutz.
+
+
+## GitHub Deployment
+
+Der Workflow `.github/workflows/firebase-deploy.yml` validiert Web-Dateien und Functions, installiert Firebase CLI und deployt Hosting, Firestore Rules und Functions in das Projekt `solution-compact`.
+
+Für CI/CD wird Application Default Credentials über ein GitHub Secret verwendet. Empfohlen ist ein dediziertes Deployment-Servicekonto mit nur den notwendigen Rollen. Nach dem Deploy wird die temporäre Credentials-Datei auf dem Runner entfernt.
