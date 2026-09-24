@@ -60,6 +60,7 @@ internal static partial class Program
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
             ("Administrator can create a new program user", UserAdminCreatesUser),
+            ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
             ("Successful restore invalidates old session", RestoreSession)
         };
@@ -963,6 +964,15 @@ internal static partial class Program
         _ = new SettingsView();
         _ = new Produktionsplanung.App.LoginWindow();
         _ = new Produktionsplanung.App.ChangePasswordWindow();
+        _ = new Produktionsplanung.App.MessagePopupWindow(new UserMessageRow
+        {
+            Id = 1,
+            Partner = "Kollege",
+            Subject = "Hinweis",
+            Body = "Testnachricht",
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        _ = new Produktionsplanung.App.MessageCenterWindow();
     }
 
     private static void ManufacturingCapacityTabRenders()
@@ -1249,6 +1259,66 @@ internal static partial class Program
             "New program user fields were not persisted correctly");
         Check(PasswordService.Verify("Temporary123", user.PasswordHash, user.PasswordSalt),
             "New program user password was not hashed/persisted correctly");
+    }
+
+    private static void UserMessagesPersistAndAcknowledge()
+    {
+        UserAccount sender;
+        UserAccount recipient;
+        using (var db = new AppDbContext())
+        {
+            var (senderHash, senderSalt) = PasswordService.HashPassword("SenderTest123");
+            var (recipientHash, recipientSalt) = PasswordService.HashPassword("RecipientTest123");
+            sender = new UserAccount
+            {
+                Username = "message-sender",
+                DisplayName = "Sender Test",
+                Role = UserRoles.Planner,
+                IsActive = true,
+                PasswordHash = senderHash,
+                PasswordSalt = senderSalt,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            recipient = new UserAccount
+            {
+                Username = "message-recipient",
+                DisplayName = "Recipient Test",
+                Role = UserRoles.Observer,
+                IsActive = true,
+                PasswordHash = recipientHash,
+                PasswordSalt = recipientSalt,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.UserAccounts.AddRange(sender, recipient);
+            db.SaveChanges();
+        }
+
+        SessionService.SignIn(sender);
+        var message = UserMessageService.Send(recipient.Id, "Schicht-Hinweis", "Bitte Auftrag A prüfen.", "Wichtig");
+        Check(message.Id > 0, "Internal hint was not persisted");
+        Check(UserMessageService.GetSent().Single(x => x.Id == message.Id).StatusText == "Noch nicht bestätigt",
+            "Sender did not see pending read acknowledgement");
+
+        SessionService.SignIn(recipient);
+        Check(UserMessageService.GetUnreadCount() == 1, "Recipient unread badge count is incorrect");
+        var inbox = UserMessageService.GetInbox();
+        var incoming = inbox.Single(x => x.Id == message.Id);
+        Check(incoming.Partner == "Sender Test" && incoming.Subject == "Schicht-Hinweis" && !incoming.IsAcknowledged,
+            "Recipient inbox did not preserve sender/message data");
+        Check(UserMessageService.Acknowledge(message.Id), "Recipient could not acknowledge message");
+        Check(UserMessageService.GetUnreadCount() == 0, "Acknowledged message remains unread");
+
+        SessionService.SignIn(sender);
+        var sent = UserMessageService.GetSent().Single(x => x.Id == message.Id);
+        Check(sent.IsAcknowledged && sent.AcknowledgedAtUtc.HasValue && sent.StatusText.StartsWith("Gelesen", StringComparison.Ordinal),
+            "Sender cannot see the read acknowledgement");
+
+        using var check = new AppDbContext();
+        var stored = check.UserMessages.AsNoTracking().Single(x => x.Id == message.Id);
+        Check(stored.SenderDisplayNameSnapshot == "Sender Test" &&
+              stored.RecipientDisplayNameSnapshot == "Recipient Test" &&
+              stored.AcknowledgedAtUtc.HasValue,
+            "Internal hint history was not retained after acknowledgement");
     }
 
     private static void FailedRestore()
