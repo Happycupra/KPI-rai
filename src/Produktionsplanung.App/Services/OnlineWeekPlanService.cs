@@ -18,6 +18,8 @@ public static class OnlineWeekPlanService
         var monday = GetMonday(date);
         var sunday = monday.AddDays(6);
         var settings = AppSettingsService.Load();
+        if (string.IsNullOrWhiteSpace(settings.CompanyId) || string.IsNullOrWhiteSpace(settings.CompanyCode))
+            throw new InvalidOperationException("Diese Installation ist noch keiner Firma zugeordnet.");
 
         using var db = new AppDbContext();
         ProductionScheduleService.EnsureMissingRunSlots(db);
