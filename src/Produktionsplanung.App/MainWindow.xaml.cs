@@ -94,6 +94,14 @@ public partial class MainWindow : Window
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => StartGuidedTour();
 
+    public void RefreshContextHelpPreference()
+    {
+        var preferences = AppSettingsService.LoadCurrentUserPreferences();
+        CurrentPageHint.Visibility = preferences.ShowContextHints ? Visibility.Visible : Visibility.Collapsed;
+        if (currentNavigation is not null)
+            CurrentPageHint.Text = AppTourCatalog.GetContextHint(currentNavigation.ButtonName);
+    }
+
     public void StartGuidedTour(bool automatic = false)
     {
         if (!SessionService.IsAuthenticated)
