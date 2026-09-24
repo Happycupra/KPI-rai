@@ -8,6 +8,7 @@ const urls = {
 const el = id => document.getElementById(id);
 let config, auth, db, role = "", companyId = "", companyCode = "", weekIds = [], weekIndex = 0;
 let modules = {};
+let sessionVersion = 0, loadVersion = 0;
 
 bootstrap();
 
@@ -26,25 +27,34 @@ async function bootstrap() {
     db = fsMod.getFirestore(app);
 
     authMod.onAuthStateChanged(auth, async user => {
+      const session = ++sessionVersion;
+      resetPlan();
       if (!user) {
         show("loginView");
-        el("userBox").classList.add("hidden");
         return;
       }
-      const token = await user.getIdTokenResult(true);
-      role = token.claims.role || "Beobachter";
-      companyId = String(token.claims.companyId || "");
-      companyCode = String(token.claims.companyCode || "");
-      if (!companyId) {
-        await authMod.signOut(auth);
-        throw new Error("Das Benutzerkonto ist keiner Firma zugeordnet.");
+      try {
+        const token = await user.getIdTokenResult(true);
+        if (session !== sessionVersion) return;
+        role = token.claims.role || "Beobachter";
+        companyId = String(token.claims.companyId || "");
+        companyCode = String(token.claims.companyCode || "");
+        if (!companyId) {
+          await authMod.signOut(auth);
+          el("loginStatus").textContent = "Das Benutzerkonto ist keiner Firma zugeordnet.";
+          return;
+        }
+        el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
+        el("roleBadge").textContent = role;
+        el("userBox").classList.remove("hidden");
+        el("adminPublish").classList.toggle("hidden", role !== "Administrator");
+        show("planView");
+        await loadWeeks();
+      } catch (error) {
+        if (session !== sessionVersion) return;
+        show("loginView");
+        el("loginStatus").textContent = "Anmeldung oder Laden fehlgeschlagen. Bitte erneut anmelden.";
       }
-      el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
-      el("roleBadge").textContent = role;
-      el("userBox").classList.remove("hidden");
-      el("adminPublish").classList.toggle("hidden", role !== "Administrator");
-      show("planView");
-      await loadWeeks();
     });
 
     wireEvents();
@@ -57,7 +67,7 @@ function wireEvents() {
   el("loginButton").addEventListener("click", login);
   el("password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
   el("logoutButton").addEventListener("click", () => modules.authMod.signOut(auth));
-  el("reloadButton").addEventListener("click", () => loadWeek(weekIds[weekIndex]));
+  el("reloadButton").addEventListener("click", () => loadWeeks(weekIds[weekIndex]));
   el("prevWeek").addEventListener("click", () => navigateWeek(1));
   el("nextWeek").addEventListener("click", () => navigateWeek(-1));
   el("publishButton").addEventListener("click", publishPackage);
@@ -86,57 +96,109 @@ async function login() {
   }
 }
 
-async function loadWeeks() {
-  const { collection, getDocs, orderBy, query, limit } = modules.fsMod;
-  const snap = await getDocs(query(collection(db, "companies", companyId, "weekPlans"), orderBy("weekStart", "desc"), limit(20)));
-  weekIds = snap.docs.map(x => x.id);
+function resetPlan() {
+  ++loadVersion;
+  role = companyId = companyCode = "";
+  weekIds = [];
   weekIndex = 0;
-  if (!weekIds.length) {
-    el("weekTitle").textContent = "Noch kein Wochenplan veröffentlicht";
-    el("planGrid").innerHTML = "";
-    return;
+  for (const id of ["planGrid", "publishedMeta", "planStatus", "publishStatus", "userName", "roleBadge", "loginStatus"])
+    el(id).textContent = "";
+  el("weekTitle").textContent = "Wochenplan";
+  el("packageFile").value = "";
+  el("password").value = "";
+  el("editForm").reset();
+  el("editDialog").close();
+  el("userBox").classList.add("hidden");
+  el("adminPublish").classList.add("hidden");
+  updateWeekButtons();
+}
+
+function updateWeekButtons() {
+  el("prevWeek").disabled = weekIndex >= weekIds.length - 1;
+  el("nextWeek").disabled = weekIndex <= 0;
+}
+
+async function loadWeeks(preferredWeekId) {
+  const session = sessionVersion;
+  const request = ++loadVersion;
+  el("planStatus").textContent = "Wochenpläne werden geladen…";
+  el("planGrid").innerHTML = "";
+  el("publishedMeta").textContent = "";
+  try {
+    const { collection, getDocs, orderBy, query, limit } = modules.fsMod;
+    const snap = await getDocs(query(collection(db, "companies", companyId, "weekPlans"), orderBy("weekStart", "desc"), limit(20)));
+    if (session !== sessionVersion || request !== loadVersion) return;
+    weekIds = snap.docs.map(x => x.id);
+    weekIndex = Math.max(0, weekIds.indexOf(preferredWeekId));
+    updateWeekButtons();
+    if (!weekIds.length) {
+      el("weekTitle").textContent = "Noch kein Wochenplan veröffentlicht";
+      el("planStatus").textContent = "";
+      return;
+    }
+    await loadWeek(weekIds[weekIndex]);
+  } catch {
+    if (session !== sessionVersion || request !== loadVersion) return;
+    weekIds = [];
+    weekIndex = 0;
+    updateWeekButtons();
+    el("weekTitle").textContent = "Wochenplan nicht verfügbar";
+    el("planStatus").textContent = "Wochenpläne konnten nicht geladen werden. Bitte Verbindung und Zugriffsrechte prüfen und erneut aktualisieren.";
   }
-  await loadWeek(weekIds[0]);
 }
 
 async function navigateWeek(delta) {
   const next = Math.max(0, Math.min(weekIds.length - 1, weekIndex + delta));
   if (next === weekIndex) return;
   weekIndex = next;
+  updateWeekButtons();
   await loadWeek(weekIds[weekIndex]);
 }
 
 async function loadWeek(weekId) {
   if (!weekId) return;
-  const { doc, getDoc, collection, getDocs } = modules.fsMod;
-  const metaSnap = await getDoc(doc(db, "companies", companyId, "weekPlans", weekId));
-  if (!metaSnap.exists()) return;
-  const meta = metaSnap.data();
-
-  const [entriesSnap, overridesSnap] = await Promise.all([
-    getDocs(collection(db, "companies", companyId, "weekPlans", weekId, "entries")),
-    getDocs(collection(db, "companies", companyId, "weekPlans", weekId, "overrides"))
-  ]);
-  const overrides = new Map(overridesSnap.docs.map(x => [x.id, x.data()]));
-  const entries = entriesSnap.docs.map(x => ({ ...x.data(), id: x.id, override: overrides.get(x.id) || null }));
-
-  el("weekTitle").textContent = `KW ${String(meta.isoWeek).padStart(2,"0")} · ${meta.weekStart} – ${meta.weekEnd}`;
-  el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · ${companyCode} · veröffentlicht von ${meta.publishedBy || "Admin"}`;
-  render(entries);
+  const request = ++loadVersion;
+  const tenant = companyId;
+  el("planGrid").innerHTML = "";
+  el("publishedMeta").textContent = "";
+  el("weekTitle").textContent = weekId;
+  el("planStatus").textContent = "Wochenplan wird geladen…";
+  try {
+    const { doc, getDoc, collection, getDocs } = modules.fsMod;
+    const metaSnap = await getDoc(doc(db, "companies", tenant, "weekPlans", weekId));
+    if (!metaSnap.exists()) throw new Error("Wochenplan nicht vorhanden.");
+    const meta = metaSnap.data();
+    const [entriesSnap, overridesSnap, slotsSnap] = await Promise.all([
+      getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "entries")),
+      getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "overrides")),
+      getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "productionSlots"))
+    ]);
+    if (request !== loadVersion || tenant !== companyId) return;
+    const overrides = new Map(overridesSnap.docs.map(x => [x.id, x.data()]));
+    const entries = entriesSnap.docs.map(x => ({ ...x.data(), id: x.id, override: overrides.get(x.id) || null }));
+    const slots = slotsSnap.docs.map(x => x.data());
+    el("weekTitle").textContent = `KW ${String(meta.isoWeek).padStart(2,"0")} · ${meta.weekStart} – ${meta.weekEnd}`;
+    el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · ${companyCode} · veröffentlicht von ${meta.publishedBy || "Admin"}`;
+    render(entries, meta.weekStart, slots);
+    el("planStatus").textContent = entries.length || slots.length ? "" : "Für diese Woche sind keine Einsätze oder Produktionsschichten geplant.";
+  } catch {
+    if (request !== loadVersion || tenant !== companyId) return;
+    el("planGrid").innerHTML = "";
+    el("planStatus").textContent = "Wochenplan konnte nicht geladen werden. Bitte erneut aktualisieren.";
+  }
 }
 
-function render(entries) {
+function render(entries, weekStart, productionSlots = []) {
   const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
   const byDate = new Map();
   for (const entry of entries) {
     if (!byDate.has(entry.date)) byDate.set(entry.date, []);
     byDate.get(entry.date).push(entry);
   }
-  const dates = [...byDate.keys()].sort();
-  const start = dates.length ? new Date(dates[0] + "T12:00:00") : new Date();
-  const monday = new Date(start);
-  const weekday = (monday.getDay() + 6) % 7;
-  monday.setDate(monday.getDate() - weekday);
+  // The selected snapshot defines the week, including empty historical weeks.
+  const monday = new Date(weekStart + "T12:00:00");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || Number.isNaN(monday.getTime()))
+    throw new Error("Ungültiger Wochenbeginn.");
 
   el("planGrid").innerHTML = "";
   for (let i=0;i<7;i++) {
@@ -164,12 +226,23 @@ function render(entries) {
       }
       col.appendChild(card);
     }
+    for (const slot of productionSlots.filter(x => x.date === key).sort((a, b) => String(a.start).localeCompare(String(b.start)))) {
+      const card = document.createElement("article");
+      card.className = "entry production-slot";
+      card.innerHTML = `<div class="employee">Produktion · ${escapeHtml(slot.orderNumber || "")}</div>
+        <div class="meta">${escapeHtml(slot.product || "")}</div>
+        <div class="meta">${escapeHtml(slot.workstationName || "")} · ${escapeHtml(slot.shiftName || "")}</div>
+        <div class="time">${escapeHtml(slot.start || "")}–${escapeHtml(slot.end || "")}</div>
+        <div class="note">Personalbedarf: ${escapeHtml(slot.requiredStaff ?? "—")}</div>`;
+      col.appendChild(card);
+    }
     el("planGrid").appendChild(col);
   }
 }
 
 function openEdit(base) {
   const v = { ...base, ...(base.override || {}) };
+  el("editStatus").textContent = "";
   el("editEntryId").value = base.id;
   el("editEmployee").value = v.employeeName || "";
   el("editWorkstation").value = v.workstationName || "";
@@ -186,6 +259,9 @@ async function saveOverride(event) {
   const weekId = weekIds[weekIndex];
   const entryId = el("editEntryId").value;
   const { doc, setDoc, serverTimestamp } = modules.fsMod;
+  el("saveOverrideButton").disabled = true;
+  el("editStatus").textContent = "Wird gespeichert…";
+  try {
   await setDoc(doc(db, "companies", companyId, "weekPlans", weekId, "overrides", entryId), {
     employeeName: el("editEmployee").value.trim(),
     workstationName: el("editWorkstation").value.trim(),
@@ -198,6 +274,11 @@ async function saveOverride(event) {
   });
   el("editDialog").close();
   await loadWeek(weekId);
+  } catch {
+    el("editStatus").textContent = "Speichern fehlgeschlagen. Deine Eingaben bleiben erhalten. Bitte erneut versuchen.";
+  } finally {
+    el("saveOverrideButton").disabled = false;
+  }
 }
 
 async function publishPackage() {
