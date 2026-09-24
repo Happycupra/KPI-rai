@@ -10,3 +10,5 @@ artifacts/
 *.log
 *.pfx
 *.p12
+
+online-weekplan/public/config.json
