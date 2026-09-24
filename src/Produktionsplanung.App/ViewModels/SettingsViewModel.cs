@@ -61,7 +61,7 @@ public partial class SettingsViewModel : ObservableObject
     private void StartGuidedTour()
     {
         if (Application.Current.MainWindow is Produktionsplanung.App.MainWindow mainWindow)
-            mainWindow.StartGuidedTour();
+            mainWindow.StartGuidedTour(fromBeginning: true);
     }
 
     [RelayCommand]
