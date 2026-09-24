@@ -47,6 +47,7 @@ jobs:
           node --check online-weekplan/public/app.js
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content online-weekplan/public/config.json -Raw | ConvertFrom-Json | Out-Null
           Push-Location online-weekplan/functions
           try {
             npm install --ignore-scripts --no-audit --no-fund
