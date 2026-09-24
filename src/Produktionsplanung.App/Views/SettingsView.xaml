@@ -230,8 +230,16 @@
                                     <TextBlock Text="Mit Zurücksetzen werden Navigation und Kalenderfilter auf die Standardansicht gestellt. Die vollständige Navigation wird beim nächsten Anmelden neu geladen."
                                                Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" />
                                 </Border>
-                                <Button Content="Persönliche Ansicht zurücksetzen" HorizontalAlignment="Center"
-                                        Command="{Binding ResetUiPreferencesCommand}" Style="{StaticResource ActionButtonStyle}" />
+                                <CheckBox Content="Kurze Kontext-Hinweise unter dem Seitentitel anzeigen"
+                                          IsChecked="{Binding ShowContextHints, Mode=TwoWay}"
+                                          Margin="0,0,0,14" HorizontalAlignment="Center"/>
+                                <WrapPanel HorizontalAlignment="Center">
+                                    <Button Content="App-Einführung erneut starten"
+                                            Command="{Binding StartGuidedTourCommand}"
+                                            Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,8,0" />
+                                    <Button Content="Persönliche Ansicht zurücksetzen"
+                                            Command="{Binding ResetUiPreferencesCommand}" Style="{StaticResource ActionButtonStyle}" />
+                                </WrapPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>

@@ -199,9 +199,16 @@
                             Click="Back_Click" IsEnabled="False" Margin="0,0,14,0" />
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <TextBlock x:Name="CurrentPageTitle" Text="Dashboard" Foreground="{StaticResource TextBrush}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="SolutionCompakt · Produktionsplanung" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                        <TextBlock x:Name="CurrentPageHint" Text="SolutionCompakt · Produktionsplanung" Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="HelpButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
+                                Style="{StaticResource SecondaryButtonStyle}" Click="HelpButton_Click"
+                                ToolTip="App-Einführung und Hilfe öffnen">
+                            <TextBlock Text="?" FontSize="18" FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Button>
                         <Button x:Name="NotificationButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
                                 Style="{StaticResource SecondaryButtonStyle}" Click="NotificationButton_Click">
                             <Grid Width="30" Height="28">

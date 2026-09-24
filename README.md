@@ -52,6 +52,16 @@ Siehe `docs/COMPANY-PROVISIONING.md` für Verkaufs-, Aktivierungs- und Offline-K
 
 **Status:** vollständig vorbereitet und lokal testbar; für echten Onlinebetrieb fehlen nur noch ein Firebase-Projekt, dessen öffentliche Web-Konfiguration und der kontrollierte Erst-Sync der Benutzer-Hashes/Rollen.
 
+### App-Einführung & kontextbezogene Hilfe
+- geführter Rundgang beim ersten Start pro Benutzer
+- rollenabhängige Schritte für Beobachter, Planer und Administratoren
+- deckt alle Hauptbereiche der Navigation ab
+- „Bereich öffnen“ springt direkt zum erklärten Modul
+- Hilfe-? oben rechts startet die Einführung jederzeit erneut
+- kurzer Kontext-Hinweis unter dem aktuellen Seitentitel
+- Tooltips ergänzen die Hilfe direkt an Feldern und Schaltflächen
+- Einstellungen erlauben Kontext-Hinweise ein-/auszuschalten und die Einführung erneut von vorne zu starten
+
 ### Personal- & Einsatzplanung
 - Outlook-ähnlicher Planungskalender mit Tag-, Woche- und Monatsansicht
 - Tages- und Wochenplanung

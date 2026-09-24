@@ -43,6 +43,7 @@ internal static partial class Program
             ("Planning sidebar is compact with filters collapsed by default", CompactPlanningSidebar),
             ("Sidebar modules keep distinct colors and active-state highlighting", ColoredNavigationActiveState),
             ("Standard action buttons are centered and consistently sized", StandardActionButtons),
+            ("Guided app tour is role-aware and contextual help is available", GuidedAppTour),
             ("Employee directory is compact and opens editor on demand", CompactEmployeeDirectory),
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
@@ -729,6 +730,82 @@ internal static partial class Program
         finally
         {
             window.Close();
+        }
+    }
+
+    private static void GuidedAppTour()
+    {
+        SessionService.SignIn(new UserAccount
+        {
+            Id = 501,
+            Username = "tour-observer",
+            DisplayName = "Tour Observer",
+            Role = UserRoles.Observer,
+            IsActive = true
+        });
+        var observer = AppTourCatalog.GetAvailableSteps();
+        Check(observer.Any(x => x.Key == "welcome") && observer.Any(x => x.Key == "analytics"),
+            "Observer tour is missing general introduction steps");
+        Check(observer.All(x => x.Key != "planning" && x.Key != "users" && x.Key != "settings"),
+            "Observer tour exposes planner/admin-only steps");
+
+        Planner();
+        var planner = AppTourCatalog.GetAvailableSteps();
+        Check(planner.Any(x => x.Key == "planning") && planner.Any(x => x.Key == "employees"),
+            "Planner tour is missing operational steps");
+        Check(planner.All(x => x.Key != "users" && x.Key != "settings"),
+            "Planner tour exposes administrator-only steps");
+
+        SessionService.SignIn(new UserAccount
+        {
+            Id = 502,
+            Username = "tour-admin",
+            DisplayName = "Tour Admin",
+            Role = UserRoles.Administrator,
+            IsActive = true
+        });
+        var admin = AppTourCatalog.GetAvailableSteps();
+        Check(admin.Any(x => x.Key == "users") && admin.Any(x => x.Key == "settings"),
+            "Administrator tour is missing administration steps");
+        Check(AppTourCatalog.GetContextHint("PlanningCalendarButton").Contains("Tages-", StringComparison.Ordinal) ||
+              AppTourCatalog.GetContextHint("PlanningCalendarButton").Contains("planst", StringComparison.OrdinalIgnoreCase),
+            "Planning context hint is missing");
+
+        AppSettingsService.UpdateCurrentUserPreferences(p =>
+        {
+            p.ShowContextHints = false;
+            p.AppTourLastShownVersion = AppTourCatalog.CurrentVersion;
+            p.AppTourCompletedVersion = AppTourCatalog.CurrentVersion;
+        });
+        var prefs = AppSettingsService.LoadCurrentUserPreferences();
+        Check(!prefs.ShowContextHints &&
+              prefs.AppTourLastShownVersion == AppTourCatalog.CurrentVersion &&
+              prefs.AppTourCompletedVersion == AppTourCatalog.CurrentVersion,
+            "Tour/context-help preferences were not persisted per user");
+
+        var main = new Produktionsplanung.App.MainWindow();
+        try
+        {
+            Check(main.FindName("HelpButton") is Button,
+                "Main window does not expose the top-bar help button");
+            Check(main.FindName("CurrentPageHint") is TextBlock,
+                "Main window does not expose contextual page help");
+
+            var tour = new Produktionsplanung.App.AppTourWindow(main, 0);
+            try
+            {
+                Check(tour.FindName("StepTitleText") is TextBlock title &&
+                      !string.IsNullOrWhiteSpace(title.Text),
+                    "Guided tour window did not render its first step");
+            }
+            finally
+            {
+                tour.Close();
+            }
+        }
+        finally
+        {
+            main.Close();
         }
     }
 
