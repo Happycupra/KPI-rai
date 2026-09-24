@@ -17,7 +17,8 @@ public partial class AppTourWindow : Window
         currentIndex = Math.Clamp(initialIndex, 0, Math.Max(0, steps.Count - 1));
 
         InitializeComponent();
-        Owner = owner;
+        if (owner.IsVisible)
+            Owner = owner;
 
         if (automatic)
         {
