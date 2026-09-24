@@ -80,8 +80,7 @@ public static class CompanyIdentityService
         var settings = AppSettingsService.Load();
         return !string.IsNullOrWhiteSpace(settings.CompanyId) &&
                !string.IsNullOrWhiteSpace(settings.CompanyCode) &&
-               !string.IsNullOrWhiteSpace(settings.CompanyName) &&
-               !string.Equals(settings.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase);
+               !string.IsNullOrWhiteSpace(settings.CompanyName);
     }
 
     public static string NormalizeCode(string? value)
