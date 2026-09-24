@@ -1,0 +1,13 @@
+{
+  "firebase": {
+    "apiKey": "AIzaSyDvPkzX6B5vmA2VWjZooDW08Pw17mRA29Y",
+    "authDomain": "solution-compact.firebaseapp.com",
+    "projectId": "solution-compact",
+    "storageBucket": "solution-compact.firebasestorage.app",
+    "messagingSenderId": "659351015653",
+    "appId": "1:659351015653:web:627d2eb1d3e698f24c840c",
+    "measurementId": "G-VYF1B3EC49"
+  },
+  "authEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/login",
+  "publishEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan"
+}

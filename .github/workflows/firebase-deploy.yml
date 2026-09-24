@@ -1,0 +1,65 @@
+name: Firebase Online Weekplan Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "online-weekplan/**"
+      - ".github/workflows/firebase-deploy.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-solution-compact-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: firebase-production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate Firebase web assets
+        run: |
+          node --check online-weekplan/functions/index.js
+          node --check online-weekplan/public/app.js
+          node -e "JSON.parse(require('fs').readFileSync('online-weekplan/firebase.json','utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('online-weekplan/public/config.json','utf8'))"
+
+      - name: Install Functions dependencies
+        working-directory: online-weekplan/functions
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Write Google credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "Missing FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT secret."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Deploy Hosting, Firestore Rules and Functions
+        working-directory: online-weekplan
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --project solution-compact --only hosting,firestore:rules,functions --non-interactive
+
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
