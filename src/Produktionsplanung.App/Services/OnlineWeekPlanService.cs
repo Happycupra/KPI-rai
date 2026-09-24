@@ -47,7 +47,7 @@ public static class OnlineWeekPlanService
                 Start = x.StartTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
                 End = x.EndTime.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
                 BreakMinutes = x.BreakMinutes,
-                Note = x.Comment ?? string.Empty
+                Note = string.Empty
             })
             .ToList();
 
