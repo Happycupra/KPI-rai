@@ -41,11 +41,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0" Height="34" Padding="10,5"
+            <TextBox Grid.Column="0" Height="38" Padding="10,5"
                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                      ToolTip="Nach Name, Personalnummer, Funktion, Abteilung oder Skill suchen"/>
 
-            <ComboBox Grid.Column="1" Height="34" Margin="10,0,0,0"
+            <ComboBox Grid.Column="1" Height="38" Margin="10,0,0,0"
                       ItemsSource="{Binding GroupModeOptions}"
                       SelectedItem="{Binding SelectedGroupMode, Mode=TwoWay}"
                       ToolTip="Mitarbeiterliste gruppieren"/>
@@ -69,12 +69,12 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Height="32" Padding="8,4"
+                        <TextBox Grid.Column="0" Height="38" Padding="8,4"
                                  Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="Neue Qualifikation"/>
                         <Button Grid.Column="1" Content="+ Skill" Command="{Binding AddQualificationCommand}"
                                 Padding="11,5" Margin="7,0,0,0"/>
-                        <ComboBox Grid.Column="3" Height="32" ItemsSource="{Binding Qualifications}"
+                        <ComboBox Grid.Column="3" Height="38" ItemsSource="{Binding Qualifications}"
                                   DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}"/>
                         <Button Grid.Column="4" Content="Löschen" Command="{Binding DeleteQualificationCommand}"
                                 Padding="11,5" Margin="7,0,0,0"/>
@@ -278,7 +278,7 @@
                                        FontSize="10" Foreground="{StaticResource MutedTextBrush}"
                                        Margin="0,2,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="×" Width="32" Height="32"
+                        <Button Grid.Column="1" Content="×" Width="32" Height="38"
                                 FontSize="17" Padding="0"
                                 ToolTip="Bearbeitung schliessen"
                                 Click="CloseEditor_Click" Style="{StaticResource CompactButtonStyle}"/>
@@ -289,7 +289,7 @@
                         <StackPanel Margin="0,0,6,0">
                             <TextBlock Text="Personalnummer *" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding PersonnelNumber, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -300,22 +300,22 @@
                                 <StackPanel>
                                     <TextBlock Text="Vorname *" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Nachname *" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
                                 </StackPanel>
                             </Grid>
 
                             <TextBlock Text="Funktion" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Role, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
 
                             <TextBlock Text="Abteilung" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -326,12 +326,12 @@
                                 <StackPanel>
                                     <TextBlock Text="Pensum %" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding WorkloadPercent, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Sollstunden / Woche" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding WeeklyTargetHours, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="32" Padding="8,4"/>
+                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
                                 </StackPanel>
                             </Grid>
 
