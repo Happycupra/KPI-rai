@@ -60,6 +60,7 @@ internal static partial class Program
             ("OEE aggregation is invariant under unit conversion", OeeUnits),
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
+            ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
             ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
@@ -925,6 +926,8 @@ internal static partial class Program
     private static void OnlineWeekPlanPackage()
     {
         var monday = new DateTime(2030, 1, 14);
+        var company = CompanyIdentityService.RegisterLocalCompany("Muster Produktion AG", "MUSTER-AG");
+        Check(company.Success, "Test company registration failed");
         SessionService.SignIn(new UserAccount
         {
             Id = 999,
@@ -964,7 +967,10 @@ internal static partial class Program
         }
 
         var snapshot = OnlineWeekPlanService.BuildSnapshot(monday);
-        Check(snapshot.SchemaVersion == "1.0" && snapshot.Entries.Any(x => x.EmployeeName == employeeName),
+        Check(snapshot.SchemaVersion == "1.1" &&
+              snapshot.CompanyCode == "MUSTER-AG" &&
+              snapshot.CompanyId == company.Settings!.CompanyId &&
+              snapshot.Entries.Any(x => x.EmployeeName == employeeName),
             "Online week plan snapshot did not include the planned employee");
         Check(snapshot.Entries.All(x => !x.Note.Contains("vertraulich", StringComparison.OrdinalIgnoreCase)),
             "Online week plan leaked absence details");
@@ -972,7 +978,8 @@ internal static partial class Program
         var package = OnlineWeekPlanService.PreparePackage(monday);
         Check(File.Exists(package.FilePath), "Online week plan JSON package was not created");
         var json = File.ReadAllText(package.FilePath);
-        Check(json.Contains("\"schemaVersion\": \"1.0\"", StringComparison.Ordinal) &&
+        Check(json.Contains("\"schemaVersion\": \"1.1\"", StringComparison.Ordinal) &&
+              json.Contains("\"companyCode\": \"MUSTER-AG\"", StringComparison.Ordinal) &&
               !json.Contains("Interner Einsatzkommentar", StringComparison.Ordinal) &&
               !json.Contains("Krank vertraulich", StringComparison.Ordinal) &&
               !json.Contains("Darf nicht online erscheinen", StringComparison.Ordinal),
@@ -1291,6 +1298,38 @@ internal static partial class Program
         Check(vm.NewPassword == "Temporary123", "Password not passed to VM");
         vm.NewUserCommand.Execute(null);
         Check(box.Password == string.Empty, "Password not cleared on new user");
+    }
+
+    private static void CompanyRegistrationAndInitialAdmin()
+    {
+        var result = AuthenticationService.CreateInitialAdministrator(
+            "Muster Maschinen AG",
+            "muster maschinen ag",
+            "firmen-admin",
+            "Firmen Admin",
+            "AdminTest123");
+
+        Check(result.Success, $"Initial company/admin setup failed: {result.Message}");
+
+        var settings = AppSettingsService.Load();
+        Check(settings.CompanyName == "Muster Maschinen AG",
+            "Company name was not registered");
+        Check(settings.CompanyCode == "MUSTER-MASCHINEN-AG",
+            "Company code was not normalized");
+        Check(Guid.TryParseExact(settings.CompanyId, "N", out _),
+            "Stable company id was not generated");
+        Check(settings.CompanyRegistrationMode == CompanyIdentityService.LocalRegistrationMode &&
+              settings.CompanyRegisteredAtUtc.HasValue,
+            "Company registration metadata is incomplete");
+
+        using var db = new AppDbContext();
+        var admin = db.UserAccounts.Single(x => x.Username == "firmen-admin");
+        Check(admin.Role == UserRoles.Administrator && admin.IsActive,
+            "First company administrator was not persisted");
+
+        var second = AuthenticationService.CreateInitialAdministrator(
+            "Andere Firma", "ANDERE", "zweiter-admin", "Zweiter Admin", "AdminTest123");
+        Check(!second.Success, "A second initial administrator unexpectedly re-ran company setup");
     }
 
     private static void UserAdminCreatesUser()
