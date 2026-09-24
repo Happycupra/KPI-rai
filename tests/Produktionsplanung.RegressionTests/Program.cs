@@ -61,6 +61,7 @@ internal static partial class Program
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
             ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
+            ("Existing installations receive a non-breaking company identity migration", LegacyCompanyIdentityMigration),
             ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
@@ -1298,6 +1299,37 @@ internal static partial class Program
         Check(vm.NewPassword == "Temporary123", "Password not passed to VM");
         vm.NewUserCommand.Execute(null);
         Check(box.Password == string.Empty, "Password not cleared on new user");
+    }
+
+    private static void LegacyCompanyIdentityMigration()
+    {
+        using (var db = new AppDbContext())
+        {
+            var (hash, salt) = PasswordService.HashPassword("LegacyTest123");
+            db.UserAccounts.Add(new UserAccount
+            {
+                Username = "legacy-admin",
+                DisplayName = "Legacy Admin",
+                Role = UserRoles.Administrator,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+            db.SaveChanges();
+        }
+
+        var migrated = CompanyIdentityService.EnsureExistingInstallationIdentity();
+        Check(Guid.TryParseExact(migrated.CompanyId, "N", out _),
+            "Legacy installation did not receive a stable company id");
+        Check(!string.IsNullOrWhiteSpace(migrated.CompanyCode),
+            "Legacy installation did not receive a company code");
+        Check(migrated.CompanyRegistrationMode == CompanyIdentityService.LegacyMigrationMode,
+            "Legacy installation migration mode was not recorded");
+
+        var second = CompanyIdentityService.EnsureExistingInstallationIdentity();
+        Check(second.CompanyId == migrated.CompanyId && second.CompanyCode == migrated.CompanyCode,
+            "Legacy company identity changed on repeated startup");
     }
 
     private static void CompanyRegistrationAndInitialAdmin()
