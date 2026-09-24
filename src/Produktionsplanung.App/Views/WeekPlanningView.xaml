@@ -53,6 +53,30 @@
                 </Border>
 
                 <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Online-Wochenplan" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                            <TextBlock Text="Firebase-ready: normale Web-Benutzer sehen den veröffentlichten Wochenplan nur lesend; Administratoren erhalten eine reduzierte Online-Bearbeitung."
+                                       Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            <TextBlock x:Name="OnlineWeekPlanStatusText" Foreground="{StaticResource PrimaryDarkBrush}"
+                                       FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
+                        <WrapPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
+                            <Button x:Name="PrepareOnlineWeekPlanButton" Content="Online-Paket vorbereiten"
+                                    Click="PrepareOnlineWeekPlan_Click" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                            <Button x:Name="OpenOnlineWeekPlanButton" Content="Online öffnen"
+                                    Click="OpenOnlineWeekPlan_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+                            <Button x:Name="ConfigureFirebaseButton" Content="Firebase konfigurieren"
+                                    Click="ConfigureFirebase_Click" Style="{StaticResource ActionButtonStyle}"/>
+                        </WrapPanel>
+                    </Grid>
+                </Border>
+
+                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
                     <StackPanel>
                         <TextBlock Text="Auftragsabdeckung der Woche" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                         <TextBlock Text="Jede Produktionsschicht eines mehrschichtigen Auftrags wird separat dargestellt und mit der tatsächlich eingeplanten Mannschaft verglichen."
