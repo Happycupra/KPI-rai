@@ -223,10 +223,10 @@
                         <TextBox Text="{Binding RequiredStaff, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
 
                         <TextBlock Text="Beschreibung" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
 
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14"  VerticalScrollBarVisibility="Auto"/>
 
                         <Border CornerRadius="8" Padding="10,7" Margin="0,0,0,10">
                             <Border.Style>
