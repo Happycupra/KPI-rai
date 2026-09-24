@@ -47,7 +47,13 @@ jobs:
           node --check online-weekplan/public/app.js
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
-          npm install --prefix online-weekplan/functions --ignore-scripts --no-audit --no-fund
+          Push-Location online-weekplan/functions
+          try {
+            npm install --ignore-scripts --no-audit --no-fund
+          }
+          finally {
+            Pop-Location
+          }
 
       - name: Restore
         run: dotnet restore Produktionsplanung.sln
