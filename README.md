@@ -26,6 +26,18 @@
 
 **Hinweis zur aktuellen Architektur:** Die Nachrichten arbeiten mit der lokalen SQLite-Datenbank der jeweiligen Installation. Ein gleichzeitiger Austausch zwischen getrennten PCs setzt künftig den zentralen Mehrbenutzer-/Serverbetrieb voraus.
 
+### Firmenregistrierung & Mandantenfähigkeit
+- stabile technische `CompanyId` pro Installation
+- lesbarer `CompanyCode` für den späteren Online-Login
+- Firmenname + Firmen-Code werden bei echter lokaler Ersteinrichtung einmalig registriert
+- bestehende Installationen werden automatisch und ohne Benutzer-/Datenverlust migriert
+- lokaler Betrieb bleibt offline-fähig; die Cloud ist nicht Voraussetzung zum Starten
+- Firebase-Daten werden unter `companies/{companyId}/...` strikt nach Firma getrennt
+- Firmen-Code + Benutzername + Passwort erlauben gleiche Benutzernamen in unterschiedlichen Firmen
+- Verkäufer-Provisionierung ist vorbereitet: online per Aktivierungscode oder später offline per digital signierter `.sccompany`-Datei
+
+Siehe `docs/COMPANY-PROVISIONING.md` für Verkaufs-, Aktivierungs- und Offline-Konzept.
+
 ### Online-Wochenplan · Firebase-ready
 - veröffentlichbarer, versionierter Wochenplan-Snapshot als JSON
 - enthält Personaleinsätze und Produktionsschichten, jedoch keine Abwesenheitsgründe/-kommentare
