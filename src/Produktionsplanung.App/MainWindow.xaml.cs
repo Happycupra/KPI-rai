@@ -389,7 +389,7 @@ public partial class MainWindow : Window
     private void SetSidebarCollapsed(bool collapsed, bool persist = true)
     {
         sidebarCollapsed = collapsed;
-        SidebarColumn.Width = new GridLength(collapsed ? 74 : 260);
+        SidebarColumn.Width = new GridLength(collapsed ? 78 : 260);
         FullBrand.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
         CompactBrand.Visibility = collapsed ? Visibility.Visible : Visibility.Collapsed;
         FooterDetails.Visibility = collapsed ? Visibility.Collapsed : Visibility.Visible;
@@ -404,7 +404,11 @@ public partial class MainWindow : Window
         {
             button.Content = collapsed ? string.Empty : button.ToolTip?.ToString() ?? string.Empty;
             button.HorizontalContentAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Left;
+            button.HorizontalAlignment = collapsed ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+            button.Width = collapsed ? 48 : double.NaN;
+            button.Height = collapsed ? 48 : 46;
             button.Padding = collapsed ? new Thickness(0) : new Thickness(9, 0, 9, 0);
+            button.Margin = collapsed ? new Thickness(0, 4, 0, 4) : new Thickness(0, 3, 0, 3);
         }
 
         ApplyGroupVisibility();
@@ -482,6 +486,7 @@ public partial class MainWindow : Window
         {
             button.Background = Brushes.Transparent;
             button.BorderBrush = Brushes.Transparent;
+            button.BorderThickness = new Thickness(0);
             button.Foreground = new SolidColorBrush(Color.FromRgb(200, 216, 230));
             button.FontWeight = FontWeights.Medium;
         }
@@ -494,6 +499,7 @@ public partial class MainWindow : Window
         var activeBackground = new SolidColorBrush(Color.FromArgb(52, accent.R, accent.G, accent.B));
         active.Background = activeBackground;
         active.BorderBrush = accentBrush;
+        active.BorderThickness = new Thickness(1);
         active.Foreground = Brushes.White;
         active.FontWeight = FontWeights.SemiBold;
     }
