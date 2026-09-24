@@ -82,6 +82,16 @@ public static class AppTourCatalog
             },
             AreaKey: "orders", NavigationButtonName: "ProductionOrdersButton", Audience: TourAudience.PlannerOrAdmin),
         new AppTourStep(
+            "archive", "📦", "Abgeschlossene Chargen",
+            "Hier findest du abgeschlossene Chargen als Produktionshistorie und kannst Details oder Berichte wieder aufrufen.",
+            new[]
+            {
+                "Suche nach Artikel, Charge oder Auftrag, um ältere Produktionen schnell zu finden.",
+                "Historische Chargen bleiben nachvollziehbar und werden nicht mit laufenden Aufträgen vermischt.",
+                "Chargendetails und PDF-Berichte unterstützen Rückfragen und Dokumentation."
+            },
+            AreaKey: "batches", NavigationButtonName: "BatchesButton", Audience: TourAudience.PlannerOrAdmin),
+        new AppTourStep(
             "cockpit", "🏭", "Auftragscockpit",
             "Das Auftragscockpit begleitet einen Auftrag durch Arbeitsgänge, Arbeitskarten und Status.",
             new[]
