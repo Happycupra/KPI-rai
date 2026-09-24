@@ -1,0 +1,62 @@
+<Window x:Class="Produktionsplanung.App.FirebaseWeekPlanConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Online-Wochenplan · Firebase"
+        Icon="{StaticResource SolutionCompaktIcon}"
+        Width="720" Height="650" MinWidth="640" MinHeight="560"
+        WindowStartupLocation="CenterOwner" Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,18">
+            <TextBlock Text="Online-Wochenplan · Firebase" Style="{StaticResource PageTitleTextStyle}"/>
+            <TextBlock Text="Die Werte dürfen leer bleiben. Sie werden erst benötigt, sobald ein Firebase-Projekt angelegt wurde."
+                       Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <Border Style="{StaticResource SectionCardStyle}" Padding="18" Margin="0,0,0,14">
+                    <StackPanel>
+                        <CheckBox x:Name="EnabledBox" Content="Online-Wochenplan aktivieren" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                        <TextBlock Text="Firebase Project ID" FontWeight="SemiBold"/>
+                        <TextBox x:Name="ProjectIdBox" Margin="0,5,0,12"/>
+
+                        <TextBlock Text="Firebase Web API Key" FontWeight="SemiBold"/>
+                        <TextBox x:Name="ApiKeyBox" Margin="0,5,0,12"/>
+
+                        <TextBlock Text="Login-Endpunkt (Custom Authentication)" FontWeight="SemiBold"/>
+                        <TextBox x:Name="AuthEndpointBox" Margin="0,5,0,12"
+                                 ToolTip="HTTPS-Endpunkt, der Benutzername + Passwort prüft und ein Firebase Custom Token zurückgibt."/>
+
+                        <TextBlock Text="Firebase Hosting URL" FontWeight="SemiBold"/>
+                        <TextBox x:Name="HostingUrlBox" Margin="0,5,0,12"/>
+
+                        <TextBlock Text="Publish-Endpunkt (später)" FontWeight="SemiBold"/>
+                        <TextBox x:Name="PublishEndpointBox" Margin="0,5,0,0"
+                                 ToolTip="Optionaler sicherer Backend-Endpunkt für die automatische Veröffentlichung aus SolutionCompakt."/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource SectionCardStyle}" Padding="18">
+                    <StackPanel>
+                        <TextBlock Text="Sicherheit" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap" LineHeight="20"
+                                   Text="In SolutionCompakt werden hier keine Firebase-Service-Account-Schlüssel und keine Klartext-Passwörter gespeichert. Der spätere Web-Login verwendet denselben sichtbaren Benutzernamen und dasselbe Passwort über einen geschützten Custom-Auth-Endpunkt. Rollen werden als Firebase Custom Claims übertragen."/>
+                        <TextBlock x:Name="StatusText" Margin="0,12,0,0" FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+            <Button Content="Abbrechen" IsCancel="True" Margin="0,0,10,0" Style="{StaticResource ActionButtonStyle}"/>
+            <Button Content="Speichern" Click="Save_Click" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -23,6 +23,7 @@ public partial class WeekPlanningView : UserControl
         PreviewMouseMove += EmployeeName_PreviewMouseMove;
         MouseLeave += (_, _) => Cursor = Cursors.Arrow;
         viewModel.RefreshProductionOrderCoverage();
+        RefreshOnlineWeekPlanStatus();
     }
 
     private void EmployeeName_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -84,6 +85,64 @@ public partial class WeekPlanningView : UserControl
             viewModel.StatusMessage = $"PDF-Export fehlgeschlagen: {ex.Message}";
             MessageBox.Show(ex.Message, "PDF-Export", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    private void PrepareOnlineWeekPlan_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not WeekPlanningViewModel viewModel)
+            return;
+
+        try
+        {
+            var result = OnlineWeekPlanService.PreparePackage(viewModel.WeekStart);
+            viewModel.StatusMessage = $"Online-Paket {result.WeekId} vorbereitet: {result.AssignmentCount} Personaleinsätze, {result.ProductionSlotCount} Produktionsschichten.";
+            RefreshOnlineWeekPlanStatus();
+            Process.Start(new ProcessStartInfo(Path.GetDirectoryName(result.FilePath)!)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            viewModel.StatusMessage = "Online-Paket konnte nicht vorbereitet werden: " + ex.Message;
+            MessageBox.Show(ex.Message, "Online-Wochenplan", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void ConfigureFirebase_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SessionService.IsAdministrator)
+            return;
+
+        var dialog = new FirebaseWeekPlanConfigWindow { Owner = Window.GetWindow(this) };
+        dialog.ShowDialog();
+        RefreshOnlineWeekPlanStatus();
+    }
+
+    private void OpenOnlineWeekPlan_Click(object sender, RoutedEventArgs e)
+    {
+        var settings = AppSettingsService.Load();
+        if (!Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out var uri))
+        {
+            MessageBox.Show("Die Firebase Hosting URL ist noch nicht konfiguriert.",
+                "Online-Wochenplan", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(uri.ToString()) { UseShellExecute = true });
+    }
+
+    private void RefreshOnlineWeekPlanStatus()
+    {
+        var settings = AppSettingsService.Load();
+        var prepared = settings.LastOnlineWeekPreparedAtUtc.HasValue
+            ? $" · letztes Paket {settings.LastOnlineWeekPreparedId} am {settings.LastOnlineWeekPreparedAtUtc.Value.ToLocalTime():dd.MM.yyyy HH:mm}"
+            : " · noch kein Paket vorbereitet";
+
+        OnlineWeekPlanStatusText.Text = OnlineWeekPlanService.FirebaseStatusText(settings) + prepared;
+        PrepareOnlineWeekPlanButton.IsEnabled = SessionService.IsAdministrator;
+        ConfigureFirebaseButton.IsEnabled = SessionService.IsAdministrator;
+        OpenOnlineWeekPlanButton.IsEnabled = Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out _);
     }
 
     private static bool TryGetEmployeeRow(DependencyObject? source, out EmployeeWeekRow row)

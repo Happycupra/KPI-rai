@@ -16,6 +16,17 @@ public sealed class AppSettings
     public DateTime? LastSuccessfulBackupAtLocal { get; set; }
     public string LastSuccessfulBackupPath { get; set; } = string.Empty;
 
+    // Firebase-ready online week plan. These values are configuration identifiers/endpoints,
+    // never service-account credentials or plaintext user passwords.
+    public bool OnlineWeekPlanEnabled { get; set; }
+    public string FirebaseProjectId { get; set; } = string.Empty;
+    public string FirebaseWebApiKey { get; set; } = string.Empty;
+    public string FirebaseAuthEndpoint { get; set; } = string.Empty;
+    public string FirebaseHostingUrl { get; set; } = string.Empty;
+    public string FirebasePublishEndpoint { get; set; } = string.Empty;
+    public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
+    public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
+
     // Security settings are installation-wide.
     public bool AutoLockEnabled { get; set; } = true;
     public int AutoLockMinutes { get; set; } = 30;
@@ -239,6 +250,12 @@ public static class AppSettingsService
         settings.BackupRetentionCount = Math.Clamp(settings.BackupRetentionCount, 1, 100);
         settings.CsvDelimiter = string.IsNullOrEmpty(settings.CsvDelimiter) ? ";" : settings.CsvDelimiter[..1];
         settings.LastSuccessfulBackupPath = settings.LastSuccessfulBackupPath?.Trim() ?? string.Empty;
+        settings.FirebaseProjectId = settings.FirebaseProjectId?.Trim() ?? string.Empty;
+        settings.FirebaseWebApiKey = settings.FirebaseWebApiKey?.Trim() ?? string.Empty;
+        settings.FirebaseAuthEndpoint = settings.FirebaseAuthEndpoint?.Trim() ?? string.Empty;
+        settings.FirebaseHostingUrl = settings.FirebaseHostingUrl?.Trim() ?? string.Empty;
+        settings.FirebasePublishEndpoint = settings.FirebasePublishEndpoint?.Trim() ?? string.Empty;
+        settings.LastOnlineWeekPreparedId = settings.LastOnlineWeekPreparedId?.Trim() ?? string.Empty;
         settings.AutoLockMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
         settings.RecoveryCodeHash = settings.RecoveryCodeHash?.Trim() ?? string.Empty;
         settings.RecoveryCodeSalt = settings.RecoveryCodeSalt?.Trim() ?? string.Empty;
