@@ -35,6 +35,20 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Setup Node for Firebase web validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate Firebase-ready web app
+        shell: pwsh
+        run: |
+          node --check online-weekplan/functions/index.js
+          node --check online-weekplan/public/app.js
+          Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
+          npm install --prefix online-weekplan/functions --ignore-scripts --no-audit --no-fund
+
       - name: Restore
         run: dotnet restore Produktionsplanung.sln
 
