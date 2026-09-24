@@ -26,10 +26,10 @@
                 <TextBlock Text="{Binding WeekRangeText}" FontSize="16" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
                 <Button Content="Diese Woche" Command="{Binding CurrentWeekCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
-                <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="36" Margin="0,0,8,0" />
-                <Button Content="›" Width="38" Height="36" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <DatePicker SelectedDate="{Binding WeekStart, Mode=TwoWay}" Width="145" Height="38" Margin="0,0,8,0" />
+                <Button Content="›" Width="38" Height="38" Command="{Binding NextWeekCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
                 <CheckBox x:Name="ExportWeekendsCheckBox" Content="WE im PDF" IsChecked="True" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="Samstag und Sonntag im PDF einschliessen" />
                 <Button Content="PDF Wochenplan" Margin="0,0,8,0" Click="ExportWeeklyPlanPdf_Click" Style="{StaticResource ActionButtonStyle}" />
                 <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
