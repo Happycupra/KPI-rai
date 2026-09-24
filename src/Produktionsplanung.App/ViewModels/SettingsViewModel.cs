@@ -53,6 +53,8 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnShowContextHintsChanged(bool value)
     {
         AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.ShowContextHints = value);
+        if (Application.Current.MainWindow is Produktionsplanung.App.MainWindow mainWindow)
+            mainWindow.RefreshContextHelpPreference();
     }
 
     [RelayCommand]
@@ -79,6 +81,7 @@ public partial class SettingsViewModel : ObservableObject
             preferences.CalendarShowAbsences = true;
             preferences.CalendarShowOperatingCalendar = true;
             preferences.CalendarShowWeekends = true;
+            preferences.ShowContextHints = true;
         });
         StatusMessage = "Persönliche Benutzeroberfläche zurückgesetzt. Die Navigation wird beim nächsten Anmelden vollständig mit den Standardwerten geladen.";
     }
