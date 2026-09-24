@@ -335,6 +335,7 @@
             <Setter Property="Height" Value="38" />
             <Setter Property="MinHeight" Value="38" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Background" Value="{StaticResource CardBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
