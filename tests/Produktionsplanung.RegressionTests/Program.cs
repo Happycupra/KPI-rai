@@ -632,10 +632,15 @@ internal static partial class Program
 
     private static void StandardActionButtons()
     {
+        Planner();
         var actionStyle = (Style)Application.Current.FindResource("ActionButtonStyle");
         var primaryStyle = (Style)Application.Current.FindResource("PrimaryActionButtonStyle");
         var dangerStyle = (Style)Application.Current.FindResource("DangerActionButtonStyle");
         var compactStyle = (Style)Application.Current.FindResource("CompactButtonStyle");
+        var textBoxStyle = (Style)Application.Current.FindResource(typeof(TextBox));
+        var comboBoxStyle = (Style)Application.Current.FindResource(typeof(ComboBox));
+        var datePickerStyle = (Style)Application.Current.FindResource(typeof(DatePicker));
+        var passwordBoxStyle = (Style)Application.Current.FindResource(typeof(PasswordBox));
 
         static object? SetterValue(Style style, DependencyProperty property) =>
             style.Setters.OfType<Setter>().LastOrDefault(x => x.Property == property)?.Value;
@@ -657,6 +662,24 @@ internal static partial class Program
         Check(Equals(SetterValue(compactStyle, Control.VerticalContentAlignmentProperty), VerticalAlignment.Center),
             "Compact icon button style is not vertically centered.");
 
+        foreach (var inputStyle in new[] { textBoxStyle, comboBoxStyle, datePickerStyle, passwordBoxStyle })
+        {
+            Check(Convert.ToDouble(SetterValue(inputStyle, FrameworkElement.HeightProperty)) >= 38,
+                "A global input style is below the 38px UI standard.");
+            Check(Equals(SetterValue(inputStyle, FrameworkElement.HorizontalAlignmentProperty), HorizontalAlignment.Stretch),
+                "A global input style does not stretch consistently in forms.");
+            Check(Equals(SetterValue(inputStyle, Control.VerticalContentAlignmentProperty), VerticalAlignment.Center),
+                "A global input style is not vertically centered.");
+        }
+
+        var multilineTrigger = textBoxStyle.Triggers.OfType<Trigger>()
+            .FirstOrDefault(x => x.Property == TextBox.AcceptsReturnProperty && Equals(x.Value, true));
+        Check(multilineTrigger is not null, "TextBox style has no multiline writing-area trigger.");
+        var multilineMinHeight = multilineTrigger!.Setters.OfType<Setter>()
+            .FirstOrDefault(x => x.Property == FrameworkElement.MinHeightProperty)?.Value;
+        Check(multilineMinHeight is not null && Convert.ToDouble(multilineMinHeight) >= 72,
+            "Multiline writing areas are below the 72px minimum height.");
+
         var views = new FrameworkElement[]
         {
             new ShiftsView(),
@@ -666,23 +689,51 @@ internal static partial class Program
             new ProductionOrdersView(),
             new ProductionActualView(),
             new SkillMatrixView(),
-            new DashboardView()
+            new DashboardView(),
+            new PlanningCalendarView(),
+            new DayPlanningView(),
+            new WeekPlanningView(),
+            new WorkTimeCalendarView(),
+            new AnalyticsView(),
+            new ManufacturingControlView(),
+            new SettingsView()
         };
 
         foreach (var view in views)
         {
             foreach (var button in LogicalDescendants<Button>(view))
             {
+                Check(button.HorizontalContentAlignment == HorizontalAlignment.Center,
+                    $"Button '{button.Content}' in {view.GetType().Name} is not horizontally centered.");
+                Check(button.VerticalContentAlignment == VerticalAlignment.Center,
+                    $"Button '{button.Content}' in {view.GetType().Name} is not vertically centered.");
+
                 if (button.Style == actionStyle || button.Style == primaryStyle || button.Style == dangerStyle)
-                {
-                    Check(button.HorizontalContentAlignment == HorizontalAlignment.Center,
-                        $"Button '{button.Content}' in {view.GetType().Name} is not horizontally centered.");
-                    Check(button.VerticalContentAlignment == VerticalAlignment.Center,
-                        $"Button '{button.Content}' in {view.GetType().Name} is not vertically centered.");
-                    Check(button.MinHeight >= 38,
+                    Check(button.MinHeight >= 38 || button.Height >= 38,
                         $"Button '{button.Content}' in {view.GetType().Name} is below the standard height.");
+            }
+
+            foreach (var textBox in LogicalDescendants<TextBox>(view))
+            {
+                if (textBox.AcceptsReturn)
+                {
+                    Check(textBox.MinHeight >= 72 || (!double.IsNaN(textBox.Height) && textBox.Height >= 72),
+                        $"Multiline TextBox in {view.GetType().Name} is too small.");
+                }
+                else
+                {
+                    Check(!double.IsNaN(textBox.Height) && textBox.Height >= 38,
+                        $"TextBox in {view.GetType().Name} is below the standard height.");
                 }
             }
+
+            foreach (var combo in LogicalDescendants<ComboBox>(view))
+                Check(!double.IsNaN(combo.Height) && combo.Height >= 38,
+                    $"ComboBox in {view.GetType().Name} is below the standard height.");
+
+            foreach (var picker in LogicalDescendants<DatePicker>(view))
+                Check(!double.IsNaN(picker.Height) && picker.Height >= 38,
+                    $"DatePicker in {view.GetType().Name} is below the standard height.");
         }
     }
 
@@ -726,6 +777,23 @@ internal static partial class Program
                 "Selected production orders area did not receive a tinted active background.");
             Check(dashboard.BorderBrush is SolidColorBrush inactiveDashboard && inactiveDashboard.Color.A == 0,
                 "Previous navigation area stayed active after switching modules.");
+
+            var toggle = (Button)window.FindName("SidebarToggleButton");
+            toggle.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var sidebarColumn = (ColumnDefinition)window.FindName("SidebarColumn");
+
+            Check(sidebarColumn.Width.Value == 78,
+                $"Collapsed sidebar width is not the compact standard: {sidebarColumn.Width.Value}");
+            Check(buttons.All(x => x.Width == 48 && x.Height == 48),
+                "Collapsed navigation buttons are not fixed to 48x48.");
+            Check(buttons.All(x => x.HorizontalAlignment == HorizontalAlignment.Center &&
+                                   x.HorizontalContentAlignment == HorizontalAlignment.Center),
+                "Collapsed navigation icons are not centered.");
+            Check(buttons.All(x => string.IsNullOrEmpty(x.Content?.ToString()) && x.ToolTip is not null),
+                "Collapsed navigation should hide labels but retain tooltips.");
+            Check(orders.BorderThickness.Left >= 1 && orders.BorderBrush is SolidColorBrush collapsedActive &&
+                  collapsedActive.Color.A > 0,
+                "Active collapsed navigation icon is not visually emphasized.");
         }
         finally
         {
