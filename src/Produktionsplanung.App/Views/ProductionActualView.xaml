@@ -62,7 +62,7 @@
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
                             <TextBlock Text="Erfasste Ist-Produktion" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
-                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="32" VerticalContentAlignment="Center" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" />
+                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" />
                         </Grid>
                         <DataGrid ItemsSource="{Binding ActualsView}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
@@ -91,17 +91,17 @@
 
                         <TextBlock Text="Produktionsauftrag" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <ComboBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
-                                  DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,12" />
+                                  DisplayMemberPath="DisplayName" Height="38" Margin="0,0,0,12" />
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ArticleNumber}" IsReadOnly="True" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding ArticleNumber}" IsReadOnly="True" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding BatchNumber}" IsReadOnly="True" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding BatchNumber}" IsReadOnly="True" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
@@ -109,11 +109,11 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Datum" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <DatePicker SelectedDate="{Binding ActualDate, Mode=TwoWay}" Height="34" />
+                                <DatePicker SelectedDate="{Binding ActualDate, Mode=TwoWay}" Height="38" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Sollrate / Stunde" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding IdealRatePerHour, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding IdealRatePerHour, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
@@ -121,11 +121,11 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Geplante Produktionszeit (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding PlannedProductionMinutes, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding PlannedProductionMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Laufzeit (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RunMinutes, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding RunMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
@@ -133,15 +133,15 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Gesamtmenge" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding TotalQuantity, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding TotalQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Gutmenge" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding GoodQuantity, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding GoodQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="Ausschuss" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ScrapQuantity, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                                <TextBox Text="{Binding ScrapQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
                             </StackPanel>
                         </Grid>
 
@@ -153,7 +153,7 @@
                         </Border>
 
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="62" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
 
                         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,8" />
                         <Button Content="Ist-Erfassung speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
@@ -188,11 +188,11 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Stillstand hinzufügen" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
                         <TextBlock Text="Grund" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding DowntimeReasons}" SelectedItem="{Binding DowntimeReason, Mode=TwoWay}" Height="34" Margin="0,0,0,12" />
+                        <ComboBox ItemsSource="{Binding DowntimeReasons}" SelectedItem="{Binding DowntimeReason, Mode=TwoWay}" Height="38" Margin="0,0,0,12" />
                         <TextBlock Text="Dauer (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding DowntimeMinutes, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding DowntimeMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" Margin="0,0,0,12" />
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding DowntimeComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding DowntimeComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
                         <Button Content="Stillstand erfassen" Command="{Binding AddDowntimeCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                     </StackPanel>
                 </Grid>

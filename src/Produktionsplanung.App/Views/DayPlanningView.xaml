@@ -18,10 +18,10 @@
                 <TextBlock Text="{Binding SelectedDateText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
                 <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
-                <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Width="145" Height="36" Margin="0,0,8,0" />
-                <Button Content="›" Width="38" Height="36" Command="{Binding NextDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
+                <DatePicker SelectedDate="{Binding SelectedDate, Mode=TwoWay}" Width="145" Height="38" Margin="0,0,8,0" />
+                <Button Content="›" Width="38" Height="38" Command="{Binding NextDayCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
                 <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
             </StackPanel>
         </Grid>
@@ -214,12 +214,12 @@
                         <TextBlock Text="Zuweisung" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                         <TextBlock Text="Mitarbeiter einer Schicht und einem Arbeitsplatz zuordnen." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,20" />
                         <TextBlock Text="Mitarbeiter" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
+                        <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="38" Margin="0,0,0,14" />
                         <TextBlock Text="Arbeitsplatz" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,6" />
+                        <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="38" Margin="0,0,0,6" />
                         <TextBlock Text="{Binding WorkstationSkillRequirementText}" Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" Margin="0,0,0,14" />
                         <TextBlock Text="Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" Margin="0,0,0,14" />
+                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="38" Margin="0,0,0,14" />
 
                         <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="9" Padding="12" Margin="0,0,0,14">
                             <StackPanel>
@@ -249,7 +249,7 @@
                         </Border>
 
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,0,0,18" />
                         <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,18">
                             <TextBlock Text="SolutionCompakt prüft Abwesenheit, Doppelbelegung, Betriebskalender und Qualifikationspflichten. Skill-Verstösse erscheinen zusätzlich im Warnungsbereich."
                                        TextWrapping="Wrap" Foreground="{StaticResource PrimaryDarkBrush}" />

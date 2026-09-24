@@ -50,9 +50,9 @@ main{max-width:1580px;margin:0 auto;padding:28px}
 .login-heading p{margin:0 0 18px;color:var(--muted)}
 h1,h2{margin-top:0}
 label{display:flex;flex-direction:column;gap:7px;font-weight:650;margin:14px 0;color:#29435a}
-input,textarea{width:100%;border:1px solid #bdccda;border-radius:10px;padding:11px 12px;background:#fff;color:#183047;outline:none}
+input,textarea{width:100%;min-height:38px;border:1px solid #bdccda;border-radius:10px;padding:10px 12px;background:#fff;color:#183047;outline:none;line-height:1.35}textarea{min-height:96px;resize:vertical}
 input:focus,textarea:focus{border-color:#5f95c4;box-shadow:0 0 0 3px rgba(46,111,167,.12)}
-button{border:1px solid #aac0d2;border-radius:10px;padding:10px 15px;font-weight:700;cursor:pointer;background:#fff;color:#183047}
+button{min-height:38px;border:1px solid #aac0d2;border-radius:10px;padding:9px 15px;font-weight:700;cursor:pointer;background:#fff;color:#183047;display:inline-flex;align-items:center;justify-content:center;text-align:center}
 button.primary{background:linear-gradient(180deg,#327bb7,#27699f);color:#fff;border-color:#27699f;box-shadow:0 5px 14px rgba(46,111,167,.2)}
 button.ghost{background:#fff}
 button.compact{padding:7px 11px}

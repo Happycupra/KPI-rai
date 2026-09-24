@@ -24,7 +24,8 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="NavChrome" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="9">
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10" SnapsToDevicePixels="True">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="42" />
@@ -34,7 +35,7 @@
                                 <Border x:Name="ActiveRail" Grid.Column="0" Width="3" Margin="0,8,0,8"
                                         CornerRadius="0,3,3,0" HorizontalAlignment="Left"
                                         Background="{TemplateBinding BorderBrush}" />
-                                <Border x:Name="IconChrome" Grid.Column="0" Width="32" Height="32" CornerRadius="8"
+                                <Border x:Name="IconChrome" Grid.Column="0" Width="34" Height="34" CornerRadius="9"
                                         Background="{Binding CommandParameter, RelativeSource={RelativeSource TemplatedParent}}"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <TextBlock x:Name="NavIcon" Text="{TemplateBinding Tag}" FontFamily="Segoe UI Emoji"
@@ -52,10 +53,16 @@
                             <Trigger Property="HorizontalContentAlignment" Value="Center">
                                 <Setter TargetName="NavLabel" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="NavChevron" Property="Visibility" Value="Collapsed" />
-                                <Setter TargetName="NavIcon" Property="Grid.Column" Value="0" />
+                                <Setter TargetName="ActiveRail" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="IconChrome" Property="Grid.Column" Value="0" />
                                 <Setter TargetName="IconChrome" Property="Grid.ColumnSpan" Value="3" />
+                                <Setter TargetName="IconChrome" Property="Width" Value="38" />
+                                <Setter TargetName="IconChrome" Property="Height" Value="38" />
+                                <Setter TargetName="IconChrome" Property="CornerRadius" Value="11" />
                                 <Setter TargetName="IconChrome" Property="HorizontalAlignment" Value="Center" />
-                                <Setter TargetName="NavIcon" Property="FontSize" Value="18" />
+                                <Setter TargetName="IconChrome" Property="VerticalAlignment" Value="Center" />
+                                <Setter TargetName="NavIcon" Property="FontSize" Value="19" />
+                                <Setter TargetName="NavChrome" Property="CornerRadius" Value="12" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="NavChrome" Property="Background" Value="{StaticResource SidebarHoverBrush}" />
@@ -116,7 +123,7 @@
             <Setter Property="Foreground" Value="#D9E6F2" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="#35536D" />
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="38" />
         </Style>
     </Window.Resources>
 
@@ -132,9 +139,10 @@
                     <Border x:Name="FullBrand" Background="White" CornerRadius="10" Padding="10,6">
                         <views:BrandLogo HorizontalAlignment="Center" />
                     </Border>
-                    <Border x:Name="CompactBrand" Width="46" Height="46" Background="White" CornerRadius="10"
+                    <Border x:Name="CompactBrand" Width="48" Height="48" Background="White" CornerRadius="12"
                             HorizontalAlignment="Center" Visibility="Collapsed">
-                        <Image Source="{StaticResource SolutionCompaktIcon}" Width="32" Height="32" />
+                        <Image Source="{StaticResource SolutionCompaktIcon}" Width="34" Height="34"
+                               Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                 </Grid>
 

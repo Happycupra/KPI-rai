@@ -29,7 +29,7 @@
                     <TextBlock x:Name="UserBlock" FontSize="15" FontWeight="SemiBold"
                                Foreground="{StaticResource TextBrush}" Margin="0,3,0,14" />
                     <TextBlock Text="Passwort" FontWeight="SemiBold" Margin="0,0,0,5" />
-                    <PasswordBox x:Name="PasswordBox" Height="36"
+                    <PasswordBox x:Name="PasswordBox" Height="38"
                                  KeyDown="PasswordBox_KeyDown" />
                     <TextBlock x:Name="StatusBlock" Foreground="{StaticResource DangerBrush}"
                                TextWrapping="Wrap" MinHeight="24" Margin="0,8,0,0" />

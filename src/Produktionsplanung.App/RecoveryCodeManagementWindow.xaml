@@ -26,7 +26,7 @@
                 </Border>
 
                 <TextBlock Text="Aktuelles Administrator-Passwort" FontWeight="SemiBold" />
-                <PasswordBox x:Name="CurrentPasswordBox" Height="36" Margin="0,5,0,12" />
+                <PasswordBox x:Name="CurrentPasswordBox" Height="38" Margin="0,5,0,12" />
                 <TextBlock x:Name="StatusBlock" Foreground="#DC2626" TextWrapping="Wrap" MinHeight="28" />
             </StackPanel>
 

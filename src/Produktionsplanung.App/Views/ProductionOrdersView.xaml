@@ -121,20 +121,20 @@
                                    Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,18" />
 
                         <TextBlock Text="Auftragsnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding OrderNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding OrderNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
 
                         <TextBlock Text="Produkt" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" />
                             </StackPanel>
                         </Grid>
 
@@ -142,11 +142,11 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Menge" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                                <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Height="38" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Einheit" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit, Mode=TwoWay}" Height="34" />
+                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit, Mode=TwoWay}" Height="38" />
                             </StackPanel>
                         </Grid>
 
@@ -154,11 +154,11 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Priorität" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority, Mode=TwoWay}" Height="34" />
+                                <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority, Mode=TwoWay}" Height="38" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Status" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status, Mode=TwoWay}" Height="34" />
+                                <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status, Mode=TwoWay}" Height="38" />
                             </StackPanel>
                         </Grid>
 
@@ -169,20 +169,20 @@
                                            Foreground="{StaticResource MutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,12" />
 
                                 <TextBlock Text="Startdatum" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Height="34" Margin="0,0,0,10" />
+                                <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Height="38" Margin="0,0,0,10" />
 
                                 <TextBlock Text="Maschine / Ort" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,0,0,10" />
+                                <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="38" Margin="0,0,0,10" />
 
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="1.35*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="Startschicht" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="34" />
+                                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="38" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Laufdauer (Schichten)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                        <TextBox Text="{Binding PlannedShiftCount, UpdateSourceTrigger=PropertyChanged}" Height="34" />
+                                        <TextBox Text="{Binding PlannedShiftCount, UpdateSourceTrigger=PropertyChanged}" Height="38" />
                                     </StackPanel>
                                 </Grid>
 
@@ -220,13 +220,13 @@
                         </Border>
 
                         <TextBlock Text="Personalbedarf pro Schicht" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding RequiredStaff, UpdateSourceTrigger=PropertyChanged}" Height="34" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding RequiredStaff, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
 
                         <TextBlock Text="Beschreibung" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
 
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="58" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,14"  VerticalScrollBarVisibility="Auto"/>
 
                         <Border CornerRadius="8" Padding="10,7" Margin="0,0,0,10">
                             <Border.Style>

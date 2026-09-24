@@ -56,17 +56,17 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel Margin="0,0,6,4">
                             <TextBlock Text="Benutzername" FontWeight="SemiBold" />
-                            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,9" />
+                            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,9" />
 
                             <TextBlock Text="Anzeigename" FontWeight="SemiBold" />
-                            <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" Height="32" Margin="0,4,0,9" />
+                            <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,9" />
 
                             <Grid Margin="0,0,0,9">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/></Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="Rolle" FontWeight="SemiBold" />
                                     <ComboBox ItemsSource="{Binding RoleOptions}" SelectedItem="{Binding SelectedRole}"
-                                              Height="32" Margin="0,4,8,0" />
+                                              Height="38" Margin="0,4,8,0" />
                                 </StackPanel>
                                 <CheckBox Grid.Column="1" Content="Aktiv" IsChecked="{Binding IsActive}"
                                           VerticalAlignment="Bottom" Margin="0,0,0,8" />
@@ -74,7 +74,7 @@
 
                             <TextBlock Text="Passwort" FontWeight="SemiBold" />
                             <PasswordBox x:Name="NewPasswordBox" PasswordChanged="NewPasswordBox_PasswordChanged"
-                                         Height="32" Margin="0,4,0,3" />
+                                         Height="38" Margin="0,4,0,3" />
                             <TextBlock Text="Mindestens 10 Zeichen, 1 Grossbuchstabe, 1 Kleinbuchstabe und 1 Zahl. Bei bestehenden Benutzern leer lassen, wenn das Passwort unverändert bleiben soll."
                                        Foreground="{StaticResource MutedTextBrush}" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,10" />

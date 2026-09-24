@@ -102,17 +102,17 @@
                         <TextBlock Text="Neuen Hinweis senden" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,16"/>
 
                         <TextBlock Text="Empfänger" FontWeight="SemiBold"/>
-                        <ComboBox x:Name="RecipientBox" DisplayMemberPath="DisplayText" Margin="0,5,0,14" Height="36"/>
+                        <ComboBox x:Name="RecipientBox" DisplayMemberPath="DisplayText" Margin="0,5,0,14" Height="38"/>
 
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="180"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Betreff" FontWeight="SemiBold"/>
-                                <TextBox x:Name="SubjectBox" MaxLength="120" Margin="0,5,0,0" Height="36"/>
+                                <TextBox x:Name="SubjectBox" MaxLength="120" Margin="0,5,0,0" Height="38"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Priorität" FontWeight="SemiBold"/>
-                                <ComboBox x:Name="PriorityBox" Margin="0,5,0,0" Height="36">
+                                <ComboBox x:Name="PriorityBox" Margin="0,5,0,0" Height="38">
                                     <ComboBoxItem Content="Normal" IsSelected="True"/>
                                     <ComboBoxItem Content="Wichtig"/>
                                 </ComboBox>
