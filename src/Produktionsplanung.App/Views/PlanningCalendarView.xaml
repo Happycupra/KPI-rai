@@ -183,9 +183,9 @@
                 <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="36" Command="{Binding PreviousCommand}" Margin="0,0,6,0" Style="{StaticResource CompactButtonStyle}"/>
+                <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousCommand}" Margin="0,0,6,0" Style="{StaticResource CompactButtonStyle}"/>
                 <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
-                <Button Content="›" Width="38" Height="36" Command="{Binding NextCommand}" Margin="0,0,14,0" Style="{StaticResource CompactButtonStyle}"/>
+                <Button Content="›" Width="38" Height="38" Command="{Binding NextCommand}" Margin="0,0,14,0" Style="{StaticResource CompactButtonStyle}"/>
 
                 <Button Content="Tag" Command="{Binding ShowDayCommand}">
                     <Button.Style>
