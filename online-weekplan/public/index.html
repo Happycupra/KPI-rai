@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SolutionCompakt · Wochenplan</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <strong>SolutionCompakt</strong>
+      <span>Online-Wochenplan</span>
+    </div>
+    <div id="userBox" class="user hidden">
+      <span id="userName"></span>
+      <span id="roleBadge"></span>
+      <button id="logoutButton" class="ghost">Abmelden</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="setupView" class="card hidden">
+      <h1>Firebase noch nicht konfiguriert</h1>
+      <p>Die Web-App ist vorbereitet. Kopiere <code>config.example.json</code> nach <code>config.json</code> und trage die Firebase-Projektdaten ein.</p>
+    </section>
+
+    <section id="loginView" class="card login hidden">
+      <h1>Wochenplan anmelden</h1>
+      <label>Benutzername<input id="username" autocomplete="username"></label>
+      <label>Passwort<input id="password" type="password" autocomplete="current-password"></label>
+      <button id="loginButton" class="primary">Anmelden</button>
+      <p id="loginStatus" class="status"></p>
+    </section>
+
+    <section id="planView" class="hidden">
+      <div class="toolbar card">
+        <div>
+          <h1 id="weekTitle">Wochenplan</h1>
+          <p id="publishedMeta"></p>
+        </div>
+        <div class="toolbar-actions">
+          <button id="prevWeek" class="ghost">‹</button>
+          <button id="nextWeek" class="ghost">›</button>
+          <button id="reloadButton" class="ghost">Aktualisieren</button>
+        </div>
+      </div>
+
+      <section id="adminPublish" class="card hidden">
+        <h2>Admin · Wochenplan veröffentlichen</h2>
+        <p>JSON-Paket aus SolutionCompakt auswählen. Die veröffentlichte Basis wird ersetzt; Online-Korrekturen bleiben separat erhalten.</p>
+        <input id="packageFile" type="file" accept=".json,application/json">
+        <button id="publishButton" class="primary">Paket veröffentlichen</button>
+        <span id="publishStatus" class="status"></span>
+      </section>
+
+      <section id="planGrid" class="week-grid"></section>
+    </section>
+  </main>
+
+  <dialog id="editDialog">
+    <form method="dialog" id="editForm">
+      <h2>Online-Korrektur</h2>
+      <input type="hidden" id="editEntryId">
+      <label>Mitarbeiter<input id="editEmployee"></label>
+      <label>Arbeitsplatz<input id="editWorkstation"></label>
+      <label>Schicht<input id="editShift"></label>
+      <div class="two">
+        <label>Start<input id="editStart" type="time"></label>
+        <label>Ende<input id="editEnd" type="time"></label>
+      </div>
+      <label>Hinweis<textarea id="editNote" rows="4"></textarea></label>
+      <p class="hint">Die Änderung gilt nur online und überschreibt nicht die lokale SolutionCompakt-Planung.</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost">Abbrechen</button>
+        <button id="saveOverrideButton" value="default" class="primary">Online speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
