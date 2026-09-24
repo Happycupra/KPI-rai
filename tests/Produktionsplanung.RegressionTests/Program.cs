@@ -950,7 +950,7 @@ internal static partial class Program
                 StartTime = shift.StartTime,
                 EndTime = shift.EndTime,
                 BreakMinutes = shift.BreakMinutes,
-                Comment = "Online sichtbar"
+                Comment = "Interner Einsatzkommentar"
             });
             db.Absences.Add(new Absence
             {
@@ -973,7 +973,7 @@ internal static partial class Program
         Check(File.Exists(package.FilePath), "Online week plan JSON package was not created");
         var json = File.ReadAllText(package.FilePath);
         Check(json.Contains("\"schemaVersion\": \"1.0\"", StringComparison.Ordinal) &&
-              json.Contains("Online sichtbar", StringComparison.Ordinal) &&
+              !json.Contains("Interner Einsatzkommentar", StringComparison.Ordinal) &&
               !json.Contains("Krank vertraulich", StringComparison.Ordinal) &&
               !json.Contains("Darf nicht online erscheinen", StringComparison.Ordinal),
             "Online week plan package content is incomplete or leaks absence data");
