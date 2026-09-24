@@ -19,7 +19,7 @@
                 <TextBox x:Name="CompanyNameBox" Height="36" Margin="0,0,0,14" TextChanged="CompanyNameBox_TextChanged" />
 
                 <TextBlock Text="Firmen-Code" FontWeight="SemiBold" Margin="0,0,0,5" />
-                <TextBox x:Name="CompanyCodeBox" Height="36" Margin="0,0,0,5" />
+                <TextBox x:Name="CompanyCodeBox" Height="36" Margin="0,0,0,5" TextChanged="CompanyCodeBox_TextChanged" />
                 <TextBlock Text="3–24 Zeichen · Buchstaben, Zahlen und Bindestriche. Beispiel: MUSTER-AG"
                            Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,0,0,14" />
             </StackPanel>
