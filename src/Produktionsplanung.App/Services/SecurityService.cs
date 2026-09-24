@@ -127,13 +127,22 @@ public static class AuthenticationService
         return db.UserAccounts.AsNoTracking().Any();
     }
 
-    public static (bool Success, string Message) CreateInitialAdministrator(string username, string displayName, string password)
+    public static (bool Success, string Message) CreateInitialAdministrator(
+        string companyName,
+        string companyCode,
+        string username,
+        string displayName,
+        string password)
     {
         using var db = new AppDbContext();
         if (db.UserAccounts.Any()) return (false, "Die Ersteinrichtung wurde bereits abgeschlossen.");
 
         var validation = ValidateUsernameAndPassword(username, password);
         if (validation is not null) return (false, validation);
+
+        var company = CompanyIdentityService.RegisterLocalCompany(companyName, companyCode);
+        if (!company.Success)
+            return (false, company.Message);
 
         var (hash, salt) = PasswordService.HashPassword(password);
         var user = new UserAccount
@@ -147,7 +156,7 @@ public static class AuthenticationService
         };
         db.UserAccounts.Add(user);
         db.SaveChanges();
-        return (true, "Administrator wurde angelegt.");
+        return (true, $"Firma {company.Settings!.CompanyName} und erster Administrator wurden angelegt.");
     }
 
     public static (bool Success, string Message, UserAccount? User) Login(string username, string password)
