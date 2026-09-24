@@ -345,7 +345,7 @@
                                     </Grid>
 
                                     <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding JobCardComment, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Margin="0,5,0,12"/>
+                                    <TextBox Text="{Binding JobCardComment, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Margin="0,5,0,12" VerticalScrollBarVisibility="Auto"/>
                                     <Button Content="✓ Arbeitsgang fertig → nächster Schritt" Command="{Binding FinishJobCardCommand}" Style="{StaticResource PrimaryButtonStyle}" Height="44"/>
                                 </StackPanel>
                             </ScrollViewer>
@@ -447,7 +447,7 @@
                                         <TextBlock Text="Arbeitsgang definieren" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,14"/>
                                         <TextBlock Text="Code" FontWeight="SemiBold"/><TextBox Text="{Binding OperationCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10"/>
                                         <TextBlock Text="Bezeichnung" FontWeight="SemiBold"/><TextBox Text="{Binding OperationName, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10"/>
-                                        <TextBlock Text="Beschreibung" FontWeight="SemiBold"/><TextBox Text="{Binding OperationDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="54" Margin="0,5,0,10"/>
+                                        <TextBlock Text="Beschreibung" FontWeight="SemiBold"/><TextBox Text="{Binding OperationDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Margin="0,5,0,10" VerticalScrollBarVisibility="Auto"/>
                                         <TextBlock Text="Standard-Arbeitsplatz" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedDefaultWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,10"/>
                                         <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="10"/><ColumnDefinition/></Grid.ColumnDefinitions>
                                             <StackPanel><TextBlock Text="Sollzeit (min)" FontWeight="SemiBold"/><TextBox Text="{Binding DefaultMinutes}" Margin="0,5,0,0"/></StackPanel>
