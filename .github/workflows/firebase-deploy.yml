@@ -45,10 +45,10 @@ jobs:
 
       - name: Write Google credentials
         env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT || secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPAKT || secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "Missing FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT secret."
+            echo "Missing Firebase service-account secret. Expected FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT (preferred), FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPAKT or FIREBASE_SERVICE_ACCOUNT."
             exit 1
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"

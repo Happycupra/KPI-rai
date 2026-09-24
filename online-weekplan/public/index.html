@@ -3,55 +3,103 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SolutionCompakt · Wochenplan</title>
+  <meta name="theme-color" content="#102a43">
+  <meta name="description" content="SolutionCompakt Online-Wochenplan für Produktion und Personalplanung">
+  <title>SolutionCompakt · Online-Wochenplan</title>
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,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">
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <strong>SolutionCompakt</strong>
-      <span>Online-Wochenplan</span>
+    <div class="brand-shell">
+      <div class="brand-logo-wrap">
+        <img class="brand-logo" src="data:image/jpeg;base64,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" alt="SolutionCompakt">
+      </div>
+      <div class="brand-context">
+        <strong>Online-Wochenplan</strong>
+        <span>Production &amp; Workforce</span>
+      </div>
     </div>
     <div id="userBox" class="user hidden">
-      <span id="userName"></span>
-      <span id="roleBadge"></span>
-      <button id="logoutButton" class="ghost">Abmelden</button>
+      <div class="user-copy">
+        <span id="userName" class="user-name"></span>
+        <span id="roleBadge" class="role-badge"></span>
+      </div>
+      <button id="logoutButton" class="ghost compact">Abmelden</button>
     </div>
   </header>
 
   <main>
-    <section id="setupView" class="card hidden">
-      <h1>Firebase noch nicht konfiguriert</h1>
-      <p>Die Web-App ist vorbereitet. Kopiere <code>config.example.json</code> nach <code>config.json</code> und trage die Firebase-Projektdaten ein.</p>
+    <section id="setupView" class="card state-card hidden">
+      <div class="state-icon">⚙</div>
+      <h1>Firebase-Einrichtung noch nicht abgeschlossen</h1>
+      <p>Die SolutionCompakt-Web-App ist installiert, aber die produktive Firebase-Konfiguration ist noch nicht vollständig erreichbar.</p>
     </section>
 
-    <section id="loginView" class="card login hidden">
-      <h1>Wochenplan anmelden</h1>
-      <label>Firmen-Code<input id="companyCode" autocomplete="organization" placeholder="z. B. MUSTER-AG"></label>
-      <label>Benutzername<input id="username" autocomplete="username"></label>
-      <label>Passwort<input id="password" type="password" autocomplete="current-password"></label>
-      <button id="loginButton" class="primary">Anmelden</button>
-      <p id="loginStatus" class="status"></p>
+    <section id="loginView" class="login-shell hidden">
+      <div class="login-brand-panel">
+        <div class="login-brand-logo">
+          <img src="data:image/jpeg;base64,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" alt="SolutionCompakt">
+        </div>
+        <div class="login-copy">
+          <span class="eyebrow">ONLINE-WOCHENPLAN</span>
+          <h1>Planung jederzeit im Blick.</h1>
+          <p>Wochenplan für Mitarbeitende, Schichten und Arbeitsplätze – sicher getrennt nach Firma.</p>
+        </div>
+        <div class="login-benefits">
+          <div><span>✓</span> Für Mitarbeitende nur lesend</div>
+          <div><span>✓</span> Admin-Korrekturen bewusst reduziert</div>
+          <div><span>✓</span> Desktop-Planung bleibt führend</div>
+        </div>
+      </div>
+
+      <div class="card login-card">
+        <div class="login-heading">
+          <span class="eyebrow">ANMELDUNG</span>
+          <h2>Wochenplan öffnen</h2>
+          <p>Mit den Zugangsdaten deiner Firma anmelden.</p>
+        </div>
+
+        <label>Firmen-Code
+          <input id="companyCode" autocomplete="organization" placeholder="z. B. MUSTER-AG">
+        </label>
+        <label>Benutzername
+          <input id="username" autocomplete="username" placeholder="Benutzername">
+        </label>
+        <label>Passwort
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+        </label>
+
+        <button id="loginButton" class="primary login-button">Anmelden</button>
+        <p id="loginStatus" class="status"></p>
+        <p class="privacy-note">Die Anmeldung ist firmenbezogen. Benutzer anderer Firmen können deine Planung nicht sehen.</p>
+      </div>
     </section>
 
     <section id="planView" class="hidden">
       <div class="toolbar card">
         <div>
+          <span class="eyebrow">ONLINE-WOCHENPLAN</span>
           <h1 id="weekTitle">Wochenplan</h1>
           <p id="publishedMeta"></p>
         </div>
         <div class="toolbar-actions">
-          <button id="prevWeek" class="ghost">‹</button>
-          <button id="nextWeek" class="ghost">›</button>
+          <button id="prevWeek" class="ghost square" aria-label="Vorherige Woche">‹</button>
+          <button id="nextWeek" class="ghost square" aria-label="Nächste Woche">›</button>
           <button id="reloadButton" class="ghost">Aktualisieren</button>
         </div>
       </div>
 
-      <section id="adminPublish" class="card hidden">
-        <h2>Admin · Wochenplan veröffentlichen</h2>
-        <p>JSON-Paket aus SolutionCompakt auswählen. Die veröffentlichte Basis wird ersetzt; Online-Korrekturen bleiben separat erhalten.</p>
-        <input id="packageFile" type="file" accept=".json,application/json">
-        <button id="publishButton" class="primary">Paket veröffentlichen</button>
+      <section id="adminPublish" class="card admin-card hidden">
+        <div>
+          <span class="eyebrow admin">ADMIN</span>
+          <h2>Wochenplan veröffentlichen</h2>
+          <p>JSON-Paket aus SolutionCompakt auswählen. Die veröffentlichte Basis wird ersetzt; Online-Korrekturen bleiben separat erhalten.</p>
+        </div>
+        <div class="admin-publish-actions">
+          <input id="packageFile" type="file" accept=".json,application/json">
+          <button id="publishButton" class="primary">Paket veröffentlichen</button>
+        </div>
         <span id="publishStatus" class="status"></span>
       </section>
 
@@ -59,8 +107,17 @@
     </section>
   </main>
 
+  <footer class="footer">
+    <div>
+      <strong>SolutionCompakt</strong>
+      <span>Planen · Organisieren · Voranbringen · Einfach effizienter</span>
+    </div>
+    <span>Online-Wochenplan</span>
+  </footer>
+
   <dialog id="editDialog">
     <form method="dialog" id="editForm">
+      <span class="eyebrow admin">ADMIN</span>
       <h2>Online-Korrektur</h2>
       <input type="hidden" id="editEntryId">
       <label>Mitarbeiter<input id="editEmployee"></label>
