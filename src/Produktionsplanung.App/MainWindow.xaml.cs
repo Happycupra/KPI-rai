@@ -136,6 +136,9 @@ public partial class MainWindow : Window
             case "orders":
                 OpenProductionOrders();
                 break;
+            case "batches":
+                OpenBatchArchive();
+                break;
             case "cockpit":
                 OpenManufacturingControl();
                 break;
