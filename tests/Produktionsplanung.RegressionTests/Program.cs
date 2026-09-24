@@ -60,6 +60,9 @@ internal static partial class Program
             ("OEE aggregation is invariant under unit conversion", OeeUnits),
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
+            ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
+            ("Existing installations receive a non-breaking company identity migration", LegacyCompanyIdentityMigration),
+            ("Backup restore cannot cross company tenants", BackupTenantIsolation),
             ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
@@ -925,6 +928,8 @@ internal static partial class Program
     private static void OnlineWeekPlanPackage()
     {
         var monday = new DateTime(2030, 1, 14);
+        var company = CompanyIdentityService.RegisterLocalCompany("Muster Produktion AG", "MUSTER-AG");
+        Check(company.Success, "Test company registration failed");
         SessionService.SignIn(new UserAccount
         {
             Id = 999,
@@ -964,7 +969,10 @@ internal static partial class Program
         }
 
         var snapshot = OnlineWeekPlanService.BuildSnapshot(monday);
-        Check(snapshot.SchemaVersion == "1.0" && snapshot.Entries.Any(x => x.EmployeeName == employeeName),
+        Check(snapshot.SchemaVersion == "1.1" &&
+              snapshot.CompanyCode == "MUSTER-AG" &&
+              snapshot.CompanyId == company.Settings!.CompanyId &&
+              snapshot.Entries.Any(x => x.EmployeeName == employeeName),
             "Online week plan snapshot did not include the planned employee");
         Check(snapshot.Entries.All(x => !x.Note.Contains("vertraulich", StringComparison.OrdinalIgnoreCase)),
             "Online week plan leaked absence details");
@@ -972,7 +980,8 @@ internal static partial class Program
         var package = OnlineWeekPlanService.PreparePackage(monday);
         Check(File.Exists(package.FilePath), "Online week plan JSON package was not created");
         var json = File.ReadAllText(package.FilePath);
-        Check(json.Contains("\"schemaVersion\": \"1.0\"", StringComparison.Ordinal) &&
+        Check(json.Contains("\"schemaVersion\": \"1.1\"", StringComparison.Ordinal) &&
+              json.Contains("\"companyCode\": \"MUSTER-AG\"", StringComparison.Ordinal) &&
               !json.Contains("Interner Einsatzkommentar", StringComparison.Ordinal) &&
               !json.Contains("Krank vertraulich", StringComparison.Ordinal) &&
               !json.Contains("Darf nicht online erscheinen", StringComparison.Ordinal),
@@ -1291,6 +1300,103 @@ internal static partial class Program
         Check(vm.NewPassword == "Temporary123", "Password not passed to VM");
         vm.NewUserCommand.Execute(null);
         Check(box.Password == string.Empty, "Password not cleared on new user");
+    }
+
+    private static void LegacyCompanyIdentityMigration()
+    {
+        using (var db = new AppDbContext())
+        {
+            var (hash, salt) = PasswordService.HashPassword("LegacyTest123");
+            db.UserAccounts.Add(new UserAccount
+            {
+                Username = "legacy-admin",
+                DisplayName = "Legacy Admin",
+                Role = UserRoles.Administrator,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+            db.SaveChanges();
+        }
+
+        var migrated = CompanyIdentityService.EnsureExistingInstallationIdentity();
+        Check(Guid.TryParseExact(migrated.CompanyId, "N", out _),
+            "Legacy installation did not receive a stable company id");
+        Check(!string.IsNullOrWhiteSpace(migrated.CompanyCode),
+            "Legacy installation did not receive a company code");
+        Check(migrated.CompanyRegistrationMode == CompanyIdentityService.LegacyMigrationMode,
+            "Legacy installation migration mode was not recorded");
+
+        var second = CompanyIdentityService.EnsureExistingInstallationIdentity();
+        Check(second.CompanyId == migrated.CompanyId && second.CompanyCode == migrated.CompanyCode,
+            "Legacy company identity changed on repeated startup");
+    }
+
+    private static void BackupTenantIsolation()
+    {
+        var registered = CompanyIdentityService.RegisterLocalCompany("Firma Alpha AG", "ALPHA");
+        Check(registered.Success, "Could not register backup test company");
+        var alpha = AppSettingsService.Load();
+        var backup = BackupService.CreateBackup(
+            Path.Combine(AppPaths.BackupsDirectory, "tenant-alpha.kpibackup"), alpha);
+
+        var betaId = Guid.NewGuid().ToString("N");
+        AppSettingsService.Update(settings =>
+        {
+            settings.CompanyId = betaId;
+            settings.CompanyCode = "BETA";
+            settings.CompanyName = "Firma Beta AG";
+            settings.CompanyRegistrationMode = CompanyIdentityService.SellerCloudMode;
+            settings.CompanyRegisteredAtUtc = DateTime.UtcNow;
+        });
+
+        var blocked = false;
+        try
+        {
+            BackupService.RestoreBackup(backup);
+        }
+        catch (InvalidDataException ex)
+        {
+            blocked = ex.Message.Contains("anderen Firma", StringComparison.OrdinalIgnoreCase);
+        }
+
+        Check(blocked, "Cross-company backup restore was not blocked");
+        var current = AppSettingsService.Load();
+        Check(current.CompanyId == betaId && current.CompanyCode == "BETA",
+            "Blocked cross-company restore changed current company identity");
+    }
+
+    private static void CompanyRegistrationAndInitialAdmin()
+    {
+        var result = AuthenticationService.CreateInitialAdministrator(
+            "Muster Maschinen AG",
+            "muster maschinen ag",
+            "firmen-admin",
+            "Firmen Admin",
+            "AdminTest123");
+
+        Check(result.Success, $"Initial company/admin setup failed: {result.Message}");
+
+        var settings = AppSettingsService.Load();
+        Check(settings.CompanyName == "Muster Maschinen AG",
+            "Company name was not registered");
+        Check(settings.CompanyCode == "MUSTER-MASCHINEN-AG",
+            "Company code was not normalized");
+        Check(Guid.TryParseExact(settings.CompanyId, "N", out _),
+            "Stable company id was not generated");
+        Check(settings.CompanyRegistrationMode == CompanyIdentityService.LocalRegistrationMode &&
+              settings.CompanyRegisteredAtUtc.HasValue,
+            "Company registration metadata is incomplete");
+
+        using var db = new AppDbContext();
+        var admin = db.UserAccounts.Single(x => x.Username == "firmen-admin");
+        Check(admin.Role == UserRoles.Administrator && admin.IsActive,
+            "First company administrator was not persisted");
+
+        var second = AuthenticationService.CreateInitialAdministrator(
+            "Andere Firma", "ANDERE", "zweiter-admin", "Zweiter Admin", "AdminTest123");
+        Check(!second.Success, "A second initial administrator unexpectedly re-ran company setup");
     }
 
     private static void UserAdminCreatesUser()

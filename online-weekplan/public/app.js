@@ -6,7 +6,7 @@ const urls = {
 };
 
 const el = id => document.getElementById(id);
-let config, auth, db, role = "", weekIds = [], weekIndex = 0;
+let config, auth, db, role = "", companyId = "", companyCode = "", weekIds = [], weekIndex = 0;
 let modules = {};
 
 bootstrap();
@@ -33,6 +33,12 @@ async function bootstrap() {
       }
       const token = await user.getIdTokenResult(true);
       role = token.claims.role || "Beobachter";
+      companyId = String(token.claims.companyId || "");
+      companyCode = String(token.claims.companyCode || "");
+      if (!companyId) {
+        await authMod.signOut(auth);
+        throw new Error("Das Benutzerkonto ist keiner Firma zugeordnet.");
+      }
       el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
       el("roleBadge").textContent = role;
       el("userBox").classList.remove("hidden");
@@ -64,7 +70,11 @@ async function login() {
     const response = await fetch(config.authEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: el("username").value, password: el("password").value })
+      body: JSON.stringify({
+        companyCode: el("companyCode").value,
+        username: el("username").value,
+        password: el("password").value
+      })
     });
     const payload = await response.json();
     if (!response.ok || !payload.customToken) throw new Error(payload.error || "Anmeldung nicht möglich.");
@@ -78,7 +88,7 @@ async function login() {
 
 async function loadWeeks() {
   const { collection, getDocs, orderBy, query, limit } = modules.fsMod;
-  const snap = await getDocs(query(collection(db, "weekPlans"), orderBy("weekStart", "desc"), limit(20)));
+  const snap = await getDocs(query(collection(db, "companies", companyId, "weekPlans"), orderBy("weekStart", "desc"), limit(20)));
   weekIds = snap.docs.map(x => x.id);
   weekIndex = 0;
   if (!weekIds.length) {
@@ -99,19 +109,19 @@ async function navigateWeek(delta) {
 async function loadWeek(weekId) {
   if (!weekId) return;
   const { doc, getDoc, collection, getDocs } = modules.fsMod;
-  const metaSnap = await getDoc(doc(db, "weekPlans", weekId));
+  const metaSnap = await getDoc(doc(db, "companies", companyId, "weekPlans", weekId));
   if (!metaSnap.exists()) return;
   const meta = metaSnap.data();
 
   const [entriesSnap, overridesSnap] = await Promise.all([
-    getDocs(collection(db, "weekPlans", weekId, "entries")),
-    getDocs(collection(db, "weekPlans", weekId, "overrides"))
+    getDocs(collection(db, "companies", companyId, "weekPlans", weekId, "entries")),
+    getDocs(collection(db, "companies", companyId, "weekPlans", weekId, "overrides"))
   ]);
   const overrides = new Map(overridesSnap.docs.map(x => [x.id, x.data()]));
   const entries = entriesSnap.docs.map(x => ({ ...x.data(), id: x.id, override: overrides.get(x.id) || null }));
 
   el("weekTitle").textContent = `KW ${String(meta.isoWeek).padStart(2,"0")} · ${meta.weekStart} – ${meta.weekEnd}`;
-  el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · veröffentlicht von ${meta.publishedBy || "Admin"}`;
+  el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · ${companyCode} · veröffentlicht von ${meta.publishedBy || "Admin"}`;
   render(entries);
 }
 
@@ -176,7 +186,7 @@ async function saveOverride(event) {
   const weekId = weekIds[weekIndex];
   const entryId = el("editEntryId").value;
   const { doc, setDoc, serverTimestamp } = modules.fsMod;
-  await setDoc(doc(db, "weekPlans", weekId, "overrides", entryId), {
+  await setDoc(doc(db, "companies", companyId, "weekPlans", weekId, "overrides", entryId), {
     employeeName: el("editEmployee").value.trim(),
     workstationName: el("editWorkstation").value.trim(),
     shiftName: el("editShift").value.trim(),

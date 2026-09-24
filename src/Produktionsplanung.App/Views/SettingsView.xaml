@@ -42,6 +42,12 @@
                                                Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16" />
                                     <TextBlock Text="Firmenname" FontWeight="SemiBold" Margin="0,0,0,5" />
                                     <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                                    <TextBlock Text="Firmen-Code" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                    <TextBox Text="{Binding CompanyCode}" IsReadOnly="True" Margin="0,0,0,8" />
+                                    <TextBlock Text="Stabile Firmen-ID" FontWeight="SemiBold" Margin="0,0,0,5" />
+                                    <TextBox Text="{Binding CompanyId}" IsReadOnly="True" Margin="0,0,0,8" />
+                                    <TextBlock Text="{Binding CompanyRegistrationMode, StringFormat=Registrierung: {0}}"
+                                               Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,12" />
                                     <TextBlock Text="Standort / Werk" FontWeight="SemiBold" Margin="0,0,0,5" />
                                     <TextBox Text="{Binding SiteName, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>

@@ -23,11 +23,24 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
   if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
 
   try {
+    const companyCode = String(req.body?.companyCode || "").trim().toUpperCase();
     const username = String(req.body?.username || "").trim().toLowerCase();
     const password = String(req.body?.password || "");
-    if (!username || !password) return fail(res, 400, "Benutzername und Passwort erforderlich.");
+    if (!companyCode || !username || !password)
+      return fail(res, 400, "Firmen-Code, Benutzername und Passwort erforderlich.");
 
-    const snap = await db.collection("authUsers")
+    const companySnap = await db.collection("companies")
+      .where("companyCode", "==", companyCode)
+      .limit(1)
+      .get();
+    if (companySnap.empty) return fail(res, 401, "Anmeldung nicht möglich.");
+
+    const companyDoc = companySnap.docs[0];
+    const companyId = companyDoc.id;
+    const companyData = companyDoc.data();
+    if (companyData.isActive === false) return fail(res, 401, "Anmeldung nicht möglich.");
+
+    const snap = await companyDoc.ref.collection("authUsers")
       .where("usernameNormalized", "==", username)
       .limit(1)
       .get();
@@ -45,12 +58,14 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
     if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual))
       return fail(res, 401, "Anmeldung nicht möglich.");
 
-    const uid = "solutioncompakt-" + String(data.sourceUserId);
+    const uid = "solutioncompakt-" + companyId + "-" + String(data.sourceUserId);
     const customToken = await getAuth().createCustomToken(uid, {
       role: data.role || "Beobachter",
       username: data.username || username,
       displayName: data.displayName || data.username || username,
-      sourceUserId: data.sourceUserId
+      sourceUserId: data.sourceUserId,
+      companyId,
+      companyCode
     });
 
     res.json({ customToken });
@@ -71,15 +86,27 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
     const claims = await getAuth().verifyIdToken(authHeader.slice("Bearer ".length));
     if (claims.role !== "Administrator") return fail(res, 403, "Administrator erforderlich.");
 
+    const companyRef = db.collection("companies").doc(String(claims.companyId || ""));
+    const companyDoc = await companyRef.get();
+    if (!companyDoc.exists || companyDoc.data().isActive === false)
+      return fail(res, 403, "Firma ist nicht aktiv.");
+
     const snapshot = req.body;
-    if (!snapshot || snapshot.schemaVersion !== "1.0" || !snapshot.weekId ||
+    if (!snapshot || snapshot.schemaVersion !== "1.1" || !snapshot.weekId ||
+        !snapshot.companyId || !snapshot.companyCode ||
         !Array.isArray(snapshot.entries) || !Array.isArray(snapshot.productionSlots)) {
       return fail(res, 400, "Ungültiges Wochenplan-Paket.");
     }
+    if (String(snapshot.companyId) !== String(claims.companyId) ||
+        String(snapshot.companyCode).toUpperCase() !== String(claims.companyCode || "").toUpperCase()) {
+      return fail(res, 403, "Wochenplan gehört zu einer anderen Firma.");
+    }
 
-    const weekRef = db.collection("weekPlans").doc(String(snapshot.weekId));
+    const weekRef = companyRef.collection("weekPlans").doc(String(snapshot.weekId));
     await weekRef.set({
       schemaVersion: snapshot.schemaVersion,
+      companyId: snapshot.companyId,
+      companyCode: snapshot.companyCode,
       weekId: snapshot.weekId,
       isoYear: snapshot.isoYear,
       isoWeek: snapshot.isoWeek,

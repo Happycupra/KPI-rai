@@ -2,13 +2,27 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Produktionsplanung.App.Views"
-        Title="SolutionCompakt Anmeldung" Icon="{StaticResource SolutionCompaktIcon}" Width="500" Height="690" ResizeMode="NoResize"
+        Title="SolutionCompakt Anmeldung" Icon="{StaticResource SolutionCompaktIcon}" Width="520" Height="790" ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen" Background="{StaticResource SubtleSurfaceBrush}">
     <Grid Margin="34">
         <StackPanel VerticalAlignment="Center">
             <views:BrandLogo HorizontalAlignment="Center" Margin="0,0,0,18"/>
             <TextBlock x:Name="ModeTitle" Text="Anmeldung" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,4,0,4" />
             <TextBlock x:Name="ModeDescription" Text="Mit deinem lokalen Benutzerkonto anmelden." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,0,0,22" />
+
+            <StackPanel x:Name="CompanyPanel" Visibility="Collapsed">
+                <Border Background="{StaticResource PrimarySoftBrush}" CornerRadius="10" Padding="12" Margin="0,0,0,14">
+                    <TextBlock Text="Diese Installation wird genau einer Firma zugeordnet. Der Firmen-Code wird später auch für den Online-Login verwendet."
+                               Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap"/>
+                </Border>
+                <TextBlock Text="Firmenname" FontWeight="SemiBold" Margin="0,0,0,5" />
+                <TextBox x:Name="CompanyNameBox" Height="36" Margin="0,0,0,14" TextChanged="CompanyNameBox_TextChanged" />
+
+                <TextBlock Text="Firmen-Code" FontWeight="SemiBold" Margin="0,0,0,5" />
+                <TextBox x:Name="CompanyCodeBox" Height="36" Margin="0,0,0,5" TextChanged="CompanyCodeBox_TextChanged" />
+                <TextBlock Text="3–24 Zeichen · Buchstaben, Zahlen und Bindestriche. Beispiel: MUSTER-AG"
+                           Foreground="{StaticResource MutedTextBrush}" FontSize="12" Margin="0,0,0,14" />
+            </StackPanel>
 
             <StackPanel x:Name="DisplayNamePanel" Visibility="Collapsed">
                 <TextBlock Text="Anzeigename" FontWeight="SemiBold" Margin="0,0,0,5" />

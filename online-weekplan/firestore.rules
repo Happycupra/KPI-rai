@@ -5,35 +5,52 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return signedIn() && request.auth.token.role == "Administrator";
+    function companyActive(companyId) {
+      return exists(/databases/$(database)/documents/companies/$(companyId)) &&
+             get(/databases/$(database)/documents/companies/$(companyId)).data.isActive != false;
     }
 
-    match /weekPlans/{weekId} {
-      allow read: if signedIn();
+    function sameCompany(companyId) {
+      return signedIn() &&
+             request.auth.token.companyId == companyId &&
+             companyActive(companyId);
+    }
+
+    function isCompanyAdmin(companyId) {
+      return sameCompany(companyId) &&
+             request.auth.token.role == "Administrator";
+    }
+
+    match /companies/{companyId} {
+      allow read: if sameCompany(companyId);
       allow write: if false;
 
-      match /entries/{entryId} {
-        allow read: if signedIn();
+      match /weekPlans/{weekId} {
+        allow read: if sameCompany(companyId);
         allow write: if false;
+
+        match /entries/{entryId} {
+          allow read: if sameCompany(companyId);
+          allow write: if false;
+        }
+
+        match /productionSlots/{slotId} {
+          allow read: if sameCompany(companyId);
+          allow write: if false;
+        }
+
+        // Admin changes stay separate from the published desktop snapshot.
+        // This keeps SolutionCompakt as the source of truth.
+        match /overrides/{entryId} {
+          allow read: if sameCompany(companyId);
+          allow create, update, delete: if isCompanyAdmin(companyId);
+        }
       }
 
-      match /productionSlots/{slotId} {
-        allow read: if signedIn();
-        allow write: if false;
+      // Password hashes are server-side only. No browser client may read them.
+      match /authUsers/{userId} {
+        allow read, write: if false;
       }
-
-      // Admin changes stay separate from the published desktop snapshot.
-      // This keeps SolutionCompakt as the source of truth.
-      match /overrides/{entryId} {
-        allow read: if signedIn();
-        allow create, update, delete: if isAdmin();
-      }
-    }
-
-    // Password hashes are server-side only. No browser client may read them.
-    match /authUsers/{userId} {
-      allow read, write: if false;
     }
   }
 }

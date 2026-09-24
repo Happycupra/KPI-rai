@@ -4,11 +4,12 @@ Dieses Verzeichnis ist die vorbereitete Firebase-Webanwendung für den SolutionC
 
 ## Zielbild
 
+- Anmeldung mit **Firmen-Code + Benutzername + Passwort**
 - angemeldete Nicht-Administratoren: Wochenplan **nur ansehen**
 - Administratoren: ansehen, JSON-Wochenplan veröffentlichen und minimale **Online-Korrekturen**
 - lokale SolutionCompakt-Planung bleibt führend
 - Online-Korrekturen liegen separat in `weekPlans/{weekId}/overrides` und verändern die Desktop-Daten nicht
-- Benutzername und Passwort können später identisch zur Desktop-App bleiben: der Cloud-Function-Endpunkt prüft die bestehenden PBKDF2-SHA256-Hashes (150000 Iterationen) und erzeugt ein Firebase Custom Token mit der Rolle als Claim
+- Benutzername und Passwort können später identisch zur Desktop-App bleiben: der Cloud-Function-Endpunkt prüft die bestehenden PBKDF2-SHA256-Hashes (150000 Iterationen) und erzeugt ein Firebase Custom Token mit Firma und Rolle als Claims
 
 ## Wenn das Firebase-Projekt später vorhanden ist
 
@@ -17,12 +18,24 @@ Dieses Verzeichnis ist die vorbereitete Firebase-Webanwendung für den SolutionC
 3. `public/config.example.json` nach `public/config.json` kopieren und Project ID, Web API Key, App ID sowie die beiden Function-URLs eintragen.
 4. `firebase deploy` ausführen.
 5. In SolutionCompakt unter Wochenplanung → **Firebase konfigurieren** dieselben öffentlichen Projektwerte/URLs eintragen.
-6. Mindestens einen Administrator in der serverseitigen Collection `authUsers` bereitstellen.
+6. Die Firma unter `companies/{companyId}` und mindestens einen Administrator unter `companies/{companyId}/authUsers` bereitstellen.
 7. In SolutionCompakt als Administrator **Online-Paket vorbereiten** und die erzeugte JSON-Datei im Web-Adminbereich veröffentlichen.
 
-## authUsers
+## Firmen- und Benutzerstruktur
 
-Die Collection ist durch Firestore-Regeln vollständig vor Browserzugriff geschützt. Ein Dokument benötigt:
+Jede Firma besitzt eine stabile, von SolutionCompakt erzeugte `companyId` und einen lesbaren `companyCode`. Dadurch können verschiedene Firmen dieselben Benutzernamen verwenden, ohne Daten zu vermischen.
+
+`companies/{companyId}` enthält mindestens:
+
+```json
+{
+  "companyCode": "MUSTER-AG",
+  "companyName": "Muster AG",
+  "isActive": true
+}
+```
+
+Die Unter-Collection `companies/{companyId}/authUsers` ist durch Firestore-Regeln vollständig vor Browserzugriff geschützt. Ein Benutzerdokument benötigt:
 
 ```json
 {
@@ -37,11 +50,11 @@ Die Collection ist durch Firestore-Regeln vollständig vor Browserzugriff gesch�
 }
 ```
 
-Passwort-Hashes dürfen nur über einen administrativen Bootstrap-/Sync-Prozess übertragen werden. Niemals Service-Account-Schlüssel oder Klartext-Passwörter in `public/`, GitHub oder die Desktop-Konfiguration legen.
+Passwort-Hashes dürfen nur über einen administrativen Bootstrap-/Sync-Prozess übertragen werden. Der Online-Login sucht zuerst die Firma über den Firmen-Code und danach den Benutzer innerhalb genau dieser Firma. Niemals Service-Account-Schlüssel oder Klartext-Passwörter in `public/`, GitHub oder die Desktop-Konfiguration legen.
 
 ## Datenmodell
 
-`weekPlans/{YYYY-Www}` enthält Metadaten. Darunter:
+`companies/{companyId}/weekPlans/{YYYY-Www}` enthält Metadaten. Darunter:
 
 - `entries/{assignment-id}`: veröffentlichte Personaleinsätze aus SolutionCompakt
 - `productionSlots/{run-id}`: Produktionsschichten
@@ -52,3 +65,16 @@ Normale Benutzer erhalten über Firestore Security Rules nur Leserechte. Schreib
 ## Sicherheit vor Produktivbetrieb
 
 Vor echtem Betrieb zusätzlich konfigurieren: enge CORS-Origin statt `*`, Firebase App Check, Monitoring/Rate-Limit für den Login-Endpunkt, Backup/Retention sowie einen kontrollierten Benutzer-Sync aus SolutionCompakt.
+
+
+## Verkäufer-Provisionierung und Offline-Betrieb
+
+Die lokale App ist bereits auf einen stabilen Firmenmandanten vorbereitet. Aktuell kann eine vollständig neue Offline-Installation Firma + ersten Admin einmalig lokal registrieren. Für den späteren Verkaufsbetrieb ist die empfohlene strengere Variante:
+
+1. Verkäufer legt Firma und ersten Admin im zentralen Provisioning an.
+2. Online-Installation aktiviert sich einmalig über einen Aktivierungscode.
+3. Offline-Installation importiert alternativ eine **digital signierte Aktivierungsdatei**.
+4. Danach funktionieren Desktop-Login, Planung und lokale Benutzerverwaltung vollständig ohne Internet.
+5. Sobald Internet vorhanden ist, werden freigegebene Benutzer-/Wochenplanänderungen synchronisiert.
+
+Eine Offline-Aktivierungsdatei sollte erst produktiv aktiviert werden, wenn der Verkäufer-Signaturschlüssel eingerichtet ist. Ein im Programm eingebetteter gemeinsamer Geheimcode wäre kein ausreichender Manipulationsschutz.

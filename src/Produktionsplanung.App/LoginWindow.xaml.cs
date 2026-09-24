@@ -6,6 +6,8 @@ namespace Produktionsplanung.App;
 public partial class LoginWindow : Window
 {
     private readonly bool _setupMode;
+    private bool _updatingCompanyCode;
+    private bool _companyCodeTouched;
 
     public LoginWindow()
     {
@@ -15,16 +17,43 @@ public partial class LoginWindow : Window
         if (_setupMode)
         {
             Title = "SolutionCompakt Ersteinrichtung";
-            ModeTitle.Text = "Ersteinrichtung";
-            ModeDescription.Text = "Lege den ersten lokalen Administrator an. Es gibt kein voreingestelltes Standardpasswort.";
+            ModeTitle.Text = "Firmenregistrierung & Ersteinrichtung";
+            ModeDescription.Text = "Registriere diese Installation für eine Firma und lege den ersten lokalen Administrator an.";
+            CompanyPanel.Visibility = Visibility.Visible;
             DisplayNamePanel.Visibility = Visibility.Visible;
             ConfirmPasswordPanel.Visibility = Visibility.Visible;
             ForgotPasswordButton.Visibility = Visibility.Collapsed;
             SubmitButton.Content = "Administrator anlegen und anmelden";
             UsernameBox.Text = "admin";
         }
+        else
+        {
+            var company = AppSettingsService.Load();
+            if (!string.IsNullOrWhiteSpace(company.CompanyName) &&
+                !string.Equals(company.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase))
+            {
+                ModeDescription.Text = $"{company.CompanyName} · {company.CompanyCode}\nMit deinem lokalen Benutzerkonto anmelden.";
+            }
+        }
 
-        Loaded += (_, _) => UsernameBox.Focus();
+        Loaded += (_, _) => (_setupMode ? CompanyNameBox : UsernameBox).Focus();
+    }
+
+    private void CompanyNameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (!_setupMode || CompanyCodeBox is null || _companyCodeTouched)
+            return;
+
+        _updatingCompanyCode = true;
+        CompanyCodeBox.Text = CompanyIdentityService.SuggestCode(CompanyNameBox.Text);
+        CompanyCodeBox.CaretIndex = CompanyCodeBox.Text.Length;
+        _updatingCompanyCode = false;
+    }
+
+    private void CompanyCodeBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (_setupMode && !_updatingCompanyCode)
+            _companyCodeTouched = true;
     }
 
     private void Submit_Click(object sender, RoutedEventArgs e)
@@ -42,7 +71,12 @@ public partial class LoginWindow : Window
                 return;
             }
 
-            var created = AuthenticationService.CreateInitialAdministrator(username, DisplayNameBox.Text, password);
+            var created = AuthenticationService.CreateInitialAdministrator(
+                CompanyNameBox.Text,
+                CompanyCodeBox.Text,
+                username,
+                DisplayNameBox.Text,
+                password);
             if (!created.Success)
             {
                 StatusBlock.Text = created.Message;
