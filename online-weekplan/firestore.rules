@@ -5,8 +5,15 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function companyActive(companyId) {
+      return exists(/databases/$(database)/documents/companies/$(companyId)) &&
+             get(/databases/$(database)/documents/companies/$(companyId)).data.isActive != false;
+    }
+
     function sameCompany(companyId) {
-      return signedIn() && request.auth.token.companyId == companyId;
+      return signedIn() &&
+             request.auth.token.companyId == companyId &&
+             companyActive(companyId);
     }
 
     function isCompanyAdmin(companyId) {
