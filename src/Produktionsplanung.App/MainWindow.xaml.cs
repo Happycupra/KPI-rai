@@ -22,6 +22,10 @@ public partial class MainWindow : Window
     private bool masterDataGroupCollapsed;
     private bool systemGroupCollapsed;
     private readonly DispatcherTimer inactivityTimer = new() { Interval = TimeSpan.FromSeconds(10) };
+    private readonly DispatcherTimer messageTimer = new() { Interval = TimeSpan.FromSeconds(15) };
+    private readonly HashSet<int> deferredMessageIds = new();
+    private MessageCenterWindow? messageCenterWindow;
+    private bool messagePopupOpen;
     private DateTime lastActivityUtc = DateTime.UtcNow;
     private bool sessionLocked;
     private bool bypassUnsavedChangesPrompt;
@@ -42,12 +46,16 @@ public partial class MainWindow : Window
 
         inactivityTimer.Tick += InactivityTimer_Tick;
         inactivityTimer.Start();
+        messageTimer.Tick += MessageTimer_Tick;
+        messageTimer.Start();
         InputManager.Current.PreProcessInput += InputManager_PreProcessInput;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
 
         Navigate(CreateEntry(NavigationRoute.Dashboard), addToHistory: false);
         RefreshNotifications();
+        RefreshPersonalMessages(showPopup: false);
+        Dispatcher.BeginInvoke(() => RefreshPersonalMessages(showPopup: true), DispatcherPriority.Background);
     }
 
     private void ApplyRolePermissions()
@@ -216,6 +224,8 @@ public partial class MainWindow : Window
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         inactivityTimer.Stop();
+        messageTimer.Stop();
+        messageCenterWindow?.Close();
         InputManager.Current.PreProcessInput -= InputManager_PreProcessInput;
     }
 
@@ -254,6 +264,8 @@ public partial class MainWindow : Window
 
         sessionLocked = true;
         employeeQuickCardWindow?.Close();
+        messageCenterWindow?.Close();
+        messageCenterWindow = null;
         employeeQuickCardWindow = null;
         AuditService.Log("Sitzung gesperrt", "Session", SessionService.CurrentUser.Id.ToString(),
             "Automatische Sperre wegen Inaktivität.");
@@ -268,7 +280,10 @@ public partial class MainWindow : Window
             sessionLocked = false;
             lastActivityUtc = DateTime.UtcNow;
             if (SessionService.IsAuthenticated)
+            {
                 AuditService.Log("Sitzung entsperrt", "Session", SessionService.CurrentUser?.Id.ToString(), null);
+                RefreshPersonalMessages(showPopup: true);
+            }
         }
     }
 
@@ -469,6 +484,88 @@ public partial class MainWindow : Window
                 Navigate(CreateEntry(NavigationRoute.Dashboard));
                 break;
         }
+    }
+
+    private void MessageTimer_Tick(object? sender, EventArgs e)
+    {
+        if (sessionLocked || !SessionService.IsAuthenticated || messagePopupOpen)
+            return;
+
+        RefreshPersonalMessages(showPopup: true);
+    }
+
+    private void RefreshPersonalMessages(bool showPopup)
+    {
+        try
+        {
+            var count = UserMessageService.GetUnreadCount();
+            MessageCountText.Text = count > 99 ? "99+" : count.ToString();
+            MessageCountBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            MessageButton.ToolTip = count == 0
+                ? "Persönliche Hinweise · keine ungelesenen Nachrichten"
+                : $"Persönliche Hinweise · {count} ungelesen";
+
+            if (showPopup && count > 0)
+                ShowNextMessagePopup();
+        }
+        catch
+        {
+            MessageCountBadge.Visibility = Visibility.Collapsed;
+            MessageButton.ToolTip = "Persönliche Hinweise konnten nicht geladen werden";
+        }
+    }
+
+    private void ShowNextMessagePopup()
+    {
+        if (messagePopupOpen || sessionLocked || !SessionService.IsAuthenticated)
+            return;
+
+        var message = UserMessageService.GetUnread().FirstOrDefault(x => !deferredMessageIds.Contains(x.Id));
+        if (message is null)
+            return;
+
+        messagePopupOpen = true;
+        try
+        {
+            var popup = new MessagePopupWindow(message) { Owner = this };
+            if (popup.ShowDialog() == true)
+            {
+                UserMessageService.Acknowledge(message.Id);
+                deferredMessageIds.Remove(message.Id);
+                RefreshPersonalMessages(showPopup: false);
+                Dispatcher.BeginInvoke(ShowNextMessagePopup, DispatcherPriority.Background);
+            }
+            else
+            {
+                deferredMessageIds.Add(message.Id);
+                RefreshPersonalMessages(showPopup: false);
+            }
+        }
+        finally
+        {
+            messagePopupOpen = false;
+        }
+    }
+
+    private void MessageButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SessionService.IsAuthenticated)
+            return;
+
+        if (messageCenterWindow is not null)
+        {
+            messageCenterWindow.Activate();
+            return;
+        }
+
+        messageCenterWindow = new MessageCenterWindow { Owner = this };
+        messageCenterWindow.MessagesChanged += (_, _) => RefreshPersonalMessages(showPopup: false);
+        messageCenterWindow.Closed += (_, _) =>
+        {
+            messageCenterWindow = null;
+            RefreshPersonalMessages(showPopup: false);
+        };
+        messageCenterWindow.Show();
     }
 
     private void ChangePassword_Click(object sender, RoutedEventArgs e)
