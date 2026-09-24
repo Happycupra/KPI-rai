@@ -48,6 +48,7 @@ internal static partial class Program
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
+            ("Online week plan package is Firebase-ready and excludes absence details", OnlineWeekPlanPackage),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -919,6 +920,79 @@ internal static partial class Program
             "Planning calendar PDF export did not create a file");
         Check(calendarResult.PageCount > 0 && !calendarResult.IncludesWeekends,
             "Planning calendar PDF did not preserve the visible weekend setting");
+    }
+
+    private static void OnlineWeekPlanPackage()
+    {
+        var monday = new DateTime(2030, 1, 14);
+        SessionService.SignIn(new UserAccount
+        {
+            Id = 999,
+            Username = "online-admin",
+            DisplayName = "Online Admin",
+            Role = UserRoles.Administrator,
+            IsActive = true
+        });
+
+        string employeeName;
+        using (var db = new AppDbContext())
+        {
+            var employee = db.Employees.First(x => x.IsActive);
+            var workstation = db.Workstations.First(x => x.IsActive);
+            var shift = db.Shifts.First();
+            employeeName = $"{employee.LastName}, {employee.FirstName}";
+            db.PlanningAssignments.Add(new PlanningAssignment
+            {
+                EmployeeId = employee.Id,
+                WorkstationId = workstation.Id,
+                ShiftId = shift.Id,
+                Date = monday,
+                StartTime = shift.StartTime,
+                EndTime = shift.EndTime,
+                BreakMinutes = shift.BreakMinutes,
+                Comment = "Online sichtbar"
+            });
+            db.Absences.Add(new Absence
+            {
+                EmployeeId = employee.Id,
+                Type = "Krank vertraulich",
+                StartDate = monday,
+                EndDate = monday,
+                Comment = "Darf nicht online erscheinen"
+            });
+            db.SaveChanges();
+        }
+
+        var snapshot = OnlineWeekPlanService.BuildSnapshot(monday);
+        Check(snapshot.SchemaVersion == "1.0" && snapshot.Entries.Any(x => x.EmployeeName == employeeName),
+            "Online week plan snapshot did not include the planned employee");
+        Check(snapshot.Entries.All(x => !x.Note.Contains("vertraulich", StringComparison.OrdinalIgnoreCase)),
+            "Online week plan leaked absence details");
+
+        var package = OnlineWeekPlanService.PreparePackage(monday);
+        Check(File.Exists(package.FilePath), "Online week plan JSON package was not created");
+        var json = File.ReadAllText(package.FilePath);
+        Check(json.Contains("\"schemaVersion\": \"1.0\"", StringComparison.Ordinal) &&
+              json.Contains("Online sichtbar", StringComparison.Ordinal) &&
+              !json.Contains("Krank vertraulich", StringComparison.Ordinal) &&
+              !json.Contains("Darf nicht online erscheinen", StringComparison.Ordinal),
+            "Online week plan package content is incomplete or leaks absence data");
+
+        var settings = AppSettingsService.Load();
+        Check(settings.LastOnlineWeekPreparedId == package.WeekId && settings.LastOnlineWeekPreparedAtUtc.HasValue,
+            "Prepared online week plan status was not saved");
+
+        SessionService.SignIn(new UserAccount { Id = 1000, Username = "observer", Role = UserRoles.Observer });
+        try
+        {
+            OnlineWeekPlanService.PreparePackage(monday);
+            throw new InvalidOperationException("Observer unexpectedly prepared an online week plan");
+        }
+        catch (InvalidOperationException ex)
+        {
+            Check(ex.Message.Contains("Administrator", StringComparison.OrdinalIgnoreCase),
+                "Observer rejection did not explain the administrator requirement");
+        }
     }
 
     private static void QuerySmoke()
