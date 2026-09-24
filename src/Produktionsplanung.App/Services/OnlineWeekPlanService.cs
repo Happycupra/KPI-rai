@@ -82,7 +82,7 @@ public static class OnlineWeekPlanService
         var isoWeek = ISOWeek.GetWeekOfYear(monday);
         return new OnlineWeekPlanSnapshot
         {
-            SchemaVersion = "1.0",
+            SchemaVersion = "1.1",
             WeekId = $"{isoYear}-W{isoWeek:00}",
             IsoYear = isoYear,
             IsoWeek = isoWeek,
@@ -90,6 +90,8 @@ public static class OnlineWeekPlanService
             WeekEnd = sunday.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             PreparedAtUtc = DateTime.UtcNow,
             PreparedBy = SessionService.CurrentUser?.Username ?? "system",
+            CompanyId = settings.CompanyId,
+            CompanyCode = settings.CompanyCode,
             CompanyName = settings.CompanyName,
             SiteName = settings.SiteName,
             Entries = assignments,
@@ -148,7 +150,9 @@ public static class OnlineWeekPlanService
 
 public sealed class OnlineWeekPlanSnapshot
 {
-    public string SchemaVersion { get; init; } = "1.0";
+    public string SchemaVersion { get; init; } = "1.1";
+    public string CompanyId { get; init; } = string.Empty;
+    public string CompanyCode { get; init; } = string.Empty;
     public string WeekId { get; init; } = string.Empty;
     public int IsoYear { get; init; }
     public int IsoWeek { get; init; }
