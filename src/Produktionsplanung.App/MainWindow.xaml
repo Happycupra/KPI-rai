@@ -123,7 +123,7 @@
             <Setter Property="Foreground" Value="#D9E6F2" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="#35536D" />
-            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="MinHeight" Value="38" />
         </Style>
     </Window.Resources>
 
