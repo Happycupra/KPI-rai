@@ -1,0 +1,100 @@
+<Window x:Class="Produktionsplanung.App.AppTourWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SolutionCompakt · App-Einführung"
+        Icon="{StaticResource SolutionCompaktIcon}"
+        Width="680" Height="610" MinWidth="620" MinHeight="560"
+        WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip"
+        Background="{StaticResource SurfaceBrush}" ShowInTaskbar="False">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="SolutionCompakt kennenlernen" FontSize="23" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBrush}"/>
+                <TextBlock x:Name="StepCounterText" Foreground="{StaticResource MutedTextBrush}"
+                           FontSize="12" Margin="0,4,0,0"/>
+            </StackPanel>
+            <Button Grid.Column="1" Content="✕" Width="34" Height="34" Padding="0"
+                    Click="Close_Click" Style="{StaticResource CompactButtonStyle}"
+                    ToolTip="Einführung schliessen"/>
+        </Grid>
+
+        <ProgressBar x:Name="TourProgress" Grid.Row="1" Height="6" Minimum="0" Maximum="1"
+                     Margin="0,18,0,20" Value="0"/>
+
+        <Border Grid.Row="2" Style="{StaticResource SectionCardStyle}" Padding="24">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Width="58" Height="58" CornerRadius="16" Background="{StaticResource PrimarySoftBrush}"
+                            HorizontalAlignment="Left" Margin="0,0,0,16">
+                        <TextBlock x:Name="StepIconText" Text="👋" FontFamily="Segoe UI Emoji"
+                                   FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+
+                    <TextBlock x:Name="StepTitleText" FontSize="25" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="StepSummaryText" FontSize="14" Foreground="{StaticResource MutedTextBrush}"
+                               TextWrapping="Wrap" LineHeight="21" Margin="0,8,0,20"/>
+
+                    <TextBlock Text="Das solltest du wissen" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="TipsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,5,0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="24"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="7" Height="7" CornerRadius="4" Background="{StaticResource PrimaryBrush}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,7,0,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextBrush}" LineHeight="20"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border x:Name="OpenAreaHint" Background="{StaticResource InfoSoftBrush}"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="9" Padding="12" Margin="0,18,0,0" Visibility="Collapsed">
+                        <TextBlock Text="Mit „Bereich öffnen“ springt SolutionCompakt direkt an die passende Stelle. Die Einführung bleibt geöffnet."
+                                   TextWrapping="Wrap" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Grid Grid.Row="3" Margin="0,18,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="LaterButton" Content="Später" Click="Close_Click"
+                    Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="PreviousButton" Content="← Zurück" Click="Previous_Click"
+                        Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+                <Button x:Name="OpenAreaButton" Content="Bereich öffnen" Click="OpenArea_Click"
+                        Style="{StaticResource ActionButtonStyle}" Visibility="Collapsed"/>
+            </StackPanel>
+
+            <Button x:Name="NextButton" Grid.Column="2" Content="Weiter →" Click="Next_Click"
+                    Style="{StaticResource PrimaryActionButtonStyle}"/>
+        </Grid>
+    </Grid>
+</Window>
