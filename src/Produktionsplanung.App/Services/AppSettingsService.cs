@@ -6,6 +6,10 @@ namespace Produktionsplanung.App.Services;
 public sealed class AppSettings
 {
     public string CompanyName { get; set; } = "SolutionCompakt";
+    public string CompanyId { get; set; } = string.Empty;
+    public string CompanyCode { get; set; } = string.Empty;
+    public string CompanyRegistrationMode { get; set; } = string.Empty;
+    public DateTime? CompanyRegisteredAtUtc { get; set; }
     public string SiteName { get; set; } = string.Empty;
     public string DefaultBackupDirectory { get; set; } = AppPaths.IsPortableMode ? "Backups" : AppPaths.BackupsDirectory;
     public string DefaultExportDirectory { get; set; } = AppPaths.IsPortableMode ? "Exports" : AppPaths.ExportsDirectory;
@@ -244,6 +248,9 @@ public static class AppSettingsService
                                string.Equals(company, "KPI-rai", StringComparison.OrdinalIgnoreCase)
             ? "SolutionCompakt"
             : company;
+        settings.CompanyId = settings.CompanyId?.Trim() ?? string.Empty;
+        settings.CompanyCode = settings.CompanyCode?.Trim().ToUpperInvariant() ?? string.Empty;
+        settings.CompanyRegistrationMode = settings.CompanyRegistrationMode?.Trim() ?? string.Empty;
         settings.SiteName = settings.SiteName?.Trim() ?? string.Empty;
         settings.DefaultBackupDirectory = ToStoredStoragePath(settings.DefaultBackupDirectory, "Backups");
         settings.DefaultExportDirectory = ToStoredStoragePath(settings.DefaultExportDirectory, "Exports");
