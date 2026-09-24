@@ -62,6 +62,7 @@ internal static partial class Program
             ("Password entry is masked and cleared", PasswordInput),
             ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
             ("Existing installations receive a non-breaking company identity migration", LegacyCompanyIdentityMigration),
+            ("Backup restore cannot cross company tenants", BackupTenantIsolation),
             ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
@@ -1330,6 +1331,40 @@ internal static partial class Program
         var second = CompanyIdentityService.EnsureExistingInstallationIdentity();
         Check(second.CompanyId == migrated.CompanyId && second.CompanyCode == migrated.CompanyCode,
             "Legacy company identity changed on repeated startup");
+    }
+
+    private static void BackupTenantIsolation()
+    {
+        var registered = CompanyIdentityService.RegisterLocalCompany("Firma Alpha AG", "ALPHA");
+        Check(registered.Success, "Could not register backup test company");
+        var alpha = AppSettingsService.Load();
+        var backup = BackupService.CreateBackup(
+            Path.Combine(AppPaths.BackupsDirectory, "tenant-alpha.kpibackup"), alpha);
+
+        var betaId = Guid.NewGuid().ToString("N");
+        AppSettingsService.Update(settings =>
+        {
+            settings.CompanyId = betaId;
+            settings.CompanyCode = "BETA";
+            settings.CompanyName = "Firma Beta AG";
+            settings.CompanyRegistrationMode = CompanyIdentityService.SellerCloudMode;
+            settings.CompanyRegisteredAtUtc = DateTime.UtcNow;
+        });
+
+        var blocked = false;
+        try
+        {
+            BackupService.RestoreBackup(backup);
+        }
+        catch (InvalidDataException ex)
+        {
+            blocked = ex.Message.Contains("anderen Firma", StringComparison.OrdinalIgnoreCase);
+        }
+
+        Check(blocked, "Cross-company backup restore was not blocked");
+        var current = AppSettingsService.Load();
+        Check(current.CompanyId == betaId && current.CompanyCode == "BETA",
+            "Blocked cross-company restore changed current company identity");
     }
 
     private static void CompanyRegistrationAndInitialAdmin()
