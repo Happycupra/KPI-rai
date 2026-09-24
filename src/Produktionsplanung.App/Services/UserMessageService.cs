@@ -68,6 +68,7 @@ public static class UserMessageService
         return db.UserMessages.AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
+            .AsEnumerable()
             .Select(x => ToRow(x, false))
             .ToList();
     }
@@ -79,6 +80,7 @@ public static class UserMessageService
         return db.UserMessages.AsNoTracking()
             .Where(x => x.SenderUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
+            .AsEnumerable()
             .Select(x => ToRow(x, true))
             .ToList();
     }
@@ -90,6 +92,7 @@ public static class UserMessageService
         return db.UserMessages.AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id && x.AcknowledgedAtUtc == null)
             .OrderBy(x => x.CreatedAtUtc)
+            .AsEnumerable()
             .Select(x => ToRow(x, false))
             .ToList();
     }
