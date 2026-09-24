@@ -49,6 +49,7 @@ internal static partial class Program
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("Online week plan package is Firebase-ready and excludes absence details", OnlineWeekPlanPackage),
+            ("Production Firebase defaults target solution-compact", FirebaseProductionDefaults),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -923,6 +924,23 @@ internal static partial class Program
             "Planning calendar PDF export did not create a file");
         Check(calendarResult.PageCount > 0 && !calendarResult.IncludesWeekends,
             "Planning calendar PDF did not preserve the visible weekend setting");
+    }
+
+    private static void FirebaseProductionDefaults()
+    {
+        var settings = new AppSettings();
+        Check(settings.FirebaseProjectId == "solution-compact",
+            "Firebase production project id default is incorrect");
+        Check(settings.FirebaseWebApiKey == "AIzaSyDvPkzX6B5vmA2VWjZooDW08Pw17mRA29Y",
+            "Firebase web API key default is incorrect");
+        Check(settings.FirebaseAuthEndpoint == "https://europe-west1-solution-compact.cloudfunctions.net/login",
+            "Firebase login endpoint default is incorrect");
+        Check(settings.FirebasePublishEndpoint == "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan",
+            "Firebase publish endpoint default is incorrect");
+        Check(settings.FirebaseHostingUrl == "https://solution-compact.web.app",
+            "Firebase hosting URL default is incorrect");
+        Check(!settings.OnlineWeekPlanEnabled,
+            "Online week plan must stay disabled until Firebase deployment is completed");
     }
 
     private static void OnlineWeekPlanPackage()
