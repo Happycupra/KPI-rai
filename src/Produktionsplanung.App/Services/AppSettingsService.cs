@@ -73,6 +73,9 @@ public sealed class UserUiPreferences
     public bool CalendarShowAbsences { get; set; } = true;
     public bool CalendarShowOperatingCalendar { get; set; } = true;
     public bool CalendarShowWeekends { get; set; } = true;
+    public bool ShowContextHints { get; set; } = true;
+    public int AppTourLastShownVersion { get; set; }
+    public int AppTourCompletedVersion { get; set; }
 }
 
 public static class AppSettingsService
@@ -221,7 +224,10 @@ public static class AppSettingsService
         CalendarShowOrders = settings.CalendarShowOrders,
         CalendarShowAbsences = settings.CalendarShowAbsences,
         CalendarShowOperatingCalendar = settings.CalendarShowOperatingCalendar,
-        CalendarShowWeekends = settings.CalendarShowWeekends
+        CalendarShowWeekends = settings.CalendarShowWeekends,
+        ShowContextHints = true,
+        AppTourLastShownVersion = 0,
+        AppTourCompletedVersion = 0
     };
 
     private static UserUiPreferences Clone(UserUiPreferences source) => new()
@@ -237,7 +243,10 @@ public static class AppSettingsService
         CalendarShowOrders = source.CalendarShowOrders,
         CalendarShowAbsences = source.CalendarShowAbsences,
         CalendarShowOperatingCalendar = source.CalendarShowOperatingCalendar,
-        CalendarShowWeekends = source.CalendarShowWeekends
+        CalendarShowWeekends = source.CalendarShowWeekends,
+        ShowContextHints = source.ShowContextHints,
+        AppTourLastShownVersion = source.AppTourLastShownVersion,
+        AppTourCompletedVersion = source.AppTourCompletedVersion
     };
 
     private static void Normalize(AppSettings settings)
@@ -286,5 +295,7 @@ public static class AppSettingsService
     {
         preferences.CalendarSelectedViewIndex = Math.Clamp(preferences.CalendarSelectedViewIndex, 0, 2);
         preferences.CalendarSearchText ??= string.Empty;
+        preferences.AppTourLastShownVersion = Math.Max(0, preferences.AppTourLastShownVersion);
+        preferences.AppTourCompletedVersion = Math.Max(0, preferences.AppTourCompletedVersion);
     }
 }
