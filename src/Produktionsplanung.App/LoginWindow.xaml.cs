@@ -6,6 +6,8 @@ namespace Produktionsplanung.App;
 public partial class LoginWindow : Window
 {
     private readonly bool _setupMode;
+    private bool _updatingCompanyCode;
+    private bool _companyCodeTouched;
 
     public LoginWindow()
     {
@@ -39,10 +41,19 @@ public partial class LoginWindow : Window
 
     private void CompanyNameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (!_setupMode || CompanyCodeBox is null || !string.IsNullOrWhiteSpace(CompanyCodeBox.Text))
+        if (!_setupMode || CompanyCodeBox is null || _companyCodeTouched)
             return;
 
+        _updatingCompanyCode = true;
         CompanyCodeBox.Text = CompanyIdentityService.SuggestCode(CompanyNameBox.Text);
+        CompanyCodeBox.CaretIndex = CompanyCodeBox.Text.Length;
+        _updatingCompanyCode = false;
+    }
+
+    private void CompanyCodeBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (_setupMode && !_updatingCompanyCode)
+            _companyCodeTouched = true;
     }
 
     private void Submit_Click(object sender, RoutedEventArgs e)
