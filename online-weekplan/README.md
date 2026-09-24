@@ -101,3 +101,6 @@ Für CI/CD wird Application Default Credentials über ein GitHub Secret verwende
 ## Deployment status
 
 Das produktive Projekt `solution-compact` ist für automatisches Deployment über GitHub Actions vorbereitet. Änderungen unter `online-weekplan/` auf `main` starten den Firebase-Deploy-Workflow automatisch.
+
+
+Deployment retry requested after configuring the `firebase-production` environment secret.
