@@ -37,6 +37,8 @@ public partial class App : Application
             DemoDataSeeder.Seed(db);
         }
 
+        CompanyIdentityService.EnsureExistingInstallationIdentity();
+
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         var login = new LoginWindow();
         if (login.ShowDialog() != true || !SessionService.IsAuthenticated)
