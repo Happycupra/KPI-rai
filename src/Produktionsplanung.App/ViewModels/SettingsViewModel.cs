@@ -11,6 +11,9 @@ namespace Produktionsplanung.App.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     [ObservableProperty] private string companyName = "SolutionCompakt";
+    [ObservableProperty] private string companyCode = string.Empty;
+    [ObservableProperty] private string companyId = string.Empty;
+    [ObservableProperty] private string companyRegistrationMode = string.Empty;
     [ObservableProperty] private string siteName = string.Empty;
     [ObservableProperty] private string defaultBackupDirectory = AppPaths.BackupsDirectory;
     [ObservableProperty] private string defaultExportDirectory = AppPaths.ExportsDirectory;
@@ -280,6 +283,9 @@ public partial class SettingsViewModel : ObservableObject
     private void ApplySettings(AppSettings settings)
     {
         CompanyName = settings.CompanyName;
+        CompanyCode = settings.CompanyCode;
+        CompanyId = settings.CompanyId;
+        CompanyRegistrationMode = settings.CompanyRegistrationMode;
         SiteName = settings.SiteName;
         DefaultBackupDirectory = settings.DefaultBackupDirectory;
         DefaultExportDirectory = settings.DefaultExportDirectory;
