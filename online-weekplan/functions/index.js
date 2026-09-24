@@ -86,6 +86,11 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
     const claims = await getAuth().verifyIdToken(authHeader.slice("Bearer ".length));
     if (claims.role !== "Administrator") return fail(res, 403, "Administrator erforderlich.");
 
+    const companyRef = db.collection("companies").doc(String(claims.companyId || ""));
+    const companyDoc = await companyRef.get();
+    if (!companyDoc.exists || companyDoc.data().isActive === false)
+      return fail(res, 403, "Firma ist nicht aktiv.");
+
     const snapshot = req.body;
     if (!snapshot || snapshot.schemaVersion !== "1.1" || !snapshot.weekId ||
         !snapshot.companyId || !snapshot.companyCode ||
@@ -97,8 +102,7 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
       return fail(res, 403, "Wochenplan gehört zu einer anderen Firma.");
     }
 
-    const weekRef = db.collection("companies").doc(String(claims.companyId))
-      .collection("weekPlans").doc(String(snapshot.weekId));
+    const weekRef = companyRef.collection("weekPlans").doc(String(snapshot.weekId));
     await weekRef.set({
       schemaVersion: snapshot.schemaVersion,
       companyId: snapshot.companyId,
