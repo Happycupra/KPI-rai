@@ -26,6 +26,20 @@
 
 **Hinweis zur aktuellen Architektur:** Die Nachrichten arbeiten mit der lokalen SQLite-Datenbank der jeweiligen Installation. Ein gleichzeitiger Austausch zwischen getrennten PCs setzt künftig den zentralen Mehrbenutzer-/Serverbetrieb voraus.
 
+### Online-Wochenplan · Firebase-ready
+- veröffentlichbarer, versionierter Wochenplan-Snapshot als JSON
+- enthält Personaleinsätze und Produktionsschichten, jedoch keine Abwesenheitsgründe/-kommentare
+- Vorbereitung direkt aus der Wochenplanung nur für Administratoren
+- Firebase-Konfigurationsdialog für Project ID, Web API Key, Login-, Hosting- und Publish-Endpunkt
+- separate Web-App unter `online-weekplan/`
+- normale Web-Benutzer: nur lesen
+- Administratoren: JSON-Wochenplan veröffentlichen und minimale Online-Korrekturen
+- Online-Korrekturen werden getrennt vom Desktop-Snapshot gespeichert, damit SolutionCompakt führend bleibt
+- Custom-Authentication-Skelett für denselben Benutzernamen und dasselbe Passwort wie in SolutionCompakt
+- Rollen werden als Firebase Custom Claims verwendet
+
+**Status:** vollständig vorbereitet und lokal testbar; für echten Onlinebetrieb fehlen nur noch ein Firebase-Projekt, dessen öffentliche Web-Konfiguration und der kontrollierte Erst-Sync der Benutzer-Hashes/Rollen.
+
 ### Personal- & Einsatzplanung
 - Outlook-ähnlicher Planungskalender mit Tag-, Woche- und Monatsansicht
 - Tages- und Wochenplanung
@@ -193,7 +207,7 @@ Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Instal
 
 **Technische Grundlage vorhanden, UI noch ausstehend:** What-if-/Neuplanung und digitale Schichtübergabe.
 
-**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung, zentraler Mehrbenutzerbetrieb und weitergehende automatische Neuplanung.
+**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung, zentraler Mehrbenutzerbetrieb, produktive Firebase-Aktivierung des vorbereiteten Online-Wochenplans und weitergehende automatische Neuplanung.
 
 ## Entwicklungsprinzipien
 - automatische Vorschläge verändern keine Produktionsdaten ohne explizite Benutzeraktion
