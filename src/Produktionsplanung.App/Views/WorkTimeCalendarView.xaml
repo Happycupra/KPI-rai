@@ -74,7 +74,7 @@
                                 <TextBlock Text="Pause Minuten" FontWeight="SemiBold"/>
                                 <TextBox Text="{Binding BreakMinutes}" Height="38" Margin="0,4,0,12"/>
                                 <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding EntryComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="65" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                                <TextBox Text="{Binding EntryComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
                                 <Button Content="Speichern" Command="{Binding SaveEntryCommand}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
                                 <Button Content="Neu" Command="{Binding NewEntryCommand}" Margin="0,0,0,7" Style="{StaticResource ActionButtonStyle}"/>
                                 <Button Content="Löschen" Command="{Binding DeleteEntryCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
@@ -115,7 +115,7 @@
                             <TextBox Text="{Binding CalendarTargetHoursFactor}" Height="38" Margin="0,4,0,5"/>
                             <TextBlock Text="0 = frei · 0.5 = halber Tag · 1 = normal · bis 2 möglich" Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,12"/>
                             <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding CalendarComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="70" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14"/>
+                            <TextBox Text="{Binding CalendarComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
                             <Button Content="Speichern" Command="{Binding SaveCalendarDayCommand}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
                             <Button Content="Neu" Command="{Binding NewCalendarDayCommand}" Margin="0,0,0,7" Style="{StaticResource ActionButtonStyle}"/>
                             <Button Content="Ausnahme löschen" Command="{Binding DeleteCalendarDayCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
