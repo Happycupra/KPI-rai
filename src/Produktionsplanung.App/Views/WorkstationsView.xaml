@@ -37,19 +37,19 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Name" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="34"/>
+                                <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="38"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Bereich / Ort" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding Area, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="34"/>
+                                <TextBox Text="{Binding Area, UpdateSourceTrigger=PropertyChanged}" Margin="0,4,0,0" Height="38"/>
                             </StackPanel>
                         </Grid>
 
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <StackPanel><TextBlock Text="Mindestbesetzung"/><TextBox Text="{Binding MinimumStaff}" Margin="0,4,0,0" Height="34"/></StackPanel>
-                            <StackPanel Grid.Column="2"><TextBlock Text="Optimal"/><TextBox Text="{Binding OptimalStaff}" Margin="0,4,0,0" Height="34"/></StackPanel>
-                            <StackPanel Grid.Column="4"><TextBlock Text="Maximum"/><TextBox Text="{Binding MaximumStaff}" Margin="0,4,0,0" Height="34"/></StackPanel>
+                            <StackPanel><TextBlock Text="Mindestbesetzung"/><TextBox Text="{Binding MinimumStaff}" Margin="0,4,0,0" Height="38"/></StackPanel>
+                            <StackPanel Grid.Column="2"><TextBlock Text="Optimal"/><TextBox Text="{Binding OptimalStaff}" Margin="0,4,0,0" Height="38"/></StackPanel>
+                            <StackPanel Grid.Column="4"><TextBlock Text="Maximum"/><TextBox Text="{Binding MaximumStaff}" Margin="0,4,0,0" Height="38"/></StackPanel>
                         </Grid>
 
                         <Border Background="#F6FAFF" BorderBrush="#CFE0F1" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,14">
@@ -136,11 +136,11 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Pflichtqualifikation"/>
-                                <ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,4,0,0"/>
+                                <ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Height="38" Margin="0,4,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Mindest-Skill-Level"/>
-                                <ComboBox ItemsSource="{Binding SkillLevels}" SelectedItem="{Binding SelectedRequiredQualificationLevel, Mode=TwoWay}" DisplayMemberPath="Name" Height="34" Margin="0,4,0,0"/>
+                                <ComboBox ItemsSource="{Binding SkillLevels}" SelectedItem="{Binding SelectedRequiredQualificationLevel, Mode=TwoWay}" DisplayMemberPath="Name" Height="38" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Grid>
 
