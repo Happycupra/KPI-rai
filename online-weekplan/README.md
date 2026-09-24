@@ -96,3 +96,8 @@ Eine Offline-Aktivierungsdatei sollte erst produktiv aktiviert werden, wenn der 
 Der Workflow `.github/workflows/firebase-deploy.yml` validiert Web-Dateien und Functions, installiert Firebase CLI und deployt Hosting, Firestore Rules und Functions in das Projekt `solution-compact`.
 
 Für CI/CD wird Application Default Credentials über ein GitHub Secret verwendet. Empfohlen ist ein dediziertes Deployment-Servicekonto mit nur den notwendigen Rollen. Nach dem Deploy wird die temporäre Credentials-Datei auf dem Runner entfernt.
+
+
+## Deployment status
+
+Das produktive Projekt `solution-compact` ist für automatisches Deployment über GitHub Actions vorbereitet. Änderungen unter `online-weekplan/` auf `main` starten den Firebase-Deploy-Workflow automatisch.
