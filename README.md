@@ -2,7 +2,7 @@
 
 **SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten in einer lokal nutzbaren Desktop-Anwendung.
 
-> **Aktueller Entwicklungsstand: 22.09.2026**  
+> **Aktueller Entwicklungsstand: 24.09.2026**  
 > Produktversion im Projekt: **0.1.0** · Plattform: **Windows 10/11 · .NET 8 · WPF · SQLite**
 
 ## Funktionsumfang
@@ -12,6 +12,19 @@
 - zentrale Hinweise für relevante Planungs- und Betriebsprobleme
 - Navigation aus Hinweisen in die betroffenen Bereiche
 - Anzeige des letzten erfolgreichen Backups
+
+### Interne Hinweise & Lesebestätigung
+- persönliche Hinweise zwischen SolutionCompakt-Benutzern
+- Briefumschlag-Symbol oben rechts mit Zähler für ungelesene Hinweise
+- Popup bei neuen Hinweisen
+- explizite Aktion **Gelesen bestätigen**
+- Posteingang und Gesendet-Historie
+- Absender sieht, ob und wann der Empfänger den Hinweis bestätigt hat
+- Priorität Normal / Wichtig
+- vollständige Speicherung mit Absender-/Empfänger-Snapshot, Betreff, Inhalt und Zeitstempeln
+- Audit-Einbindung für Senden und Lesebestätigung
+
+**Hinweis zur aktuellen Architektur:** Die Nachrichten arbeiten mit der lokalen SQLite-Datenbank der jeweiligen Installation. Ein gleichzeitiger Austausch zwischen getrennten PCs setzt künftig den zentralen Mehrbenutzer-/Serverbetrieb voraus.
 
 ### Personal- & Einsatzplanung
 - Outlook-ähnlicher Planungskalender mit Tag-, Woche- und Monatsansicht
@@ -176,7 +189,7 @@ Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Instal
 
 ## Aktueller Entwicklungsstand
 
-**Produktiv bzw. in der Bedienoberfläche integriert:** Personal- und Schichtplanung, Mitarbeiter/Skills, Abwesenheiten, Betriebskalender, Produktionsaufträge, Fertigungssteuerung, Artikel/Chargen, Ist-Produktion/OEE, KPI-Auswertungen, Benutzer/Audit, Backup/Restore, CSV- und PDF-Export sowie Portable-Betrieb.
+**Produktiv bzw. in der Bedienoberfläche integriert:** Personal- und Schichtplanung, Mitarbeiter/Skills, Abwesenheiten, Betriebskalender, Produktionsaufträge, Fertigungssteuerung, Artikel/Chargen, Ist-Produktion/OEE, KPI-Auswertungen, interne Hinweise mit Popup und Lesebestätigung, Benutzer/Audit, Backup/Restore, CSV- und PDF-Export sowie Portable-Betrieb.
 
 **Technische Grundlage vorhanden, UI noch ausstehend:** What-if-/Neuplanung und digitale Schichtübergabe.
 
