@@ -55,7 +55,7 @@ public partial class MainWindow : Window
         Navigate(CreateEntry(NavigationRoute.Dashboard), addToHistory: false);
         RefreshNotifications();
         RefreshPersonalMessages(showPopup: false);
-        Dispatcher.BeginInvoke(() => RefreshPersonalMessages(showPopup: true), DispatcherPriority.Background);
+        Dispatcher.BeginInvoke(new Action(() => RefreshPersonalMessages(showPopup: true)), DispatcherPriority.Background);
     }
 
     private void ApplyRolePermissions()
@@ -533,7 +533,7 @@ public partial class MainWindow : Window
                 UserMessageService.Acknowledge(message.Id);
                 deferredMessageIds.Remove(message.Id);
                 RefreshPersonalMessages(showPopup: false);
-                Dispatcher.BeginInvoke(ShowNextMessagePopup, DispatcherPriority.Background);
+                Dispatcher.BeginInvoke(new Action(ShowNextMessagePopup), DispatcherPriority.Background);
             }
             else
             {
