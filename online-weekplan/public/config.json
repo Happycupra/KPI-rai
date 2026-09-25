@@ -9,5 +9,10 @@
     "measurementId": "G-VYF1B3EC49"
   },
   "authEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/login",
-  "publishEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan"
+  "publishEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan",
+  "licenseRequestEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest",
+  "licenseStatusEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus",
+  "adminLicensesEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminLicenses",
+  "adminExtendLicenseEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminExtendLicense",
+  "adminSetLicenseStatusEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseStatus"
 }
