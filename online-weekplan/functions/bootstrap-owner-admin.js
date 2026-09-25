@@ -62,6 +62,20 @@ async function main() {
     await request(configUrl, { method: "PATCH", body: configBody }, token);
   }
 
+  await request(
+    `https://identitytoolkit.googleapis.com/admin/v2/projects/${PROJECT_ID}/config?updateMask=notification.sendEmail.callbackUri`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        notification: {
+          sendEmail: {
+            callbackUri: "https://solution-compact.web.app/auth-action.html"
+          }
+        }
+      })
+    },
+    token);
+
   const auth = getAuth();
   try {
     const user = await auth.getUserByEmail(OWNER_EMAIL);
