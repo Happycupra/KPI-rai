@@ -6,7 +6,7 @@ namespace Produktionsplanung.App;
 
 public partial class App : Application
 {
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
@@ -38,6 +38,29 @@ public partial class App : Application
         }
 
         CompanyIdentityService.EnsureExistingInstallationIdentity();
+
+        var licenseGate = await LicenseService.EvaluateStartupAsync();
+        if (!licenseGate.Allowed)
+        {
+            var licenseWindow = new LicenseWindow(licenseGate.Message);
+            if (licenseWindow.ShowDialog() != true)
+            {
+                Shutdown();
+                return;
+            }
+
+            licenseGate = await LicenseService.EvaluateStartupAsync();
+            if (!licenseGate.Allowed)
+            {
+                MessageBox.Show(
+                    licenseGate.Message,
+                    "SolutionCompakt – Registrierung erforderlich",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                Shutdown();
+                return;
+            }
+        }
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
         var login = new LoginWindow();

@@ -16,8 +16,8 @@ permissions:
 env:
   WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
   WINDOWS_SIGNING_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+  BUILD_VERSION: 1.0.${{ github.run_number }}
 
-# Only the newest main build may publish artifacts. This prevents concurrent runs from racing on downloads/.
 concurrency:
   group: windows-build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -44,7 +44,9 @@ jobs:
         shell: pwsh
         run: |
           node --check online-weekplan/functions/index.js
+          node --check online-weekplan/functions/bootstrap-owner-admin.js
           node --check online-weekplan/public/app.js
+          node --check online-weekplan/public/admin.js
           node --test tests/online-weekplan.test.cjs
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
@@ -61,18 +63,42 @@ jobs:
         run: dotnet restore Produktionsplanung.sln
 
       - name: Build
-        run: dotnet build Produktionsplanung.sln --configuration Release --no-restore
+        shell: pwsh
+        run: |
+          dotnet build Produktionsplanung.sln --configuration Release --no-restore `
+            -p:VersionPrefix=$env:BUILD_VERSION `
+            -p:AssemblyVersion="$env:BUILD_VERSION.0" `
+            -p:FileVersion="$env:BUILD_VERSION.0" `
+            -p:InformationalVersion=$env:BUILD_VERSION
 
       - name: Regression tests (isolated SQLite and WPF)
         run: dotnet run --project tests/Produktionsplanung.RegressionTests --configuration Release
 
       - name: Publish standalone Windows x64
-        run: dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false --output artifacts/win-x64
+        shell: pwsh
+        run: |
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true `
+            -p:PublishSingleFile=false `
+            -p:VersionPrefix=$env:BUILD_VERSION `
+            -p:AssemblyVersion="$env:BUILD_VERSION.0" `
+            -p:FileVersion="$env:BUILD_VERSION.0" `
+            -p:InformationalVersion=$env:BUILD_VERSION `
+            --output artifacts/win-x64
 
       - name: Publish portable single-file Windows x64
         shell: pwsh
         run: |
-          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false --output artifacts/single-file
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:DebugType=None `
+            -p:DebugSymbols=false `
+            -p:VersionPrefix=$env:BUILD_VERSION `
+            -p:AssemblyVersion="$env:BUILD_VERSION.0" `
+            -p:FileVersion="$env:BUILD_VERSION.0" `
+            -p:InformationalVersion=$env:BUILD_VERSION `
+            --output artifacts/single-file
           $exe = Join-Path $PWD "artifacts/single-file/SolutionCompakt.exe"
           if (-not (Test-Path $exe)) { throw "Single-file executable not found: $exe" }
 
@@ -106,17 +132,14 @@ jobs:
           SolutionCompakt USB / Portable
           ==============================
 
-          1. Diesen gesamten Ordner auf einen USB-Stick oder in einen beliebigen beschreibbaren Ordner kopieren.
-          2. SolutionCompakt.exe starten.
-          3. Die Datei portable.mode NICHT löschen. Sie aktiviert den USB-Modus.
+          Gesamten Ordner auf einen USB-Stick oder in einen beschreibbaren Ordner kopieren und SolutionCompakt.exe starten.
+          Die Datei portable.mode aktiviert den USB-Modus und darf nicht gelöscht werden.
 
           Im USB-Modus bleiben die Daten beim Programm:
-          - produktionsplanung.db: direkt neben SolutionCompakt.exe
-          - settings.json: direkt neben SolutionCompakt.exe
-          - Backups: Unterordner Backups
-          - Exporte: Unterordner Exports
-
-          Wird portable.mode entfernt, verwendet SolutionCompakt aus Kompatibilitätsgründen weiterhin %LOCALAPPDATA%\Produktionsplanung.
+          - produktionsplanung.db direkt neben SolutionCompakt.exe
+          - settings.json direkt neben SolutionCompakt.exe
+          - Backups im Unterordner Backups
+          - Exporte im Unterordner Exports
           "@ | Set-Content -Path (Join-Path $usb "README-PORTABLE.txt") -Encoding UTF8
 
       - name: Install Inno Setup
@@ -127,7 +150,7 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "/DMyAppVersion=0.1.0" "installer\SolutionCompakt.iss"
+          & $iscc "/DMyAppVersion=$env:BUILD_VERSION" "installer\SolutionCompakt.iss"
 
       - name: Sign installer
         if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
@@ -148,28 +171,28 @@ jobs:
       - name: Upload portable build
         uses: actions/upload-artifact@v4
         with:
-          name: SolutionCompakt-Windows-0.1.0-win-x64
+          name: SolutionCompakt-Windows-${{ env.BUILD_VERSION }}-win-x64
           path: artifacts/win-x64
 
       - name: Upload portable single EXE
         uses: actions/upload-artifact@v4
         with:
-          name: SolutionCompakt-Portable-0.1.0-win-x64
+          name: SolutionCompakt-Portable-${{ env.BUILD_VERSION }}-win-x64
           path: artifacts/single-file/SolutionCompakt.exe
 
       - name: Upload USB portable package
         uses: actions/upload-artifact@v4
         with:
-          name: SolutionCompakt-USB-Portable-0.1.0-win-x64
+          name: SolutionCompakt-USB-Portable-${{ env.BUILD_VERSION }}-win-x64
           path: artifacts/usb-portable
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: SolutionCompakt-Setup-0.1.0-win-x64
+          name: SolutionCompakt-Setup-${{ env.BUILD_VERSION }}-win-x64
           path: artifacts/installer/*.exe
 
-      - name: Mirror all four artifact ZIPs into downloads on main
+      - name: Publish installer update channel on main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         run: |
@@ -179,22 +202,29 @@ jobs:
           $setup = Get-ChildItem artifacts/installer/*.exe | Select-Object -First 1
           if (-not $setup) { throw "Installer executable not found." }
 
-          Compress-Archive -Path $setup.FullName -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Setup-0.1.0-win-x64.zip") -Force
-          Compress-Archive -Path "artifacts/single-file/SolutionCompakt.exe" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Portable-0.1.0-win-x64.zip") -Force
-          Compress-Archive -Path "artifacts/usb-portable/*" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-USB-Portable-0.1.0-win-x64.zip") -Force
-          Compress-Archive -Path "artifacts/win-x64/*" -DestinationPath (Join-Path $downloadStage "SolutionCompakt-Windows-0.1.0-win-x64.zip") -Force
+          $latestZip = Join-Path $downloadStage "SolutionCompakt-Setup-latest.zip"
+          Compress-Archive -Path $setup.FullName -DestinationPath $latestZip -Force
+          $sha256 = (Get-FileHash $latestZip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $manifest = @{
+            version = $env:BUILD_VERSION
+            downloadUrl = "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/SolutionCompakt-Setup-latest.zip?v=$env:BUILD_VERSION"
+            sha256 = $sha256
+            publishedAtUtc = [DateTime]::UtcNow.ToString("o")
+          } | ConvertTo-Json
+          Set-Content -Path (Join-Path $downloadStage "update.json") -Value $manifest -Encoding UTF8
 
           git fetch origin main
           git checkout -B main origin/main
 
           New-Item -ItemType Directory -Path downloads -Force | Out-Null
-          Copy-Item (Join-Path $downloadStage "*.zip") downloads -Force
+          Copy-Item $latestZip "downloads/SolutionCompakt-Setup-latest.zip" -Force
+          Copy-Item (Join-Path $downloadStage "update.json") "downloads/update.json" -Force
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/*.zip
+          git add downloads/SolutionCompakt-Setup-latest.zip downloads/update.json
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
-            git commit -m "Add latest Windows build archives to downloads [skip ci]"
+            git commit -m "Publish SolutionCompakt $env:BUILD_VERSION update [skip ci]"
             git push origin main
           }

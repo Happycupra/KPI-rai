@@ -31,6 +31,21 @@ public sealed class AppSettings
     public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
     public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
 
+    // Trial, registration and seller-managed licensing.
+    public DateTime? TrialStartedAtUtc { get; set; }
+    public string LicenseInstallationId { get; set; } = string.Empty;
+    public string LicenseSecret { get; set; } = string.Empty;
+    public string LicenseEmail { get; set; } = string.Empty;
+    public string LicenseStatus { get; set; } = string.Empty;
+    public DateTime? LicenseValidUntilUtc { get; set; }
+    public DateTime? LicenseLastCheckedAtUtc { get; set; }
+    public string LicenseRequestEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest";
+    public string LicenseStatusEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus";
+
+    // Automatic update channel for installed Windows versions.
+    public bool AutoUpdateEnabled { get; set; } = true;
+    public string UpdateManifestUrl { get; set; } = "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/update.json";
+
     // Security settings are installation-wide.
     public bool AutoLockEnabled { get; set; } = true;
     public int AutoLockMinutes { get; set; } = 30;
@@ -272,6 +287,19 @@ public static class AppSettingsService
         settings.FirebaseHostingUrl = settings.FirebaseHostingUrl?.Trim() ?? string.Empty;
         settings.FirebasePublishEndpoint = settings.FirebasePublishEndpoint?.Trim() ?? string.Empty;
         settings.LastOnlineWeekPreparedId = settings.LastOnlineWeekPreparedId?.Trim() ?? string.Empty;
+        settings.LicenseInstallationId = settings.LicenseInstallationId?.Trim() ?? string.Empty;
+        settings.LicenseSecret = settings.LicenseSecret?.Trim() ?? string.Empty;
+        settings.LicenseEmail = settings.LicenseEmail?.Trim().ToLowerInvariant() ?? string.Empty;
+        settings.LicenseStatus = settings.LicenseStatus?.Trim().ToLowerInvariant() ?? string.Empty;
+        settings.LicenseRequestEndpoint = string.IsNullOrWhiteSpace(settings.LicenseRequestEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest"
+            : settings.LicenseRequestEndpoint.Trim();
+        settings.LicenseStatusEndpoint = string.IsNullOrWhiteSpace(settings.LicenseStatusEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus"
+            : settings.LicenseStatusEndpoint.Trim();
+        settings.UpdateManifestUrl = string.IsNullOrWhiteSpace(settings.UpdateManifestUrl)
+            ? "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/update.json"
+            : settings.UpdateManifestUrl.Trim();
         settings.AutoLockMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
         settings.RecoveryCodeHash = settings.RecoveryCodeHash?.Trim() ?? string.Empty;
         settings.RecoveryCodeSalt = settings.RecoveryCodeSalt?.Trim() ?? string.Empty;

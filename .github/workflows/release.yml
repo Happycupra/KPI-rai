@@ -47,13 +47,13 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false -p:Version=$version --output artifacts/win-x64
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=false -p:VersionPrefix=$version -p:AssemblyVersion="$version.0" -p:FileVersion="$version.0" -p:InformationalVersion=$version --output artifacts/win-x64
 
       - name: Publish portable single-file Windows x64
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:Version=$version --output artifacts/single-file
+          dotnet publish src/Produktionsplanung.App/Produktionsplanung.App.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -p:VersionPrefix=$version -p:AssemblyVersion="$version.0" -p:FileVersion="$version.0" -p:InformationalVersion=$version --output artifacts/single-file
           $source = Join-Path $PWD "artifacts/single-file/SolutionCompakt.exe"
           $target = Join-Path $PWD "artifacts/SolutionCompakt-$version-win-x64-portable.exe"
           if (-not (Test-Path $source)) { throw "Single-file executable not found: $source" }
