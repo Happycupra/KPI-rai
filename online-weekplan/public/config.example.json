@@ -6,5 +6,10 @@
     "appId": "FIREBASE_WEB_APP_ID"
   },
   "authEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/login",
-  "publishEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/publishWeekPlan"
+  "publishEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/publishWeekPlan",
+  "licenseRequestEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/licenseRequest",
+  "licenseStatusEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/licenseStatus",
+  "adminLicensesEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminLicenses",
+  "adminExtendLicenseEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminExtendLicense",
+  "adminSetLicenseStatusEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminSetLicenseStatus"
 }
