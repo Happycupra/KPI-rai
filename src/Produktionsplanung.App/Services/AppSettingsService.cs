@@ -31,6 +31,21 @@ public sealed class AppSettings
     public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
     public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
 
+    // Trial, registration and seller-managed licensing.
+    public DateTime? TrialStartedAtUtc { get; set; }
+    public string LicenseInstallationId { get; set; } = string.Empty;
+    public string LicenseSecret { get; set; } = string.Empty;
+    public string LicenseEmail { get; set; } = string.Empty;
+    public string LicenseStatus { get; set; } = string.Empty;
+    public DateTime? LicenseValidUntilUtc { get; set; }
+    public DateTime? LicenseLastCheckedAtUtc { get; set; }
+    public string LicenseRequestEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest";
+    public string LicenseStatusEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus";
+
+    // Automatic update channel for installed Windows versions.
+    public bool AutoUpdateEnabled { get; set; } = true;
+    public string UpdateManifestUrl { get; set; } = "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/update.json";
+
     // Security settings are installation-wide.
     public bool AutoLockEnabled { get; set; } = true;
     public int AutoLockMinutes { get; set; } = 30;
