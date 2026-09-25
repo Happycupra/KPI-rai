@@ -29,7 +29,6 @@ public partial class MainWindow : Window
     private bool messagePopupOpen;
     private DateTime lastActivityUtc = DateTime.UtcNow;
     private bool sessionLocked;
-    private bool bypassUnsavedChangesPrompt;
     private List<DashboardIssue> notificationIssues = new();
 
     public MainWindow()
@@ -286,8 +285,7 @@ public partial class MainWindow : Window
 
     private bool CanLeaveCurrentContent()
     {
-        if (bypassUnsavedChangesPrompt ||
-            ContentHost.Content is not IUnsavedChangesAware dirtyAware ||
+        if (ContentHost.Content is not IUnsavedChangesAware dirtyAware ||
             !dirtyAware.HasUnsavedChanges)
             return true;
 

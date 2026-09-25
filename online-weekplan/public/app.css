@@ -110,3 +110,12 @@ dialog::backdrop{background:rgba(16,42,67,.42);backdrop-filter:blur(2px)}
   .footer{padding:6px 14px 22px;flex-direction:column}
   .two{grid-template-columns:1fr}
 }
+
+/* Keep controls usable at narrow widths and with long imported values. */
+button:disabled{opacity:.5;cursor:default;transform:none}
+button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.entry{overflow-wrap:anywhere;min-width:0}
+.production-slot{border-left-color:#177245}
+.admin-publish-actions input{min-width:0;max-width:100%}
+.admin-publish-actions button{max-width:100%;white-space:normal}
+dialog{max-height:90vh;overflow-y:auto}

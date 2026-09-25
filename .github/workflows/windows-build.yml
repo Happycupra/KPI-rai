@@ -19,7 +19,7 @@ env:
 
 # Only the newest main build may publish artifacts. This prevents concurrent runs from racing on downloads/.
 concurrency:
-  group: windows-build-main
+  group: windows-build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -45,6 +45,7 @@ jobs:
         run: |
           node --check online-weekplan/functions/index.js
           node --check online-weekplan/public/app.js
+          node --test tests/online-weekplan.test.cjs
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.json -Raw | ConvertFrom-Json | Out-Null
