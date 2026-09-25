@@ -54,11 +54,23 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
 
-      - name: Deploy Hosting, Firestore Rules and Functions
+      - name: Deploy Hosting and Firestore Rules
         working-directory: online-weekplan
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --project solution-compact --only hosting,firestore:rules,functions --non-interactive
+        run: firebase deploy --project solution-compact --only hosting,firestore:rules --non-interactive
+
+      - name: Configure Functions artifact cleanup
+        working-directory: online-weekplan
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase functions:artifacts:setpolicy --project solution-compact --location europe-west1 --days 7 --non-interactive
+
+      - name: Deploy Functions
+        working-directory: online-weekplan
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: firebase deploy --project solution-compact --only functions --non-interactive
 
       - name: Remove temporary credentials
         if: always()
