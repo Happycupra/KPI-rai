@@ -21,7 +21,7 @@ async function request(url, options, token) {
 }
 
 async function waitOperation(operation, token) {
-  if (!operation?.name) return;
+  if (!operation?.name || operation.done === true || String(operation.name).includes("DONE_OPERATION")) return;
   for (let i = 0; i < 30; i++) {
     const current = await request(`https://serviceusage.googleapis.com/v1/${operation.name}`, { method: "GET" }, token);
     if (current.done) {
