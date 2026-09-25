@@ -84,11 +84,46 @@ public partial class MainWindow : Window
         return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
     }
 
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         var preferences = AppSettingsService.LoadCurrentUserPreferences();
         if (preferences.AppTourLastShownVersion < AppTourCatalog.CurrentVersion)
             Dispatcher.BeginInvoke(new Action(() => StartGuidedTour(automatic: true)), DispatcherPriority.Background);
+
+        var settings = AppSettingsService.Load();
+        if (!settings.AutoUpdateEnabled || AppPaths.IsPortableMode)
+            return;
+
+        var update = await UpdateService.CheckAsync();
+        if (!update.Success || !update.UpdateAvailable || update.LatestVersion is null)
+            return;
+
+        var answer = MessageBox.Show(
+            this,
+            $"Eine neue SolutionCompakt-Version ist verfügbar.\n\nInstalliert: {update.CurrentVersion.ToString(3)}\nNeu: {update.LatestVersion.ToString(3)}\n\nJetzt herunterladen und installieren?",
+            "SolutionCompakt Update",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Information);
+
+        if (answer != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            IsEnabled = false;
+            await UpdateService.DownloadAndLaunchAsync(update);
+            Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            IsEnabled = true;
+            MessageBox.Show(
+                this,
+                "Das Update konnte nicht gestartet werden.\n\n" + ex.Message,
+                "SolutionCompakt Update",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => StartGuidedTour();
