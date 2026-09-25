@@ -64,7 +64,10 @@ async function resetPassword() {
   setLoginBusy(true);
   try {
     el("email").value = OWNER_EMAIL;
-    await authMod.sendPasswordResetEmail(auth, OWNER_EMAIL);
+    await authMod.sendPasswordResetEmail(auth, OWNER_EMAIL, {
+      url: "https://solution-compact.web.app/admin.html",
+      handleCodeInApp: false
+    });
     el("loginStatus").style.color = "#166534";
     el("loginStatus").textContent = "E-Mail zum Festlegen/Zurücksetzen des Passworts wurde gesendet.";
   } catch (error) {
