@@ -45,13 +45,22 @@ async function main() {
     token);
   await waitOperation(operation, token);
 
-  await request(
-    `https://identitytoolkit.googleapis.com/admin/v2/projects/${PROJECT_ID}/config?updateMask=signIn.email.enabled,signIn.email.passwordRequired`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ signIn: { email: { enabled: true, passwordRequired: true } } })
-    },
-    token);
+  const configUrl =
+    `https://identitytoolkit.googleapis.com/admin/v2/projects/${PROJECT_ID}/config?updateMask=signIn.email.enabled,signIn.email.passwordRequired`;
+  const configBody = JSON.stringify({ signIn: { email: { enabled: true, passwordRequired: true } } });
+
+  try {
+    await request(configUrl, { method: "PATCH", body: configBody }, token);
+  } catch (error) {
+    if (!String(error.message || error).includes("CONFIGURATION_NOT_FOUND")) throw error;
+
+    await request(
+      `https://identitytoolkit.googleapis.com/v2/projects/${PROJECT_ID}/identityPlatform:initializeAuth`,
+      { method: "POST", body: "{}" },
+      token);
+
+    await request(configUrl, { method: "PATCH", body: configBody }, token);
+  }
 
   const auth = getAuth();
   try {
