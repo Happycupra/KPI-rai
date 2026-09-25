@@ -287,6 +287,19 @@ public static class AppSettingsService
         settings.FirebaseHostingUrl = settings.FirebaseHostingUrl?.Trim() ?? string.Empty;
         settings.FirebasePublishEndpoint = settings.FirebasePublishEndpoint?.Trim() ?? string.Empty;
         settings.LastOnlineWeekPreparedId = settings.LastOnlineWeekPreparedId?.Trim() ?? string.Empty;
+        settings.LicenseInstallationId = settings.LicenseInstallationId?.Trim() ?? string.Empty;
+        settings.LicenseSecret = settings.LicenseSecret?.Trim() ?? string.Empty;
+        settings.LicenseEmail = settings.LicenseEmail?.Trim().ToLowerInvariant() ?? string.Empty;
+        settings.LicenseStatus = settings.LicenseStatus?.Trim().ToLowerInvariant() ?? string.Empty;
+        settings.LicenseRequestEndpoint = string.IsNullOrWhiteSpace(settings.LicenseRequestEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest"
+            : settings.LicenseRequestEndpoint.Trim();
+        settings.LicenseStatusEndpoint = string.IsNullOrWhiteSpace(settings.LicenseStatusEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus"
+            : settings.LicenseStatusEndpoint.Trim();
+        settings.UpdateManifestUrl = string.IsNullOrWhiteSpace(settings.UpdateManifestUrl)
+            ? "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/update.json"
+            : settings.UpdateManifestUrl.Trim();
         settings.AutoLockMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
         settings.RecoveryCodeHash = settings.RecoveryCodeHash?.Trim() ?? string.Empty;
         settings.RecoveryCodeSalt = settings.RecoveryCodeSalt?.Trim() ?? string.Empty;
