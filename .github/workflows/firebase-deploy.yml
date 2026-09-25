@@ -33,6 +33,8 @@ jobs:
         run: |
           node --check online-weekplan/functions/index.js
           node --check online-weekplan/public/app.js
+          node --check online-weekplan/public/admin.js
+          node --check online-weekplan/functions/bootstrap-owner-admin.js
           node -e "JSON.parse(require('fs').readFileSync('online-weekplan/firebase.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('online-weekplan/public/config.json','utf8'))"
 
@@ -53,6 +55,12 @@ jobs:
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
           chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+
+      - name: Configure email login and owner admin
+        working-directory: online-weekplan/functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: node bootstrap-owner-admin.js
 
       - name: Deploy Hosting and Firestore Rules
         working-directory: online-weekplan
