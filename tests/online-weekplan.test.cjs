@@ -102,3 +102,12 @@ test('newly published first week can be discovered with refresh', async () => {
   assert.equal(h.run('weekIds[0]'), '2030-W03');
   assert.equal(h.el('planGrid').children.length, 7);
 });
+
+
+test('remember-login PIN requires four matching digits', () => {
+  const h = harness();
+  assert.equal(h.run('validatePinSetup("1234", "1234")'), "");
+  assert.match(h.run('validatePinSetup("123", "123")'), /4 Ziffern/);
+  assert.match(h.run('validatePinSetup("12A4", "12A4")'), /4 Ziffern/);
+  assert.match(h.run('validatePinSetup("1234", "4321")'), /stimmen nicht überein/);
+});
