@@ -9,7 +9,7 @@ function harness() {
     return { children: [], value: '', disabled: false, textContent: '',
       classList: { add() {}, remove() {}, toggle() {} },
       appendChild(child) { this.children.push(child); },
-      addEventListener() {}, close() { this.closed = true; }, reset() {},
+      addEventListener() {}, focus() { this.focused = true; }, close() { this.closed = true; }, reset() {},
       set innerHTML(value) { this.html = value; this.children = []; },
       get innerHTML() { return this.html || ''; }
     };
