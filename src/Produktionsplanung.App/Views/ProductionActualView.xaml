@@ -64,9 +64,24 @@
                             <TextBlock Text="Erfasste Ist-Produktion" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
                             <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" />
                         </Grid>
-                        <DataGrid ItemsSource="{Binding ActualsView}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
+                        <DataGrid x:Name="ActualsGrid" ItemsSource="{Binding ActualsView}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                                   HeadersVisibility="Column" MinHeight="420" MaxHeight="560">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="ActualRow_PreviewMouseRightButtonDown"/>
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <MenuItem Header="Chargendetails / Übersicht" Click="ActualBatchContext_Click"/>
+                                                <MenuItem Header="Auftrag bearbeiten" Click="ActualOrderContext_Click"/>
+                                                <MenuItem Header="Auftragscockpit" Click="ActualControlContext_Click"/>
+                                                <MenuItem Header="Artikelverzeichnis" Click="ActualArticlesContext_Click"/>
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.RowStyle>
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="90" />
                                 <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />
