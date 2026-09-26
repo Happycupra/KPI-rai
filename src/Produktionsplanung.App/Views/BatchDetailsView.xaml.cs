@@ -51,6 +51,34 @@ public partial class BatchDetailsView : UserControl
     private void Control_Click(object sender, RoutedEventArgs e) => Host?.OpenManufacturingControl(id);
     private void Actual_Click(object sender, RoutedEventArgs e) => Host?.OpenProductionActual(id);
     private void Complete_Click(object sender, RoutedEventArgs e) => Run(() => BatchService.Complete(id));
+    private void Trash_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SessionService.IsPlannerOrAdmin)
+            return;
+
+        var details = BatchService.GetDetails(id);
+        var batch = string.IsNullOrWhiteSpace(details.Batch.BatchNumber)
+            ? "ohne Chargennummer"
+            : $"Charge {details.Batch.BatchNumber}";
+
+        if (MessageBox.Show(
+                Window.GetWindow(this),
+                $"Auftrag {details.Batch.OrderNumber} / {batch} wirklich in den Papierkorb verschieben?\n\nDie gesamte Produktionshistorie bleibt erhalten und kann durch einen Administrator wiederhergestellt werden.",
+                "Charge / Auftrag in Papierkorb",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            RecycleBinService.MoveProductionOrderToTrash(id);
+            Host?.OpenProductionOrders();
+        }
+        catch (Exception ex)
+        {
+            Message.Text = $"Charge konnte nicht in den Papierkorb verschoben werden: {ex.Message}";
+        }
+    }
     private void Reopen_Click(object sender, RoutedEventArgs e) => Run(() => BatchService.Reopen(id, Reason.Text));
     private void Run(Action action)
     {
