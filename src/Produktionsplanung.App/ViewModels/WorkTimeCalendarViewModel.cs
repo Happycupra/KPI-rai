@@ -337,7 +337,7 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
         var conflict = other.FirstOrDefault(x => IntervalsOverlap(candidate, GetOverlapInterval(x)));
         if (conflict is not null)
         {
-            StatusMessage = $"Arbeitszeit überschneidet sich mit einem bestehenden Eintrag vom {conflict.Date:dd.MM.yyyy} ({conflict.StartTime:hh\:mm}–{(conflict.IsRunning ? "läuft" : conflict.EndTime.ToString(@"hh\:mm"))}).";
+            StatusMessage = $"Arbeitszeit überschneidet sich mit einem bestehenden Eintrag vom {conflict.Date:dd.MM.yyyy} ({conflict.StartTime:hh\\:mm}–{(conflict.IsRunning ? "läuft" : conflict.EndTime.ToString(@"hh\:mm"))}).";
             return;
         }
 
@@ -721,7 +721,7 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
                 EmployeeName = $"{x.Employee.LastName}, {x.Employee.FirstName}",
                 StartTime = x.StartTime,
                 EndTime = x.EndTime,
-                TimeText = x.IsRunning ? $"{x.StartTime:hh\:mm}–läuft" : $"{x.StartTime:hh\:mm}–{x.EndTime:hh\:mm}",
+                TimeText = x.IsRunning ? $"{x.StartTime:hh\\:mm}–läuft" : $"{x.StartTime:hh\\:mm}–{x.EndTime:hh\\:mm}",
                 BreakMinutes = x.BreakMinutes,
                 NetHours = CalculateNetHours(x, now),
                 DurationText = DurationText(x, now),
