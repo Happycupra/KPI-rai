@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Microsoft.Win32;
 using Produktionsplanung.App.Models;
 using Produktionsplanung.App.Services;
@@ -103,5 +104,42 @@ public partial class ArticlesView : UserControl
         HistoryTitle.Text = $"Chargen · {a.ArticleNumber} – {a.Name}";
         Comparison.Content = new BatchComparisonView(a.Id);
         History.Content = new BatchBrowserView("Alle", a.Id);
+    }
+
+    private void ArticleRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow { DataContext: ArticleMaster article } row)
+            return;
+        row.IsSelected = true;
+        ArticlesGrid.SelectedItem = article;
+    }
+
+    private static ArticleMaster? ContextArticle(object sender)
+    {
+        if (sender is not MenuItem menuItem ||
+            menuItem.Parent is not ContextMenu contextMenu ||
+            contextMenu.PlacementTarget is not DataGridRow { DataContext: ArticleMaster article })
+            return null;
+        return article;
+    }
+
+    private void EditArticleContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextArticle(sender) is { } article)
+            Edit(article.Id);
+    }
+
+    private void OverviewArticleContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextArticle(sender) is not { } article)
+            return;
+        ArticlesGrid.SelectedItem = article;
+        HistoryTitle.BringIntoView();
+    }
+
+    private void NewBatchArticleContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextArticle(sender) is { } article)
+            (Window.GetWindow(this) as MainWindow)?.CreateBatch(article.Id);
     }
 }
