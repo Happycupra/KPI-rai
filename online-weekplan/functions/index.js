@@ -217,7 +217,9 @@ exports.licenseRequest = onRequest({ region: "europe-west1" }, async (req, res) 
         validUntilUtc: toIso(after.validUntil),
         message: after.status === "active"
           ? "Registrierung ist bereits freigeschaltet."
-          : "Registrierungsanfrage wurde aktualisiert und wartet auf Freischaltung."
+          : after.status === "suspended"
+            ? "Diese Installation wurde gesperrt. Bitte wenden Sie sich an den Administrator: irajet.ramadani@gmail.com"
+            : "Registrierungsanfrage wurde aktualisiert und wartet auf Freischaltung."
       });
     }
 
@@ -349,7 +351,7 @@ exports.licenseStatus = onRequest({ region: "europe-west1" }, async (req, res) =
         : status === "pending"
           ? "Registrierungsanfrage wartet auf Freischaltung."
           : status === "suspended"
-            ? "Diese Lizenz wurde gesperrt."
+            ? "Diese Installation wurde gesperrt. Bitte wenden Sie sich an den Administrator: irajet.ramadani@gmail.com"
             : status === "expired"
               ? "Die Freischaltung ist abgelaufen."
               : "Diese Installation ist noch nicht freigeschaltet."
