@@ -195,4 +195,78 @@ public partial class DayPlanningView : UserControl
         viewModel.RefreshOperatingCalendarAlert();
         viewModel.RefreshEmployeeSuggestions();
     }
+    private MainWindow? Host => Window.GetWindow(this) as MainWindow;
+
+    private void CoverageRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is DataGridRow { DataContext: ProductionOrderCoverageRow row } gridRow &&
+            DataContext is DayPlanningViewModel vm)
+        {
+            gridRow.IsSelected = true;
+            vm.SelectedProductionOrderCoverage = row;
+        }
+    }
+
+    private static ProductionOrderCoverageRow? ContextCoverage(object sender)
+    {
+        if (sender is not MenuItem item ||
+            item.Parent is not ContextMenu menu ||
+            menu.PlacementTarget is not DataGridRow { DataContext: ProductionOrderCoverageRow row })
+            return null;
+        return row;
+    }
+
+    private void CoverageDetailsContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextCoverage(sender) is { } row) Host?.OpenBatch(row.OrderId);
+    }
+
+    private void CoverageEditContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextCoverage(sender) is { } row) Host?.OpenProductionOrder(row.OrderId);
+    }
+
+    private void CoverageActualContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextCoverage(sender) is { } row) Host?.OpenProductionActual(row.OrderId);
+    }
+
+    private void CoverageArticlesContext_Click(object sender, RoutedEventArgs e) => Host?.OpenArticles();
+
+    private void AssignmentRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is DataGridRow { DataContext: DayAssignmentRow row } gridRow &&
+            DataContext is DayPlanningViewModel vm)
+        {
+            gridRow.IsSelected = true;
+            vm.SelectedAssignment = row;
+        }
+    }
+
+    private static DayAssignmentRow? ContextAssignment(object sender)
+    {
+        if (sender is not MenuItem item ||
+            item.Parent is not ContextMenu menu ||
+            menu.PlacementTarget is not DataGridRow { DataContext: DayAssignmentRow row })
+            return null;
+        return row;
+    }
+
+    private void AssignmentEmployeeCardContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextAssignment(sender) is { } row && DataContext is DayPlanningViewModel vm)
+            Host?.OpenEmployeeQuickCard(row.EmployeeId, vm.SelectedDate);
+    }
+
+    private void AssignmentEmployeeMasterContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextAssignment(sender) is { } row) Host?.OpenEmployee(row.EmployeeId);
+    }
+
+    private void AssignmentEmployeePlanContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextAssignment(sender) is not null && DataContext is DayPlanningViewModel vm)
+            Host?.OpenDayPlanning(vm.SelectedDate);
+    }
+
 }
