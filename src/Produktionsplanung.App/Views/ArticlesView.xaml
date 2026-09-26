@@ -19,8 +19,23 @@
    <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
   </WrapPanel>
   <TextBlock Text="Excel: Artikelimport separat oder Stammdaten-Vorlage mit Mitarbeitenden, Arbeitsplätzen, Schichten, Arbeitsplatz-Schichten und Produktionsaufträgen. Jeder Stammdatenimport startet mit Vorschau/Testlauf. Skill-Level 5 = Admin." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
-  <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap"/>
-  <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220"><DataGrid.Columns>
+  <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap" FontWeight="SemiBold"/>
+  <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220">
+   <DataGrid.RowStyle>
+    <Style TargetType="DataGridRow">
+     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ArticleRow_PreviewMouseRightButtonDown"/>
+     <Setter Property="ContextMenu">
+      <Setter.Value>
+       <ContextMenu>
+        <MenuItem Header="Artikel bearbeiten" Click="EditArticleContext_Click"/>
+        <MenuItem Header="Übersicht / Chargenhistorie" Click="OverviewArticleContext_Click"/>
+        <MenuItem Header="Neue Charge" Click="NewBatchArticleContext_Click"/>
+       </ContextMenu>
+      </Setter.Value>
+     </Setter>
+    </Style>
+   </DataGrid.RowStyle>
+   <DataGrid.Columns>
    <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>
    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="240"/>
    <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="85"/>
