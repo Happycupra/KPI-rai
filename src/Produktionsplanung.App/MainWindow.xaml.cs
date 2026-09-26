@@ -13,6 +13,7 @@ namespace Produktionsplanung.App;
 
 public partial class MainWindow : Window
 {
+    private const string BaseWindowTitle = "SolutionCompakt – Produktions- & Personalplanung";
     private readonly Stack<NavigationEntry> navigationHistory = new();
     private NavigationEntry? currentNavigation;
     private EmployeeQuickCardWindow? employeeQuickCardWindow;
@@ -23,12 +24,15 @@ public partial class MainWindow : Window
     private bool systemGroupCollapsed;
     private readonly DispatcherTimer inactivityTimer = new() { Interval = TimeSpan.FromSeconds(10) };
     private readonly DispatcherTimer messageTimer = new() { Interval = TimeSpan.FromSeconds(15) };
+    private readonly DispatcherTimer licenseTimer = new() { Interval = TimeSpan.FromSeconds(30) };
     private readonly HashSet<int> deferredMessageIds = new();
     private MessageCenterWindow? messageCenterWindow;
     private AppTourWindow? appTourWindow;
     private bool messagePopupOpen;
     private DateTime lastActivityUtc = DateTime.UtcNow;
     private bool sessionLocked;
+    private bool licenseCheckRunning;
+    private bool licenseBlocked;
     private List<DashboardIssue> notificationIssues = new();
 
     public MainWindow()
@@ -49,6 +53,9 @@ public partial class MainWindow : Window
         inactivityTimer.Start();
         messageTimer.Tick += MessageTimer_Tick;
         messageTimer.Start();
+        licenseTimer.Tick += LicenseTimer_Tick;
+        licenseTimer.Start();
+        ApplyLicensePresentation();
         InputManager.Current.PreProcessInput += InputManager_PreProcessInput;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
@@ -124,6 +131,63 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
+    }
+
+    private async void LicenseTimer_Tick(object? sender, EventArgs e)
+    {
+        if (licenseCheckRunning || licenseBlocked)
+            return;
+
+        licenseCheckRunning = true;
+        try
+        {
+            var gate = await LicenseService.EvaluateStartupAsync();
+            ApplyLicensePresentation(gate);
+
+            if (gate.Allowed)
+                return;
+
+            licenseBlocked = true;
+            licenseTimer.Stop();
+            IsEnabled = false;
+
+            var suspended = string.Equals(gate.Status, "suspended", StringComparison.OrdinalIgnoreCase);
+            MessageBox.Show(
+                this,
+                suspended ? LicenseService.SuspendedMessage : gate.Message,
+                suspended ? "SolutionCompakt – Installation gesperrt" : "SolutionCompakt – Lizenzprüfung",
+                MessageBoxButton.OK,
+                suspended ? MessageBoxImage.Stop : MessageBoxImage.Warning);
+
+            Application.Current.Shutdown();
+        }
+        finally
+        {
+            licenseCheckRunning = false;
+        }
+    }
+
+    private void ApplyLicensePresentation(LicenseGateResult? gate = null)
+    {
+        bool isTrial;
+        if (gate is not null)
+        {
+            isTrial = gate.Allowed && gate.IsTrial;
+        }
+        else
+        {
+            var settings = AppSettingsService.Load();
+            var now = DateTime.UtcNow;
+            var active = string.Equals(settings.LicenseStatus, "active", StringComparison.OrdinalIgnoreCase) &&
+                         settings.LicenseValidUntilUtc is { } validUntil &&
+                         validUntil > now;
+            var suspended = string.Equals(settings.LicenseStatus, "suspended", StringComparison.OrdinalIgnoreCase);
+            var trialEnd = settings.TrialStartedAtUtc?.AddDays(LicenseService.TrialDays);
+            isTrial = !active && !suspended && trialEnd is { } end && end > now;
+        }
+
+        LicenseModeBadge.Visibility = isTrial ? Visibility.Visible : Visibility.Collapsed;
+        Title = isTrial ? BaseWindowTitle + " · DEMO" : BaseWindowTitle;
     }
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => StartGuidedTour();
@@ -346,6 +410,9 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
+        if (licenseBlocked)
+            return;
+
         if (!CanLeaveCurrentContent())
             e.Cancel = true;
     }
@@ -354,6 +421,7 @@ public partial class MainWindow : Window
     {
         inactivityTimer.Stop();
         messageTimer.Stop();
+        licenseTimer.Stop();
         messageCenterWindow?.Close();
         appTourWindow?.Close();
         InputManager.Current.PreProcessInput -= InputManager_PreProcessInput;

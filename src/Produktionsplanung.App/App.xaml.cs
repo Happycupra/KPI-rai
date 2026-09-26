@@ -11,11 +11,6 @@ public partial class App : Application
         base.OnStartup(e);
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
-        MessageBox.Show(
-            "Eigentum von Irajet Ramadani - nur zu Testzwecken zu verwenden",
-            "SolutionCompakt - Nutzungshinweis",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
 
         AppPaths.InitializeStorageMode(e.Args);
         if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
@@ -40,6 +35,18 @@ public partial class App : Application
         CompanyIdentityService.EnsureExistingInstallationIdentity();
 
         var licenseGate = await LicenseService.EvaluateStartupAsync();
+        if (!licenseGate.Allowed &&
+            string.Equals(licenseGate.Status, "suspended", StringComparison.OrdinalIgnoreCase))
+        {
+            MessageBox.Show(
+                LicenseService.SuspendedMessage,
+                "SolutionCompakt – Installation gesperrt",
+                MessageBoxButton.OK,
+                MessageBoxImage.Stop);
+            Shutdown();
+            return;
+        }
+
         if (!licenseGate.Allowed)
         {
             var licenseWindow = new LicenseWindow(licenseGate.Message);
@@ -52,14 +59,24 @@ public partial class App : Application
             licenseGate = await LicenseService.EvaluateStartupAsync();
             if (!licenseGate.Allowed)
             {
+                var suspended = string.Equals(licenseGate.Status, "suspended", StringComparison.OrdinalIgnoreCase);
                 MessageBox.Show(
-                    licenseGate.Message,
-                    "SolutionCompakt – Registrierung erforderlich",
+                    suspended ? LicenseService.SuspendedMessage : licenseGate.Message,
+                    suspended ? "SolutionCompakt – Installation gesperrt" : "SolutionCompakt – Registrierung erforderlich",
                     MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                    suspended ? MessageBoxImage.Stop : MessageBoxImage.Warning);
                 Shutdown();
                 return;
             }
+        }
+
+        if (licenseGate.IsTrial)
+        {
+            MessageBox.Show(
+                $"DEMO-Version · {licenseGate.TrialDaysRemaining} Tag(e) Testphase verbleibend.\n\nEigentum von Irajet Ramadani – nur zu Testzwecken zu verwenden.",
+                "SolutionCompakt – DEMO",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
         }
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
