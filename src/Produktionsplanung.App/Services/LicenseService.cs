@@ -41,6 +41,7 @@ public static class LicenseService
     public static LicenseGateResult GetLocalTrialState()
     {
         var settings = EnsureLocalLicenseIdentity();
+        _ = TrySyncPendingRecoveryCodeAsync();
         var now = DateTime.UtcNow;
         var trialEnd = settings.TrialStartedAtUtc!.Value.AddDays(TrialDays);
         var remaining = Math.Max(0, (int)Math.Ceiling((trialEnd - now).TotalDays));
@@ -145,6 +146,8 @@ public static class LicenseService
                     value.CompanyName = companyName;
             });
 
+            await TrySyncPendingRecoveryCodeAsync(cancellationToken);
+
             return new LicenseActionResult(
                 true,
                 payload.Status,
@@ -185,6 +188,8 @@ public static class LicenseService
                 value.LicenseLastCheckedAtUtc = DateTime.UtcNow;
             });
 
+            await TrySyncPendingRecoveryCodeAsync(cancellationToken);
+
             return new LicenseActionResult(
                 true,
                 payload.Status,
@@ -195,6 +200,60 @@ public static class LicenseService
         {
             return new LicenseActionResult(false, settings.LicenseStatus, settings.LicenseValidUntilUtc,
                 "Lizenzserver nicht erreichbar. " + ex.Message);
+        }
+    }
+
+    public static void QueueRecoveryCodeForSupportSync(string recoveryCode)
+    {
+        var normalized = (recoveryCode ?? string.Empty).Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return;
+
+        AppSettingsService.Update(settings =>
+        {
+            settings.RecoveryCodePendingSupportSync = normalized;
+        });
+
+        _ = TrySyncPendingRecoveryCodeAsync();
+    }
+
+    public static async Task<bool> TrySyncPendingRecoveryCodeAsync(CancellationToken cancellationToken = default)
+    {
+        var settings = EnsureLocalLicenseIdentity();
+        var recoveryCode = settings.RecoveryCodePendingSupportSync?.Trim().ToUpperInvariant() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(recoveryCode))
+            return true;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(
+                settings.LicenseRecoverySyncEndpoint,
+                new
+                {
+                    installationId = settings.LicenseInstallationId,
+                    secret = settings.LicenseSecret,
+                    recoveryCode,
+                    companyName = settings.CompanyName,
+                    appVersion = CurrentVersionText()
+                },
+                JsonOptions,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return false;
+
+            AppSettingsService.Update(value =>
+            {
+                if (string.Equals(value.RecoveryCodePendingSupportSync, recoveryCode, StringComparison.Ordinal))
+                    value.RecoveryCodePendingSupportSync = string.Empty;
+                value.RecoveryCodeLastSupportSyncAtUtc = DateTime.UtcNow;
+            });
+            return true;
+        }
+        catch
+        {
+            // Offline use stays possible. The pending code is retried on a later start/check.
+            return false;
         }
     }
 
