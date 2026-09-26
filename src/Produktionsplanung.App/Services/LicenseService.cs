@@ -60,6 +60,7 @@ public static class LicenseService
     public static async Task<LicenseGateResult> EvaluateStartupAsync(CancellationToken cancellationToken = default)
     {
         var settings = EnsureLocalLicenseIdentity();
+        _ = TrySyncPendingRecoveryCodeAsync();
         var now = DateTime.UtcNow;
         var trialEnd = settings.TrialStartedAtUtc!.Value.AddDays(TrialDays);
 
