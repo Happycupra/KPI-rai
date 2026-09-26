@@ -70,18 +70,16 @@
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
                                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ActualRow_PreviewMouseRightButtonDown"/>
-                                    <Setter Property="ContextMenu">
-                                        <Setter.Value>
-                                            <ContextMenu>
-                                                <MenuItem Header="Chargendetails / Übersicht" Click="ActualBatchContext_Click"/>
-                                                <MenuItem Header="Auftrag bearbeiten" Click="ActualOrderContext_Click"/>
-                                                <MenuItem Header="Auftragscockpit" Click="ActualControlContext_Click"/>
-                                                <MenuItem Header="Artikelverzeichnis" Click="ActualArticlesContext_Click"/>
-                                            </ContextMenu>
-                                        </Setter.Value>
-                                    </Setter>
                                 </Style>
                             </DataGrid.RowStyle>
+                            <DataGrid.ContextMenu>
+                                <ContextMenu>
+                                <MenuItem Header="Chargendetails / Übersicht" Click="ActualBatchContext_Click"/>
+                                <MenuItem Header="Auftrag bearbeiten" Click="ActualOrderContext_Click"/>
+                                <MenuItem Header="Auftragscockpit" Click="ActualControlContext_Click"/>
+                                <MenuItem Header="Artikelverzeichnis" Click="ActualArticlesContext_Click"/>
+                                </ContextMenu>
+                            </DataGrid.ContextMenu>
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=dd.MM.yyyy}" Width="90" />
                                 <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90" />

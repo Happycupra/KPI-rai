@@ -208,17 +208,15 @@
                                 <DataGrid.RowStyle>
                                     <Style TargetType="DataGridRow">
                                         <EventSetter Event="PreviewMouseRightButtonDown" Handler="AssignmentRow_PreviewMouseRightButtonDown"/>
-                                        <Setter Property="ContextMenu">
-                                            <Setter.Value>
-                                                <ContextMenu>
-                                                    <MenuItem Header="Mitarbeiterkarte" Click="AssignmentEmployeeCardContext_Click"/>
-                                                    <MenuItem Header="Skills / Stammdaten" Click="AssignmentEmployeeMasterContext_Click"/>
-                                                    <MenuItem Header="Aktuell geplant" Click="AssignmentEmployeePlanContext_Click"/>
-                                                </ContextMenu>
-                                            </Setter.Value>
-                                        </Setter>
                                     </Style>
                                 </DataGrid.RowStyle>
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu>
+                                    <MenuItem Header="Mitarbeiterkarte" Click="AssignmentEmployeeCardContext_Click"/>
+                                    <MenuItem Header="Skills / Stammdaten" Click="AssignmentEmployeeMasterContext_Click"/>
+                                    <MenuItem Header="Aktuell geplant" Click="AssignmentEmployeePlanContext_Click"/>
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*" />
                                     <DataGridTextColumn Header="Funktion" Binding="{Binding Role}" Width="1.2*" />
