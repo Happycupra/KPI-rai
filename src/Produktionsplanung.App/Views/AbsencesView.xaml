@@ -9,7 +9,21 @@
         </StackPanel>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-            <DataGrid ItemsSource="{Binding Absences}" SelectedItem="{Binding SelectedAbsence}" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid x:Name="AbsencesGrid" ItemsSource="{Binding Absences}" SelectedItem="{Binding SelectedAbsence}" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.RowStyle>
+                    <Style TargetType="DataGridRow">
+                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="AbsenceRow_PreviewMouseRightButtonDown"/>
+                        <Setter Property="ContextMenu">
+                            <Setter.Value>
+                                <ContextMenu>
+                                    <MenuItem Header="Mitarbeiterkarte" Click="EmployeeCardContext_Click"/>
+                                    <MenuItem Header="Skills / Stammdaten" Click="EmployeeMasterContext_Click"/>
+                                    <MenuItem Header="Aktuell geplant" Click="EmployeePlanContext_Click"/>
+                                </ContextMenu>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.RowStyle>
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="2*"/>
                     <DataGridTextColumn Header="Art" Binding="{Binding Type}" Width="*"/>
