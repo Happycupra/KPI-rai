@@ -213,6 +213,8 @@
                                     <MenuItem Header="Mitarbeiterkarte" Click="AssignmentEmployeeCardContext_Click"/>
                                     <MenuItem Header="Skills / Stammdaten" Click="AssignmentEmployeeMasterContext_Click"/>
                                     <MenuItem Header="Aktuell geplant" Click="AssignmentEmployeePlanContext_Click"/>
+                                    <Separator/>
+                                    <MenuItem Header="Aus Planung entfernen…" Click="AssignmentRemoveContext_Click"/>
                                     </ContextMenu>
                                 </DataGrid.ContextMenu>
                                 <DataGrid.Columns>
@@ -313,7 +315,7 @@
                         </Border>
                         <Button Content="Speichern" Command="{Binding SaveValidatedCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
                         <Button Content="Neue Zuweisung" Command="{Binding NewAssignmentCommand}" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
-                        <Button Content="Ausgewählte Zuweisung löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}" />
+                        <Button Content="Ausgewählte Zuweisung entfernen…" Click="DeleteAssignment_Click" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

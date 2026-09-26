@@ -70,7 +70,7 @@ public partial class MainWindow : Window
         VersionBlock.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0"}";
         var canOperate = SessionService.IsPlannerOrAdmin;
         PlanningCalendarButton.IsEnabled = canOperate;
-        WorkTimeCalendarButton.IsEnabled = canOperate; ProductionOrdersButton.IsEnabled = canOperate; ManufacturingControlButton.IsEnabled = canOperate; ProductionActualButton.IsEnabled = canOperate;
+        WorkTimeCalendarButton.IsEnabled = SessionService.IsAuthenticated; ProductionOrdersButton.IsEnabled = canOperate; ManufacturingControlButton.IsEnabled = canOperate; ProductionActualButton.IsEnabled = canOperate;
         EmployeesButton.IsEnabled = canOperate; WorkstationsButton.IsEnabled = canOperate;
         AbsencesButton.IsEnabled = canOperate;
         UserAdminButton.IsEnabled = SessionService.IsAdministrator; SettingsButton.IsEnabled = SessionService.IsAdministrator;
@@ -228,7 +228,7 @@ public partial class MainWindow : Window
     public void OpenManufacturingControl(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl, productionOrderId: id)); }
     public void OpenProductionActual(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual, productionOrderId: id)); }
     public void OpenSettings() { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.Settings)); }
-    public void OpenWorkTimeCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
+    public void OpenWorkTimeCalendar() { if (SessionService.IsAuthenticated) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
     public void OpenEmployee(int employeeId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees, employeeId: employeeId)); }
     public void OpenProductionOrder(int productionOrderId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders, productionOrderId: productionOrderId)); }
 

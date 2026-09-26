@@ -11,7 +11,7 @@
         <Grid Margin="0,0,0,16">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Arbeitszeit &amp; Betriebskalender" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+                <TextBlock Text="Arbeitszeit / Betrieb" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
                 <TextBlock Text="{Binding MonthText}" FontSize="15" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
             </StackPanel>
             <WrapPanel Grid.Column="1" VerticalAlignment="Center">
@@ -23,10 +23,10 @@
         </Grid>
 
         <TabControl Grid.Row="1">
-            <TabItem Header="Arbeitszeitkonto">
+            <TabItem Header="Arbeitszeit / Betrieb">
                 <Grid Margin="14">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions><RowDefinition Height="0.9*"/><RowDefinition Height="14"/><RowDefinition Height="1.1*"/></Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="2.1*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="400"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="0.72*"/><RowDefinition Height="14"/><RowDefinition Height="1.28*"/></Grid.RowDefinitions>
 
                     <Border Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
@@ -45,7 +45,7 @@
 
                     <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
-                            <TextBlock Text="Erfasste Arbeitszeiten" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Betriebs- und Arbeitszeiteinträge" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
                             <DataGrid x:Name="WorkTimeEntriesGrid" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
                                 <DataGrid.RowStyle>
                                     <Style TargetType="DataGridRow">
@@ -54,18 +54,21 @@
                                 </DataGrid.RowStyle>
                                 <DataGrid.ContextMenu>
                                     <ContextMenu>
-                                    <MenuItem Header="Mitarbeiterkarte" Click="WorkTimeEmployeeCardContext_Click"/>
-                                    <MenuItem Header="Skills / Stammdaten" Click="WorkTimeEmployeeMasterContext_Click"/>
-                                    <MenuItem Header="Aktuell geplant" Click="WorkTimeEmployeePlanContext_Click"/>
+                                        <MenuItem Header="Mitarbeiterkarte" Click="WorkTimeEmployeeCardContext_Click"/>
+                                        <MenuItem Header="Skills / Stammdaten" Click="WorkTimeEmployeeMasterContext_Click"/>
+                                        <MenuItem Header="Aktuell geplant" Click="WorkTimeEmployeePlanContext_Click"/>
                                     </ContextMenu>
                                 </DataGrid.ContextMenu>
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="100"/>
-                                    <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="90"/>
+                                    <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="90"/>
+                                    <DataGridTextColumn Header="Charge" Binding="{Binding BatchNumber}" Width="90"/>
+                                    <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="90"/>
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="115"/>
                                     <DataGridTextColumn Header="Zeit" Binding="{Binding TimeText}" Width="105"/>
-                                    <DataGridTextColumn Header="Pause" Binding="{Binding BreakMinutes}" Width="65"/>
-                                    <DataGridTextColumn Header="Netto h" Binding="{Binding NetHours, StringFormat=0.00}" Width="75"/>
-                                    <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="1.5*"/>
+                                    <DataGridTextColumn Header="Dauer" Binding="{Binding DurationText}" Width="95"/>
+                                    <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="1.4*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>
@@ -74,20 +77,56 @@
                     <Border Grid.Column="2" Grid.RowSpan="3" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="18">
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <TextBlock Text="Arbeitszeit erfassen" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,14"/>
-                                <TextBlock Text="Mitarbeiter" FontWeight="SemiBold"/>
-                                <ComboBox ItemsSource="{Binding Employees}" SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="38" Margin="0,4,0,12"/>
+                                <TextBlock Text="Betriebszeit erfassen" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="Jeder neue Eintrag wird automatisch dem angemeldeten Mitarbeiter zugeordnet."
+                                           Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                                <TextBlock Text="Angemeldeter Mitarbeiter" FontWeight="SemiBold"/>
+                                <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="7" Padding="10" Margin="0,4,0,12">
+                                    <TextBlock Text="{Binding CurrentEmployeeName}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                </Border>
+
                                 <TextBlock Text="Datum" FontWeight="SemiBold"/>
                                 <DatePicker SelectedDate="{Binding EntryDate, Mode=TwoWay}" Height="38" Margin="0,4,0,12"/>
-                                <TextBlock Text="Start (HH:mm)" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding StartTimeText, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,12"/>
-                                <TextBlock Text="Ende (HH:mm)" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding EndTimeText, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,12"/>
-                                <TextBlock Text="Pause Minuten" FontWeight="SemiBold"/>
+
+                                <TextBlock Text="Artikel" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding Articles}" SelectedItem="{Binding SelectedArticle, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName" Height="38" Margin="0,4,0,12" IsTextSearchEnabled="True"/>
+
+                                <TextBlock Text="Charge / Auftrag" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName" Height="38" Margin="0,4,0,12" IsTextSearchEnabled="True"/>
+
+                                <TextBlock Text="Status *" FontWeight="SemiBold"/>
+                                <ComboBox ItemsSource="{Binding StatusOptions}" Text="{Binding EntryStatus, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEditable="True" IsTextSearchEnabled="True" Height="38" Margin="0,4,0,4"/>
+                                <TextBlock Text="Pflichtfeld · frei eingeben. Neue Status werden gespeichert und später wieder angeboten."
+                                           Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Start (HH:mm)" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding StartTimeText, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,12"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Ende (HH:mm)" FontWeight="SemiBold"/>
+                                        <TextBox Text="{Binding EndTimeText, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,12"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="Pause-Abzug Minuten (optional)" FontWeight="SemiBold"/>
                                 <TextBox Text="{Binding BreakMinutes}" Height="38" Margin="0,4,0,12"/>
-                                <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
-                                <TextBox Text="{Binding EntryComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
-                                <Button Content="Speichern" Command="{Binding SaveEntryCommand}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
+
+                                <TextBlock Text="Bemerkung" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding EntryComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="62" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Button Content="Jetzt starten" Command="{Binding StartNowCommand}" IsEnabled="{Binding CanLogTime}" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                    <Button Grid.Column="2" Content="Laufenden Eintrag stoppen" Command="{Binding StopRunningCommand}" IsEnabled="{Binding HasRunningEntry}" Style="{StaticResource ActionButtonStyle}"/>
+                                </Grid>
+                                <Button Content="Eintrag speichern / Änderungen übernehmen" Command="{Binding SaveEntryCommand}" IsEnabled="{Binding CanLogTime}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
                                 <Button Content="Neu" Command="{Binding NewEntryCommand}" Margin="0,0,0,7" Style="{StaticResource ActionButtonStyle}"/>
                                 <Button Content="In Papierkorb" Command="{Binding DeleteEntryCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
                                 <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,14,0,0"/>
@@ -97,7 +136,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Betriebskalender">
+            <TabItem Header="Betriebskalender" IsEnabled="{Binding CanManageOperatingCalendar}">
                 <Grid Margin="14">
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="380"/></Grid.ColumnDefinitions>
                     <Border Background="{StaticResource CardBrush}" CornerRadius="10" Padding="14">

@@ -13,8 +13,10 @@ public partial class UserAdminViewModel : ObservableObject
     public ObservableCollection<UserAdminRow> Users { get; } = new();
     public ObservableCollection<AuditLogRow> AuditRows { get; } = new();
     public IReadOnlyList<string> RoleOptions { get; } = UserRoles.All;
+    public ObservableCollection<UserEmployeeOption> EmployeeOptions { get; } = new();
 
     [ObservableProperty] private UserAdminRow? selectedUser;
+    [ObservableProperty] private UserEmployeeOption? selectedEmployeeLink;
     [ObservableProperty] private string username = string.Empty;
     [ObservableProperty] private string displayName = string.Empty;
     [ObservableProperty] private string selectedRole = UserRoles.Observer;
@@ -25,6 +27,7 @@ public partial class UserAdminViewModel : ObservableObject
 
     public UserAdminViewModel()
     {
+        LoadEmployeeOptions();
         Refresh();
         NewUser();
     }
@@ -41,6 +44,7 @@ public partial class UserAdminViewModel : ObservableObject
         DisplayName = value.DisplayName;
         SelectedRole = value.Role;
         IsActive = value.IsActive;
+        SelectedEmployeeLink = EmployeeOptions.FirstOrDefault(x => x.Id == value.EmployeeId) ?? EmployeeOptions.FirstOrDefault();
         NewPassword = string.Empty;
         ConfirmNewPassword = string.Empty;
         StatusMessage = string.Empty;
@@ -54,6 +58,7 @@ public partial class UserAdminViewModel : ObservableObject
         DisplayName = string.Empty;
         SelectedRole = UserRoles.Observer;
         IsActive = true;
+        SelectedEmployeeLink = EmployeeOptions.FirstOrDefault();
         NewPassword = string.Empty;
         ConfirmNewPassword = string.Empty;
         StatusMessage = string.Empty;
@@ -111,6 +116,7 @@ public partial class UserAdminViewModel : ObservableObject
                 DisplayName = string.IsNullOrWhiteSpace(DisplayName) ? normalizedUsername : DisplayName.Trim(),
                 Role = SelectedRole,
                 IsActive = IsActive,
+                EmployeeId = SelectedEmployeeLink?.Id,
                 PasswordHash = hash,
                 PasswordSalt = salt,
                 CreatedAtUtc = DateTime.UtcNow
@@ -139,6 +145,7 @@ public partial class UserAdminViewModel : ObservableObject
             entity.DisplayName = string.IsNullOrWhiteSpace(DisplayName) ? normalizedUsername : DisplayName.Trim();
             entity.Role = SelectedRole;
             entity.IsActive = IsActive;
+            entity.EmployeeId = SelectedEmployeeLink?.Id;
 
             if (!string.IsNullOrWhiteSpace(NewPassword) || !string.IsNullOrWhiteSpace(ConfirmNewPassword))
             {
@@ -182,9 +189,27 @@ public partial class UserAdminViewModel : ObservableObject
     [RelayCommand]
     private void Refresh()
     {
+        LoadEmployeeOptions();
         LoadUsers();
         LoadAudit();
         StatusMessage = string.Empty;
+    }
+
+    private void LoadEmployeeOptions()
+    {
+        var selectedId = SelectedEmployeeLink?.Id;
+        using var db = new AppDbContext();
+        EmployeeOptions.Clear();
+        EmployeeOptions.Add(new UserEmployeeOption { Id = null, DisplayName = "– nicht verknüpft –" });
+        foreach (var employee in db.Employees.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.LastName).ThenBy(x => x.FirstName))
+        {
+            EmployeeOptions.Add(new UserEmployeeOption
+            {
+                Id = employee.Id,
+                DisplayName = $"{employee.LastName}, {employee.FirstName} · {employee.PersonnelNumber}"
+            });
+        }
+        SelectedEmployeeLink = EmployeeOptions.FirstOrDefault(x => x.Id == selectedId) ?? EmployeeOptions.FirstOrDefault();
     }
 
     private void LoadUsers()
@@ -192,12 +217,16 @@ public partial class UserAdminViewModel : ObservableObject
         using var db = new AppDbContext();
         var selectedId = SelectedUser?.Id;
         var rows = db.UserAccounts.AsNoTracking().OrderBy(x => x.Username).ToList();
+        var employeeMap = db.Employees.IgnoreQueryFilters().AsNoTracking().ToDictionary(x => x.Id);
         Users.Clear();
         foreach (var x in rows)
         {
+            employeeMap.TryGetValue(x.EmployeeId ?? 0, out var linkedEmployee);
             Users.Add(new UserAdminRow
             {
                 Id = x.Id,
+                EmployeeId = x.EmployeeId,
+                EmployeeName = linkedEmployee is null ? "–" : $"{linkedEmployee.LastName}, {linkedEmployee.FirstName}",
                 Username = x.Username,
                 DisplayName = x.DisplayName,
                 Role = x.Role,
@@ -236,6 +265,8 @@ public partial class UserAdminViewModel : ObservableObject
 public class UserAdminRow
 {
     public int Id { get; set; }
+    public int? EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
@@ -254,4 +285,11 @@ public class AuditLogRow
     public string? EntityId { get; set; }
     public string? Details { get; set; }
     public string TimestampText => TimestampUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss");
+}
+
+
+public class UserEmployeeOption
+{
+    public int? Id { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 }
