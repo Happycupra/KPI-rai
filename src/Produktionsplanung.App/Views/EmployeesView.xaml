@@ -131,8 +131,9 @@
                                           ToolTip="Aufklappen für Details · Rechtsklick zum Bearbeiten">
                                     <Expander.ContextMenu>
                                         <ContextMenu>
-                                            <MenuItem Header="Bearbeiten"
-                                                      Click="EditEmployeeMenuItem_Click"/>
+                                            <MenuItem Header="Mitarbeiterkarte" Click="EmployeeCardMenuItem_Click"/>
+                                            <MenuItem Header="Skills / Stammdaten bearbeiten" Click="EditEmployeeMenuItem_Click"/>
+                                            <MenuItem Header="Aktuell geplant · heute" Click="EmployeeCurrentPlanMenuItem_Click"/>
                                         </ContextMenu>
                                     </Expander.ContextMenu>
 
@@ -387,7 +388,7 @@
                                 Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
                         <Button Content="Aktivieren" Command="{Binding ActivateCommand}"
                                 Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
-                        <Button Content="Löschen" Command="{Binding DeleteCommand}"
+                        <Button Content="In Papierkorb" Command="{Binding DeleteCommand}"
                                 Margin="0,0,6,0" Style="{StaticResource DangerActionButtonStyle}"/>
                         <Button Content="Speichern" Command="{Binding SaveCommand}"
                                 Style="{StaticResource PrimaryActionButtonStyle}"/>
