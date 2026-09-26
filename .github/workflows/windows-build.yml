@@ -72,6 +72,7 @@ jobs:
             -p:InformationalVersion=$env:BUILD_VERSION
 
       - name: Regression tests (isolated SQLite and WPF)
+        timeout-minutes: 5
         run: dotnet run --project tests/Produktionsplanung.RegressionTests --configuration Release
 
       - name: Publish standalone Windows x64

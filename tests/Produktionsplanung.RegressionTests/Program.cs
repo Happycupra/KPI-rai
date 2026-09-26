@@ -80,6 +80,8 @@ internal static partial class Program
             typeof(SessionService).GetProperty(nameof(SessionService.RequiresRestart))!.SetValue(null, false);
             try
             {
+                Console.WriteLine("START " + test.Name);
+                Console.Out.Flush();
                 using (var db = new AppDbContext())
                 {
                     db.Database.EnsureCreated();
