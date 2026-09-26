@@ -126,7 +126,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            IsEnabled = true;
+            IsEnabled = !licenseBlocked;
             MessageBox.Show(
                 this,
                 "Das Update konnte nicht gestartet werden.\n\n" + ex.Message,

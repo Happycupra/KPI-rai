@@ -18,7 +18,7 @@ internal static partial class Program
         {
             var failed = false;
             try { BackupService.CreateBackup(path, settings); }
-            catch (IOException) { failed = true; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { failed = true; }
             Check(failed, "Replacing a locked backup should fail");
         }
         Check(before.SequenceEqual(File.ReadAllBytes(path)), "Existing backup was lost or changed");
@@ -43,7 +43,7 @@ internal static partial class Program
         {
             var failed = false;
             try { BackupService.RestoreBackup(path); }
-            catch (IOException) { failed = true; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { failed = true; }
             Check(failed, "Locked settings should abort restore");
         }
         using (var db = new AppDbContext())
@@ -79,7 +79,7 @@ internal static partial class Program
             settings.CompanyName = "Must not be saved";
             var failed = false;
             try { AppSettingsService.Save(settings); }
-            catch (IOException) { failed = true; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { failed = true; }
             Check(failed, "Locked settings should reject write");
         }
         Check(before.SequenceEqual(File.ReadAllBytes(AppPaths.SettingsPath)), "Failed save truncated settings");
