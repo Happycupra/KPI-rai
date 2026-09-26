@@ -72,10 +72,14 @@
                                           VerticalAlignment="Bottom" Margin="0,0,0,8" />
                             </Grid>
 
-                            <TextBlock Text="Passwort" FontWeight="SemiBold" />
+                            <TextBlock Text="Neues Passwort / Passwort zurücksetzen" FontWeight="SemiBold" />
                             <PasswordBox x:Name="NewPasswordBox" PasswordChanged="NewPasswordBox_PasswordChanged"
+                                         Height="38" Margin="0,4,0,7" />
+
+                            <TextBlock Text="Passwort bestätigen" FontWeight="SemiBold" />
+                            <PasswordBox x:Name="ConfirmPasswordBox" PasswordChanged="ConfirmPasswordBox_PasswordChanged"
                                          Height="38" Margin="0,4,0,3" />
-                            <TextBlock Text="Mindestens 10 Zeichen, 1 Grossbuchstabe, 1 Kleinbuchstabe und 1 Zahl. Bei bestehenden Benutzern leer lassen, wenn das Passwort unverändert bleiben soll."
+                            <TextBlock Text="Mindestens 10 Zeichen, 1 Grossbuchstabe, 1 Kleinbuchstabe und 1 Zahl. Bei bestehenden Benutzern beide Felder leer lassen, wenn das Passwort unverändert bleiben soll."
                                        Foreground="{StaticResource MutedTextBrush}" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,0,0,10" />
                         </StackPanel>
