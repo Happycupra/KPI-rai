@@ -12,7 +12,7 @@ public static class UserLoginQrCodeService
     {
         var company = Uri.EscapeDataString((companyCode ?? string.Empty).Trim().ToUpperInvariant());
         var user = Uri.EscapeDataString((username ?? string.Empty).Trim());
-        return $"{LoginBaseUrl}?companyCode={company}&username={user}";
+        return $"{LoginBaseUrl}?companyCode={company}&username={user}&login=qr";
     }
 
     public static byte[] CreatePng(string loginUrl, int pixelsPerModule = 12)
