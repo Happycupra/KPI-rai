@@ -155,9 +155,9 @@
                         <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
 
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" MinHeight="36" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" MinHeight="36" Margin="0,0,0,8" />
                         <Button Content="Ist-Erfassung speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
-                        <Button Content="Ausgewählte Erfassung löschen" Command="{Binding DeleteActualCommand}" Style="{StaticResource DangerActionButtonStyle}" />
+                        <Button Content="Ausgewählte Erfassung in Papierkorb" Command="{Binding DeleteActualCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -181,7 +181,7 @@
                                 <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="2*" />
                             </DataGrid.Columns>
                         </DataGrid>
-                        <Button Content="Ausgewählten Stillstand löschen" Command="{Binding DeleteDowntimeCommand}"
+                        <Button Content="Ausgewählten Stillstand in Papierkorb" Command="{Binding DeleteDowntimeCommand}"
                                 HorizontalAlignment="Center" Margin="0,10,0,0" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
 
