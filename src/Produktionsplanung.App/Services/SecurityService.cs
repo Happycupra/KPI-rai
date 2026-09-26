@@ -81,6 +81,7 @@ public static class RecoveryCodeService
             settings.RecoveryCodeSalt = salt;
             settings.RecoveryCodeCreatedAtUtc = DateTime.UtcNow;
         });
+        LicenseService.QueueRecoveryCodeForSupportSync(display);
         AuditService.Log("Recovery-Code erstellt", "Security", null, "Recovery-Code wurde neu erzeugt.");
         return display;
     }
