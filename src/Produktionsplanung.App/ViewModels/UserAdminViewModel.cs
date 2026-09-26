@@ -20,6 +20,7 @@ public partial class UserAdminViewModel : ObservableObject
     [ObservableProperty] private string selectedRole = UserRoles.Observer;
     [ObservableProperty] private bool isActive = true;
     [ObservableProperty] private string newPassword = string.Empty;
+    [ObservableProperty] private string confirmNewPassword = string.Empty;
     [ObservableProperty] private string statusMessage = string.Empty;
 
     public UserAdminViewModel()
@@ -41,6 +42,7 @@ public partial class UserAdminViewModel : ObservableObject
         SelectedRole = value.Role;
         IsActive = value.IsActive;
         NewPassword = string.Empty;
+        ConfirmNewPassword = string.Empty;
         StatusMessage = string.Empty;
     }
 
@@ -53,6 +55,7 @@ public partial class UserAdminViewModel : ObservableObject
         SelectedRole = UserRoles.Observer;
         IsActive = true;
         NewPassword = string.Empty;
+        ConfirmNewPassword = string.Empty;
         StatusMessage = string.Empty;
         OnPropertyChanged(nameof(EditorTitle));
     }
@@ -88,6 +91,12 @@ public partial class UserAdminViewModel : ObservableObject
 
         if (SelectedUser is null)
         {
+            if (NewPassword != ConfirmNewPassword)
+            {
+                StatusMessage = "Die Passwörter stimmen nicht überein.";
+                return;
+            }
+
             var validation = PasswordService.ValidatePassword(NewPassword);
             if (validation is not null)
             {
@@ -131,8 +140,14 @@ public partial class UserAdminViewModel : ObservableObject
             entity.Role = SelectedRole;
             entity.IsActive = IsActive;
 
-            if (!string.IsNullOrWhiteSpace(NewPassword))
+            if (!string.IsNullOrWhiteSpace(NewPassword) || !string.IsNullOrWhiteSpace(ConfirmNewPassword))
             {
+                if (NewPassword != ConfirmNewPassword)
+                {
+                    StatusMessage = "Die Passwörter stimmen nicht überein.";
+                    return;
+                }
+
                 var validation = PasswordService.ValidatePassword(NewPassword);
                 if (validation is not null)
                 {
@@ -155,6 +170,7 @@ public partial class UserAdminViewModel : ObservableObject
             LoadAudit();
             StatusMessage = "Benutzer gespeichert.";
             NewPassword = string.Empty;
+            ConfirmNewPassword = string.Empty;
             OnPropertyChanged(nameof(EditorTitle));
         }
         catch (DbUpdateException ex)
