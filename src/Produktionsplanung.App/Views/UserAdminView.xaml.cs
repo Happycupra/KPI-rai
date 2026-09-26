@@ -11,6 +11,12 @@ public partial class UserAdminView : UserControl
             viewModel.NewPassword = NewPasswordBox.Password;
     }
 
+    private void ConfirmPasswordBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
+    {
+        if (DataContext is UserAdminViewModel viewModel)
+            viewModel.ConfirmNewPassword = ConfirmPasswordBox.Password;
+    }
+
     public UserAdminView()
     {
         InitializeComponent();
@@ -21,6 +27,10 @@ public partial class UserAdminView : UserControl
             if (e.PropertyName == nameof(UserAdminViewModel.NewPassword) &&
                 NewPasswordBox.Password != viewModel.NewPassword)
                 NewPasswordBox.Password = viewModel.NewPassword;
+
+            if (e.PropertyName == nameof(UserAdminViewModel.ConfirmNewPassword) &&
+                ConfirmPasswordBox.Password != viewModel.ConfirmNewPassword)
+                ConfirmPasswordBox.Password = viewModel.ConfirmNewPassword;
         };
     }
 }
