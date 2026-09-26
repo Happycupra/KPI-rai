@@ -16,7 +16,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel>
                 <TextBlock Text="Einstellungen" Style="{StaticResource PageTitleTextStyle}" />
-                <TextBlock Text="Unternehmensdaten, Datensicherung, Sicherheit, Export und persönliche Oberfläche verwalten."
+                <TextBlock Text="Unternehmensdaten, Datensicherung, Papierkorb, Sicherheit, Export und persönliche Oberfläche verwalten."
                            Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <Button Grid.Column="1" Content="Einstellungen speichern"
@@ -124,6 +124,40 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Papierkorb">
+                <Grid Margin="6,14,6,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Nachvollziehbarer Papierkorb" Style="{StaticResource SectionHeaderTextStyle}"/>
+                            <TextBlock Text="Gelöschte Datensätze werden nicht endgültig entfernt. Die Löschung bleibt mit Benutzer und Zeitpunkt erhalten; wiederhergestellte Einträge bleiben ebenfalls als Historie sichtbar."
+                                       Foreground="{StaticResource WarningBrush}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding RecycleBinItems}" SelectedItem="{Binding SelectedRecycleBinItem, Mode=TwoWay}"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Gelöscht am" Binding="{Binding DeletedAtText}" Width="150"/>
+                            <DataGridTextColumn Header="Typ" Binding="{Binding TypeText}" Width="125"/>
+                            <DataGridTextColumn Header="Datensatz" Binding="{Binding DisplayName}" Width="2*"/>
+                            <DataGridTextColumn Header="Gelöscht von" Binding="{Binding DeletedBy}" Width="110"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.4*"/>
+                            <DataGridTextColumn Header="Grund" Binding="{Binding Reason}" Width="1.2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,12,0,0">
+                        <Button Content="Aktualisieren" Command="{Binding RefreshRecycleBinCommand}" Margin="0,0,8,0"
+                                Style="{StaticResource ActionButtonStyle}"/>
+                        <Button Content="Ausgewählten Datensatz wiederherstellen" Command="{Binding RestoreRecycleBinItemCommand}"
+                                IsEnabled="{Binding SelectedRecycleBinItem.CanRestore}" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                    </WrapPanel>
+                </Grid>
             </TabItem>
 
             <TabItem Header="Sicherheit">
@@ -249,7 +283,7 @@
 
         <Border Grid.Row="2" Background="{StaticResource InfoSoftBrush}" BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,4,0,0">
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" FontWeight="SemiBold" />
         </Border>
     </Grid>
 </UserControl>
