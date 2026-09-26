@@ -47,6 +47,20 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         ? "1 Schicht"
         : $"{PlannedShiftCount} aufeinanderfolgende Schichten";
 
+    public bool IsArticleIdentityLocked => SelectedOrder?.ArticleIdentityLocked == true;
+    public bool CanEditArticleIdentity => SelectedOrder is not null && !IsArticleIdentityLocked;
+    public bool IsBatchNumberLocked => SelectedOrder?.HasProductionHistory == true;
+    public bool CanEditScheduling => SelectedOrder is not null && SelectedOrder.HasActuals == false;
+    public string LockedFieldsHint => SelectedOrder is null
+        ? "Bitte einen bestehenden Auftrag auswählen oder „Neue Charge“ verwenden."
+        : SelectedOrder.HasActuals
+            ? "Historische Ist-Daten vorhanden: Artikel, Produkt, Einheit sowie Terminierung sind fix. Zulässige Felder bleiben bearbeitbar."
+            : SelectedOrder.HasProductionHistory
+                ? "Produktion wurde bereits begonnen: Artikel, Produkt, Einheit und Chargennummer sind fix. Zulässige Felder bleiben bearbeitbar."
+                : SelectedOrder.ArticleMasterId.HasValue
+                    ? "Artikelstammdaten und Einheit stammen aus dem Artikelverzeichnis und bleiben für diese Charge fix."
+                    : string.Empty;
+
     public ProductionOrderManagementViewModel(bool loadExistingOrders = true)
     {
         OrdersView = CollectionViewSource.GetDefaultView(Orders);
@@ -130,8 +144,15 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
         Status = value.Status;
         Comment = value.Comment ?? string.Empty;
         StatusMessage = value.HasActuals
-            ? "Historie vorhanden: Produkt, Einheit, Arbeitsplatz und Terminierung sind gesperrt; Status, Priorität und Kommentar bleiben korrigierbar."
-            : string.Empty;
+            ? "Historie vorhanden: historisch kritische Felder sind gesperrt; zulässige Korrekturen bleiben möglich."
+            : value.HasProductionHistory
+                ? "Produktion begonnen: Artikelidentität und Chargennummer sind gesperrt; zulässige Korrekturen bleiben möglich."
+                : string.Empty;
+        OnPropertyChanged(nameof(IsArticleIdentityLocked));
+        OnPropertyChanged(nameof(CanEditArticleIdentity));
+        OnPropertyChanged(nameof(IsBatchNumberLocked));
+        OnPropertyChanged(nameof(CanEditScheduling));
+        OnPropertyChanged(nameof(LockedFieldsHint));
         RefreshRunSchedulePreview();
     }
 
@@ -336,34 +357,34 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             StatusMessage = "Bitte zuerst einen Produktionsauftrag auswählen.";
             return;
         }
-
-        using var db = new AppDbContext();
-        var entity = db.ProductionOrders.FirstOrDefault(x => x.Id == SelectedOrder.Id);
-        if (entity is null)
+        if (!SessionService.IsPlannerOrAdmin)
         {
-            LoadOrders();
+            StatusMessage = "Nur Planer oder Administratoren dürfen Produktionsdaten ändern.";
             return;
         }
 
-        if (!BatchService.CanEdit(db, entity.Id, out var editError)) { StatusMessage = editError; return; }
-        if (entity.StartedAtUtc.HasValue || db.JobCards.Any(x => x.ProductionOrderId == entity.Id) || db.ProductionActuals.Any(x => x.ProductionOrderId == entity.Id))
-        {
-            StatusMessage = "Aufträge mit Ist-Produktion können nicht gelöscht werden. Bitte abschliessen, damit die Produktionshistorie erhalten bleibt.";
-            return;
-        }
-
+        var batchText = string.IsNullOrWhiteSpace(SelectedOrder.BatchNumber)
+            ? "ohne Chargennummer"
+            : $"Charge {SelectedOrder.BatchNumber}";
         if (MessageBox.Show(
-                $"Auftrag {entity.OrderNumber} endgültig löschen?",
-                "Produktionsauftrag löschen",
+                $"Auftrag {SelectedOrder.OrderNumber} / {batchText} wirklich in den Papierkorb verschieben?\n\n" +
+                "Produktionsdaten, Arbeitskarten und Historie bleiben vollständig erhalten und der Datensatz kann durch einen Administrator wiederhergestellt werden.",
+                "Charge / Auftrag in Papierkorb",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        db.ProductionOrders.Remove(entity);
-        db.SaveChanges();
-        LoadOrders();
-        NewOrder();
-        StatusMessage = "Produktionsauftrag gelöscht.";
+        try
+        {
+            RecycleBinService.MoveProductionOrderToTrash(SelectedOrder.Id);
+            LoadOrders();
+            NewOrder();
+            StatusMessage = "Produktionsauftrag in den Papierkorb verschoben.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Produktionsauftrag konnte nicht in den Papierkorb verschoben werden: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -468,6 +489,11 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             .Select(x => x.ProductionOrderId)
             .Distinct()
             .ToHashSet();
+        var productionHistoryIds = db.JobCards.AsNoTracking()
+            .Where(x => x.Status != "Bereit" || x.RunMinutes > 0 || x.StartedAtUtc.HasValue)
+            .Select(x => x.ProductionOrderId)
+            .Distinct()
+            .ToHashSet();
         var items = db.ProductionOrders.AsNoTracking()
             .Include(x => x.Workstation)
             .Include(x => x.Shift)
@@ -481,6 +507,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
             Orders.Add(new ProductionOrderRow
             {
                 Id = item.Id,
+                ArticleMasterId = item.ArticleMasterId,
                 OrderNumber = item.OrderNumber,
                 Product = item.Product,
                 ArticleNumber = item.ArticleNumber,
@@ -498,7 +525,8 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
                 RequiredStaff = item.RequiredStaff,
                 Status = item.Status,
                 Comment = item.Comment,
-                HasActuals = actualOrderIds.Contains(item.Id)
+                HasActuals = actualOrderIds.Contains(item.Id),
+                HasProductionHistory = item.StartedAtUtc.HasValue || actualOrderIds.Contains(item.Id) || productionHistoryIds.Contains(item.Id)
             });
         }
 
@@ -511,6 +539,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
 public class ProductionOrderRow
 {
     public int Id { get; set; }
+    public int? ArticleMasterId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public string Product { get; set; } = string.Empty;
     public string ArticleNumber { get; set; } = string.Empty;
@@ -529,6 +558,8 @@ public class ProductionOrderRow
     public string Status { get; set; } = string.Empty;
     public string? Comment { get; set; }
     public bool HasActuals { get; set; }
+    public bool HasProductionHistory { get; set; }
+    public bool ArticleIdentityLocked => ArticleMasterId.HasValue || HasProductionHistory;
     public string QuantityText => $"{Quantity:N0} {Unit}";
     public string RunText => PlannedShiftCount == 1 ? "1 Schicht" : $"{PlannedShiftCount} Schichten";
 }
