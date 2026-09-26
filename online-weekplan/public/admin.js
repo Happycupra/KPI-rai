@@ -6,7 +6,65 @@ const urls = {
 };
 
 const el = id => document.getElementById(id);
+const PIN_STORAGE_KEY = "solutioncompakt.admin.pin.v1";
 let authMod, auth, config;
+let pinUnlocked = false;
+
+const PIN_ITERATIONS = 150000;
+function validatePinSetup(pin, confirmation) {
+  if (!/^\d{4}$/.test(String(pin || ""))) return "Der Zugangs-PIN muss genau 4 Ziffern enthalten.";
+  if (pin !== confirmation) return "Die beiden PIN-Eingaben stimmen nicht überein.";
+  return "";
+}
+function pinStorage() {
+  try { return globalThis.localStorage || null; } catch { return null; }
+}
+function getPinRecord() {
+  try {
+    const raw = pinStorage()?.getItem(PIN_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function clearPinRecord() {
+  try { pinStorage()?.removeItem(PIN_STORAGE_KEY); } catch {}
+}
+function toBase64(bytes) {
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+function fromBase64(value) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+async function derivePinHash(pin, salt) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: PIN_ITERATIONS, hash: "SHA-256" },
+    key, 256);
+  return new Uint8Array(bits);
+}
+async function savePinRecord(userId, pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await derivePinHash(pin, salt);
+  pinStorage()?.setItem(PIN_STORAGE_KEY, JSON.stringify({
+    userId, salt: toBase64(salt), hash: toBase64(hash), createdAt: new Date().toISOString()
+  }));
+}
+async function verifyPinRecord(userId, pin) {
+  if (!/^\d{4}$/.test(String(pin || ""))) return false;
+  const record = getPinRecord();
+  if (!record || record.userId !== userId || !record.salt || !record.hash) return false;
+  try {
+    const actual = await derivePinHash(pin, fromBase64(record.salt));
+    const expected = fromBase64(record.hash);
+    if (actual.length !== expected.length) return false;
+    let diff = 0;
+    for (let i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
+    return diff === 0;
+  } catch { return false; }
+}
+
 
 bootstrap();
 
@@ -20,25 +78,43 @@ async function bootstrap() {
 
     el("loginButton").addEventListener("click", login);
     el("password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+    el("rememberLogin").addEventListener("change", () => {
+      el("pinSetup").classList.toggle("hidden", !el("rememberLogin").checked);
+      if (!el("rememberLogin").checked) {
+        el("accessPin").value = "";
+        el("confirmAccessPin").value = "";
+      }
+    });
+    el("pinUnlockButton").addEventListener("click", unlockWithPin);
+    el("unlockPin").addEventListener("keydown", e => { if (e.key === "Enter") unlockWithPin(); });
+    el("pinSwitchAccountButton").addEventListener("click", switchAccount);
     el("resetButton").addEventListener("click", resetPassword);
-    el("logoutButton").addEventListener("click", () => authMod.signOut(auth));
+    el("logoutButton").addEventListener("click", logout);
     el("reloadButton").addEventListener("click", loadLicenses);
 
     authMod.onAuthStateChanged(auth, async user => {
+      el("adminView").classList.add("hidden");
+      el("loginCard").classList.add("hidden");
+      el("pinCard").classList.add("hidden");
       if (!user) {
-        el("adminView").classList.add("hidden");
+        pinUnlocked = false;
         el("loginCard").classList.remove("hidden");
         return;
       }
       if ((user.email || "").toLowerCase() !== OWNER_EMAIL) {
+        clearPinRecord();
         await authMod.signOut(auth);
         el("loginStatus").textContent = "Dieses Konto ist nicht für die Lizenzverwaltung freigeschaltet.";
         return;
       }
-      el("loginCard").classList.add("hidden");
-      el("adminView").classList.remove("hidden");
-      el("adminEmail").textContent = user.email || "";
-      await loadLicenses();
+      const record = getPinRecord();
+      if (record?.userId === user.uid && !pinUnlocked) {
+        el("pinUserLabel").textContent = user.email || "Gespeicherte Anmeldung";
+        el("pinCard").classList.remove("hidden");
+        el("unlockPin").focus();
+        return;
+      }
+      await showAdmin(user);
     });
   } catch (error) {
     el("loginStatus").textContent = "Admin-Seite konnte nicht initialisiert werden: " + error.message;
@@ -48,21 +124,78 @@ async function bootstrap() {
 async function login() {
   setLoginBusy(true);
   el("loginStatus").textContent = "";
+  const remember = el("rememberLogin").checked;
+  if (remember) {
+    const pinError = validatePinSetup(el("accessPin").value, el("confirmAccessPin").value);
+    if (pinError) {
+      el("loginStatus").textContent = pinError;
+      setLoginBusy(false);
+      return;
+    }
+  }
   try {
     const email = el("email").value.trim().toLowerCase();
     if (email !== OWNER_EMAIL) throw new Error("Nur die hinterlegte Anbieter-E-Mail ist zugelassen.");
-    await authMod.signInWithEmailAndPassword(auth, email, el("password").value);
+    await authMod.setPersistence(
+      auth,
+      remember ? authMod.browserLocalPersistence : authMod.browserSessionPersistence
+    );
+    if (!remember) clearPinRecord();
+    pinUnlocked = true;
+    const credential = await authMod.signInWithEmailAndPassword(auth, email, el("password").value);
+    if (remember) await savePinRecord(credential.user.uid, el("accessPin").value);
     el("password").value = "";
+    el("accessPin").value = "";
+    el("confirmAccessPin").value = "";
   } catch (error) {
+    pinUnlocked = false;
     el("loginStatus").textContent = humanAuthError(error);
   } finally {
     setLoginBusy(false);
   }
 }
 
+async function unlockWithPin() {
+  const user = auth?.currentUser;
+  if (!user) return switchAccount();
+  el("pinStatus").textContent = "";
+  if (!await verifyPinRecord(user.uid, el("unlockPin").value)) {
+    el("pinStatus").textContent = "Der Zugangs-PIN ist nicht korrekt.";
+    el("unlockPin").value = "";
+    el("unlockPin").focus();
+    return;
+  }
+  pinUnlocked = true;
+  el("unlockPin").value = "";
+  el("pinCard").classList.add("hidden");
+  await showAdmin(user);
+}
+
+async function switchAccount() {
+  clearPinRecord();
+  pinUnlocked = false;
+  await authMod.signOut(auth);
+}
+
+async function logout() {
+  clearPinRecord();
+  pinUnlocked = false;
+  await authMod.signOut(auth);
+}
+
+async function showAdmin(user) {
+  el("loginCard").classList.add("hidden");
+  el("pinCard").classList.add("hidden");
+  el("adminView").classList.remove("hidden");
+  el("adminEmail").textContent = user.email || "";
+  await loadLicenses();
+}
+
 async function resetPassword() {
   setLoginBusy(true);
   try {
+    clearPinRecord();
+    pinUnlocked = false;
     el("email").value = OWNER_EMAIL;
     await authMod.sendPasswordResetEmail(auth, OWNER_EMAIL);
     el("loginStatus").style.color = "#166534";

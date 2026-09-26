@@ -33,11 +33,34 @@
     <input id="email" type="email" autocomplete="username" value="irajet.ramadani@gmail.com">
     <label for="password">Passwort</label>
     <input id="password" type="password" autocomplete="current-password">
+    <label style="display:flex;align-items:center;gap:9px;margin-top:14px">
+      <input id="rememberLogin" type="checkbox" style="width:auto;margin:0">
+      Eingeloggt bleiben
+    </label>
+    <div id="pinSetup" class="hidden">
+      <label for="accessPin">4-stelliger Zugangs-PIN</label>
+      <input id="accessPin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password">
+      <label for="confirmAccessPin">PIN bestätigen</label>
+      <input id="confirmAccessPin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password">
+      <div class="muted" style="margin-top:6px">Der PIN wird nur auf diesem Gerät als kryptografischer Prüfwert gespeichert. Kein QR-Login.</div>
+    </div>
     <div class="actions" style="margin-top:16px">
       <button id="loginButton" class="primary">Anmelden</button>
       <button id="resetButton">Passwort festlegen / vergessen</button>
     </div>
     <div id="loginStatus" class="status"></div>
+  </section>
+
+  <section id="pinCard" class="card login hidden">
+    <h1>Lizenzverwaltung entsperren</h1>
+    <div id="pinUserLabel" class="sub">Gespeicherte Anmeldung</div>
+    <label for="unlockPin">4-stelliger Zugangs-PIN</label>
+    <input id="unlockPin" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code">
+    <div class="actions" style="margin-top:16px">
+      <button id="pinUnlockButton" class="primary">Entsperren</button>
+      <button id="pinSwitchAccountButton">Mit Passwort anmelden</button>
+    </div>
+    <div id="pinStatus" class="status"></div>
   </section>
 
   <section id="adminView" class="hidden">
