@@ -83,6 +83,8 @@ public partial class UserAdminViewModel : ObservableObject
 
         using var db = new AppDbContext();
         var editingId = SelectedUser?.Id;
+        var invalidateQuickAccess = editingId.HasValue &&
+            (!IsActive || !string.IsNullOrWhiteSpace(NewPassword) || !string.IsNullOrWhiteSpace(ConfirmNewPassword));
         if (db.UserAccounts.AsNoTracking().Any(x => x.Username == normalizedUsername && (!editingId.HasValue || x.Id != editingId.Value)))
         {
             StatusMessage = "Dieser Benutzername existiert bereits.";
@@ -163,6 +165,8 @@ public partial class UserAdminViewModel : ObservableObject
         try
         {
             db.SaveChanges();
+            if (editingId.HasValue && invalidateQuickAccess)
+                QuickAccessService.ClearIfUser(editingId.Value);
             var savedUsername = normalizedUsername;
             LoadUsers();
             SelectedUser = Users.FirstOrDefault(x =>
