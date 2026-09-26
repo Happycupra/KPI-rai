@@ -50,7 +50,15 @@ public partial class LoginWindow : Window
             }
         }
 
-        Loaded += (_, _) => (_quickAccessMode ? QuickPinBox : _setupMode ? CompanyNameBox : UsernameBox).Focus();
+        Loaded += (_, _) =>
+        {
+            if (_quickAccessMode)
+                QuickPinBox.Focus();
+            else if (_setupMode)
+                CompanyNameBox.Focus();
+            else
+                UsernameBox.Focus();
+        };
     }
 
     private void ApplyCompanyDescription()
