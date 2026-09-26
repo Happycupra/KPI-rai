@@ -110,6 +110,71 @@ function renderRow(item) {
   install.innerHTML = `<span class="muted">${escapeHtml(item.installationId || "")}</span><br><span class="muted">Version ${escapeHtml(item.lastAppVersion || "—")}</span>`;
   tr.appendChild(install);
 
+  const support = document.createElement("td");
+  support.className = "support-note";
+  if (item.hasRecoveryCode) {
+    const info = document.createElement("div");
+    info.className = "muted";
+    info.textContent = item.recoveryCodeUpdatedAtUtc
+      ? "Hinterlegt: " + formatDateTime(item.recoveryCodeUpdatedAtUtc)
+      : "Recovery-Code hinterlegt";
+    support.appendChild(info);
+
+    const show = document.createElement("button");
+    show.textContent = "Recovery-Code anzeigen";
+    show.style.marginTop = "6px";
+    const codeBox = document.createElement("div");
+    codeBox.className = "recovery-code hidden";
+    const copy = document.createElement("button");
+    copy.textContent = "Kopieren";
+    copy.className = "hidden";
+    copy.style.marginTop = "6px";
+
+    show.addEventListener("click", async () => {
+      if (!codeBox.classList.contains("hidden")) {
+        codeBox.classList.add("hidden");
+        copy.classList.add("hidden");
+        show.textContent = "Recovery-Code anzeigen";
+        return;
+      }
+
+      show.disabled = true;
+      try {
+        if (!codeBox.textContent) {
+          const data = await adminCall(config.adminGetRecoveryCodeEndpoint, { installationId: item.installationId });
+          codeBox.textContent = data.recoveryCode || "";
+        }
+        codeBox.classList.remove("hidden");
+        copy.classList.remove("hidden");
+        show.textContent = "Recovery-Code ausblenden";
+      } catch (error) {
+        el("adminStatus").textContent = error.message;
+      } finally {
+        show.disabled = false;
+      }
+    });
+
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(codeBox.textContent || "");
+        el("adminStatus").style.color = "#166534";
+        el("adminStatus").textContent = "Recovery-Code wurde in die Zwischenablage kopiert.";
+      } catch {
+        el("adminStatus").style.color = "#b42318";
+        el("adminStatus").textContent = "Recovery-Code konnte nicht automatisch kopiert werden.";
+      }
+    });
+
+    support.appendChild(show);
+    support.appendChild(document.createElement("br"));
+    support.appendChild(codeBox);
+    support.appendChild(document.createElement("br"));
+    support.appendChild(copy);
+  } else {
+    support.innerHTML = '<span class="muted">Noch nicht synchronisiert.</span>';
+  }
+  tr.appendChild(support);
+
   const actions = document.createElement("td");
   actions.className = "actions";
   for (const days of [7,30,90,365]) {
