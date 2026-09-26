@@ -1321,17 +1321,34 @@ internal static partial class Program
     {
         Planner();
         var actualId = AddActual();
-        using var db = new AppDbContext();
-        var orderId = db.ProductionActuals.Single(x => x.Id == actualId).ProductionOrderId;
-        var vm = new ProductionOrderManagementViewModel();
-        vm.SelectedOrder = vm.Orders.Single(x => x.Id == orderId);
-        vm.DeleteCommand.Execute(null);
-        Check(vm.StatusMessage.Contains("Produktionshistorie"), "History warning missing");
-        var blocked = false;
-        try { db.Database.ExecuteSqlInterpolated($"DELETE FROM ProductionOrders WHERE Id = {orderId}"); }
-        catch (SqliteException) { blocked = true; }
-        Check(blocked, "Database allowed cascading history deletion");
-        Check(db.ProductionActuals.Any(x => x.Id == actualId) && db.DowntimeEntries.Any(), "History lost");
+        int orderId;
+        using (var db = new AppDbContext())
+            orderId = db.ProductionActuals.Single(x => x.Id == actualId).ProductionOrderId;
+
+        RecycleBinService.MoveProductionOrderToTrash(orderId);
+
+        using (var db = new AppDbContext())
+        {
+            Check(!db.ProductionOrders.Any(x => x.Id == orderId), "Trashed order still visible in active queries");
+            var archived = db.ProductionOrders.IgnoreQueryFilters().Single(x => x.Id == orderId);
+            Check(archived.IsDeleted && archived.DeletedAtUtc.HasValue, "Order was not soft-deleted");
+            Check(db.ProductionActuals.Any(x => x.Id == actualId) && db.DowntimeEntries.Any(), "Production history lost");
+            Check(db.RecycleBinItems.Any(x => x.EntityType == nameof(ProductionOrder) && x.EntityId == orderId.ToString()), "Recycle-bin entry missing");
+
+            var blocked = false;
+            try { db.Database.ExecuteSqlInterpolated($"DELETE FROM ProductionOrders WHERE Id = {orderId}"); }
+            catch (SqliteException) { blocked = true; }
+            Check(blocked, "Database allowed hard deletion of a production order");
+        }
+
+        SessionService.SignIn(new UserAccount { Id = 999, Username = "audit-admin", Role = UserRoles.Administrator, IsActive = true });
+        long recycleId;
+        using (var db = new AppDbContext())
+            recycleId = db.RecycleBinItems.Where(x => x.EntityType == nameof(ProductionOrder) && x.EntityId == orderId.ToString())
+                .OrderByDescending(x => x.Id).Select(x => x.Id).First();
+        RecycleBinService.Restore(recycleId);
+        using var restored = new AppDbContext();
+        Check(restored.ProductionOrders.Any(x => x.Id == orderId), "Recycle-bin restore did not reactivate the order");
     }
 
     private static void DowntimeEdit()
