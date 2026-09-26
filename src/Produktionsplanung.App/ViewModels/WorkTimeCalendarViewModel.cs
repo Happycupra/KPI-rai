@@ -253,6 +253,7 @@ public partial class WorkTimeCalendarViewModel : ObservableObject
         using var db = new AppDbContext();
         var entity = db.WorkTimeEntries
             .Where(x => x.EmployeeId == employeeId && x.IsRunning)
+            .AsEnumerable()
             .OrderByDescending(x => x.Date)
             .ThenByDescending(x => x.StartTime)
             .FirstOrDefault();

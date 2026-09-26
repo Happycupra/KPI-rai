@@ -1609,7 +1609,11 @@ internal static partial class Program
         vm.SaveEntryCommand.Execute(null);
 
         using var check = new AppDbContext();
-        var entries = check.WorkTimeEntries.Where(x => x.EmployeeId == employeeId && x.Date.Date == new DateTime(2035, 2, 12)).OrderBy(x => x.StartTime).ToList();
+        var entries = check.WorkTimeEntries
+            .Where(x => x.EmployeeId == employeeId && x.Date.Date == new DateTime(2035, 2, 12))
+            .AsEnumerable()
+            .OrderBy(x => x.StartTime)
+            .ToList();
         Check(entries.Count == 2, "Sequential work-time entries were not stored");
         Check(entries[0].Status == "Mischen" && entries[1].Status == "Produzieren", "Work-time statuses were not stored");
         Check(check.WorkTimeStatuses.Any(x => x.Name == "Mischen") && check.WorkTimeStatuses.Any(x => x.Name == "Produzieren"),
