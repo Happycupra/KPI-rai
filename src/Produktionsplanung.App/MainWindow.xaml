@@ -210,6 +210,11 @@
                         <TextBlock x:Name="CurrentPageHint" Text="SolutionCompakt · Produktionsplanung" Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border x:Name="LicenseModeBadge" Background="{StaticResource DangerBrush}" CornerRadius="10"
+                                Padding="10,4" Margin="0,0,12,0" Visibility="Collapsed"
+                                ToolTip="Diese Installation läuft als Testversion.">
+                            <TextBlock Text="DEMO" Foreground="White" FontSize="11" FontWeight="Bold" />
+                        </Border>
                         <Button x:Name="HelpButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
                                 Style="{StaticResource SecondaryButtonStyle}" Click="HelpButton_Click"
                                 ToolTip="App-Einführung und Hilfe öffnen">
