@@ -233,6 +233,7 @@ public static class RecoveryCodeService
         db.SaveChanges();
         QuickAccessService.ClearIfUser(user.Id);
         AuditService.Log("Passwort wiederhergestellt", nameof(UserAccount), user.Id.ToString(), $"Recovery für {user.Username}");
+        OnlineAccessSyncService.QueueSync();
         return (true, "Das Passwort wurde zurückgesetzt. Du kannst dich jetzt mit dem neuen Passwort anmelden.");
     }
 
@@ -330,6 +331,7 @@ public static class AuthenticationService
         db.SaveChanges();
         QuickAccessService.ClearIfUser(user.Id);
         AuditService.Log("Passwort geändert", nameof(UserAccount), user.Id.ToString(), "Eigenes Passwort geändert");
+        OnlineAccessSyncService.QueueSync();
         return (true, "Passwort wurde geändert.");
     }
 
