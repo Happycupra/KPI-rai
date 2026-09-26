@@ -70,9 +70,40 @@
           <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
         </label>
 
+        <label style="display:flex;align-items:center;gap:9px;font-weight:650;margin-top:14px">
+          <input id="rememberLogin" type="checkbox" style="width:auto;margin:0">
+          Eingeloggt bleiben
+        </label>
+        <p class="privacy-note" style="margin-top:4px">Bei späteren Browser-Starts wird der Zugang mit einem 4-stelligen PIN geschützt.</p>
+        <div id="pinSetup" class="hidden">
+          <label>4-stelliger Zugangs-PIN
+            <input id="accessPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" placeholder="••••">
+          </label>
+          <label>PIN bestätigen
+            <input id="confirmAccessPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="new-password" placeholder="••••">
+          </label>
+          <p class="privacy-note">Der PIN wird nur auf diesem Gerät als kryptografischer Prüfwert gespeichert. Kein QR-Login.</p>
+        </div>
+
         <button id="loginButton" class="primary login-button">Anmelden</button>
         <p id="loginStatus" class="status"></p>
         <p class="privacy-note">Die Anmeldung ist firmenbezogen. Benutzer anderer Firmen können deine Planung nicht sehen.</p>
+      </div>
+    </section>
+
+    <section id="pinView" class="login-shell hidden">
+      <div class="card login-card" style="max-width:520px;margin:0 auto">
+        <div class="login-heading">
+          <span class="eyebrow">GESCHÜTZTER ZUGANG</span>
+          <h2>Mit PIN entsperren</h2>
+          <p id="pinUserLabel">Gespeicherte Anmeldung</p>
+        </div>
+        <label>4-stelliger Zugangs-PIN
+          <input id="unlockPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" placeholder="••••">
+        </label>
+        <button id="pinUnlockButton" class="primary login-button">Entsperren</button>
+        <button id="pinSwitchAccountButton" class="ghost" style="width:100%;margin-top:8px">Mit Passwort / anderem Konto anmelden</button>
+        <p id="pinStatus" class="status"></p>
       </div>
     </section>
 

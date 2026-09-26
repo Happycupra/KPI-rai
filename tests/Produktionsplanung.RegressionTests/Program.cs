@@ -62,6 +62,7 @@ internal static partial class Program
             ("OEE aggregation is invariant under unit conversion", OeeUnits),
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
+            ("Remembered login requires a confirmed four-digit PIN", RememberedLoginPin),
             ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
             ("Existing installations receive a non-breaking company identity migration", LegacyCompanyIdentityMigration),
             ("Backup restore cannot cross company tenants", BackupTenantIsolation),
@@ -1557,6 +1558,23 @@ internal static partial class Program
         var current = AppSettingsService.Load();
         Check(current.CompanyId == betaId && current.CompanyCode == "BETA",
             "Blocked cross-company restore changed current company identity");
+    }
+
+    private static void RememberedLoginPin()
+    {
+        Planner();
+        var user = SessionService.CurrentUser!;
+        Check(QuickAccessService.ValidatePinPair("1234", "1234") is null, "Valid four-digit PIN was rejected");
+        Check(QuickAccessService.ValidatePinPair("123", "123") is not null, "Short PIN was accepted");
+        Check(QuickAccessService.ValidatePinPair("12A4", "12A4") is not null, "Non-numeric PIN was accepted");
+        Check(QuickAccessService.ValidatePinPair("1234", "4321") is not null, "Mismatched PIN confirmation was accepted");
+        var configured = QuickAccessService.Configure(user, "1234", "1234");
+        Check(configured.Success, "Remembered PIN could not be configured");
+        SessionService.SignOut();
+        Check(!QuickAccessService.LoginWithPin("9999").Success && !SessionService.IsAuthenticated, "Wrong PIN authenticated the user");
+        var correct = QuickAccessService.LoginWithPin("1234");
+        Check(correct.Success && SessionService.CurrentUser?.Id == user.Id, "Correct PIN did not restore the remembered user");
+        QuickAccessService.Clear();
     }
 
     private static void CompanyRegistrationAndInitialAdmin()

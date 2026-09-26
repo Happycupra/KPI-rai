@@ -51,6 +51,14 @@ public sealed class AppSettings
     public bool AutoLockEnabled { get; set; } = true;
     public int AutoLockMinutes { get; set; } = 30;
 
+    // Optional device-local quick access. The four-digit PIN is never stored in plaintext.
+    public bool RememberLoginEnabled { get; set; }
+    public int? RememberedUserId { get; set; }
+    public string RememberedUsername { get; set; } = string.Empty;
+    public string QuickAccessPinHash { get; set; } = string.Empty;
+    public string QuickAccessPinSalt { get; set; } = string.Empty;
+    public DateTime? RememberLoginConfiguredAtUtc { get; set; }
+
     // Local recovery credential. The PBKDF2 hash/salt remains the local verifier.
     // A freshly generated code is held here only until it has been securely synchronized
     // to the private vendor license record, then this pending plaintext value is cleared.
