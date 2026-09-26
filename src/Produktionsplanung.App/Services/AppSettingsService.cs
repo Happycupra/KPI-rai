@@ -110,6 +110,11 @@ public sealed class UserUiPreferences
 public static class AppSettingsService
 {
     private static readonly object Sync = new();
+
+    internal static void RunExclusive(Action action)
+    {
+        lock (Sync) action();
+    }
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     public static AppSettings Load()
@@ -224,7 +229,16 @@ public static class AppSettingsService
     {
         AppPaths.EnsureDirectories();
         Normalize(settings);
-        File.WriteAllText(AppPaths.SettingsPath, JsonSerializer.Serialize(settings, JsonOptions));
+        var pendingPath = AppPaths.SettingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(pendingPath, JsonSerializer.Serialize(settings, JsonOptions));
+            File.Move(pendingPath, AppPaths.SettingsPath, overwrite: true);
+        }
+        finally
+        {
+            try { File.Delete(pendingPath); } catch { }
+        }
     }
 
     private static AppSettings NewDefaults() => new()

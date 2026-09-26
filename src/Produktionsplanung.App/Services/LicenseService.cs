@@ -31,6 +31,10 @@ public static class LicenseService
 
     public static AppSettings EnsureLocalLicenseIdentity()
     {
+        var existing = AppSettingsService.Load();
+        if (existing.TrialStartedAtUtc.HasValue && !string.IsNullOrWhiteSpace(existing.LicenseInstallationId) &&
+            !string.IsNullOrWhiteSpace(existing.LicenseSecret))
+            return existing;
         return AppSettingsService.Update(settings =>
         {
             settings.TrialStartedAtUtc ??= DateTime.UtcNow;
@@ -170,7 +174,7 @@ public static class LicenseService
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
+            using var response = await Http.PostAsJsonAsync(
                 settings.LicenseRequestEndpoint,
                 new
                 {
@@ -217,7 +221,7 @@ public static class LicenseService
         var settings = EnsureLocalLicenseIdentity();
         try
         {
-            var response = await Http.PostAsJsonAsync(
+            using var response = await Http.PostAsJsonAsync(
                 settings.LicenseStatusEndpoint,
                 new
                 {
@@ -277,7 +281,7 @@ public static class LicenseService
 
         try
         {
-            var response = await Http.PostAsJsonAsync(
+            using var response = await Http.PostAsJsonAsync(
                 settings.LicenseRecoverySyncEndpoint,
                 new
                 {

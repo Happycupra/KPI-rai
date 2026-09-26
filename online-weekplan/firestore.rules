@@ -6,14 +6,22 @@ service cloud.firestore {
     }
 
     function companyActive(companyId) {
-      return exists(/databases/$(database)/documents/companies/$(companyId)) &&
-             get(/databases/$(database)/documents/companies/$(companyId)).data.isActive != false;
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      let license = get(/databases/$(database)/documents/licenses/$(company.licenseInstallationId)).data;
+      return company.isActive != false && license.status == "active" &&
+             license.validUntil > request.time;
+    }
+
+    function currentUser(companyId) {
+      let userId = string(request.auth.token.sourceUserId);
+      let user = get(/databases/$(database)/documents/companies/$(companyId)/authUsers/$(userId)).data;
+      return user.isActive == true && user.role == request.auth.token.role &&
+             user.get('credentialVersion', 'legacy') == request.auth.token.get('credentialVersion', 'legacy');
     }
 
     function sameCompany(companyId) {
-      return signedIn() &&
-             request.auth.token.companyId == companyId &&
-             companyActive(companyId);
+      return signedIn() && request.auth.token.companyId == companyId &&
+             companyActive(companyId) && currentUser(companyId);
     }
 
     function isCompanyAdmin(companyId) {
@@ -42,6 +50,14 @@ service cloud.firestore {
 
         match /productionSlots/{slotId} {
           allow read: if sameCompany(companyId);
+          allow write: if false;
+        }
+
+        // Immutable upload versions are readable only after complete publication.
+        match /versions/{versionId}/{collectionName}/{entryId} {
+          allow read: if collectionName in ['entries', 'productionSlots'] &&
+            sameCompany(companyId) &&
+            get(/databases/$(database)/documents/companies/$(companyId)/weekPlans/$(weekId)).data.activeVersion == versionId;
           allow write: if false;
         }
 

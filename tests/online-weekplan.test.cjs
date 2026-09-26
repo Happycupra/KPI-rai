@@ -129,3 +129,15 @@ test('QR login pre-fills company and username but never password', () => {
   assert.equal(h.el('password').value, '');
   assert.equal(h.el('rememberLogin').checked, false);
 });
+
+test('versioned week reads entries and production from one published generation', async () => {
+  const h = harness();
+  h.run(`companyId="tenant";var requestedPaths=[];modules.fsMod={
+    doc(){},collection(...args){const p=args.slice(1).join('/');requestedPaths.push(p);return p},
+    getDoc(){return Promise.resolve({exists:()=>true,data:()=>({activeVersion:"published-v2",weekStart:"2030-01-14",weekEnd:"2030-01-20",isoWeek:3})})},
+    getDocs(){return Promise.resolve({docs:[]})}
+  }`);
+  await h.run('loadWeek("2030-W03")');
+  assert.equal(h.run('requestedPaths[0]'), 'companies/tenant/weekPlans/2030-W03/versions/published-v2/entries');
+  assert.equal(h.run('requestedPaths[2]'), 'companies/tenant/weekPlans/2030-W03/versions/published-v2/productionSlots');
+});

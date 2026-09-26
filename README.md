@@ -2,8 +2,8 @@
 
 **SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten in einer lokal nutzbaren Desktop-Anwendung.
 
-> **Aktueller Entwicklungsstand: 24.09.2026**  
-> Produktversion im Projekt: **0.1.0** · Plattform: **Windows 10/11 · .NET 8 · WPF · SQLite**
+> **Aktueller Entwicklungsstand: 26.09.2026**
+> Auslieferungsversion: **1.0.<Buildnummer>** (aktuell im [Update-Manifest](downloads/update.json)) · Plattform: **Windows 10/11 · .NET 8 · WPF · SQLite**
 
 ## Funktionsumfang
 
@@ -31,7 +31,8 @@
 - lesbarer `CompanyCode` für den späteren Online-Login
 - Firmenname + Firmen-Code werden bei echter lokaler Ersteinrichtung einmalig registriert
 - bestehende Installationen werden automatisch und ohne Benutzer-/Datenverlust migriert
-- lokaler Betrieb bleibt offline-fähig; die Cloud ist nicht Voraussetzung zum Starten
+- lokale Datenhaltung; nach der 7-tägigen Testphase ist eine erfolgreiche Online-Lizenzprüfung erforderlich
+- während der Arbeit pausiert eine fehlgeschlagene Lizenzprüfung die Bedienung und erhält offene Eingaben; nach erfolgreicher Prüfung wird die Bedienung wieder freigegeben
 - Firebase-Daten werden unter `companies/{companyId}/...` strikt nach Firma getrennt
 - Firmen-Code + Benutzername + Passwort erlauben gleiche Benutzernamen in unterschiedlichen Firmen
 - Verkäufer-Provisionierung ist vorbereitet: online per Aktivierungscode oder später offline per digital signierter `.sccompany`-Datei
@@ -47,10 +48,11 @@ Siehe `docs/COMPANY-PROVISIONING.md` für Verkaufs-, Aktivierungs- und Offline-K
 - normale Web-Benutzer: nur lesen
 - Administratoren: JSON-Wochenplan veröffentlichen und minimale Online-Korrekturen
 - Online-Korrekturen werden getrennt vom Desktop-Snapshot gespeichert, damit SolutionCompakt führend bleibt
-- Custom-Authentication-Skelett für denselben Benutzernamen und dasselbe Passwort wie in SolutionCompakt
+- Benutzer-Synchronisation und Online-Anmeldung mit denselben Zugangsdaten wie in SolutionCompakt
+- Benutzer-QR-Codes mit Firmen-Code und Benutzername, ohne Passwort, inklusive PDF-Export
 - Rollen werden als Firebase Custom Claims verwendet
 
-**Status:** vollständig vorbereitet und lokal testbar; für echten Onlinebetrieb fehlen nur noch ein Firebase-Projekt, dessen öffentliche Web-Konfiguration und der kontrollierte Erst-Sync der Benutzer-Hashes/Rollen.
+**Status:** Firebase-Konfiguration und Deployment-Workflow sind eingerichtet. Online-Zugriff setzt eine aktive Lizenz und synchronisierte Benutzer voraus. Serverseitige Regeln prüfen auch bestehende Sitzungen auf Lizenz, Benutzerstatus, Rolle und Passwortversion. Wochenpläne werden erst nach vollständigem Upload einer neuen Version veröffentlicht.
 
 ### App-Einführung & kontextbezogene Hilfe
 - geführter Rundgang beim ersten Start pro Benutzer
@@ -229,7 +231,7 @@ Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Instal
 
 **Technische Grundlage vorhanden, UI noch ausstehend:** What-if-/Neuplanung und digitale Schichtübergabe.
 
-**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung, zentraler Mehrbenutzerbetrieb, produktive Firebase-Aktivierung des vorbereiteten Online-Wochenplans und weitergehende automatische Neuplanung.
+**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung, zentraler Mehrbenutzerbetrieb und weitergehende automatische Neuplanung.
 
 ## Entwicklungsprinzipien
 - automatische Vorschläge verändern keine Produktionsdaten ohne explizite Benutzeraktion

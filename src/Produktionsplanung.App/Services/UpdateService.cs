@@ -30,6 +30,8 @@ public static class UpdateService
         var settings = AppSettingsService.Load();
         try
         {
+            if (!IsHttpsUrl(settings.UpdateManifestUrl))
+                throw new InvalidDataException("Update-Adresse muss HTTPS verwenden.");
             using var response = await Http.GetAsync(settings.UpdateManifestUrl, cancellationToken);
             response.EnsureSuccessStatusCode();
             var manifest = await JsonSerializer.DeserializeAsync<UpdateManifest>(
@@ -37,7 +39,7 @@ public static class UpdateService
                 JsonOptions,
                 cancellationToken);
 
-            if (manifest is null || !Version.TryParse(manifest.Version, out var latest) || string.IsNullOrWhiteSpace(manifest.DownloadUrl))
+            if (manifest is null || !Version.TryParse(manifest.Version, out var latest) || !IsValidDownload(manifest.DownloadUrl, manifest.Sha256))
                 return new UpdateCheckResult(false, false, CurrentVersion, null, string.Empty, string.Empty, "Update-Manifest ist ungültig.");
 
             var available = latest > CurrentVersion;
@@ -66,9 +68,10 @@ public static class UpdateService
         if (AppPaths.IsPortableMode)
             throw new InvalidOperationException("Der automatische Installer-Update ist im USB-/Portable-Modus deaktiviert.");
 
-        var root = Path.Combine(Path.GetTempPath(), "SolutionCompakt-Update", update.LatestVersion.ToString(3));
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+        if (!IsValidDownload(update.DownloadUrl, update.Sha256))
+            throw new InvalidDataException("Update benötigt eine HTTPS-Adresse und eine gültige SHA-256-Prüfsumme.");
+
+        var root = Path.Combine(Path.GetTempPath(), "SolutionCompakt-Update", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
 
         var zipPath = Path.Combine(root, "SolutionCompakt-Setup.zip");
@@ -80,7 +83,6 @@ public static class UpdateService
             await input.CopyToAsync(output, cancellationToken);
         }
 
-        if (!string.IsNullOrWhiteSpace(update.Sha256))
         {
             await using var stream = File.OpenRead(zipPath);
             var actual = Convert.ToHexString(await SHA256.HashDataAsync(stream, cancellationToken)).ToLowerInvariant();
@@ -90,9 +92,8 @@ public static class UpdateService
 
         var extract = Path.Combine(root, "installer");
         ZipFile.ExtractToDirectory(zipPath, extract, overwriteFiles: true);
-        var installer = Directory.EnumerateFiles(extract, "SolutionCompakt-Setup-*.exe", SearchOption.AllDirectories)
-            .FirstOrDefault()
-            ?? Directory.EnumerateFiles(extract, "*.exe", SearchOption.AllDirectories).FirstOrDefault();
+        var installers = Directory.GetFiles(extract, "SolutionCompakt-Setup-*.exe", SearchOption.AllDirectories);
+        var installer = installers.Length == 1 ? installers[0] : null;
 
         if (string.IsNullOrWhiteSpace(installer))
             throw new FileNotFoundException("Der SolutionCompakt-Installer wurde im Update-Paket nicht gefunden.");
@@ -100,6 +101,13 @@ public static class UpdateService
         Process.Start(new ProcessStartInfo(installer) { UseShellExecute = true });
         return installer;
     }
+
+    private static bool IsHttpsUrl(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps &&
+        string.IsNullOrEmpty(uri.UserInfo);
+
+    internal static bool IsValidDownload(string? url, string? sha256) =>
+        IsHttpsUrl(url) && sha256 is { Length: 64 } && sha256.All(Uri.IsHexDigit);
 
     private sealed class UpdateManifest
     {
