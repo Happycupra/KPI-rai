@@ -12,7 +12,9 @@
   "publishEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan",
   "licenseRequestEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest",
   "licenseStatusEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus",
+  "licenseRecoverySyncEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/licenseRecoverySync",
   "adminLicensesEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminLicenses",
+  "adminGetRecoveryCodeEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminGetRecoveryCode",
   "adminExtendLicenseEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminExtendLicense",
   "adminSetLicenseStatusEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseStatus"
 }
