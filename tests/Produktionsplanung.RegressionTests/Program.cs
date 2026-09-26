@@ -118,7 +118,9 @@ internal static partial class Program
 
     private static void DemoSeederPreservesChanges()
     {
+        Planner();
         int workstationId;
+        int[] orderIds;
         using (var db = new AppDbContext())
         {
             var workstation = db.Workstations.OrderBy(x => x.Id).First();
@@ -126,15 +128,23 @@ internal static partial class Program
             workstation.IsActive = false;
             db.WorkstationShiftRules.RemoveRange(
                 db.WorkstationShiftRules.Where(x => x.WorkstationId == workstationId));
-            db.ProductionOrders.RemoveRange(db.ProductionOrders);
+            orderIds = db.ProductionOrders.Select(x => x.Id).ToArray();
             db.SaveChanges();
+        }
 
+        foreach (var orderId in orderIds)
+            RecycleBinService.MoveProductionOrderToTrash(orderId, "Regressionstest: bewusst geleerte Auftragsliste");
+
+        using (var db = new AppDbContext())
+        {
             DemoDataSeeder.Seed(db);
 
             Check(!db.WorkstationShiftRules.Any(x => x.WorkstationId == workstationId),
                 "Seeder recreated deliberately removed workstation shift rules");
             Check(!db.ProductionOrders.Any(),
                 "Seeder recreated demo production orders after user cleared them");
+            Check(db.ProductionOrders.IgnoreQueryFilters().Count(x => x.IsDeleted) == orderIds.Length,
+                "Soft-deleted demo orders were not preserved in history");
         }
 
         var vm = new WorkstationManagementViewModel();
