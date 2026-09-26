@@ -179,9 +179,9 @@ public static class BatchService
 
     public static bool CanEdit(AppDbContext db, int orderId, out string message)
     {
-        message = !SessionService.IsPlannerOrAdmin ? "Nur Planer oder Administratoren dürfen Produktionsdaten ändern."
-            : db.ProductionOrders.Any(x => x.Id == orderId && x.Status == "Abgeschlossen")
-                ? "Abgeschlossene Charge: zuerst in den Chargendetails mit Begründung wieder öffnen." : "";
+        message = !SessionService.IsPlannerOrAdmin
+            ? "Nur Planer oder Administratoren dürfen Produktionsdaten ändern."
+            : db.ProductionOrders.Any(x => x.Id == orderId) ? "" : "Die Charge bzw. der Auftrag ist nicht mehr aktiv vorhanden.";
         return message.Length == 0;
     }
 }
