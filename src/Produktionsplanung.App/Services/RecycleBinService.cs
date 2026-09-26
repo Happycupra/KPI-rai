@@ -16,7 +16,7 @@ public sealed class RecycleBinRow
     public string? Reason { get; init; }
     public DateTime? RestoredAtUtc { get; init; }
     public string? RestoredBy { get; init; }
-    public bool CanRestore => !RestoredAtUtc.HasValue;
+    public bool CanRestore => !RestoredAtUtc.HasValue && EntityType is nameof(ProductionOrder) or nameof(Employee);
     public string TypeText => EntityType switch
     {
         nameof(ProductionOrder) => "Charge / Auftrag",
@@ -26,7 +26,7 @@ public sealed class RecycleBinRow
     public string DeletedAtText => DeletedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss");
     public string StatusText => RestoredAtUtc.HasValue
         ? $"Wiederhergestellt {RestoredAtUtc.Value.ToLocalTime():dd.MM.yyyy HH:mm} · {RestoredBy}"
-        : "Im Papierkorb";
+        : CanRestore ? "Im Papierkorb · wiederherstellbar" : "Archiviert · Audit-Historie erhalten";
 }
 
 public static class RecycleBinService
@@ -158,6 +158,32 @@ public static class RecycleBinService
         tx.Commit();
     }
 
+    public static void ArchiveDeletion(AppDbContext db, object entity, string entityId, string displayName, string? reason = null)
+    {
+        var username = CurrentUsername();
+        var now = DateTime.UtcNow;
+        var entityType = entity.GetType().Name;
+        db.RecycleBinItems.Add(new RecycleBinItem
+        {
+            EntityType = entityType,
+            EntityId = entityId,
+            DisplayName = displayName,
+            DeletedAtUtc = now,
+            DeletedBy = username,
+            Reason = CleanReason(reason),
+            SnapshotJson = SerializeScalarSnapshot(entity)
+        });
+        db.AuditLogs.Add(new AuditLog
+        {
+            TimestampUtc = now,
+            Username = username,
+            Action = "In Papierkorb archiviert",
+            EntityType = entityType,
+            EntityId = entityId,
+            Details = displayName
+        });
+    }
+
     public static void Restore(long recycleBinId)
     {
         if (!SessionService.IsAdministrator)
@@ -238,6 +264,24 @@ public static class RecycleBinService
         employee.IsActive = true;
         employee.DeletedAtUtc = null;
         employee.DeletedBy = null;
+    }
+
+    private static string SerializeScalarSnapshot(object entity)
+    {
+        var values = entity.GetType().GetProperties()
+            .Where(p => p.CanRead &&
+                        (p.PropertyType.IsPrimitive ||
+                         p.PropertyType.IsEnum ||
+                         p.PropertyType == typeof(string) ||
+                         p.PropertyType == typeof(decimal) ||
+                         p.PropertyType == typeof(DateTime) ||
+                         p.PropertyType == typeof(DateTime?) ||
+                         p.PropertyType == typeof(TimeSpan) ||
+                         p.PropertyType == typeof(TimeSpan?) ||
+                         p.PropertyType == typeof(Guid) ||
+                         p.PropertyType == typeof(Guid?)))
+            .ToDictionary(p => p.Name, p => p.GetValue(entity));
+        return JsonSerializer.Serialize(values);
     }
 
     private static string BuildOrderDisplayName(ProductionOrder order)
