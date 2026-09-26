@@ -324,9 +324,16 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        RecoveryCodeStatus = settings.RecoveryCodeCreatedAtUtc.HasValue
+        var baseStatus = settings.RecoveryCodeCreatedAtUtc.HasValue
             ? $"Eingerichtet · zuletzt erneuert {settings.RecoveryCodeCreatedAtUtc.Value.ToLocalTime():g}."
             : "Recovery-Code ist eingerichtet.";
+
+        if (!string.IsNullOrWhiteSpace(settings.RecoveryCodePendingSupportSync))
+            RecoveryCodeStatus = baseStatus + " · Support-Sicherung wartet auf Internetverbindung.";
+        else if (settings.RecoveryCodeLastSupportSyncAtUtc.HasValue)
+            RecoveryCodeStatus = baseStatus + $" · Für den Support gesichert {settings.RecoveryCodeLastSupportSyncAtUtc.Value.ToLocalTime():g}.";
+        else
+            RecoveryCodeStatus = baseStatus;
     }
 
     private void OpenDirectory(string dir)
