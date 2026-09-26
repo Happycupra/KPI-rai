@@ -51,6 +51,7 @@ internal static partial class Program
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),
             ("Online week plan package is Firebase-ready and excludes absence details", OnlineWeekPlanPackage),
             ("Production Firebase defaults target solution-compact", FirebaseProductionDefaults),
+            ("Online access sync preserves desktop credentials and tenant identity", OnlineAccessSyncPayload),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -1095,10 +1096,74 @@ internal static partial class Program
             "Firebase login endpoint default is incorrect");
         Check(settings.FirebasePublishEndpoint == "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan",
             "Firebase publish endpoint default is incorrect");
+        Check(settings.FirebaseUserSyncEndpoint == "https://europe-west1-solution-compact.cloudfunctions.net/syncOnlineAccess",
+            "Firebase online user sync endpoint default is incorrect");
         Check(settings.FirebaseHostingUrl == "https://solution-compact.web.app",
             "Firebase hosting URL default is incorrect");
         Check(!settings.OnlineWeekPlanEnabled,
             "Online week plan must stay disabled until Firebase deployment is completed");
+    }
+
+    private static void OnlineAccessSyncPayload()
+    {
+        var (hash, salt) = PasswordService.HashPassword("OnlineTest123");
+        var settings = new AppSettings
+        {
+            CompanyId = "0123456789abcdef0123456789abcdef",
+            CompanyCode = "sc-test",
+            CompanyName = "Test Firma AG",
+            LicenseInstallationId = "installation_012345678901234567890123456789",
+            LicenseSecret = "secret_0123456789012345678901234567890123456789"
+        };
+        var users = new[]
+        {
+            new UserAccount
+            {
+                Id = 7,
+                Username = "Admin",
+                DisplayName = "Irajet",
+                Role = UserRoles.Administrator,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt
+            }
+        };
+
+        var payload = OnlineAccessSyncService.BuildRequest(settings, users);
+        Check(payload.CompanyId == settings.CompanyId && payload.CompanyCode == "SC-TEST",
+            "Online access sync changed tenant identity");
+        Check(payload.Users.Count == 1 && payload.Users[0].SourceUserId == 7,
+            "Online access sync did not preserve the source user id");
+        Check(payload.Users[0].Username == "Admin" && payload.Users[0].UsernameNormalized == "admin",
+            "Online access sync did not normalize the login name correctly");
+        Check(payload.Users[0].PasswordHash == hash && payload.Users[0].PasswordSalt == salt,
+            "Online access sync changed the desktop PBKDF2 credentials");
+        Check(payload.Users[0].Role == UserRoles.Administrator && payload.Users[0].IsActive,
+            "Online access sync changed role or active status");
+
+        var duplicateRejected = false;
+        try
+        {
+            OnlineAccessSyncService.BuildRequest(settings, new[]
+            {
+                users[0],
+                new UserAccount
+                {
+                    Id = 8,
+                    Username = "admin",
+                    DisplayName = "Duplicate",
+                    Role = UserRoles.Observer,
+                    IsActive = true,
+                    PasswordHash = hash,
+                    PasswordSalt = salt
+                }
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            duplicateRejected = true;
+        }
+        Check(duplicateRejected, "Case-only duplicate usernames were not rejected for online access");
     }
 
     private static void OnlineWeekPlanPackage()
