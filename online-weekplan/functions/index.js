@@ -197,9 +197,14 @@ exports.licenseRequest = onRequest({ region: "europe-west1" }, async (req, res) 
       if (current.secretHash && current.secretHash !== secretHash)
         return fail(res, 401, "Diese Installation konnte nicht bestätigt werden.");
 
+      const preservedStatus = ["active", "suspended"].includes(String(current.status || "").toLowerCase())
+        ? current.status
+        : "pending";
+
       await ref.set({
         companyName,
         contactEmail,
+        status: preservedStatus,
         lastAppVersion: appVersion,
         requestedAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
@@ -238,6 +243,63 @@ exports.licenseRequest = onRequest({ region: "europe-west1" }, async (req, res) 
   } catch (error) {
     console.error(error);
     fail(res, 500, "Registrierungsanfrage konnte nicht verarbeitet werden.");
+  }
+});
+
+exports.licenseRecoverySync = onRequest({ region: "europe-west1" }, async (req, res) => {
+  cors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+  if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
+
+  try {
+    const installationId = String(req.body?.installationId || "").trim();
+    const secret = String(req.body?.secret || "").trim();
+    const recoveryCode = String(req.body?.recoveryCode || "").trim().toUpperCase();
+    const companyName = String(req.body?.companyName || "").trim();
+    const appVersion = String(req.body?.appVersion || "").trim();
+
+    if (!validInstallationId(installationId) || !validSecret(secret))
+      return fail(res, 400, "Ungültige Installationskennung.");
+    if (!/^[A-F0-9]{5}(?:-[A-F0-9]{5}){5}$/.test(recoveryCode))
+      return fail(res, 400, "Ungültiger Recovery-Code.");
+
+    const ref = db.collection("licenses").doc(installationId);
+    const snap = await ref.get();
+    const secretHash = sha256(secret);
+
+    if (snap.exists) {
+      const current = snap.data();
+      if (current.secretHash && current.secretHash !== secretHash)
+        return fail(res, 401, "Diese Installation konnte nicht bestätigt werden.");
+
+      await ref.set({
+        secretHash,
+        companyName: companyName || current.companyName || "",
+        supportRecoveryCode: recoveryCode,
+        supportRecoveryUpdatedAt: FieldValue.serverTimestamp(),
+        lastAppVersion: appVersion,
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+    } else {
+      await ref.set({
+        installationId,
+        secretHash,
+        companyName,
+        contactEmail: "",
+        status: "trial",
+        validUntil: null,
+        supportRecoveryCode: recoveryCode,
+        supportRecoveryUpdatedAt: FieldValue.serverTimestamp(),
+        lastAppVersion: appVersion,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
+      });
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, "Recovery-Code konnte nicht für den Support hinterlegt werden.");
   }
 });
 
@@ -318,13 +380,52 @@ exports.adminLicenses = onRequest({ region: "europe-west1" }, async (req, res) =
         createdAtUtc: toIso(data.createdAt),
         requestedAtUtc: toIso(data.requestedAt),
         lastCheckedAtUtc: toIso(data.lastCheckedAt),
-        lastAppVersion: data.lastAppVersion || ""
+        lastAppVersion: data.lastAppVersion || "",
+        hasRecoveryCode: Boolean(data.supportRecoveryCode),
+        recoveryCodeUpdatedAtUtc: toIso(data.supportRecoveryUpdatedAt)
       };
     });
     res.json({ ok: true, licenses });
   } catch (error) {
     console.error(error);
     fail(res, 500, "Registrierungen konnten nicht geladen werden.");
+  }
+});
+
+exports.adminGetRecoveryCode = onRequest({ region: "europe-west1" }, async (req, res) => {
+  cors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+  if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
+  const claims = await requireOwner(req, res);
+  if (!claims) return;
+
+  try {
+    const installationId = String(req.body?.installationId || "").trim();
+    if (!validInstallationId(installationId))
+      return fail(res, 400, "Ungültige Installationskennung.");
+
+    const ref = db.collection("licenses").doc(installationId);
+    const snap = await ref.get();
+    if (!snap.exists) return fail(res, 404, "Registrierung nicht gefunden.");
+
+    const data = snap.data();
+    const recoveryCode = String(data.supportRecoveryCode || "").trim();
+    if (!recoveryCode) return fail(res, 404, "Für diese Installation ist noch kein Recovery-Code hinterlegt.");
+
+    await ref.set({
+      recoveryCodeViewedAt: FieldValue.serverTimestamp(),
+      recoveryCodeViewedBy: String(claims.email || OWNER_EMAIL),
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    res.json({
+      ok: true,
+      recoveryCode,
+      updatedAtUtc: toIso(data.supportRecoveryUpdatedAt)
+    });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, "Recovery-Code konnte nicht geladen werden.");
   }
 });
 
