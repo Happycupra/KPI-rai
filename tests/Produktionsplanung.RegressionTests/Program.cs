@@ -1562,12 +1562,30 @@ internal static partial class Program
 
     private static void RememberedLoginPin()
     {
-        Planner();
-        var user = SessionService.CurrentUser!;
         Check(QuickAccessService.ValidatePinPair("1234", "1234") is null, "Valid four-digit PIN was rejected");
         Check(QuickAccessService.ValidatePinPair("123", "123") is not null, "Short PIN was accepted");
         Check(QuickAccessService.ValidatePinPair("12A4", "12A4") is not null, "Non-numeric PIN was accepted");
         Check(QuickAccessService.ValidatePinPair("1234", "4321") is not null, "Mismatched PIN confirmation was accepted");
+
+        UserAccount user;
+        using (var db = new AppDbContext())
+        {
+            var (hash, salt) = PasswordService.HashPassword("Temporary123");
+            user = new UserAccount
+            {
+                Username = "pin-user",
+                DisplayName = "PIN User",
+                Role = UserRoles.Planner,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.UserAccounts.Add(user);
+            db.SaveChanges();
+        }
+
+        SessionService.SignIn(user);
         var configured = QuickAccessService.Configure(user, "1234", "1234");
         Check(configured.Success, "Remembered PIN could not be configured");
         SessionService.SignOut();
