@@ -14,9 +14,26 @@
     <TextBlock Text="Abschluss von" VerticalAlignment="Center" Margin="0,0,6,0"/><DatePicker SelectedDate="{Binding CompletedFrom}" Width="135" Margin="0,0,8,0"/>
     <TextBlock Text="bis" VerticalAlignment="Center" Margin="0,0,6,0"/><DatePicker SelectedDate="{Binding CompletedTo}" Width="135"/>
    </WrapPanel>
-   <TextBlock Text="{Binding Message}" Margin="0,0,0,8" TextWrapping="Wrap"/>
+   <TextBlock Text="{Binding Message}" Margin="0,0,0,8" TextWrapping="Wrap" FontWeight="SemiBold"/>
   </StackPanel>
-  <DataGrid ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedBatch}" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="160" MaxHeight="460" SelectionMode="Single" PreviewKeyDown="Grid_KeyDown">
+  <DataGrid x:Name="BatchGrid" ItemsSource="{Binding Rows}" SelectedItem="{Binding SelectedBatch}" AutoGenerateColumns="False" IsReadOnly="True" MinHeight="160" MaxHeight="460" SelectionMode="Single" PreviewKeyDown="Grid_KeyDown">
+   <DataGrid.RowStyle>
+       <Style TargetType="DataGridRow">
+           <EventSetter Event="PreviewMouseRightButtonDown" Handler="BatchRow_PreviewMouseRightButtonDown"/>
+       </Style>
+   </DataGrid.RowStyle>
+   <DataGrid.ContextMenu>
+       <ContextMenu>
+       <MenuItem Header="Übersicht / Chargendetails" Click="OpenContext_Click"/>
+       <MenuItem Header="Bearbeiten" Click="EditContext_Click"/>
+       <Separator/>
+       <MenuItem Header="Auftragscockpit" Click="ControlContext_Click"/>
+       <MenuItem Header="Ist-Produktion / OEE" Click="ActualContext_Click"/>
+       <MenuItem Header="Artikelverzeichnis" Click="ArticlesContext_Click"/>
+       <Separator/>
+       <MenuItem Header="In Papierkorb verschieben" Click="TrashContext_Click"/>
+       </ContextMenu>
+   </DataGrid.ContextMenu>
    <DataGrid.Columns>
     <DataGridTemplateColumn Header="Charge" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="{Binding BatchLabel}" Click="Open_Click" ToolTip="Charge öffnen" Padding="5" HorizontalContentAlignment="Center"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
     <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="90"/>

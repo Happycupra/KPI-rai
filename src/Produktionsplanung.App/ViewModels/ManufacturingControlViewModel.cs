@@ -442,10 +442,12 @@ public partial class ManufacturingControlViewModel : ObservableObject
         }
         var entity = db.RoutingSteps.FirstOrDefault(x => x.Id == row.Id);
         if (entity is null) return;
+        RecycleBinService.ArchiveDeletion(db, entity, entity.Id.ToString(),
+            $"Arbeitsplan {SelectedRouting.Name} · Schritt {row.SequenceNumber} · {row.OperationName}");
         db.RoutingSteps.Remove(entity);
         db.SaveChanges();
         LoadRoutingSteps(SelectedRouting.Id);
-        StatusMessage = "Arbeitsplan-Schritt gelöscht.";
+        StatusMessage = "Arbeitsplan-Schritt entfernt und im Papierkorb archiviert.";
     }
 
     [RelayCommand]

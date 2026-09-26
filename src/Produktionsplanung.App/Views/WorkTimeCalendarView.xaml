@@ -46,7 +46,19 @@
                     <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Erfasste Arbeitszeiten" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <DataGrid ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+                            <DataGrid x:Name="WorkTimeEntriesGrid" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="WorkTimeRow_PreviewMouseRightButtonDown"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu>
+                                    <MenuItem Header="Mitarbeiterkarte" Click="WorkTimeEmployeeCardContext_Click"/>
+                                    <MenuItem Header="Skills / Stammdaten" Click="WorkTimeEmployeeMasterContext_Click"/>
+                                    <MenuItem Header="Aktuell geplant" Click="WorkTimeEmployeePlanContext_Click"/>
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="100"/>
                                     <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*"/>
@@ -77,8 +89,8 @@
                                 <TextBox Text="{Binding EntryComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
                                 <Button Content="Speichern" Command="{Binding SaveEntryCommand}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
                                 <Button Content="Neu" Command="{Binding NewEntryCommand}" Margin="0,0,0,7" Style="{StaticResource ActionButtonStyle}"/>
-                                <Button Content="Löschen" Command="{Binding DeleteEntryCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
-                                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                                <Button Content="In Papierkorb" Command="{Binding DeleteEntryCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
+                                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,14,0,0"/>
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
@@ -118,8 +130,8 @@
                             <TextBox Text="{Binding CalendarComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,4,0,14" VerticalScrollBarVisibility="Auto"/>
                             <Button Content="Speichern" Command="{Binding SaveCalendarDayCommand}" Margin="0,0,0,7" Style="{StaticResource PrimaryActionButtonStyle}"/>
                             <Button Content="Neu" Command="{Binding NewCalendarDayCommand}" Margin="0,0,0,7" Style="{StaticResource ActionButtonStyle}"/>
-                            <Button Content="Ausnahme löschen" Command="{Binding DeleteCalendarDayCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
-                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,14,0,0"/>
+                            <Button Content="Ausnahme archivieren" Command="{Binding DeleteCalendarDayCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
+                            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,14,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>

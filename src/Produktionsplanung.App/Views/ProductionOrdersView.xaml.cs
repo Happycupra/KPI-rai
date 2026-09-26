@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
@@ -22,7 +23,7 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
             viewModel.SelectedOrder = viewModel.Orders.FirstOrDefault(x => x.Id == selectedOrderId.Value);
 
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
-        OrderEditorPanel.IsEnabled = viewModel.SelectedOrder?.Status != "Abgeschlossen";
+        OrderEditorPanel.IsEnabled = SessionService.IsPlannerOrAdmin;
         CaptureBaseline();
         Loaded += (_, _) => UpdateResponsiveLayout(ActualWidth);
     }
@@ -35,6 +36,61 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
 
     private void LayoutRoot_SizeChanged(object sender, SizeChangedEventArgs e) =>
         UpdateResponsiveLayout(e.NewSize.Width);
+
+    private void OrderRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGridRow { DataContext: ProductionOrderRow row } gridRow)
+            return;
+        gridRow.IsSelected = true;
+        viewModel.SelectedOrder = row;
+    }
+
+    private static ProductionOrderRow? ContextOrder(object sender)
+    {
+        if (sender is not MenuItem menuItem ||
+            menuItem.Parent is not ContextMenu contextMenu ||
+            contextMenu.PlacementTarget is not DataGridRow { DataContext: ProductionOrderRow row })
+            return null;
+        return row;
+    }
+
+    private void EditOrderContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextOrder(sender) is { } row)
+        {
+            viewModel.SelectedOrder = row;
+            OrderEditorPanel.BringIntoView();
+        }
+    }
+
+    private void OpenBatchContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextOrder(sender) is { } row)
+            (Window.GetWindow(this) as MainWindow)?.OpenBatch(row.Id);
+    }
+
+    private void OpenControlContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextOrder(sender) is { } row)
+            (Window.GetWindow(this) as MainWindow)?.OpenManufacturingControl(row.Id);
+    }
+
+    private void OpenActualContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextOrder(sender) is { } row)
+            (Window.GetWindow(this) as MainWindow)?.OpenProductionActual(row.Id);
+    }
+
+    private void OpenArticlesContext_Click(object sender, RoutedEventArgs e) =>
+        (Window.GetWindow(this) as MainWindow)?.OpenArticles();
+
+    private void DeleteOrderContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextOrder(sender) is not { } row)
+            return;
+        viewModel.SelectedOrder = row;
+        viewModel.DeleteCommand.Execute(null);
+    }
 
     private void UpdateResponsiveLayout(double width)
     {
@@ -102,10 +158,7 @@ public partial class ProductionOrdersView : UserControl, IUnsavedChangesAware
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ProductionOrderManagementViewModel.SelectedOrder))
-        {
-            OrderEditorPanel.IsEnabled = viewModel.SelectedOrder?.Status != "Abgeschlossen";
             CaptureBaseline();
-        }
     }
 
     private void CaptureBaseline() => baseline = BuildSnapshot();

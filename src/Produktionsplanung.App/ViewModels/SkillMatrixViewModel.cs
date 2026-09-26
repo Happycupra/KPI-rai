@@ -121,6 +121,7 @@ public partial class SkillMatrixViewModel : ObservableObject
         var links = db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId);
         db.EmployeeQualifications.RemoveRange(links);
         var qualification = db.Qualifications.First(x => x.Id == qualificationId);
+        RecycleBinService.ArchiveDeletion(db, qualification, qualification.Id.ToString(), $"Qualifikation {qualification.Name}");
         db.Qualifications.Remove(qualification);
         db.SaveChanges();
         SelectedQualification = null;

@@ -174,10 +174,12 @@ public partial class DayPlanningViewModel : ObservableObject
             return;
         }
 
+        var label = $"{SelectedAssignment.EmployeeName} · {SelectedAssignment.WorkstationName} · {SelectedDate:dd.MM.yyyy}";
+        RecycleBinService.ArchiveDeletion(db, entity, entity.Id.ToString(), label);
         db.PlanningAssignments.Remove(entity);
         db.SaveChanges();
         LoadDay();
-        StatusMessage = "Zuweisung gelöscht.";
+        StatusMessage = "Zuweisung entfernt und im Papierkorb archiviert.";
     }
 
     private void LoadReferenceData()

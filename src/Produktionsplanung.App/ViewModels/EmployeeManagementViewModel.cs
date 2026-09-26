@@ -271,46 +271,23 @@ public partial class EmployeeManagementViewModel : ObservableObject
         if (EditingId == 0)
             return;
 
-        using var db = new AppDbContext();
-        var refs = new List<string>();
-        if (db.PlanningAssignments.Any(x => x.EmployeeId == EditingId)) refs.Add("Planungen");
-        if (db.Absences.Any(x => x.EmployeeId == EditingId)) refs.Add("Abwesenheiten");
-        if (db.WorkTimeEntries.Any(x => x.EmployeeId == EditingId)) refs.Add("Arbeitszeitbuchungen");
-
-        if (refs.Count > 0)
-        {
-            MessageBox.Show(
-                $"Dieser Mitarbeiter kann nicht endgültig gelöscht werden, weil folgende Daten vorhanden sind: {string.Join(", ", refs)}. Bitte deaktivieren Sie ihn stattdessen.",
-                "Löschen nicht möglich",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
         if (MessageBox.Show(
-                $"{FirstName} {LastName} endgültig löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.",
-                "Mitarbeiter löschen",
+                $"{FirstName} {LastName} wirklich in den Papierkorb verschieben?\n\nPlanungen, Abwesenheiten, Arbeitszeiten und Skills bleiben als Historie erhalten.",
+                "Mitarbeiter in Papierkorb",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        db.EmployeeQualifications.RemoveRange(db.EmployeeQualifications.Where(x => x.EmployeeId == EditingId));
-        db.Employees.Remove(db.Employees.First(x => x.Id == EditingId));
-
         try
         {
-            db.SaveChanges();
-            StatusMessage = $"{FirstName} {LastName} gelöscht.";
+            RecycleBinService.MoveEmployeeToTrash(EditingId);
+            StatusMessage = $"{FirstName} {LastName} in den Papierkorb verschoben.";
             LoadEmployees();
             CloseEditor();
         }
-        catch (DbUpdateException)
+        catch (Exception ex)
         {
-            MessageBox.Show(
-                "Der Mitarbeiter wird noch von anderen Daten verwendet und konnte nicht gelöscht werden. Bitte deaktivieren Sie ihn stattdessen.",
-                "Löschen nicht möglich",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            StatusMessage = $"Mitarbeiter konnte nicht in den Papierkorb verschoben werden: {ex.Message}";
         }
     }
 
@@ -382,7 +359,10 @@ public partial class EmployeeManagementViewModel : ObservableObject
             db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId));
         var qualification = db.Qualifications.FirstOrDefault(x => x.Id == qualificationId);
         if (qualification is not null)
+        {
+            RecycleBinService.ArchiveDeletion(db, qualification, qualification.Id.ToString(), $"Qualifikation {qualification.Name}");
             db.Qualifications.Remove(qualification);
+        }
 
         db.SaveChanges();
         SelectedQualification = null;

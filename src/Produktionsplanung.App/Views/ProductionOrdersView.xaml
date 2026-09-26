@@ -64,8 +64,25 @@
                         </Grid>
                     </Border>
 
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
-                                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                    <DataGrid x:Name="OrdersGrid" Grid.Row="1" ItemsSource="{Binding OrdersView}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
+                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                        <DataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <EventSetter Event="PreviewMouseRightButtonDown" Handler="OrderRow_PreviewMouseRightButtonDown"/>
+                            </Style>
+                        </DataGrid.RowStyle>
+                        <DataGrid.ContextMenu>
+                            <ContextMenu>
+                            <MenuItem Header="Bearbeiten" Click="EditOrderContext_Click"/>
+                            <MenuItem Header="Chargendetails / Übersicht" Click="OpenBatchContext_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Auftragscockpit" Click="OpenControlContext_Click"/>
+                            <MenuItem Header="Ist-Produktion / OEE" Click="OpenActualContext_Click"/>
+                            <MenuItem Header="Artikelverzeichnis" Click="OpenArticlesContext_Click"/>
+                            <Separator/>
+                            <MenuItem Header="In Papierkorb verschieben" Click="DeleteOrderContext_Click"/>
+                            </ContextMenu>
+                        </DataGrid.ContextMenu>
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="100" />
                                             <DataGridTextColumn Header="Artikel" Binding="{Binding ArticleNumber}" Width="105" />
@@ -118,23 +135,34 @@
                     <StackPanel>
                         <TextBlock Text="Auftrag bearbeiten" Style="{StaticResource SectionHeaderTextStyle}" />
                         <TextBlock Text="Die Laufdauer kann mehrere aufeinanderfolgende Schichten umfassen. SolutionCompakt erzeugt die Schichtfolge automatisch."
-                                   Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,18" />
+                                   Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,8" />
+                        <TextBlock Text="{Binding LockedFieldsHint}" Foreground="{StaticResource WarningBrush}" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" Margin="0,0,0,18">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding LockedFieldsHint}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
                         <TextBlock Text="Auftragsnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
                         <TextBox Text="{Binding OrderNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
 
                         <TextBlock Text="Produkt" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsArticleIdentityLocked}" Height="38" Margin="0,0,0,12" ToolTip="Historisch gesperrt, sobald Artikelbindung oder Produktionshistorie besteht." />
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" />
+                                <TextBox Text="{Binding ArticleNumber, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsArticleIdentityLocked}" Height="38" ToolTip="Historisch gesperrt, sobald Artikelbindung oder Produktionshistorie besteht." />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="38" />
+                                <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsBatchNumberLocked}" Height="38" ToolTip="Nach Produktionsbeginn bleibt die Chargennummer historisch fix." />
                             </StackPanel>
                         </Grid>
 
@@ -146,7 +174,7 @@
                             </StackPanel>
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="Einheit" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit, Mode=TwoWay}" Height="38" />
+                                <ComboBox ItemsSource="{Binding Units}" SelectedItem="{Binding Unit, Mode=TwoWay}" IsEnabled="{Binding CanEditArticleIdentity}" Height="38" ToolTip="Die Einheit gehört zur historischen Artikelidentität." />
                             </StackPanel>
                         </Grid>
 
@@ -169,20 +197,20 @@
                                            Foreground="{StaticResource MutedTextBrush}" FontSize="12" TextWrapping="Wrap" Margin="0,3,0,12" />
 
                                 <TextBlock Text="Startdatum" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" Height="38" Margin="0,0,0,10" />
+                                <DatePicker SelectedDate="{Binding PlannedDate, Mode=TwoWay}" IsEnabled="{Binding CanEditScheduling}" Height="38" Margin="0,0,0,10" />
 
                                 <TextBlock Text="Maschine / Ort" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Height="38" Margin="0,0,0,10" />
+                                <ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" IsEnabled="{Binding CanEditScheduling}" Height="38" Margin="0,0,0,10" />
 
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="1.35*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="Startschicht" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" Height="38" />
+                                        <ComboBox ItemsSource="{Binding Shifts}" SelectedItem="{Binding SelectedShift, Mode=TwoWay}" DisplayMemberPath="DisplayName" IsEnabled="{Binding CanEditScheduling}" Height="38" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Laufdauer (Schichten)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                        <TextBox Text="{Binding PlannedShiftCount, UpdateSourceTrigger=PropertyChanged}" Height="38" />
+                                        <TextBox Text="{Binding PlannedShiftCount, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding CanEditScheduling}" Height="38" />
                                     </StackPanel>
                                 </Grid>
 
@@ -250,7 +278,7 @@
                                             <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
                                             <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
                                         </DataTrigger>
-                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag gelöscht.">
+                                        <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag in den Papierkorb verschoben.">
                                             <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
                                             <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}" />
                                         </DataTrigger>
@@ -261,7 +289,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap">
+                            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{StaticResource DangerBrush}" />
@@ -269,7 +297,7 @@
                                             <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag und Produktionsschichten gespeichert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
                                             <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag aktualisiert; bestehende Produktionsschichten blieben unverändert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
                                             <DataTrigger Binding="{Binding StatusMessage}" Value="Auftrag aktualisiert; historische Stammdaten und Produktionsschichten blieben unverändert."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
-                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag gelöscht."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
+                                            <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsauftrag in den Papierkorb verschoben."><Setter Property="Foreground" Value="{StaticResource SuccessBrush}" /></DataTrigger>
                                             <DataTrigger Binding="{Binding StatusMessage}" Value="Produktionsaufträge aktualisiert."><Setter Property="Foreground" Value="{StaticResource InfoBrush}" /></DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -278,7 +306,7 @@
                         </Border>
                         <Button Content="Speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
                         <Button Content="Neue Charge" Click="NewBatch_Click" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
-                        <Button Content="Ausgewählten Auftrag löschen" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}" />
+                        <Button Content="In Papierkorb verschieben" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

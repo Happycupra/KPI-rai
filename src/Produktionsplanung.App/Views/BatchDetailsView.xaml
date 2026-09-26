@@ -17,14 +17,15 @@
    <Button Content="Auftrag bearbeiten" Click="Edit_Click" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}"/>
    <Button Content="Fertigungssteuerung" Click="Control_Click" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}"/>
    <Button Content="Ist-Produktion" Click="Actual_Click" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}"/>
-   <Button Content="Charge abschliessen" Click="Complete_Click" Margin="0,0,8,8" Style="{StaticResource PrimaryActionButtonStyle}"/>
+   <Button x:Name="CompleteButton" Content="Charge abschliessen" Click="Complete_Click" Margin="0,0,8,8" Style="{StaticResource PrimaryActionButtonStyle}"/>
+   <Button Content="In Papierkorb" Click="Trash_Click" Margin="0,0,8,8" Style="{StaticResource DangerActionButtonStyle}"/>
   </WrapPanel>
   <StackPanel x:Name="ReopenActions" Margin="0,0,0,12">
-   <TextBlock Text="Abgeschlossene Charge · schreibgeschützt. Für Korrekturen eine Begründung eingeben." TextWrapping="Wrap"/>
+   <TextBlock Text="Abgeschlossene Charge: historisch kritische Felder bleiben fix; zulässige Korrekturen sind weiterhin möglich. Für eine erneute Produktion die Charge mit Begründung wieder öffnen." TextWrapping="Wrap" FontWeight="SemiBold"/>
    <TextBox x:Name="Reason" MaxLength="2000" Margin="0,6" AutomationProperties.Name="Begründung für Wiederöffnung"/>
    <Button Content="Wieder öffnen" Click="Reopen_Click" HorizontalAlignment="Center" Style="{StaticResource ActionButtonStyle}"/>
   </StackPanel>
-  <TextBlock x:Name="Message" TextWrapping="Wrap" Margin="0,0,0,10"/>
+  <TextBlock x:Name="Message" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,0,0,10"/>
   <TextBlock Text="Arbeitsgänge" Style="{StaticResource SectionHeaderTextStyle}"/>
   <TextBlock x:Name="CardsEmpty" Text="Nicht erfasst" Margin="0,6"/>
   <DataGrid ItemsSource="{Binding JobCards}" IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="300" Margin="0,8,0,18"><DataGrid.Columns>

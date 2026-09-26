@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.EntityFrameworkCore;
 using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
+using Produktionsplanung.App.Services;
 
 namespace Produktionsplanung.App.ViewModels;
 
@@ -103,13 +105,19 @@ public partial class AbsenceManagementViewModel : ObservableObject
     private void Delete()
     {
         if (SelectedAbsence is null) return;
+        if (MessageBox.Show(
+                $"Abwesenheit von {SelectedAbsence.EmployeeName} ({SelectedAbsence.StartDate:dd.MM.yyyy}–{SelectedAbsence.EndDate:dd.MM.yyyy}) wirklich entfernen?\n\nDer Datensatz bleibt im Papierkorb und Audit-Log erhalten.",
+                "Abwesenheit entfernen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
         using var db = new AppDbContext();
         var entity = db.Absences.First(x => x.Id == SelectedAbsence.Id);
+        RecycleBinService.ArchiveDeletion(db, entity, entity.Id.ToString(),
+            $"{SelectedAbsence.EmployeeName} · {entity.Type} · {entity.StartDate:dd.MM.yyyy}–{entity.EndDate:dd.MM.yyyy}");
         db.Absences.Remove(entity);
         db.SaveChanges();
         Load();
         NewAbsence();
-        StatusMessage = "Abwesenheit gelöscht.";
+        StatusMessage = "Abwesenheit entfernt und im Papierkorb archiviert.";
     }
 
     private void Load(int? selectId = null)

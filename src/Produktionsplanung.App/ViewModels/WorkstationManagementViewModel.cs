@@ -242,16 +242,22 @@ public partial class WorkstationManagementViewModel : ObservableObject
         if (db.PlanningAssignments.Any(x => x.WorkstationId == id) ||
             db.ProductionOrders.Any(x => x.WorkstationId == id))
         {
-            StatusMessage = "Arbeitsplatz kann nicht gelöscht werden, da Planungen oder Produktionsaufträge vorhanden sind. Bitte deaktivieren.";
+            StatusMessage = "Arbeitsplatz kann nicht entfernt werden, da Planungen oder Produktionsaufträge vorhanden sind. Bitte deaktivieren.";
             return;
         }
 
+        if (MessageBox.Show(
+                $"Arbeitsplatz „{SelectedWorkstation.Name}“ wirklich entfernen?\n\nDer Datensatz bleibt im Papierkorb und Audit-Log erhalten.",
+                "Arbeitsplatz entfernen", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
         var entity = db.Workstations.First(x => x.Id == id);
+        RecycleBinService.ArchiveDeletion(db, entity, id.ToString(), $"Arbeitsplatz {entity.Name} · {entity.Area}");
         db.Workstations.Remove(entity);
         db.SaveChanges();
         Load();
         NewWorkstation();
-        StatusMessage = "Arbeitsplatz gelöscht.";
+        StatusMessage = "Arbeitsplatz entfernt und im Papierkorb archiviert.";
     }
 
     private void Load(int? selectId = null)

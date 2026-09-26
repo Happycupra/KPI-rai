@@ -33,6 +33,15 @@ public static class ProductionStaffingService
         if (assignments.Count == 0)
             return new(false, $"{employee.FirstName} {employee.LastName} ist in diesem Produktionsslot nicht eingeplant.", null);
 
+        foreach (var assignment in assignments)
+        {
+            RecycleBinService.ArchiveDeletion(
+                db,
+                assignment,
+                assignment.Id.ToString(),
+                $"Planungszuweisung {employee.LastName}, {employee.FirstName} · {slot.Date:dd.MM.yyyy} · {slot.ProductionOrder.Workstation.Name} · {slot.Shift.Name}",
+                $"Aus Produktionsslot {slot.ProductionOrder.OrderNumber} entfernt");
+        }
         db.PlanningAssignments.RemoveRange(assignments);
         db.SaveChanges();
 
