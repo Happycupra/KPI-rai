@@ -485,7 +485,7 @@ public partial class ProductionOrderManagementViewModel : ObservableObject
     private void LoadOrders(int? selectId = null)
     {
         using var db = new AppDbContext();
-        var actualOrderIds = db.ProductionActuals.AsNoTracking()
+        var actualOrderIds = db.ProductionActuals.IgnoreQueryFilters().AsNoTracking()
             .Select(x => x.ProductionOrderId)
             .Distinct()
             .ToHashSet();
