@@ -23,6 +23,9 @@ public sealed record LicenseActionResult(
 public static class LicenseService
 {
     public const int TrialDays = 7;
+    public const string AdministratorEmail = "irajet.ramadani@gmail.com";
+    public static string SuspendedMessage =>
+        $"Diese Installation wurde gesperrt. Bitte wenden Sie sich an den Administrator: {AdministratorEmail}";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -64,6 +67,71 @@ public static class LicenseService
         var now = DateTime.UtcNow;
         var trialEnd = settings.TrialStartedAtUtc!.Value.AddDays(TrialDays);
 
+        // Always ask the license server when it is reachable, even during the trial.
+        // This makes an administrator suspension effective immediately on the next check
+        // and removes DEMO mode as soon as the installation has been activated.
+        var online = await CheckOnlineAsync(cancellationToken);
+        if (online.Success)
+        {
+            if (string.Equals(online.Status, "suspended", StringComparison.OrdinalIgnoreCase))
+            {
+                return new LicenseGateResult(
+                    false,
+                    false,
+                    0,
+                    online.Status,
+                    online.ValidUntilUtc,
+                    SuspendedMessage);
+            }
+
+            var active = string.Equals(online.Status, "active", StringComparison.OrdinalIgnoreCase) &&
+                         online.ValidUntilUtc is { } validUntil &&
+                         validUntil > now;
+
+            if (active)
+            {
+                return new LicenseGateResult(
+                    true,
+                    false,
+                    0,
+                    online.Status,
+                    online.ValidUntilUtc,
+                    $"Lizenz freigeschaltet bis {online.ValidUntilUtc!.Value.ToLocalTime():d}.");
+            }
+
+            if (now < trialEnd)
+            {
+                var remaining = Math.Max(1, (int)Math.Ceiling((trialEnd - now).TotalDays));
+                return new LicenseGateResult(
+                    true,
+                    true,
+                    remaining,
+                    online.Status,
+                    online.ValidUntilUtc,
+                    $"DEMO · Testphase aktiv · noch {remaining} Tag(e).");
+            }
+
+            return new LicenseGateResult(
+                false,
+                false,
+                0,
+                online.Status,
+                online.ValidUntilUtc,
+                online.Message);
+        }
+
+        // Never fall back to offline trial use after a suspension has already been cached locally.
+        if (string.Equals(settings.LicenseStatus, "suspended", StringComparison.OrdinalIgnoreCase))
+        {
+            return new LicenseGateResult(
+                false,
+                false,
+                0,
+                settings.LicenseStatus,
+                settings.LicenseValidUntilUtc,
+                SuspendedMessage);
+        }
+
         if (now < trialEnd)
         {
             var remaining = Math.Max(1, (int)Math.Ceiling((trialEnd - now).TotalDays));
@@ -73,35 +141,17 @@ public static class LicenseService
                 remaining,
                 settings.LicenseStatus,
                 settings.LicenseValidUntilUtc,
-                $"Testphase aktiv · noch {remaining} Tag(e).");
+                $"DEMO · Testphase aktiv · noch {remaining} Tag(e).");
         }
-
-        var online = await CheckOnlineAsync(cancellationToken);
-        if (!online.Success)
-        {
-            return new LicenseGateResult(
-                false,
-                false,
-                0,
-                online.Status,
-                online.ValidUntilUtc,
-                "Nach Ablauf der 7-tägigen Testphase ist beim Programmstart eine Internetverbindung zur Lizenzprüfung erforderlich. " +
-                online.Message);
-        }
-
-        var active = string.Equals(online.Status, "active", StringComparison.OrdinalIgnoreCase) &&
-                     online.ValidUntilUtc is { } validUntil &&
-                     validUntil > now;
 
         return new LicenseGateResult(
-            active,
+            false,
             false,
             0,
             online.Status,
             online.ValidUntilUtc,
-            active
-                ? $"Lizenz freigeschaltet bis {online.ValidUntilUtc!.Value.ToLocalTime():d}."
-                : online.Message);
+            "Nach Ablauf der 7-tägigen Testphase ist beim Programmstart eine Internetverbindung zur Lizenzprüfung erforderlich. " +
+            online.Message);
     }
 
     public static async Task<LicenseActionResult> RequestRegistrationAsync(
