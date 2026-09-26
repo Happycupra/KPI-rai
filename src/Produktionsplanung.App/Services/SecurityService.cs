@@ -57,6 +57,125 @@ public static class PasswordService
     }
 }
 
+public static class QuickAccessService
+{
+    public static bool IsValidPin(string? pin) =>
+        pin is { Length: 4 } && pin.All(char.IsDigit);
+
+    public static string? ValidatePinPair(string? pin, string? confirmation)
+    {
+        if (!IsValidPin(pin))
+            return "Der Zugangs-PIN muss genau 4 Ziffern enthalten.";
+        if (!string.Equals(pin, confirmation, StringComparison.Ordinal))
+            return "Die beiden PIN-Eingaben stimmen nicht überein.";
+        return null;
+    }
+
+    public static UserAccount? GetRememberedUser()
+    {
+        var settings = AppSettingsService.Load();
+        if (!settings.RememberLoginEnabled ||
+            !settings.RememberedUserId.HasValue ||
+            string.IsNullOrWhiteSpace(settings.QuickAccessPinHash) ||
+            string.IsNullOrWhiteSpace(settings.QuickAccessPinSalt))
+            return null;
+
+        using var db = new AppDbContext();
+        var user = db.UserAccounts.AsNoTracking().FirstOrDefault(x => x.Id == settings.RememberedUserId.Value);
+        if (user is null || !user.IsActive)
+        {
+            Clear();
+            return null;
+        }
+
+        return user;
+    }
+
+    public static (bool Success, string Message, UserAccount? User) LoginWithPin(string pin)
+    {
+        var settings = AppSettingsService.Load();
+        var remembered = GetRememberedUser();
+        if (remembered is null)
+            return (false, "Es ist kein gespeicherter PIN-Zugang eingerichtet.", null);
+        if (!IsValidPin(pin) ||
+            !PasswordService.Verify(pin, settings.QuickAccessPinHash, settings.QuickAccessPinSalt))
+            return (false, "Der Zugangs-PIN ist nicht korrekt.", null);
+
+        using var db = new AppDbContext();
+        var user = db.UserAccounts.FirstOrDefault(x => x.Id == remembered.Id && x.IsActive);
+        if (user is null)
+        {
+            Clear();
+            return (false, "Das gespeicherte Benutzerkonto ist nicht mehr verfügbar.", null);
+        }
+
+        user.LastLoginAtUtc = DateTime.UtcNow;
+        db.SaveChanges();
+        SessionService.SignIn(user);
+        AuditService.Log("PIN-Login", "Session", user.Id.ToString(), "Gerätelokaler 4-stelliger Zugangs-PIN.");
+        return (true, "Anmeldung mit PIN erfolgreich.", user);
+    }
+
+    public static bool CanUseForCurrentUser()
+    {
+        var current = SessionService.CurrentUser;
+        var settings = AppSettingsService.Load();
+        return current is not null &&
+               settings.RememberLoginEnabled &&
+               settings.RememberedUserId == current.Id &&
+               !string.IsNullOrWhiteSpace(settings.QuickAccessPinHash) &&
+               !string.IsNullOrWhiteSpace(settings.QuickAccessPinSalt);
+    }
+
+    public static bool VerifyCurrentPin(string pin)
+    {
+        if (!CanUseForCurrentUser() || !IsValidPin(pin))
+            return false;
+        var settings = AppSettingsService.Load();
+        return PasswordService.Verify(pin, settings.QuickAccessPinHash, settings.QuickAccessPinSalt);
+    }
+
+    public static (bool Success, string Message) Configure(UserAccount user, string pin, string confirmation)
+    {
+        var validation = ValidatePinPair(pin, confirmation);
+        if (validation is not null)
+            return (false, validation);
+
+        var (hash, salt) = PasswordService.HashPassword(pin);
+        AppSettingsService.Update(settings =>
+        {
+            settings.RememberLoginEnabled = true;
+            settings.RememberedUserId = user.Id;
+            settings.RememberedUsername = user.Username;
+            settings.QuickAccessPinHash = hash;
+            settings.QuickAccessPinSalt = salt;
+            settings.RememberLoginConfiguredAtUtc = DateTime.UtcNow;
+        });
+        AuditService.Log("PIN-Zugang eingerichtet", "Session", user.Id.ToString(), "Gerät bleibt angemeldet; Zugriff ist mit 4-stelligem PIN geschützt.");
+        return (true, "PIN-Zugang wurde eingerichtet.");
+    }
+
+    public static void ClearIfUser(int userId)
+    {
+        var settings = AppSettingsService.Load();
+        if (settings.RememberedUserId == userId)
+            Clear();
+    }
+
+    public static void Clear()
+    {
+        AppSettingsService.Update(settings =>
+        {
+            settings.RememberLoginEnabled = false;
+            settings.RememberedUserId = null;
+            settings.RememberedUsername = string.Empty;
+            settings.QuickAccessPinHash = string.Empty;
+            settings.QuickAccessPinSalt = string.Empty;
+            settings.RememberLoginConfiguredAtUtc = null;
+        });
+    }
+}
+
 public static class RecoveryCodeService
 {
     public static bool HasRecoveryCode()
@@ -112,6 +231,7 @@ public static class RecoveryCodeService
         user.PasswordHash = hash;
         user.PasswordSalt = salt;
         db.SaveChanges();
+        QuickAccessService.ClearIfUser(user.Id);
         AuditService.Log("Passwort wiederhergestellt", nameof(UserAccount), user.Id.ToString(), $"Recovery für {user.Username}");
         return (true, "Das Passwort wurde zurückgesetzt. Du kannst dich jetzt mit dem neuen Passwort anmelden.");
     }
@@ -208,6 +328,7 @@ public static class AuthenticationService
         user.PasswordHash = hash;
         user.PasswordSalt = salt;
         db.SaveChanges();
+        QuickAccessService.ClearIfUser(user.Id);
         AuditService.Log("Passwort geändert", nameof(UserAccount), user.Id.ToString(), "Eigenes Passwort geändert");
         return (true, "Passwort wurde geändert.");
     }

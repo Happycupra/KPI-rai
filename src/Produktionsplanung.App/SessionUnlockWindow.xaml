@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="SolutionCompakt – Sitzung gesperrt"
         Icon="{StaticResource SolutionCompaktIcon}"
-        Width="480" Height="390" ResizeMode="NoResize"
+        Width="480" Height="455" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         Background="{StaticResource SurfaceBrush}">
@@ -16,29 +16,29 @@
                            Foreground="{StaticResource PrimaryDarkBrush}"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
-
             <TextBlock Text="Sitzung gesperrt" FontSize="24" FontWeight="SemiBold"
                        Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" />
-            <TextBlock Text="Die Oberfläche wurde wegen Inaktivität gesperrt. Offene Eingaben bleiben erhalten."
+            <TextBlock x:Name="ModeHint" Text="Die Oberfläche wurde wegen Inaktivität gesperrt. Offene Eingaben bleiben erhalten."
                        Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"
                        TextAlignment="Center" Margin="0,6,0,20" />
-
             <Border Style="{StaticResource SectionCardStyle}" Padding="16" Margin="0,0,0,16">
                 <StackPanel>
                     <TextBlock Text="Angemeldeter Benutzer" Style="{StaticResource SecondaryTextStyle}" />
                     <TextBlock x:Name="UserBlock" FontSize="15" FontWeight="SemiBold"
                                Foreground="{StaticResource TextBrush}" Margin="0,3,0,14" />
-                    <TextBlock Text="Passwort" FontWeight="SemiBold" Margin="0,0,0,5" />
-                    <PasswordBox x:Name="PasswordBox" Height="38"
-                                 KeyDown="PasswordBox_KeyDown" />
+                    <TextBlock x:Name="CredentialLabel" Text="Passwort" FontWeight="SemiBold" Margin="0,0,0,5" />
+                    <PasswordBox x:Name="PasswordBox" Height="38" KeyDown="PasswordBox_KeyDown" />
                     <TextBlock x:Name="StatusBlock" Foreground="{StaticResource DangerBrush}"
                                TextWrapping="Wrap" MinHeight="24" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
-
-            <Button Content="Entsperren" Height="38"
+            <Button x:Name="UnlockButton" Content="Entsperren" Height="38"
                     Style="{StaticResource PrimaryActionButtonStyle}"
                     Click="Unlock_Click" />
+            <Button x:Name="PasswordFallbackButton" Content="Mit Passwort entsperren"
+                    Margin="0,8,0,0" Visibility="Collapsed"
+                    Style="{StaticResource ActionButtonStyle}"
+                    Click="PasswordFallback_Click" />
         </StackPanel>
     </Grid>
 </Window>

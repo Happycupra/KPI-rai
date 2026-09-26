@@ -6,9 +6,67 @@ const urls = {
 };
 
 const el = id => document.getElementById(id);
+const PIN_STORAGE_KEY = "solutioncompakt.weekplan.pin.v1";
 let config, auth, db, role = "", companyId = "", companyCode = "", weekIds = [], weekIndex = 0;
 let modules = {};
 let sessionVersion = 0, loadVersion = 0;
+let pinUnlocked = false;
+
+const PIN_ITERATIONS = 150000;
+function validatePinSetup(pin, confirmation) {
+  if (!/^\d{4}$/.test(String(pin || ""))) return "Der Zugangs-PIN muss genau 4 Ziffern enthalten.";
+  if (pin !== confirmation) return "Die beiden PIN-Eingaben stimmen nicht überein.";
+  return "";
+}
+function pinStorage() {
+  try { return globalThis.localStorage || null; } catch { return null; }
+}
+function getPinRecord() {
+  try {
+    const raw = pinStorage()?.getItem(PIN_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function clearPinRecord() {
+  try { pinStorage()?.removeItem(PIN_STORAGE_KEY); } catch {}
+}
+function toBase64(bytes) {
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+function fromBase64(value) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+async function derivePinHash(pin, salt) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: PIN_ITERATIONS, hash: "SHA-256" },
+    key, 256);
+  return new Uint8Array(bits);
+}
+async function savePinRecord(userId, pin) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await derivePinHash(pin, salt);
+  pinStorage()?.setItem(PIN_STORAGE_KEY, JSON.stringify({
+    userId, salt: toBase64(salt), hash: toBase64(hash), createdAt: new Date().toISOString()
+  }));
+}
+async function verifyPinRecord(userId, pin) {
+  if (!/^\d{4}$/.test(String(pin || ""))) return false;
+  const record = getPinRecord();
+  if (!record || record.userId !== userId || !record.salt || !record.hash) return false;
+  try {
+    const actual = await derivePinHash(pin, fromBase64(record.salt));
+    const expected = fromBase64(record.hash);
+    if (actual.length !== expected.length) return false;
+    let diff = 0;
+    for (let i = 0; i < actual.length; i++) diff |= actual[i] ^ expected[i];
+    return diff === 0;
+  } catch { return false; }
+}
+
 
 bootstrap();
 
@@ -30,31 +88,18 @@ async function bootstrap() {
       const session = ++sessionVersion;
       resetPlan();
       if (!user) {
+        pinUnlocked = false;
         show("loginView");
         return;
       }
-      try {
-        const token = await user.getIdTokenResult(true);
-        if (session !== sessionVersion) return;
-        role = token.claims.role || "Beobachter";
-        companyId = String(token.claims.companyId || "");
-        companyCode = String(token.claims.companyCode || "");
-        if (!companyId) {
-          await authMod.signOut(auth);
-          el("loginStatus").textContent = "Das Benutzerkonto ist keiner Firma zugeordnet.";
-          return;
-        }
-        el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
-        el("roleBadge").textContent = role;
-        el("userBox").classList.remove("hidden");
-        el("adminPublish").classList.toggle("hidden", role !== "Administrator");
-        show("planView");
-        await loadWeeks();
-      } catch (error) {
-        if (session !== sessionVersion) return;
-        show("loginView");
-        el("loginStatus").textContent = "Anmeldung oder Laden fehlgeschlagen. Bitte erneut anmelden.";
+      const pinRecord = getPinRecord();
+      if (pinRecord?.userId === user.uid && !pinUnlocked) {
+        el("pinUserLabel").textContent = "Gespeicherte Anmeldung · PIN erforderlich";
+        show("pinView");
+        el("unlockPin").focus();
+        return;
       }
+      await activateAuthenticatedUser(user, session);
     });
 
     wireEvents();
@@ -66,7 +111,17 @@ async function bootstrap() {
 function wireEvents() {
   el("loginButton").addEventListener("click", login);
   el("password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
-  el("logoutButton").addEventListener("click", () => modules.authMod.signOut(auth));
+  el("rememberLogin").addEventListener("change", () => {
+    el("pinSetup").classList.toggle("hidden", !el("rememberLogin").checked);
+    if (!el("rememberLogin").checked) {
+      el("accessPin").value = "";
+      el("confirmAccessPin").value = "";
+    }
+  });
+  el("pinUnlockButton").addEventListener("click", unlockWithPin);
+  el("unlockPin").addEventListener("keydown", e => { if (e.key === "Enter") unlockWithPin(); });
+  el("pinSwitchAccountButton").addEventListener("click", switchAccount);
+  el("logoutButton").addEventListener("click", logout);
   el("reloadButton").addEventListener("click", () => loadWeeks(weekIds[weekIndex]));
   el("prevWeek").addEventListener("click", () => navigateWeek(1));
   el("nextWeek").addEventListener("click", () => navigateWeek(-1));
@@ -76,7 +131,21 @@ function wireEvents() {
 
 async function login() {
   el("loginStatus").textContent = "Anmeldung läuft…";
+  const remember = el("rememberLogin").checked;
+  if (remember) {
+    const pinError = validatePinSetup(el("accessPin").value, el("confirmAccessPin").value);
+    if (pinError) {
+      el("loginStatus").textContent = pinError;
+      return;
+    }
+  }
   try {
+    await modules.authMod.setPersistence(
+      auth,
+      remember ? modules.authMod.browserLocalPersistence : modules.authMod.browserSessionPersistence
+    );
+    if (!remember) clearPinRecord();
+    pinUnlocked = true;
     const response = await fetch(config.authEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,11 +157,70 @@ async function login() {
     });
     const payload = await response.json();
     if (!response.ok || !payload.customToken) throw new Error(payload.error || "Anmeldung nicht möglich.");
-    await modules.authMod.signInWithCustomToken(auth, payload.customToken);
+    const credential = await modules.authMod.signInWithCustomToken(auth, payload.customToken);
+    if (remember) await savePinRecord(credential.user.uid, el("accessPin").value);
     el("password").value = "";
+    el("accessPin").value = "";
+    el("confirmAccessPin").value = "";
     el("loginStatus").textContent = "";
   } catch (error) {
+    pinUnlocked = false;
     el("loginStatus").textContent = error.message;
+  }
+}
+
+async function unlockWithPin() {
+  const user = auth?.currentUser;
+  if (!user) return switchAccount();
+  el("pinStatus").textContent = "";
+  if (!await verifyPinRecord(user.uid, el("unlockPin").value)) {
+    el("pinStatus").textContent = "Der Zugangs-PIN ist nicht korrekt.";
+    el("unlockPin").value = "";
+    el("unlockPin").focus();
+    return;
+  }
+  pinUnlocked = true;
+  el("unlockPin").value = "";
+  const session = ++sessionVersion;
+  resetPlan();
+  await activateAuthenticatedUser(user, session);
+}
+
+async function switchAccount() {
+  clearPinRecord();
+  pinUnlocked = false;
+  await modules.authMod.signOut(auth);
+}
+
+async function logout() {
+  clearPinRecord();
+  pinUnlocked = false;
+  await modules.authMod.signOut(auth);
+}
+
+async function activateAuthenticatedUser(user, session) {
+  try {
+    const token = await user.getIdTokenResult(true);
+    if (session !== sessionVersion) return;
+    role = token.claims.role || "Beobachter";
+    companyId = String(token.claims.companyId || "");
+    companyCode = String(token.claims.companyCode || "");
+    if (!companyId) {
+      clearPinRecord();
+      await modules.authMod.signOut(auth);
+      el("loginStatus").textContent = "Das Benutzerkonto ist keiner Firma zugeordnet.";
+      return;
+    }
+    el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
+    el("roleBadge").textContent = role;
+    el("userBox").classList.remove("hidden");
+    el("adminPublish").classList.toggle("hidden", role !== "Administrator");
+    show("planView");
+    await loadWeeks();
+  } catch {
+    if (session !== sessionVersion) return;
+    show("loginView");
+    el("loginStatus").textContent = "Anmeldung oder Laden fehlgeschlagen. Bitte erneut anmelden.";
   }
 }
 
@@ -303,7 +431,7 @@ async function publishPackage() {
 }
 
 function show(id) {
-  for (const name of ["setupView","loginView","planView"]) el(name).classList.add("hidden");
+  for (const name of ["setupView","loginView","pinView","planView"]) el(name).classList.add("hidden");
   el(id).classList.remove("hidden");
 }
 
