@@ -63,6 +63,7 @@ internal static partial class Program
             ("OEE keeps same-name workstations separate", WorkstationIdentity),
             ("Password entry is masked and cleared", PasswordInput),
             ("Remembered login requires a confirmed four-digit PIN", RememberedLoginPin),
+            ("Work-time status timeline belongs to the logged-in employee", WorkTimeStatusTimeline),
             ("Initial administrator is bound to a stable company tenant", CompanyRegistrationAndInitialAdmin),
             ("Existing installations receive a non-breaking company identity migration", LegacyCompanyIdentityMigration),
             ("Backup restore cannot cross company tenants", BackupTenantIsolation),
@@ -1593,6 +1594,67 @@ internal static partial class Program
         var correct = QuickAccessService.LoginWithPin("1234");
         Check(correct.Success && SessionService.CurrentUser?.Id == user.Id, "Correct PIN did not restore the remembered user");
         QuickAccessService.Clear();
+    }
+
+    private static void WorkTimeStatusTimeline()
+    {
+        int employeeId;
+        UserAccount user;
+        using (var db = new AppDbContext())
+        {
+            var employee = db.Employees.First(x => x.IsActive);
+            employeeId = employee.Id;
+            var (hash, salt) = PasswordService.HashPassword("Temporary123");
+            user = new UserAccount
+            {
+                EmployeeId = employeeId,
+                Username = "worktime-user",
+                DisplayName = $"{employee.FirstName} {employee.LastName}",
+                Role = UserRoles.Observer,
+                IsActive = true,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            db.UserAccounts.Add(user);
+            db.SaveChanges();
+        }
+
+        SessionService.SignIn(user);
+        var vm = new WorkTimeCalendarViewModel();
+        Check(vm.CanLogTime, "Mapped user could not enter work time");
+        vm.EntryDate = new DateTime(2035, 2, 12);
+        vm.StartTimeText = "08:00";
+        vm.EndTimeText = "09:00";
+        vm.BreakMinutes = 0;
+        vm.EntryStatus = "";
+        vm.SaveEntryCommand.Execute(null);
+        Check(vm.StatusMessage.Contains("Pflichtfeld"), "Missing status was not rejected");
+
+        vm.EntryStatus = "Mischen";
+        vm.SelectedArticle = vm.Articles.FirstOrDefault();
+        vm.SelectedOrder = vm.Orders.FirstOrDefault();
+        vm.SaveEntryCommand.Execute(null);
+
+        vm.NewEntryCommand.Execute(null);
+        vm.EntryDate = new DateTime(2035, 2, 12);
+        vm.StartTimeText = "09:00";
+        vm.EndTimeText = "10:00";
+        vm.BreakMinutes = 0;
+        vm.EntryStatus = "Produzieren";
+        vm.SaveEntryCommand.Execute(null);
+
+        using var check = new AppDbContext();
+        var entries = check.WorkTimeEntries
+            .Where(x => x.EmployeeId == employeeId && x.Date.Date == new DateTime(2035, 2, 12))
+            .AsEnumerable()
+            .OrderBy(x => x.StartTime)
+            .ToList();
+        Check(entries.Count == 2, "Sequential work-time entries were not stored");
+        Check(entries[0].Status == "Mischen" && entries[1].Status == "Produzieren", "Work-time statuses were not stored");
+        Check(check.WorkTimeStatuses.Any(x => x.Name == "Mischen") && check.WorkTimeStatuses.Any(x => x.Name == "Produzieren"),
+            "Free-text work-time statuses were not persisted for reuse");
+        Check(entries.All(x => x.EmployeeId == employeeId), "Work-time entry was not tied to the logged-in employee");
     }
 
     private static void CompanyRegistrationAndInitialAdmin()
