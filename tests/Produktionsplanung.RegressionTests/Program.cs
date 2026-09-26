@@ -52,6 +52,7 @@ internal static partial class Program
             ("Online week plan package is Firebase-ready and excludes absence details", OnlineWeekPlanPackage),
             ("Production Firebase defaults target solution-compact", FirebaseProductionDefaults),
             ("Online access sync preserves desktop credentials and tenant identity", OnlineAccessSyncPayload),
+            ("User login QR contains only login URL identity data", UserLoginQrCodePayload),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),
             ("Production actual choices sort by date and shift time", ProductionActualOrdering),
@@ -1102,6 +1103,22 @@ internal static partial class Program
             "Firebase hosting URL default is incorrect");
         Check(!settings.OnlineWeekPlanEnabled,
             "Online week plan must stay disabled until Firebase deployment is completed");
+    }
+
+    private static void UserLoginQrCodePayload()
+    {
+        var url = UserLoginQrCodeService.BuildLoginUrl("sc-d78a9a", "Admin User");
+        Check(url.StartsWith("https://solution-compact.web.app/", StringComparison.Ordinal),
+            "QR login URL does not target the production online login");
+        Check(url.Contains("companyCode=SC-D78A9A", StringComparison.Ordinal) &&
+              url.Contains("username=Admin%20User", StringComparison.Ordinal) &&
+              url.Contains("login=qr", StringComparison.Ordinal),
+            "QR login URL does not contain the expected company/user prefill");
+        Check(!url.Contains("password", StringComparison.OrdinalIgnoreCase),
+            "QR login URL must never contain a password");
+        var png = UserLoginQrCodeService.CreatePng(url, 4);
+        Check(png.Length > 100 && png[0] == 0x89 && png[1] == 0x50 && png[2] == 0x4E && png[3] == 0x47,
+            "QR code generator did not return a PNG image");
     }
 
     private static void OnlineAccessSyncPayload()

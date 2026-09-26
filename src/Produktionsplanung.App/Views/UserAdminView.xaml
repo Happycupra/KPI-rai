@@ -88,6 +88,7 @@
                     <StackPanel Grid.Row="2" Margin="0,8,0,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <Button Content="+ Neuer Benutzer" Command="{Binding NewUserCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                            <Button Content="QR-Code erstellen" Click="CreateQrCode_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
                             <Button Content="Speichern" Style="{StaticResource PrimaryActionButtonStyle}" Command="{Binding SaveUserCommand}" />
                         </StackPanel>
                         <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource PrimaryDarkBrush}"

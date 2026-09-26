@@ -13,6 +13,32 @@ let sessionVersion = 0, loadVersion = 0;
 let pinUnlocked = false;
 
 const PIN_ITERATIONS = 150000;
+
+function qrLoginParameters() {
+  try {
+    const params = new URLSearchParams(globalThis.location?.search || "");
+    if (params.get("login") !== "qr") return null;
+    const company = String(params.get("companyCode") || "").trim().toUpperCase();
+    const username = String(params.get("username") || "").trim();
+    return company || username ? { company, username } : null;
+  } catch {
+    return null;
+  }
+}
+
+function applyQrLoginPrefill() {
+  const qr = qrLoginParameters();
+  if (!qr) return false;
+  if (qr.company) el("companyCode").value = qr.company;
+  if (qr.username) el("username").value = qr.username;
+  el("rememberLogin").checked = false;
+  el("pinSetup").classList.add("hidden");
+  el("accessPin").value = "";
+  el("confirmAccessPin").value = "";
+  setTimeout(() => el("password").focus(), 0);
+  return true;
+}
+
 function validatePinSetup(pin, confirmation) {
   if (!/^\d{4}$/.test(String(pin || ""))) return "Der Zugangs-PIN muss genau 4 Ziffern enthalten.";
   if (pin !== confirmation) return "Die beiden PIN-Eingaben stimmen nicht überein.";
@@ -84,12 +110,21 @@ async function bootstrap() {
     auth = authMod.getAuth(app);
     db = fsMod.getFirestore(app);
 
+    // A scanned user QR code must always lead to an explicit password prompt,
+    // never silently reuse a previously stored browser session/PIN.
+    if (qrLoginParameters()) {
+      clearPinRecord();
+      await authMod.signOut(auth);
+      pinUnlocked = false;
+    }
+
     authMod.onAuthStateChanged(auth, async user => {
       const session = ++sessionVersion;
       resetPlan();
       if (!user) {
         pinUnlocked = false;
         show("loginView");
+        applyQrLoginPrefill();
         return;
       }
       const pinRecord = getPinRecord();
