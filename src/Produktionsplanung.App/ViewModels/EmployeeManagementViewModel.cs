@@ -359,7 +359,10 @@ public partial class EmployeeManagementViewModel : ObservableObject
             db.EmployeeQualifications.Where(x => x.QualificationId == qualificationId));
         var qualification = db.Qualifications.FirstOrDefault(x => x.Id == qualificationId);
         if (qualification is not null)
+        {
+            RecycleBinService.ArchiveDeletion(db, qualification, qualification.Id.ToString(), $"Qualifikation {qualification.Name}");
             db.Qualifications.Remove(qualification);
+        }
 
         db.SaveChanges();
         SelectedQualification = null;
