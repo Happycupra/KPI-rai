@@ -9,7 +9,9 @@
   "publishEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/publishWeekPlan",
   "licenseRequestEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/licenseRequest",
   "licenseStatusEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/licenseStatus",
+  "licenseRecoverySyncEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/licenseRecoverySync",
   "adminLicensesEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminLicenses",
+  "adminGetRecoveryCodeEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminGetRecoveryCode",
   "adminExtendLicenseEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminExtendLicense",
   "adminSetLicenseStatusEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminSetLicenseStatus"
 }
