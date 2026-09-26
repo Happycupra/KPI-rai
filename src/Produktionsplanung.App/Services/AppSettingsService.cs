@@ -41,6 +41,7 @@ public sealed class AppSettings
     public DateTime? LicenseLastCheckedAtUtc { get; set; }
     public string LicenseRequestEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseRequest";
     public string LicenseStatusEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus";
+    public string LicenseRecoverySyncEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/licenseRecoverySync";
 
     // Automatic update channel for installed Windows versions.
     public bool AutoUpdateEnabled { get; set; } = true;
@@ -50,11 +51,14 @@ public sealed class AppSettings
     public bool AutoLockEnabled { get; set; } = true;
     public int AutoLockMinutes { get; set; } = 30;
 
-    // Local recovery credential. Only the PBKDF2 hash/salt is stored; the recovery code itself
-    // is shown once to the administrator and must be kept outside the application.
+    // Local recovery credential. The PBKDF2 hash/salt remains the local verifier.
+    // A freshly generated code is held here only until it has been securely synchronized
+    // to the private vendor license record, then this pending plaintext value is cleared.
     public string RecoveryCodeHash { get; set; } = string.Empty;
     public string RecoveryCodeSalt { get; set; } = string.Empty;
     public DateTime? RecoveryCodeCreatedAtUtc { get; set; }
+    public string RecoveryCodePendingSupportSync { get; set; } = string.Empty;
+    public DateTime? RecoveryCodeLastSupportSyncAtUtc { get; set; }
 
     // Legacy installation-wide UI values. They remain for backwards-compatible deserialization
     // and are copied into a user's profile the first time that user opens the new version.
@@ -297,12 +301,16 @@ public static class AppSettingsService
         settings.LicenseStatusEndpoint = string.IsNullOrWhiteSpace(settings.LicenseStatusEndpoint)
             ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus"
             : settings.LicenseStatusEndpoint.Trim();
+        settings.LicenseRecoverySyncEndpoint = string.IsNullOrWhiteSpace(settings.LicenseRecoverySyncEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/licenseRecoverySync"
+            : settings.LicenseRecoverySyncEndpoint.Trim();
         settings.UpdateManifestUrl = string.IsNullOrWhiteSpace(settings.UpdateManifestUrl)
             ? "https://raw.githubusercontent.com/Happycupra/KPI-rai/main/downloads/update.json"
             : settings.UpdateManifestUrl.Trim();
         settings.AutoLockMinutes = Math.Clamp(settings.AutoLockMinutes, 1, 240);
         settings.RecoveryCodeHash = settings.RecoveryCodeHash?.Trim() ?? string.Empty;
         settings.RecoveryCodeSalt = settings.RecoveryCodeSalt?.Trim() ?? string.Empty;
+        settings.RecoveryCodePendingSupportSync = settings.RecoveryCodePendingSupportSync?.Trim().ToUpperInvariant() ?? string.Empty;
         settings.CalendarSelectedViewIndex = Math.Clamp(settings.CalendarSelectedViewIndex, 0, 2);
         settings.CalendarSearchText ??= string.Empty;
 
