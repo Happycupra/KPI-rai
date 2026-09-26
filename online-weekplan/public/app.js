@@ -331,10 +331,12 @@ async function loadWeek(weekId) {
     const metaSnap = await getDoc(doc(db, "companies", tenant, "weekPlans", weekId));
     if (!metaSnap.exists()) throw new Error("Wochenplan nicht vorhanden.");
     const meta = metaSnap.data();
+    const snapshotPath = ["companies", tenant, "weekPlans", weekId];
+    if (meta.activeVersion) snapshotPath.push("versions", meta.activeVersion);
     const [entriesSnap, overridesSnap, slotsSnap] = await Promise.all([
-      getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "entries")),
+      getDocs(collection(db, ...snapshotPath, "entries")),
       getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "overrides")),
-      getDocs(collection(db, "companies", tenant, "weekPlans", weekId, "productionSlots"))
+      getDocs(collection(db, ...snapshotPath, "productionSlots"))
     ]);
     if (request !== loadVersion || tenant !== companyId) return;
     const overrides = new Map(overridesSnap.docs.map(x => [x.id, x.data()]));

@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private bool sessionLocked;
     private bool licenseCheckRunning;
     private bool licenseBlocked;
+    private readonly List<Window> licenseDisabledWindows = new();
     private List<DashboardIssue> notificationIssues = new();
 
     public MainWindow()
@@ -97,7 +98,7 @@ public partial class MainWindow : Window
 
         var preferences = AppSettingsService.LoadCurrentUserPreferences();
         if (preferences.AppTourLastShownVersion < AppTourCatalog.CurrentVersion)
-            Dispatcher.BeginInvoke(new Action(() => StartGuidedTour(automatic: true)), DispatcherPriority.Background);
+            _ = Dispatcher.BeginInvoke(new Action(() => StartGuidedTour(automatic: true)), DispatcherPriority.Background);
 
         var settings = AppSettingsService.Load();
         if (!settings.AutoUpdateEnabled || AppPaths.IsPortableMode)
@@ -125,7 +126,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            IsEnabled = true;
+            IsEnabled = !licenseBlocked;
             MessageBox.Show(
                 this,
                 "Das Update konnte nicht gestartet werden.\n\n" + ex.Message,
@@ -137,36 +138,50 @@ public partial class MainWindow : Window
 
     private async void LicenseTimer_Tick(object? sender, EventArgs e)
     {
-        if (licenseCheckRunning || licenseBlocked)
-            return;
-
+        if (licenseCheckRunning || SessionService.RequiresRestart) return;
         licenseCheckRunning = true;
         try
         {
             var gate = await LicenseService.EvaluateStartupAsync();
             ApplyLicensePresentation(gate);
-
-            if (gate.Allowed)
-                return;
-
-            licenseBlocked = true;
-            licenseTimer.Stop();
-            IsEnabled = false;
-
-            var suspended = string.Equals(gate.Status, "suspended", StringComparison.OrdinalIgnoreCase);
-            MessageBox.Show(
-                this,
-                suspended ? LicenseService.SuspendedMessage : gate.Message,
-                suspended ? "SolutionCompakt – Installation gesperrt" : "SolutionCompakt – Lizenzprüfung",
-                MessageBoxButton.OK,
-                suspended ? MessageBoxImage.Stop : MessageBoxImage.Warning);
-
-            Application.Current.Shutdown();
+            ApplyRuntimeLicenseGate(gate);
         }
-        finally
+        catch (Exception ex)
         {
-            licenseCheckRunning = false;
+            ApplyRuntimeLicenseGate(new(false, false, 0, "unknown", null,
+                "Lizenzprüfung vorübergehend nicht möglich. " + ex.Message));
         }
+        finally { licenseCheckRunning = false; }
+    }
+
+    internal void ApplyRuntimeLicenseGate(LicenseGateResult gate, bool showMessage = true)
+    {
+        if (gate.Allowed)
+        {
+            if (!licenseBlocked) return;
+            licenseBlocked = false;
+            foreach (var window in licenseDisabledWindows)
+                window.IsEnabled = true;
+            licenseDisabledWindows.Clear();
+            Title = BaseWindowTitle;
+            return;
+        }
+
+        var firstBlock = !licenseBlocked;
+        licenseBlocked = true;
+        foreach (Window window in Application.Current.Windows)
+        {
+            if (!window.IsEnabled) continue;
+            licenseDisabledWindows.Add(window);
+            window.IsEnabled = false;
+        }
+        Title = BaseWindowTitle + " · Lizenzprüfung – Arbeit pausiert";
+        if (firstBlock && showMessage)
+            MessageBox.Show(this,
+                gate.Message + "\n\nDie Arbeit ist pausiert. Offene Eingaben bleiben erhalten. " +
+                "Die Lizenz wird automatisch erneut geprüft; nach erfolgreicher Prüfung können Sie weiterarbeiten.",
+                "SolutionCompakt – Lizenzprüfung", MessageBoxButton.OK, MessageBoxImage.Warning);
+        // Keep the timer running. Never discard open editors by shutting down on a network error.
     }
 
     private void ApplyLicensePresentation(LicenseGateResult? gate = null)
@@ -413,7 +428,12 @@ public partial class MainWindow : Window
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         if (licenseBlocked)
+        {
+            e.Cancel = MessageBox.Show(this,
+                "Die Arbeit ist pausiert. Beim Beenden gehen ungespeicherte Eingaben verloren. Trotzdem beenden?",
+                "SolutionCompakt beenden", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes;
             return;
+        }
 
         if (!CanLeaveCurrentContent())
             e.Cancel = true;
@@ -431,7 +451,7 @@ public partial class MainWindow : Window
 
     private void InputManager_PreProcessInput(object sender, PreProcessInputEventArgs e)
     {
-        if (sessionLocked || !SessionService.IsAuthenticated)
+        if (licenseBlocked || sessionLocked || !SessionService.IsAuthenticated)
             return;
 
         if (e.StagingItem.Input is KeyboardEventArgs or MouseEventArgs)
@@ -440,7 +460,7 @@ public partial class MainWindow : Window
 
     private void InactivityTimer_Tick(object? sender, EventArgs e)
     {
-        if (sessionLocked || !SessionService.IsAuthenticated)
+        if (licenseBlocked || sessionLocked || !SessionService.IsAuthenticated)
             return;
 
         var settings = AppSettingsService.Load();
@@ -459,7 +479,7 @@ public partial class MainWindow : Window
 
     private void LockSession()
     {
-        if (sessionLocked || SessionService.CurrentUser is null)
+        if (licenseBlocked || sessionLocked || SessionService.CurrentUser is null)
             return;
 
         sessionLocked = true;
@@ -694,7 +714,7 @@ public partial class MainWindow : Window
 
     private void MessageTimer_Tick(object? sender, EventArgs e)
     {
-        if (sessionLocked || !SessionService.IsAuthenticated || messagePopupOpen)
+        if (licenseBlocked || sessionLocked || !SessionService.IsAuthenticated || messagePopupOpen)
             return;
 
         RefreshPersonalMessages(showPopup: true);

@@ -71,7 +71,13 @@ internal static partial class Program
             ("Administrator can create a new program user", UserAdminCreatesUser),
             ("Internal user hints persist and require read acknowledgement", UserMessagesPersistAndAcknowledge),
             ("Failed restore preserves active session", FailedRestore),
-            ("Successful restore invalidates old session", RestoreSession)
+            ("Successful restore invalidates old session", RestoreSession),
+            ("Failed backup overwrite preserves existing archive", BackupOverwriteFailurePreservesArchive),
+            ("Restore rolls database back when settings replacement fails", RestoreRollbackPreservesDatabaseAndSession),
+            ("Corrupt backup preserves current data", CorruptBackupPreservesCurrentData),
+            ("Failed settings write preserves original", SettingsWriteFailurePreservesOriginal),
+            ("Updates require HTTPS and SHA256", UpdateRequiresHttpsAndHash),
+            ("Runtime license pause preserves editors and recovers", RuntimeLicensePausePreservesWindow)
         };
         var failed = 0;
         foreach (var test in tests)

@@ -44,7 +44,7 @@ async function requireOwner(req, res) {
     return null;
   }
   try {
-    const claims = await getAuth().verifyIdToken(authHeader.slice("Bearer ".length));
+    const claims = await getAuth().verifyIdToken(authHeader.slice("Bearer ".length), true);
     const email = String(claims.email || "").trim().toLowerCase();
     if (email !== OWNER_EMAIL || claims.email_verified !== true) {
       fail(res, 403, "Keine Berechtigung für die Lizenzverwaltung.");
@@ -54,6 +54,62 @@ async function requireOwner(req, res) {
   } catch {
     fail(res, 401, "Anmeldung ist ungültig oder abgelaufen.");
     return null;
+  }
+}
+
+// Authorization is checked against current server data, not only long-lived token claims.
+async function activeCompany(companyRef) {
+  const company = await companyRef.get();
+  if (!company.exists || company.data().isActive === false) return null;
+  const data = company.data();
+  const installationId = String(data.licenseInstallationId || "");
+  if (!validInstallationId(installationId)) return null;
+  const license = await db.collection("licenses").doc(installationId).get();
+  const value = license.exists ? license.data() : {};
+  const until = value.validUntil?.toDate?.();
+  return value.status === "active" && until && until > new Date() ? data : null;
+}
+
+async function requireCompanyAdmin(req, res) {
+  const header = String(req.headers.authorization || "");
+  if (!header.startsWith("Bearer ")) {
+    fail(res, 401, "Authentifizierung erforderlich.");
+    return null;
+  }
+  let claims;
+  try {
+    claims = await getAuth().verifyIdToken(header.slice(7), true);
+  } catch {
+    fail(res, 401, "Bitte erneut anmelden.");
+    return null;
+  }
+  if (claims.role !== "Administrator" || !/^[A-Za-z0-9_-]{16,100}$/.test(String(claims.companyId || "")) ||
+      !Number.isInteger(claims.sourceUserId) || claims.sourceUserId < 1) {
+    fail(res, 403, "Administrator erforderlich.");
+    return null;
+  }
+  const companyRef = db.collection("companies").doc(claims.companyId);
+  if (!await activeCompany(companyRef)) {
+    fail(res, 403, "Online-Zugang ist nicht freigeschaltet.");
+    return null;
+  }
+  const user = await companyRef.collection("authUsers").doc(String(claims.sourceUserId)).get();
+  const data = user.exists ? user.data() : {};
+  if (data.isActive !== true || data.role !== "Administrator" ||
+      (data.credentialVersion || "legacy") !== (claims.credentialVersion || "legacy")) {
+    fail(res, 403, "Berechtigung geändert. Bitte erneut anmelden.");
+    return null;
+  }
+  return { claims, companyRef };
+}
+
+function validateItems(items) {
+  const seen = new Set();
+  for (const item of items) {
+    const id = String(item?.id || "").trim();
+    if (!id || id.includes("/") || id === "." || id === ".." || id.length > 200 || seen.has(id))
+      throw new Error("Ungültige oder doppelte Eintragskennung.");
+    seen.add(id);
   }
 }
 
@@ -80,17 +136,8 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
     const companyData = companyDoc.data();
     if (companyData.isActive === false) return fail(res, 401, "Anmeldung nicht möglich.");
 
-    // Once a desktop installation has synchronized this tenant, the web login
-    // follows the same seller-managed license as the Windows application.
-    const boundInstallationId = String(companyData.licenseInstallationId || "").trim();
-    if (boundInstallationId) {
-      const licenseSnap = await db.collection("licenses").doc(boundInstallationId).get();
-      if (!licenseSnap.exists) return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
-      const license = licenseSnap.data();
-      const validUntil = license.validUntil?.toDate?.() || null;
-      if (String(license.status || "").toLowerCase() !== "active" || !validUntil || validUntil <= new Date())
-        return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
-    }
+    if (!await activeCompany(companyDoc.ref))
+      return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
 
     const snap = await companyDoc.ref.collection("authUsers")
       .where("usernameNormalized", "==", username)
@@ -111,6 +158,7 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
 
     const uid = "solutioncompakt-" + companyId + "-" + String(data.sourceUserId);
     const customToken = await getAuth().createCustomToken(uid, {
+      credentialVersion: data.credentialVersion || "legacy",
       role: data.role || "Beobachter",
       username: data.username || username,
       displayName: data.displayName || data.username || username,
@@ -132,15 +180,9 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
   if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
 
   try {
-    const authHeader = String(req.headers.authorization || "");
-    if (!authHeader.startsWith("Bearer ")) return fail(res, 401, "Authentifizierung erforderlich.");
-    const claims = await getAuth().verifyIdToken(authHeader.slice("Bearer ".length));
-    if (claims.role !== "Administrator") return fail(res, 403, "Administrator erforderlich.");
-
-    const companyRef = db.collection("companies").doc(String(claims.companyId || ""));
-    const companyDoc = await companyRef.get();
-    if (!companyDoc.exists || companyDoc.data().isActive === false)
-      return fail(res, 403, "Firma ist nicht aktiv.");
+    const access = await requireCompanyAdmin(req, res);
+    if (!access) return;
+    const { claims, companyRef } = access;
 
     const snapshot = req.body;
     if (!snapshot || snapshot.schemaVersion !== "1.1" || !snapshot.weekId ||
@@ -153,8 +195,26 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
       return fail(res, 403, "Wochenplan gehört zu einer anderen Firma.");
     }
 
+    if (!/^\d{4}-W\d{2}$/.test(String(snapshot.weekId)) ||
+        snapshot.entries.length + snapshot.productionSlots.length > 10000)
+      return fail(res, 400, "Ungültige Woche oder zu grosses Wochenplan-Paket.");
+    try {
+      validateItems(snapshot.entries);
+      validateItems(snapshot.productionSlots);
+    } catch (error) {
+      return fail(res, 400, error.message);
+    }
+
     const weekRef = companyRef.collection("weekPlans").doc(String(snapshot.weekId));
+    // A failed/concurrent upload cannot modify the currently published snapshot.
+    const version = crypto.randomUUID();
+    const versionRef = weekRef.collection("versions").doc(version);
+    await replaceCollection(versionRef.collection("entries"), snapshot.entries);
+    await replaceCollection(versionRef.collection("productionSlots"), snapshot.productionSlots);
+    // Recheck authorization after the potentially lengthy upload.
+    if (!await requireCompanyAdmin(req, res)) return;
     await weekRef.set({
+      activeVersion: version,
       schemaVersion: snapshot.schemaVersion,
       companyId: snapshot.companyId,
       companyCode: snapshot.companyCode,
@@ -172,9 +232,6 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
       assignmentCount: snapshot.entries.length,
       productionSlotCount: snapshot.productionSlots.length
     }, { merge: true });
-
-    await replaceCollection(weekRef.collection("entries"), snapshot.entries);
-    await replaceCollection(weekRef.collection("productionSlots"), snapshot.productionSlots);
 
     res.json({ ok: true, weekId: snapshot.weekId });
   } catch (error) {
@@ -259,6 +316,7 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
         isActive: raw?.isActive === true,
         passwordHash,
         passwordSalt,
+        credentialVersion: sha256(passwordHash + ":" + passwordSalt),
         synchronizedAt: FieldValue.serverTimestamp()
       });
     }
@@ -646,6 +704,7 @@ exports.adminSetLicenseStatus = onRequest({ region: "europe-west1" }, async (req
 });
 
 async function replaceCollection(collectionRef, items) {
+  validateItems(items);
   const existing = await collectionRef.listDocuments();
   let operations = [];
 

@@ -23,7 +23,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  firestore-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install isolated rules test dependencies
+        run: npm ci --prefix tests/firestore --ignore-scripts --no-audit --no-fund
+      - name: Exercise tenant, license and session rules in Firestore emulator
+        run: npm test --prefix tests/firestore
+
   build:
+    needs: firestore-security
     runs-on: windows-latest
 
     steps:
@@ -47,7 +66,7 @@ jobs:
           node --check online-weekplan/functions/bootstrap-owner-admin.js
           node --check online-weekplan/public/app.js
           node --check online-weekplan/public/admin.js
-          node --test tests/online-weekplan.test.cjs
+          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.json -Raw | ConvertFrom-Json | Out-Null

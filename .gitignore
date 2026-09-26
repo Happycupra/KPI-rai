@@ -11,3 +11,5 @@ artifacts/
 *.pfx
 *.p12
 
+
+node_modules/
