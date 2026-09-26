@@ -181,7 +181,11 @@ public static class BatchService
     {
         message = !SessionService.IsPlannerOrAdmin
             ? "Nur Planer oder Administratoren dürfen Produktionsdaten ändern."
-            : db.ProductionOrders.Any(x => x.Id == orderId) ? "" : "Die Charge bzw. der Auftrag ist nicht mehr aktiv vorhanden.";
+            : db.ProductionOrders.Any(x => x.Id == orderId && x.Status == "Abgeschlossen")
+                ? "Abgeschlossene Charge: zuerst in den Chargendetails mit Begründung wieder öffnen."
+                : db.ProductionOrders.Any(x => x.Id == orderId)
+                    ? ""
+                    : "Die Charge bzw. der Auftrag ist nicht mehr aktiv vorhanden.";
         return message.Length == 0;
     }
 }
