@@ -18,7 +18,13 @@ function harness() {
     getElementById(id) { if (!nodes.has(id)) nodes.set(id, element()); return nodes.get(id); },
     createElement: element
   };
-  const context = vm.createContext({ document, console });
+  const context = vm.createContext({
+    document,
+    console,
+    URLSearchParams,
+    location: { search: '' },
+    setTimeout(fn) { fn(); }
+  });
   const source = fs.readFileSync('online-weekplan/public/app.js', 'utf8').replace('bootstrap();', '');
   vm.runInContext(source, context);
   return { nodes, run: code => vm.runInContext(code, context), el: document.getElementById };
@@ -110,4 +116,16 @@ test('remember-login PIN requires four matching digits', () => {
   assert.match(h.run('validatePinSetup("123", "123")'), /4 Ziffern/);
   assert.match(h.run('validatePinSetup("12A4", "12A4")'), /4 Ziffern/);
   assert.match(h.run('validatePinSetup("1234", "4321")'), /stimmen nicht überein/);
+});
+
+
+test('QR login pre-fills company and username but never password', () => {
+  const h = harness();
+  h.run('location.search="?companyCode=SC-D78A9A&username=admin&login=qr"');
+  h.el('password').value = '';
+  assert.equal(h.run('applyQrLoginPrefill()'), true);
+  assert.equal(h.el('companyCode').value, 'SC-D78A9A');
+  assert.equal(h.el('username').value, 'admin');
+  assert.equal(h.el('password').value, '');
+  assert.equal(h.el('rememberLogin').checked, false);
 });
