@@ -80,6 +80,18 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
     const companyData = companyDoc.data();
     if (companyData.isActive === false) return fail(res, 401, "Anmeldung nicht möglich.");
 
+    // Once a desktop installation has synchronized this tenant, the web login
+    // follows the same seller-managed license as the Windows application.
+    const boundInstallationId = String(companyData.licenseInstallationId || "").trim();
+    if (boundInstallationId) {
+      const licenseSnap = await db.collection("licenses").doc(boundInstallationId).get();
+      if (!licenseSnap.exists) return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
+      const license = licenseSnap.data();
+      const validUntil = license.validUntil?.toDate?.() || null;
+      if (String(license.status || "").toLowerCase() !== "active" || !validUntil || validUntil <= new Date())
+        return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
+    }
+
     const snap = await companyDoc.ref.collection("authUsers")
       .where("usernameNormalized", "==", username)
       .limit(1)
@@ -168,6 +180,135 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
   } catch (error) {
     console.error(error);
     fail(res, 500, "Wochenplan konnte nicht veröffentlicht werden.");
+  }
+});
+
+exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 60 }, async (req, res) => {
+  cors(res);
+  if (req.method === "OPTIONS") return res.status(204).send("");
+  if (req.method !== "POST") return fail(res, 405, "Method not allowed.");
+
+  try {
+    const installationId = String(req.body?.installationId || "").trim();
+    const secret = String(req.body?.secret || "").trim();
+    const appVersion = String(req.body?.appVersion || "").trim();
+    const companyId = String(req.body?.companyId || "").trim();
+    const companyCode = String(req.body?.companyCode || "").trim().toUpperCase();
+    const companyName = String(req.body?.companyName || "").trim();
+    const users = Array.isArray(req.body?.users) ? req.body.users : [];
+
+    if (!validInstallationId(installationId) || !validSecret(secret))
+      return fail(res, 400, "Ungültige Installationskennung.");
+    if (!/^[A-Za-z0-9_-]{16,100}$/.test(companyId) ||
+        !/^[A-Z0-9-]{3,24}$/.test(companyCode) ||
+        companyName.length < 2)
+      return fail(res, 400, "Ungültige Firmendaten.");
+    if (users.length < 1 || users.length > 500)
+      return fail(res, 400, "Mindestens ein und höchstens 500 Benutzer sind erforderlich.");
+
+    const licenseRef = db.collection("licenses").doc(installationId);
+    const licenseSnap = await licenseRef.get();
+    if (!licenseSnap.exists) return fail(res, 401, "Installation ist noch nicht freigeschaltet.");
+    const license = licenseSnap.data();
+    if (license.secretHash !== sha256(secret))
+      return fail(res, 401, "Diese Installation konnte nicht bestätigt werden.");
+
+    const validUntil = license.validUntil?.toDate?.() || null;
+    if (String(license.status || "").toLowerCase() !== "active" || !validUntil || validUntil <= new Date())
+      return fail(res, 403, "Die Lizenz ist für den Online-Zugang nicht aktiv.");
+
+    const normalizedSeen = new Set();
+    const synchronizedUsers = [];
+    for (const raw of users) {
+      const sourceUserId = Number(raw?.sourceUserId);
+      const username = String(raw?.username || "").trim();
+      const usernameNormalized = String(raw?.usernameNormalized || username).trim().toLowerCase();
+      const displayName = String(raw?.displayName || username).trim();
+      const role = String(raw?.role || "").trim();
+      const passwordHash = String(raw?.passwordHash || "").trim();
+      const passwordSalt = String(raw?.passwordSalt || "").trim();
+
+      if (!Number.isInteger(sourceUserId) || sourceUserId < 1 ||
+          username.length < 3 || username.length > 100 ||
+          usernameNormalized.length < 3 || usernameNormalized.length > 100 ||
+          displayName.length < 1 || displayName.length > 160 ||
+          !["Administrator", "Planer", "Beobachter"].includes(role))
+        return fail(res, 400, "Ungültige Benutzerdaten.");
+
+      if (normalizedSeen.has(usernameNormalized))
+        return fail(res, 400, "Benutzernamen dürfen sich online nicht nur durch Gross-/Kleinschreibung unterscheiden.");
+      normalizedSeen.add(usernameNormalized);
+
+      let hashBytes, saltBytes;
+      try {
+        hashBytes = Buffer.from(passwordHash, "base64");
+        saltBytes = Buffer.from(passwordSalt, "base64");
+      } catch {
+        return fail(res, 400, "Ungültige Passwortdaten.");
+      }
+      if (hashBytes.length !== 32 || saltBytes.length !== 16)
+        return fail(res, 400, "Ungültige Passwortdaten.");
+
+      synchronizedUsers.push({
+        id: String(sourceUserId),
+        sourceUserId,
+        username,
+        usernameNormalized,
+        displayName,
+        role,
+        isActive: raw?.isActive === true,
+        passwordHash,
+        passwordSalt,
+        synchronizedAt: FieldValue.serverTimestamp()
+      });
+    }
+
+    const codeMatch = await db.collection("companies")
+      .where("companyCode", "==", companyCode)
+      .limit(2)
+      .get();
+    if (codeMatch.docs.some(doc => doc.id !== companyId))
+      return fail(res, 409, "Dieser Firmen-Code ist bereits einer anderen Firma zugeordnet.");
+
+    const companyRef = db.collection("companies").doc(companyId);
+    const companySnap = await companyRef.get();
+    if (companySnap.exists) {
+      const current = companySnap.data();
+      const boundInstallationId = String(current.licenseInstallationId || "").trim();
+      if (boundInstallationId && boundInstallationId !== installationId)
+        return fail(res, 409, "Diese Firma ist bereits einer anderen Installation zugeordnet.");
+    }
+
+    await companyRef.set({
+      companyId,
+      companyCode,
+      companyName,
+      isActive: true,
+      licenseInstallationId: installationId,
+      lastDesktopAppVersion: appVersion,
+      authUsersUpdatedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    await replaceCollection(companyRef.collection("authUsers"), synchronizedUsers);
+
+    await licenseRef.set({
+      companyId,
+      companyCode,
+      companyName,
+      lastAppVersion: appVersion,
+      onlineAccessLastSyncedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    res.json({
+      ok: true,
+      userCount: synchronizedUsers.length,
+      message: `${synchronizedUsers.length} Benutzer für den Online-Wochenplan synchronisiert.`
+    });
+  } catch (error) {
+    console.error(error);
+    fail(res, 500, "Online-Zugang konnte nicht synchronisiert werden.");
   }
 });
 

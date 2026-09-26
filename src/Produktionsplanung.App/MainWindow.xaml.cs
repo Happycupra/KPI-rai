@@ -93,6 +93,8 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        OnlineAccessSyncService.QueueSync();
+
         var preferences = AppSettingsService.LoadCurrentUserPreferences();
         if (preferences.AppTourLastShownVersion < AppTourCatalog.CurrentVersion)
             Dispatcher.BeginInvoke(new Action(() => StartGuidedTour(automatic: true)), DispatcherPriority.Background);

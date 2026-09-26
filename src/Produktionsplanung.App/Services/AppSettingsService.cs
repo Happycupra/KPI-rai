@@ -28,6 +28,8 @@ public sealed class AppSettings
     public string FirebaseAuthEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/login";
     public string FirebaseHostingUrl { get; set; } = "https://solution-compact.web.app";
     public string FirebasePublishEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan";
+    public string FirebaseUserSyncEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/syncOnlineAccess";
+    public DateTime? LastOnlineAccessSyncAtUtc { get; set; }
     public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
     public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
 
@@ -298,6 +300,9 @@ public static class AppSettingsService
         settings.FirebaseAuthEndpoint = settings.FirebaseAuthEndpoint?.Trim() ?? string.Empty;
         settings.FirebaseHostingUrl = settings.FirebaseHostingUrl?.Trim() ?? string.Empty;
         settings.FirebasePublishEndpoint = settings.FirebasePublishEndpoint?.Trim() ?? string.Empty;
+        settings.FirebaseUserSyncEndpoint = string.IsNullOrWhiteSpace(settings.FirebaseUserSyncEndpoint)
+            ? "https://europe-west1-solution-compact.cloudfunctions.net/syncOnlineAccess"
+            : settings.FirebaseUserSyncEndpoint.Trim();
         settings.LastOnlineWeekPreparedId = settings.LastOnlineWeekPreparedId?.Trim() ?? string.Empty;
         settings.LicenseInstallationId = settings.LicenseInstallationId?.Trim() ?? string.Empty;
         settings.LicenseSecret = settings.LicenseSecret?.Trim() ?? string.Empty;

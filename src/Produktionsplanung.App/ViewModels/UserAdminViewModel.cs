@@ -173,6 +173,7 @@ public partial class UserAdminViewModel : ObservableObject
                 string.Equals(x.Username, savedUsername, StringComparison.Ordinal));
             LoadAudit();
             StatusMessage = "Benutzer gespeichert.";
+            OnlineAccessSyncService.QueueSync();
             NewPassword = string.Empty;
             ConfirmNewPassword = string.Empty;
             OnPropertyChanged(nameof(EditorTitle));
