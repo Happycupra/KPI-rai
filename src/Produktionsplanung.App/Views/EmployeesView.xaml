@@ -76,7 +76,7 @@
                                 Padding="11,5" Margin="7,0,0,0"/>
                         <ComboBox Grid.Column="3" Height="38" ItemsSource="{Binding Qualifications}"
                                   DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}"/>
-                        <Button Grid.Column="4" Content="Löschen" Command="{Binding DeleteQualificationCommand}"
+                        <Button Grid.Column="4" Content="Archivieren" Command="{Binding DeleteQualificationCommand}"
                                 Padding="11,5" Margin="7,0,0,0"/>
                         <TextBlock Grid.Column="5" Text="Skill-Level 0–5 werden direkt beim Mitarbeiter gepflegt · Level 5 = Admin."
                                    VerticalAlignment="Center" Margin="12,0,0,0"
