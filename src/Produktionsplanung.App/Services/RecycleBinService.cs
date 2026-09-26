@@ -16,11 +16,13 @@ public sealed class RecycleBinRow
     public string? Reason { get; init; }
     public DateTime? RestoredAtUtc { get; init; }
     public string? RestoredBy { get; init; }
-    public bool CanRestore => !RestoredAtUtc.HasValue && EntityType is nameof(ProductionOrder) or nameof(Employee);
+    public bool CanRestore => !RestoredAtUtc.HasValue && EntityType is nameof(ProductionOrder) or nameof(Employee) or nameof(ProductionActual) or nameof(DowntimeEntry);
     public string TypeText => EntityType switch
     {
         nameof(ProductionOrder) => "Charge / Auftrag",
         nameof(Employee) => "Mitarbeiter",
+        nameof(ProductionActual) => "Ist-Produktion",
+        nameof(DowntimeEntry) => "Stillstand",
         _ => EntityType
     };
     public string DeletedAtText => DeletedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss");
@@ -158,6 +160,70 @@ public static class RecycleBinService
         tx.Commit();
     }
 
+    public static void MoveProductionActualToTrash(int id, string? reason = null)
+    {
+        RequirePlanner();
+        using var db = new AppDbContext();
+        using var tx = db.Database.BeginTransaction();
+        var actual = db.ProductionActuals.Include(x => x.ProductionOrder).FirstOrDefault(x => x.Id == id)
+            ?? throw new InvalidOperationException("Die Ist-Erfassung ist nicht mehr aktiv vorhanden.");
+        var username = CurrentUsername();
+        var now = DateTime.UtcNow;
+        actual.IsDeleted = true;
+        actual.DeletedAtUtc = now;
+        actual.DeletedBy = username;
+        var label = $"Ist-Produktion · Auftrag {actual.ProductionOrder.OrderNumber} · {actual.Date:dd.MM.yyyy}";
+        db.RecycleBinItems.Add(new RecycleBinItem
+        {
+            EntityType = nameof(ProductionActual),
+            EntityId = actual.Id.ToString(),
+            DisplayName = label,
+            DeletedAtUtc = now,
+            DeletedBy = username,
+            Reason = CleanReason(reason),
+            SnapshotJson = SerializeScalarSnapshot(actual)
+        });
+        db.AuditLogs.Add(new AuditLog
+        {
+            TimestampUtc = now, Username = username, Action = "In Papierkorb verschoben",
+            EntityType = nameof(ProductionActual), EntityId = actual.Id.ToString(), Details = label
+        });
+        db.SaveChanges();
+        tx.Commit();
+    }
+
+    public static void MoveDowntimeToTrash(int id, string? reason = null)
+    {
+        RequirePlanner();
+        using var db = new AppDbContext();
+        using var tx = db.Database.BeginTransaction();
+        var downtime = db.DowntimeEntries.Include(x => x.ProductionActual).FirstOrDefault(x => x.Id == id)
+            ?? throw new InvalidOperationException("Der Stillstand ist nicht mehr aktiv vorhanden.");
+        var username = CurrentUsername();
+        var now = DateTime.UtcNow;
+        downtime.IsDeleted = true;
+        downtime.DeletedAtUtc = now;
+        downtime.DeletedBy = username;
+        var label = $"Stillstand · {downtime.Reason} · {downtime.Minutes:0.#} min · Ist-ID {downtime.ProductionActualId}";
+        db.RecycleBinItems.Add(new RecycleBinItem
+        {
+            EntityType = nameof(DowntimeEntry),
+            EntityId = downtime.Id.ToString(),
+            DisplayName = label,
+            DeletedAtUtc = now,
+            DeletedBy = username,
+            Reason = CleanReason(reason),
+            SnapshotJson = SerializeScalarSnapshot(downtime)
+        });
+        db.AuditLogs.Add(new AuditLog
+        {
+            TimestampUtc = now, Username = username, Action = "In Papierkorb verschoben",
+            EntityType = nameof(DowntimeEntry), EntityId = downtime.Id.ToString(), Details = label
+        });
+        db.SaveChanges();
+        tx.Commit();
+    }
+
     public static void ArchiveDeletion(AppDbContext db, object entity, string entityId, string displayName, string? reason = null)
     {
         var username = CurrentUsername();
@@ -204,6 +270,12 @@ public static class RecycleBinService
             case nameof(Employee):
                 RestoreEmployee(db, item);
                 break;
+            case nameof(ProductionActual):
+                RestoreProductionActual(db, item);
+                break;
+            case nameof(DowntimeEntry):
+                RestoreDowntime(db, item);
+                break;
             default:
                 throw new InvalidOperationException($"Für „{item.EntityType}“ ist keine Wiederherstellung eingerichtet.");
         }
@@ -247,6 +319,35 @@ public static class RecycleBinService
         order.IsDeleted = false;
         order.DeletedAtUtc = null;
         order.DeletedBy = null;
+    }
+
+    private static void RestoreProductionActual(AppDbContext db, RecycleBinItem item)
+    {
+        if (!int.TryParse(item.EntityId, out var id))
+            throw new InvalidOperationException("Ungültige Ist-ID im Papierkorb.");
+        var actual = db.ProductionActuals.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id)
+            ?? throw new InvalidOperationException("Die zugrunde liegende Ist-Erfassung ist nicht mehr vorhanden.");
+        if (!actual.IsDeleted)
+            throw new InvalidOperationException("Die Ist-Erfassung ist bereits aktiv.");
+        actual.IsDeleted = false;
+        actual.DeletedAtUtc = null;
+        actual.DeletedBy = null;
+    }
+
+    private static void RestoreDowntime(AppDbContext db, RecycleBinItem item)
+    {
+        if (!int.TryParse(item.EntityId, out var id))
+            throw new InvalidOperationException("Ungültige Stillstands-ID im Papierkorb.");
+        var downtime = db.DowntimeEntries.IgnoreQueryFilters().FirstOrDefault(x => x.Id == id)
+            ?? throw new InvalidOperationException("Der zugrunde liegende Stillstand ist nicht mehr vorhanden.");
+        if (!downtime.IsDeleted)
+            throw new InvalidOperationException("Der Stillstand ist bereits aktiv.");
+        var parentExists = db.ProductionActuals.IgnoreQueryFilters().Any(x => x.Id == downtime.ProductionActualId && !x.IsDeleted);
+        if (!parentExists)
+            throw new InvalidOperationException("Zuerst muss die zugehörige Ist-Erfassung wiederhergestellt werden.");
+        downtime.IsDeleted = false;
+        downtime.DeletedAtUtc = null;
+        downtime.DeletedBy = null;
     }
 
     private static void RestoreEmployee(AppDbContext db, RecycleBinItem item)
