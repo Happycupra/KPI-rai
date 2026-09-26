@@ -1,0 +1,41 @@
+<Window x:Class="Produktionsplanung.App.UserQrCodeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Benutzer QR-Code"
+        Icon="{StaticResource SolutionCompaktIcon}"
+        Width="560" Height="720" MinWidth="520" MinHeight="640"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="QrPrintPanel" Background="White" CornerRadius="14" Padding="24">
+            <StackPanel>
+                <TextBlock Text="SolutionCompakt" FontSize="26" FontWeight="Bold" Foreground="#1E3A5F" HorizontalAlignment="Center"/>
+                <TextBlock Text="Persönlicher Login-QR-Code" FontSize="17" FontWeight="SemiBold" Margin="0,4,0,18" HorizontalAlignment="Center"/>
+
+                <Image x:Name="QrImage" Width="310" Height="310" Stretch="Uniform" HorizontalAlignment="Center"/>
+
+                <TextBlock x:Name="DisplayNameText" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,16,0,2"/>
+                <TextBlock x:Name="UsernameText" FontSize="13" Foreground="#5B6472" HorizontalAlignment="Center"/>
+                <TextBlock x:Name="CompanyText" FontSize="13" Foreground="#5B6472" HorizontalAlignment="Center" Margin="0,2,0,14"/>
+
+                <TextBlock Text="QR-Code scannen → Login-Seite öffnet sich mit Firmen-Code und Benutzername."
+                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="Das Passwort wird nicht im QR-Code gespeichert und muss immer separat eingegeben werden."
+                           TextWrapping="Wrap" TextAlignment="Center" FontWeight="SemiBold" Margin="0,0,0,14"/>
+
+                <TextBox x:Name="LoginUrlBox" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="1" Padding="8"/>
+            </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
+            <Button Content="Drucken" Click="Print_Click" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0"/>
+            <Button Content="PDF exportieren" Click="ExportPdf_Click" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,8,0"/>
+            <Button Content="Schliessen" Click="Close_Click" Style="{StaticResource ActionButtonStyle}"/>
+        </StackPanel>
+    </Grid>
+</Window>
