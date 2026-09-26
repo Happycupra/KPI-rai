@@ -46,7 +46,21 @@
                     <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Erfasste Arbeitszeiten" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                            <DataGrid ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+                            <DataGrid x:Name="WorkTimeEntriesGrid" ItemsSource="{Binding Entries}" SelectedItem="{Binding SelectedEntry, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="WorkTimeRow_PreviewMouseRightButtonDown"/>
+                                        <Setter Property="ContextMenu">
+                                            <Setter.Value>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Mitarbeiterkarte" Click="WorkTimeEmployeeCardContext_Click"/>
+                                                    <MenuItem Header="Skills / Stammdaten" Click="WorkTimeEmployeeMasterContext_Click"/>
+                                                    <MenuItem Header="Aktuell geplant" Click="WorkTimeEmployeePlanContext_Click"/>
+                                                </ContextMenu>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGrid.RowStyle>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Datum" Binding="{Binding DateText}" Width="100"/>
                                     <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*"/>
