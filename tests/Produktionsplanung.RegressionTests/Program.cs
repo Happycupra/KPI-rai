@@ -1590,6 +1590,7 @@ internal static partial class Program
         vm.SelectedRole = UserRoles.Planner;
         vm.IsActive = true;
         vm.NewPassword = "Temporary123";
+        vm.ConfirmNewPassword = "Temporary123";
         vm.SaveUserCommand.Execute(null);
 
         Check(vm.StatusMessage == "Benutzer gespeichert.",
