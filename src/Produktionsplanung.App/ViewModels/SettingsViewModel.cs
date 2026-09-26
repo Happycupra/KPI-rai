@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -26,12 +27,18 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string statusMessage = string.Empty;
     [ObservableProperty] private string recoveryCodeStatus = "Nicht eingerichtet";
     [ObservableProperty] private bool showContextHints = true;
+    [ObservableProperty] private RecycleBinRow? selectedRecycleBinItem;
 
+    public ObservableCollection<RecycleBinRow> RecycleBinItems { get; } = new();
     public IReadOnlyList<int> AutoLockOptions { get; } = new[] { 15, 30, 60 };
     public string DatabasePath => AppPaths.DatabasePath;
     public string SettingsPath => AppPaths.SettingsPath;
 
-    public SettingsViewModel() => LoadSettings();
+    public SettingsViewModel()
+    {
+        LoadSettings();
+        LoadRecycleBin();
+    }
 
     [RelayCommand]
     private void SaveSettings()
@@ -55,6 +62,46 @@ public partial class SettingsViewModel : ObservableObject
         AppSettingsService.UpdateCurrentUserPreferences(preferences => preferences.ShowContextHints = value);
         if (Application.Current.MainWindow is Produktionsplanung.App.MainWindow mainWindow)
             mainWindow.RefreshContextHelpPreference();
+    }
+
+    [RelayCommand]
+    private void RefreshRecycleBin()
+    {
+        LoadRecycleBin();
+        StatusMessage = $"{RecycleBinItems.Count} Papierkorb-Eintrag/Einträge geladen.";
+    }
+
+    [RelayCommand]
+    private void RestoreRecycleBinItem()
+    {
+        if (SelectedRecycleBinItem is null)
+        {
+            StatusMessage = "Bitte zuerst einen Papierkorb-Eintrag auswählen.";
+            return;
+        }
+        if (!SelectedRecycleBinItem.CanRestore)
+        {
+            StatusMessage = "Dieser Eintrag wurde bereits wiederhergestellt.";
+            return;
+        }
+
+        if (MessageBox.Show(
+                $"„{SelectedRecycleBinItem.DisplayName}“ wirklich wiederherstellen?",
+                "Aus Papierkorb wiederherstellen",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            RecycleBinService.Restore(SelectedRecycleBinItem.Id);
+            LoadRecycleBin();
+            StatusMessage = "Datensatz erfolgreich wiederhergestellt. Die Wiederherstellung wurde im Audit-Log protokolliert.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Wiederherstellung nicht möglich: {ex.Message}";
+        }
     }
 
     [RelayCommand]
@@ -312,6 +359,17 @@ public partial class SettingsViewModel : ObservableObject
         IncludeUtf8Bom = settings.IncludeUtf8Bom;
         AutoLockEnabled = settings.AutoLockEnabled;
         AutoLockMinutes = AutoLockOptions.Contains(settings.AutoLockMinutes) ? settings.AutoLockMinutes : 30;
+    }
+
+    private void LoadRecycleBin()
+    {
+        var selectedId = SelectedRecycleBinItem?.Id;
+        RecycleBinItems.Clear();
+        foreach (var item in RecycleBinService.Load())
+            RecycleBinItems.Add(item);
+        SelectedRecycleBinItem = selectedId.HasValue
+            ? RecycleBinItems.FirstOrDefault(x => x.Id == selectedId.Value)
+            : RecycleBinItems.FirstOrDefault();
     }
 
     private void RefreshRecoveryCodeStatus() => RefreshRecoveryCodeStatus(AppSettingsService.Load());
