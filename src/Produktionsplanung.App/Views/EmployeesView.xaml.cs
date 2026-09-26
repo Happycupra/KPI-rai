@@ -71,16 +71,36 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
 
     private void EditEmployeeMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (!ConfirmReplaceEditor())
-            return;
-
-        if (sender is not MenuItem menuItem ||
-            menuItem.Parent is not ContextMenu contextMenu ||
-            contextMenu.PlacementTarget is not FrameworkElement { DataContext: EmployeeDirectoryRow row })
+        if (!ConfirmReplaceEditor() || ContextEmployee(sender) is not { } row)
             return;
 
         viewModel.EditEmployee(row.Id);
         CaptureBaseline();
+    }
+
+    private void EmployeeCardMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextEmployee(sender) is { } row)
+            (Window.GetWindow(this) as MainWindow)?.OpenEmployeeQuickCard(row.Id, DateTime.Today);
+    }
+
+    private void EmployeeCurrentPlanMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextEmployee(sender) is not { } row)
+            return;
+
+        viewModel.EditEmployee(row.Id);
+        (Window.GetWindow(this) as MainWindow)?.OpenEmployeeQuickCard(row.Id, DateTime.Today);
+        CaptureBaseline();
+    }
+
+    private static EmployeeDirectoryRow? ContextEmployee(object sender)
+    {
+        if (sender is not MenuItem menuItem ||
+            menuItem.Parent is not ContextMenu contextMenu ||
+            contextMenu.PlacementTarget is not FrameworkElement { DataContext: EmployeeDirectoryRow row })
+            return null;
+        return row;
     }
 
     private void CloseEditor_Click(object sender, RoutedEventArgs e)
