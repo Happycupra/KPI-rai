@@ -498,7 +498,7 @@
                                             <DataGridTextColumn Header="Soll min" Binding="{Binding PlannedMinutes, StringFormat=N0}" Width="75"/>
                                             <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70"/>
                                             <DataGridTemplateColumn Header="" Width="70">
-                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Löschen" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource CompactButtonStyle}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Archivieren" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource CompactButtonStyle}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
@@ -523,7 +523,7 @@
 
         <Border Grid.Row="3" Margin="0,12,0,0" Padding="10,7" CornerRadius="8"
                 Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-            <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" TextWrapping="Wrap"/>
         </Border>
     </Grid>
 </UserControl>
