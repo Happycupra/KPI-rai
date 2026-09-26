@@ -21,6 +21,12 @@ service cloud.firestore {
              request.auth.token.role == "Administrator";
     }
 
+    // Licensing and vendor support credentials are never exposed directly to clients.
+    // They are accessible only through privileged Cloud Functions.
+    match /licenses/{installationId} {
+      allow read, write: if false;
+    }
+
     match /companies/{companyId} {
       allow read: if sameCompany(companyId);
       allow write: if false;
