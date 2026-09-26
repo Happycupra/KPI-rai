@@ -51,6 +51,12 @@ public static class OnlineAccessSyncService
         try
         {
             var settings = LicenseService.EnsureLocalLicenseIdentity();
+            var now = DateTime.UtcNow;
+            if (!string.Equals(settings.LicenseStatus, "active", StringComparison.OrdinalIgnoreCase) ||
+                settings.LicenseValidUntilUtc is not { } validUntil ||
+                validUntil <= now)
+                return new OnlineAccessSyncResult(false, "Online-Zugang wird nur bei aktiver Lizenz synchronisiert.", 0);
+
             if (string.IsNullOrWhiteSpace(settings.CompanyId) ||
                 string.IsNullOrWhiteSpace(settings.CompanyCode))
                 return new OnlineAccessSyncResult(false, "Firma ist lokal noch nicht vollständig eingerichtet.", 0);
