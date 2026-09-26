@@ -138,8 +138,19 @@
                                       Drop="ProductionCoverageGrid_Drop">
                                 <DataGrid.RowStyle>
                                     <Style TargetType="DataGridRow">
-                                        <Setter Property="ToolTip" Value="Mitarbeiter hier ablegen"/>
+                                        <Setter Property="ToolTip" Value="Mitarbeiter hier ablegen · Rechtsklick für weitere Aktionen"/>
                                         <Setter Property="MinHeight" Value="32"/>
+                                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="CoverageRow_PreviewMouseRightButtonDown"/>
+                                        <Setter Property="ContextMenu">
+                                            <Setter.Value>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Übersicht / Chargendetails" Click="CoverageDetailsContext_Click"/>
+                                                    <MenuItem Header="Auftrag bearbeiten" Click="CoverageEditContext_Click"/>
+                                                    <MenuItem Header="Ist-Produktion / OEE" Click="CoverageActualContext_Click"/>
+                                                    <MenuItem Header="Artikelverzeichnis" Click="CoverageArticlesContext_Click"/>
+                                                </ContextMenu>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
                                 </DataGrid.RowStyle>
                                 <DataGrid.Columns>
@@ -192,8 +203,22 @@
                                 <TextBlock Text="Geplante Einsätze" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
                                 <Button Grid.Column="1" Content="+ Neue Zuweisung" Padding="14,6" Command="{Binding NewAssignmentCommand}" />
                             </Grid>
-                            <DataGrid ItemsSource="{Binding Assignments}" SelectedItem="{Binding SelectedAssignment, Mode=TwoWay}"
+                            <DataGrid x:Name="AssignmentsGrid" ItemsSource="{Binding Assignments}" SelectedItem="{Binding SelectedAssignment, Mode=TwoWay}"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column" MinHeight="260">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="AssignmentRow_PreviewMouseRightButtonDown"/>
+                                        <Setter Property="ContextMenu">
+                                            <Setter.Value>
+                                                <ContextMenu>
+                                                    <MenuItem Header="Mitarbeiterkarte" Click="AssignmentEmployeeCardContext_Click"/>
+                                                    <MenuItem Header="Skills / Stammdaten" Click="AssignmentEmployeeMasterContext_Click"/>
+                                                    <MenuItem Header="Aktuell geplant" Click="AssignmentEmployeePlanContext_Click"/>
+                                                </ContextMenu>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGrid.RowStyle>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*" />
                                     <DataGridTextColumn Header="Funktion" Binding="{Binding Role}" Width="1.2*" />
