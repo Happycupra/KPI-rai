@@ -33,6 +33,8 @@ public sealed class AppSettings
     public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
     public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
 
+    public Dictionary<string, OnlineWeekPlanPublication> OnlineWeekPublications { get; set; } = new();
+
     // Trial, registration and seller-managed licensing.
     public DateTime? TrialStartedAtUtc { get; set; }
     public string LicenseInstallationId { get; set; } = string.Empty;

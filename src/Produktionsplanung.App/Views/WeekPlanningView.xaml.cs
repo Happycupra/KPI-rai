@@ -87,6 +87,32 @@ public partial class WeekPlanningView : UserControl
         }
     }
 
+    private void PublishOnlineWeekPlan_Click(object sender, RoutedEventArgs e)
+    {
+        if (!SessionService.IsAdministrator || DataContext is not WeekPlanningViewModel viewModel) return;
+        if (!OnlineWeekPlanService.IsFirebaseConfigured(AppSettingsService.Load()))
+        {
+            ConfigureFirebase_Click(sender, e);
+            if (!OnlineWeekPlanService.IsFirebaseConfigured(AppSettingsService.Load())) return;
+        }
+        try
+        {
+            var snapshot = OnlineWeekPlanService.BuildSnapshot(viewModel.WeekStart);
+            var dialog = new PublishWeekPlanWindow(snapshot) { Owner = Window.GetWindow(this) };
+            if (dialog.ShowDialog() != true || dialog.Publication is not { } receipt) return;
+            viewModel.StatusMessage = string.IsNullOrEmpty(dialog.ReceiptWarning)
+                ? $"{receipt.WeekId} veröffentlicht am {receipt.PublishedAtUtc.ToLocalTime():dd.MM.yyyy HH:mm:ss} Uhr."
+                : dialog.ReceiptWarning;
+            RefreshOnlineWeekPlanStatus();
+            if (!string.IsNullOrEmpty(dialog.ReceiptWarning))
+                OnlinePublicationStatusText.Text = viewModel.StatusMessage;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "Online-Veröffentlichung", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private void PrepareOnlineWeekPlan_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not WeekPlanningViewModel viewModel)
@@ -140,6 +166,13 @@ public partial class WeekPlanningView : UserControl
             : " · noch kein Paket vorbereitet";
 
         OnlineWeekPlanStatusText.Text = OnlineWeekPlanService.FirebaseStatusText(settings) + prepared;
+        PublishOnlineWeekPlanButton.IsEnabled = SessionService.IsAdministrator;
+        var weekId = OnlineWeekPlanService.WeekIdFor(((WeekPlanningViewModel)DataContext).WeekStart);
+        OnlineWeekPlanPublication? receipt = null;
+        settings.OnlineWeekPublications?.TryGetValue(OnlineWeekPlanPublisher.ReceiptKey(settings.CompanyId, weekId), out receipt);
+        OnlinePublicationStatusText.Text = receipt is null
+            ? $"{weekId}: Von diesem Gerät noch keine Veröffentlichung bestätigt."
+            : $"{weekId} · zuletzt aus dieser App veröffentlicht: {receipt.PublishedAtUtc.ToLocalTime():dd.MM.yyyy HH:mm:ss} Uhr · {receipt.PublishedBy}";
         PrepareOnlineWeekPlanButton.IsEnabled = SessionService.IsAdministrator;
         ConfigureFirebaseButton.IsEnabled = SessionService.IsAdministrator;
         OpenOnlineWeekPlanButton.IsEnabled = Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out _);
@@ -168,9 +201,10 @@ public partial class WeekPlanningView : UserControl
         return null;
     }
 
-    private static void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (sender is not WeekPlanningViewModel viewModel) return;
+        if (e.PropertyName == nameof(WeekPlanningViewModel.WeekStart)) RefreshOnlineWeekPlanStatus();
         if (e.PropertyName is nameof(WeekPlanningViewModel.WeekStart) or nameof(WeekPlanningViewModel.StatusMessage))
             viewModel.RefreshProductionOrderCoverage();
     }

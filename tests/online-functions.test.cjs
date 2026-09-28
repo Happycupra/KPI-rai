@@ -21,7 +21,7 @@ function harness() {
   function reference(path) {
     return { path, doc: id => reference(path + '/' + id), collection: id => reference(path + '/' + id),
       get: async () => snapshot(path),
-      set: async (value, options) => { state.writes++; data.set(path, options?.merge ? { ...data.get(path), ...value } : value); },
+      set: async (value, options) => { state.writes++; data.set(path, options?.merge ? { ...data.get(path), ...value } : value); return { writeTime: { toDate: () => new Date("2030-01-14T09:15:30.000Z") } }; },
       listDocuments: async () => [...data.keys()].filter(key => key.startsWith(path + '/') && !key.slice(path.length + 1).includes('/')).map(reference) };
   }
   const db = { collection: name => reference(name), batch() {
@@ -111,4 +111,19 @@ test('concurrent publishers never mix their entries and production slots', async
   const a = h.data.has(`${path}/entries/a`);
   assert.equal(h.data.has(`${path}/productionSlots/a`), a);
   assert.equal(h.data.has(`${path}/productionSlots/b`), !a);
+});
+
+
+test('publish returns the server write time only after the new version is committed', async () => {
+  const h = harness();
+  const response = await h.publish();
+  assert.equal(response.code, 200);
+  assert.equal(response.body.publishedAtUtc, '2030-01-14T09:15:30.000Z');
+  assert.equal(response.body.weekId, h.body.weekId);
+  assert.notEqual(h.data.get(h.week).activeVersion, 'previous');
+  const failed = harness();
+  failed.state.failBatch = 1;
+  const error = await failed.publish();
+  assert.equal(error.code, 500);
+  assert.equal(error.body.publishedAtUtc, undefined);
 });

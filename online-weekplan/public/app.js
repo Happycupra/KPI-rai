@@ -360,7 +360,7 @@ async function loadWeek(weekId) {
     const entries = entriesSnap.docs.map(x => ({ ...x.data(), id: x.id, override: overrides.get(x.id) || null }));
     const slots = slotsSnap.docs.map(x => x.data());
     el("weekTitle").textContent = `KW ${String(meta.isoWeek).padStart(2,"0")} · ${meta.weekStart} – ${meta.weekEnd}`;
-    el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · ${companyCode} · veröffentlicht von ${meta.publishedBy || "Admin"}`;
+    el("publishedMeta").textContent = `${meta.companyName || "SolutionCompakt"}${meta.siteName ? " · " + meta.siteName : ""} · ${companyCode} · veröffentlicht: ${publicationTimeText(meta.publishedAt)} · von ${meta.publishedBy || "Admin"}`;
     render(entries, meta.weekStart, slots);
     el("planStatus").textContent = entries.length || slots.length ? "" : "Für diese Woche sind keine Einsätze oder Produktionsschichten geplant.";
   } catch {
@@ -368,6 +368,16 @@ async function loadWeek(weekId) {
     el("planGrid").innerHTML = "";
     el("planStatus").textContent = "Wochenplan konnte nicht geladen werden. Bitte erneut aktualisieren.";
   }
+}
+
+function publicationTimeText(value) {
+  if (!value) return "Zeitpunkt unbekannt";
+  const date = typeof value.toDate === "function" ? value.toDate() : new Date(value);
+  if (Number.isNaN(date.getTime())) return "Zeitpunkt unbekannt";
+  return date.toLocaleString("de-CH", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit"
+  }) + " Uhr";
 }
 
 function render(entries, weekStart, productionSlots = []) {

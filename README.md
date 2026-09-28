@@ -39,10 +39,12 @@
 
 Siehe `docs/COMPANY-PROVISIONING.md` für Verkaufs-, Aktivierungs- und Offline-Konzept.
 
-### Online-Wochenplan · Firebase-ready
+### Online-Wochenplan · direkt veröffentlichen
 - veröffentlichbarer, versionierter Wochenplan-Snapshot als JSON
 - enthält Personaleinsätze und Produktionsschichten, jedoch keine Abwesenheitsgründe/-kommentare
-- Vorbereitung direkt aus der Wochenplanung nur für Administratoren
+- **Wochenplanung → Veröffentlichen**: ausgewählte Woche nach Passwortbestätigung direkt aus der App hochladen (Administrator)
+- bestätigtes Veröffentlichungsdatum mit Uhrzeit je Firma/Woche lokal gespeichert; der Online-Plan zeigt den serverseitigen Zeitpunkt
+- Änderungen werden bewusst erst beim erneuten Veröffentlichen übernommen; JSON-Paketexport bleibt als Alternative verfügbar
 - Firebase-Konfigurationsdialog für Project ID, Web API Key, Login-, Hosting- und Publish-Endpunkt
 - separate Web-App unter `online-weekplan/`
 - normale Web-Benutzer: nur lesen

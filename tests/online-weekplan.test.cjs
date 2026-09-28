@@ -214,3 +214,17 @@ test('double submission sends one login and releases the button after a failure 
   await h.run('login()');
   assert.equal(h.run('requests.length'), 2);
 });
+
+
+test('online plan shows the publication timestamp from server metadata', async () => {
+  const h = harness();
+  h.run(`companyId="tenant";companyCode="SC-TEST"; modules.fsMod={
+    doc(){},collection(){},getDocs(){return Promise.resolve({docs:[]})},
+    getDoc(){return Promise.resolve({exists:()=>true,data:()=>({weekStart:"2030-01-14",weekEnd:"2030-01-20",isoWeek:3,
+      publishedAt:{toDate:()=>new Date("2030-01-14T09:15:30Z")},publishedBy:"test-admin"})})}
+  }`);
+  await h.run('loadWeek("2030-W03")');
+  assert.match(h.el('publishedMeta').textContent, /14\.01\.2030/);
+  assert.match(h.el('publishedMeta').textContent, /Uhr.*test-admin/);
+  assert.equal(h.run('publicationTimeText(null)'), 'Zeitpunkt unbekannt');
+});

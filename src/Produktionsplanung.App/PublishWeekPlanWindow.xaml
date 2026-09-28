@@ -1,0 +1,21 @@
+<Window x:Class="Produktionsplanung.App.PublishWeekPlanWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Wochenplan veröffentlichen" Icon="{StaticResource SolutionCompaktIcon}"
+        Width="560" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}">
+    <StackPanel Margin="24">
+        <TextBlock Text="Wochenplan veröffentlichen" FontSize="23" FontWeight="SemiBold"/>
+        <TextBlock x:Name="SummaryText" TextWrapping="Wrap" Margin="0,12,0,8"/>
+        <TextBlock Text="Die gespeicherten Einsätze und Produktionsschichten dieser Woche werden online bereitgestellt. Ein bereits veröffentlichter Plan dieser Woche wird ersetzt. Spätere Änderungen in der App müssen erneut veröffentlicht werden."
+                   TextWrapping="Wrap" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,16"/>
+        <TextBlock x:Name="UsernameText" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <TextBlock Text="Zur Bestätigung dein App-Passwort eingeben:"/>
+        <PasswordBox x:Name="PasswordInput" Margin="0,8,0,8"/>
+        <TextBlock x:Name="StatusText" TextWrapping="Wrap" Foreground="{StaticResource DangerBrush}" Margin="0,8,0,12"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="CancelButton" Content="Abbrechen" IsCancel="True" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+            <Button x:Name="PublishButton" Content="Veröffentlichen" IsDefault="True" Click="Publish_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
