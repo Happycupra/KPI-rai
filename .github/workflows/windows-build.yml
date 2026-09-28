@@ -66,7 +66,7 @@ jobs:
           node --check online-weekplan/functions/bootstrap-owner-admin.js
           node --check online-weekplan/public/app.js
           node --check online-weekplan/public/admin.js
-          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs
+          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs tests/login-signing.test.cjs
           Get-Content online-weekplan/firebase.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.example.json -Raw | ConvertFrom-Json | Out-Null
           Get-Content online-weekplan/public/config.json -Raw | ConvertFrom-Json | Out-Null

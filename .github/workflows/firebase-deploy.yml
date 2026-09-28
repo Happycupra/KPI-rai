@@ -31,7 +31,7 @@ jobs:
 
       - name: Validate Firebase web assets
         run: |
-          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs
+          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs tests/login-signing.test.cjs
           node --check online-weekplan/functions/index.js
           node --check online-weekplan/public/app.js
           node --check online-weekplan/public/admin.js
@@ -80,6 +80,12 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
         run: firebase deploy --project solution-compact --only functions --non-interactive
+
+      - name: Configure login token signing
+        working-directory: online-weekplan/functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: node configure-login-signing.js
 
       - name: Remove temporary credentials
         if: always()
