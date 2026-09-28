@@ -29,7 +29,7 @@ jobs:
             const since=new Date(Date.now()-3*3600000).toISOString();
             const r=await client.request({url:'https://logging.googleapis.com/v2/entries:list',method:'POST',data:{
               resourceNames:['projects/solution-compact'],
-              filter:'resource.type="cloud_run_revision" AND resource.labels.service_name="login" AND severity>=ERROR AND timestamp>="'+since+'"',
+              filter:'resource.type="cloud_run_revision" AND resource.labels.service_name="login" AND logName="projects/solution-compact/logs/run.googleapis.com%2Fstderr" AND timestamp>="'+since+'"',
               orderBy:'timestamp desc',pageSize:30
             }});
             console.log('Matching error entries:',(r.data.entries||[]).length);
@@ -37,6 +37,7 @@ jobs:
               const message=entry.textPayload||JSON.stringify(entry.jsonPayload||{});
               console.log(JSON.stringify({
                 timestamp:entry.timestamp,
+                errorSummary:message.split("\\n")[0].slice(0,600).replace(/[A-Za-z0-9_-]{24,}/g,"[redacted]"),
                 codes:[...new Set(message.match(/auth\/[a-z-]+/g)||[])],
                 signBlob:/signBlob/i.test(message),
                 tokenCreation:/createCustomToken|signJwt|signBlob|IAMSigner/i.test(message),
