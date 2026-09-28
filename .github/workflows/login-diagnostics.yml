@@ -1,11 +1,11 @@
-name: Diagnose login server errors
+name: Repair and verify login signing
 on:
   push:
     branches: [diagnostics/login-500-20260928]
 permissions:
   contents: read
 jobs:
-  diagnose:
+  repair:
     runs-on: ubuntu-latest
     environment: firebase-production
     steps:
@@ -13,43 +13,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - run: node --test tests/login-signing.test.cjs
       - run: npm install --ignore-scripts --no-audit --no-fund
         working-directory: online-weekplan/functions
-      - name: Classify recent login errors without exporting raw logs
+      - name: Write temporary deployment credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT || secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPAKT || secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          chmod 600 "$RUNNER_TEMP/firebase-service-account.json"
+      - name: Configure scoped runtime signing permission
+        working-directory: online-weekplan/functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
+        run: node configure-login-signing.js
+      - name: Verify production login with isolated temporary records
         working-directory: online-weekplan/functions
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPACT || secrets.FIREBASE_SERVICE_ACCOUNT_SOLUTION_COMPAKT || secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          node <<'NODE'
-          const {GoogleAuth}=require('google-auth-library');
-          (async()=>{
-            const credentials=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-            const auth=new GoogleAuth({credentials,scopes:['https://www.googleapis.com/auth/cloud-platform']});
-            const client=await auth.getClient();
-            const since=new Date(Date.now()-3*3600000).toISOString();
-            const r=await client.request({url:'https://logging.googleapis.com/v2/entries:list',method:'POST',data:{
-              resourceNames:['projects/solution-compact'],
-              filter:'resource.type="cloud_run_revision" AND resource.labels.service_name="login" AND logName="projects/solution-compact/logs/run.googleapis.com%2Fstderr" AND timestamp>="'+since+'"',
-              orderBy:'timestamp desc',pageSize:30
-            }});
-            console.log('Matching error entries:',(r.data.entries||[]).length);
-            for(const entry of r.data.entries||[]){
-              const message=entry.textPayload||JSON.stringify(entry.jsonPayload||{});
-              console.log(JSON.stringify({
-                timestamp:entry.timestamp,
-                errorSummary:message.split("\\n")[0].slice(0,600).replace(/[A-Za-z0-9_-]{24,}/g,"[redacted]"),
-                codes:[...new Set(message.match(/auth\/[a-z-]+/g)||[])],
-                signBlob:/signBlob/i.test(message),
-                tokenCreation:/createCustomToken|signJwt|signBlob|IAMSigner/i.test(message),
-                permissionDenied:/permission.denied|insufficient.permission|PERMISSION_DENIED|permission.*required/i.test(message),
-                iamApiDisabled:/iamcredentials.*disabled|IAM.*API.*not.*enabled/i.test(message),
-                invalidUid:/invalid.uid|uid.*128/i.test(message),
-                invalidClaims:/invalid.claims|reserved.claims|claims.*undefined/i.test(message),
-                firestore:/Firestore|firestore|FAILED_PRECONDITION/i.test(message),
-                passwordHash:/pbkdf2|ERR_OUT_OF_RANGE|ERR_INVALID_ARG_TYPE/i.test(message)
-              }));
-            }
-            const f=await client.request({url:'https://cloudfunctions.googleapis.com/v2/projects/solution-compact/locations/europe-west1/functions/login'});
-            console.log('Login runtime account:',f.data.serviceConfig?.serviceAccountEmail);
-          })().catch(e=>{console.error('Diagnostic failed:',e.response?.status||e.code,e.response?.data?.error?.status||'');process.exitCode=1});
-          NODE
+          cp ../public/config.json public-config-diagnostic.json
+          node smoke-test-login.cjs
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
