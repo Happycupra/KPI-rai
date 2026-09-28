@@ -7,7 +7,7 @@ initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
 const db=getFirestore(), auth=getAuth();
 const suffix=crypto.randomBytes(16).toString('hex');
 const companyId='diagnostic_'+suffix, installationId='diagnostic_'+suffix;
-const companyCode='CHECK-'+suffix.slice(0,16), username='diagnostic';
+const companyCode='CHECK-'+suffix.slice(0,16).toUpperCase(), username='diagnostic';
 const uid='solutioncompakt-'+companyId+'-1';
 const password=crypto.randomBytes(32).toString('base64url');
 const salt=crypto.randomBytes(16);
