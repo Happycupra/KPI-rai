@@ -141,3 +141,76 @@ test('versioned week reads entries and production from one published generation'
   assert.equal(h.run('requestedPaths[0]'), 'companies/tenant/weekPlans/2030-W03/versions/published-v2/entries');
   assert.equal(h.run('requestedPaths[2]'), 'companies/tenant/weekPlans/2030-W03/versions/published-v2/productionSlots');
 });
+
+function prepareLogin(h) {
+  h.el('companyCode').value = '  SC-TEST  ';
+  h.el('username').value = ' admin ';
+  h.el('password').value = ' password with spaces ';
+  h.run(`config={authEndpoint:'https://example.test/login'};auth={};
+    var requests=[], persistenceCalls=0;
+    modules.authMod={
+      async setPersistence(){persistenceCalls++},
+      async signInWithCustomToken(){return {user:{uid:'test-user'}}}
+    };
+    fetch=async (url,options)=>{
+      requests.push(JSON.parse(options.body));
+      return {ok:true,json:async()=>({customToken:'test-token'})};
+    };`);
+}
+
+test('login identifies each missing field before contacting authentication services', async () => {
+  for (const [field, value, label] of [['companyCode','  ','Firmen-Code'], ['username','  ','Benutzername'], ['password','','Passwort']]) {
+    const h = harness();
+    prepareLogin(h);
+    h.el(field).value = value;
+    await h.run('login()');
+    assert.equal(h.run('requests.length'), 0);
+    assert.equal(h.run('persistenceCalls'), 0);
+    assert.match(h.el('loginStatus').textContent, new RegExp(label));
+    assert.equal(h.el(field).focused, true);
+  }
+});
+
+test('login retains submitted credentials when auth initialization resets the form', async () => {
+  const h = harness();
+  prepareLogin(h);
+  h.run('modules.authMod.setPersistence=async()=>{resetPlan()}');
+  await h.run('login()');
+  assert.deepEqual(JSON.parse(h.run('JSON.stringify(requests[0])')), {
+    companyCode:'SC-TEST', username:'admin', password:' password with spaces '
+  });
+});
+
+test('remembered login uses the PIN validated at submission', async () => {
+  const h = harness();
+  prepareLogin(h);
+  h.el('rememberLogin').checked = true;
+  h.el('accessPin').value = h.el('confirmAccessPin').value = '1234';
+  h.run(`var savedPin;
+    savePinRecord=async(uid,pin)=>{savedPin=pin};
+    modules.authMod.setPersistence=async()=>{el('accessPin').value=''};`);
+  await h.run('login()');
+  assert.equal(h.run('savedPin'), '1234');
+});
+
+test('double submission sends one login and releases the button after a failure for retry', async () => {
+  const h = harness();
+  prepareLogin(h);
+  h.run(`var finishPersistence;
+    modules.authMod.setPersistence=()=>new Promise(resolve=>finishPersistence=resolve);
+    fetch=async(url,options)=>{
+      requests.push(JSON.parse(options.body));
+      return {ok:false,json:async()=>({error:'Anmeldung nicht möglich.'})};
+    };`);
+  const first = h.run('login()');
+  assert.equal(h.el('loginButton').disabled, true);
+  await h.run('login()');
+  h.run('finishPersistence()');
+  await first;
+  assert.equal(h.run('requests.length'), 1);
+  assert.equal(h.el('loginButton').disabled, false);
+  assert.equal(h.el('loginStatus').textContent, 'Anmeldung nicht möglich.');
+  h.run('modules.authMod.setPersistence=async()=>{}');
+  await h.run('login()');
+  assert.equal(h.run('requests.length'), 2);
+});

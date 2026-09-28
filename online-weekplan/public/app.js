@@ -11,6 +11,7 @@ let config, auth, db, role = "", companyId = "", companyCode = "", weekIds = [],
 let modules = {};
 let sessionVersion = 0, loadVersion = 0;
 let pinUnlocked = false;
+let loginInProgress = false;
 
 const PIN_ITERATIONS = 150000;
 
@@ -165,15 +166,32 @@ function wireEvents() {
 }
 
 async function login() {
-  el("loginStatus").textContent = "Anmeldung läuft…";
+  if (loginInProgress) return;
+  // Capture once before awaiting Firebase: auth callbacks may reset the form.
+  const credentials = {
+    companyCode: el("companyCode").value.trim(),
+    username: el("username").value.trim(),
+    password: el("password").value
+  };
+  for (const [field, label] of [["companyCode", "Firmen-Code"], ["username", "Benutzername"], ["password", "Passwort"]]) {
+    if (!credentials[field]) {
+      el("loginStatus").textContent = `Bitte ${label} eingeben.`;
+      el(field).focus();
+      return;
+    }
+  }
   const remember = el("rememberLogin").checked;
+  const pin = el("accessPin").value;
   if (remember) {
-    const pinError = validatePinSetup(el("accessPin").value, el("confirmAccessPin").value);
+    const pinError = validatePinSetup(pin, el("confirmAccessPin").value);
     if (pinError) {
       el("loginStatus").textContent = pinError;
       return;
     }
   }
+  loginInProgress = true;
+  el("loginButton").disabled = true;
+  el("loginStatus").textContent = "Anmeldung läuft…";
   try {
     await modules.authMod.setPersistence(
       auth,
@@ -184,16 +202,12 @@ async function login() {
     const response = await fetch(config.authEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        companyCode: el("companyCode").value,
-        username: el("username").value,
-        password: el("password").value
-      })
+      body: JSON.stringify(credentials)
     });
     const payload = await response.json();
     if (!response.ok || !payload.customToken) throw new Error(payload.error || "Anmeldung nicht möglich.");
     const credential = await modules.authMod.signInWithCustomToken(auth, payload.customToken);
-    if (remember) await savePinRecord(credential.user.uid, el("accessPin").value);
+    if (remember) await savePinRecord(credential.user.uid, pin);
     el("password").value = "";
     el("accessPin").value = "";
     el("confirmAccessPin").value = "";
@@ -201,6 +215,9 @@ async function login() {
   } catch (error) {
     pinUnlocked = false;
     el("loginStatus").textContent = error.message;
+  } finally {
+    loginInProgress = false;
+    el("loginButton").disabled = false;
   }
 }
 
