@@ -36,9 +36,11 @@ async function post(url, body, token){
   assert.ok(Number.isFinite(Date.parse(receipt.publishedAtUtc)),'Server timestamp is missing');
   const week=company.collection('weekPlans').doc(snapshot.weekId);
   const stored=(await week.get()).data();
-  assert.equal(stored.publishedAt.toDate().toISOString(),receipt.publishedAtUtc);
+  // Firestore serverTimestamp is the request time; WriteResult reports the later commit time.
+  const serverTimeDelta=Date.parse(receipt.publishedAtUtc)-stored.publishedAt.toMillis();
+  assert.ok(serverTimeDelta>=0 && serverTimeDelta<2000, "Receipt must correspond to the same server publication");
   assert.ok((await week.collection('versions').doc(stored.activeVersion).collection('entries').doc('diagnostic').get()).exists);
-  console.log('PASS: live login, token exchange, authorized publish, complete snapshot and matching server timestamp');
+  console.log('PASS: live login, token exchange, authorized publish, complete snapshot and server-confirmed publication time');
  }finally{
   if(seeded){
    const results=await Promise.allSettled([db.recursiveDelete(company),license.delete(),auth.deleteUser(uid).catch(e=>{if(e.code!=='auth/user-not-found')throw e})]);
@@ -47,3 +49,4 @@ async function post(url, body, token){
   }
  }
 })().catch(e=>{console.error(e.message);process.exitCode=1});
+
