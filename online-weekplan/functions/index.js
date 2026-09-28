@@ -213,7 +213,7 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
     await replaceCollection(versionRef.collection("productionSlots"), snapshot.productionSlots);
     // Recheck authorization after the potentially lengthy upload.
     if (!await requireCompanyAdmin(req, res)) return;
-    await weekRef.set({
+    const publication = await weekRef.set({
       activeVersion: version,
       schemaVersion: snapshot.schemaVersion,
       companyId: snapshot.companyId,
@@ -233,7 +233,7 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
       productionSlotCount: snapshot.productionSlots.length
     }, { merge: true });
 
-    res.json({ ok: true, weekId: snapshot.weekId });
+    res.json({ ok: true, weekId: snapshot.weekId, publishedAtUtc: publication.writeTime.toDate().toISOString() });
   } catch (error) {
     console.error(error);
     fail(res, 500, "Wochenplan konnte nicht veröffentlicht werden.");

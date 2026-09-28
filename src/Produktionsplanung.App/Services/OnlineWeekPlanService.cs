@@ -130,17 +130,22 @@ public static class OnlineWeekPlanService
         settings.OnlineWeekPlanEnabled &&
         !string.IsNullOrWhiteSpace(settings.FirebaseProjectId) &&
         !string.IsNullOrWhiteSpace(settings.FirebaseWebApiKey) &&
-        Uri.TryCreate(settings.FirebaseAuthEndpoint, UriKind.Absolute, out _) &&
-        Uri.TryCreate(settings.FirebaseHostingUrl, UriKind.Absolute, out _) &&
-        Uri.TryCreate(settings.FirebasePublishEndpoint, UriKind.Absolute, out _);
+        IsHttpsUrl(settings.FirebaseAuthEndpoint) &&
+        IsHttpsUrl(settings.FirebaseHostingUrl) &&
+        IsHttpsUrl(settings.FirebasePublishEndpoint);
+
+    public static bool IsHttpsUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+
+    public static string WeekIdFor(DateTime date) => $"{ISOWeek.GetYear(date):0000}-W{ISOWeek.GetWeekOfYear(date):00}";
 
     public static string FirebaseStatusText(AppSettings settings)
     {
         if (!settings.OnlineWeekPlanEnabled)
-            return "Firebase vorbereitet · noch nicht aktiviert";
+            return "Online-Veröffentlichung deaktiviert · bitte in den Online-Einstellungen aktivieren";
         return IsFirebaseConfigured(settings)
-            ? "Firebase-Konfiguration vollständig · Veröffentlichung kann angebunden werden"
-            : "Firebase aktiviert · Konfigurationsdaten noch unvollständig";
+            ? "Bereit zur direkten Online-Veröffentlichung"
+            : "Online-Einstellungen noch unvollständig";
     }
 
     private static DateTime GetMonday(DateTime date)

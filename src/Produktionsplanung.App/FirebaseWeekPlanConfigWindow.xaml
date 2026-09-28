@@ -36,9 +36,9 @@
                         <TextBlock Text="Firebase Hosting URL" FontWeight="SemiBold"/>
                         <TextBox x:Name="HostingUrlBox" Margin="0,5,0,12"/>
 
-                        <TextBlock Text="Publish-Endpunkt (später)" FontWeight="SemiBold"/>
+                        <TextBlock Text="Veröffentlichungs-Endpunkt" FontWeight="SemiBold"/>
                         <TextBox x:Name="PublishEndpointBox" Margin="0,5,0,0"
-                                 ToolTip="Optionaler sicherer Backend-Endpunkt für die automatische Veröffentlichung aus SolutionCompakt."/>
+                                 ToolTip="HTTPS-Endpunkt für die direkte Veröffentlichung aus SolutionCompakt."/>
                     </StackPanel>
                 </Border>
 
@@ -46,7 +46,7 @@
                     <StackPanel>
                         <TextBlock Text="Sicherheit" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,8"/>
                         <TextBlock TextWrapping="Wrap" LineHeight="20"
-                                   Text="In SolutionCompakt werden hier keine Firebase-Service-Account-Schlüssel und keine Klartext-Passwörter gespeichert. Der spätere Web-Login verwendet denselben sichtbaren Benutzernamen und dasselbe Passwort über einen geschützten Custom-Auth-Endpunkt. Rollen werden als Firebase Custom Claims übertragen."/>
+                                   Text="In SolutionCompakt werden hier keine Firebase-Service-Account-Schlüssel und keine Klartext-Passwörter gespeichert. Der Web-Login verwendet denselben sichtbaren Benutzernamen und dasselbe Passwort über einen geschützten Custom-Auth-Endpunkt. Rollen werden als Firebase Custom Claims übertragen."/>
                         <TextBlock x:Name="StatusText" Margin="0,12,0,0" FontWeight="SemiBold"
                                    Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
