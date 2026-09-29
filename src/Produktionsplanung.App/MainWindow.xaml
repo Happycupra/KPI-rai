@@ -7,12 +7,12 @@
         Background="{StaticResource SurfaceBrush}">
     <Window.Resources>
         <Style x:Key="NavButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#D9E6F2" />
+            <Setter Property="Foreground" Value="#C8D8E6" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="46" />
-            <Setter Property="Margin" Value="0,3" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Margin" Value="0,2" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="FontWeight" Value="Medium" />
             <Setter Property="FontSize" Value="13" />
@@ -23,30 +23,58 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="NavChrome" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10" SnapsToDevicePixels="True">
+                        <Border x:Name="NavChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="42" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="26" />
+                                    <ColumnDefinition Width="24" />
                                 </Grid.ColumnDefinitions>
-                                <Border x:Name="ActiveRail" Grid.Column="0" Width="3" Margin="0,8,0,8"
-                                        CornerRadius="0,3,3,0" HorizontalAlignment="Left"
+                                <Border x:Name="ActiveRail"
+                                        Grid.Column="0"
+                                        Width="3"
+                                        Margin="0,9,0,9"
+                                        CornerRadius="0,3,3,0"
+                                        HorizontalAlignment="Left"
                                         Background="{TemplateBinding BorderBrush}" />
-                                <Border x:Name="IconChrome" Grid.Column="0" Width="34" Height="34" CornerRadius="9"
-                                        Background="{Binding CommandParameter, RelativeSource={RelativeSource TemplatedParent}}"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock x:Name="NavIcon" Text="{TemplateBinding Tag}" FontFamily="Segoe UI Emoji"
-                                               FontSize="17" Foreground="White"
-                                               VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                <Border x:Name="IconChrome"
+                                        Grid.Column="0"
+                                        Width="32"
+                                        Height="32"
+                                        CornerRadius="8"
+                                        Background="{StaticResource SidebarHoverBrush}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                    <TextBlock x:Name="NavIcon"
+                                               Text="{TemplateBinding Tag}"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16"
+                                               Foreground="{Binding CommandParameter, RelativeSource={RelativeSource TemplatedParent}}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center" />
                                 </Border>
-                                <TextBlock x:Name="NavLabel" Grid.Column="1" Text="{TemplateBinding Content}" Margin="6,0,6,0"
-                                           Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
-                                           FontWeight="{TemplateBinding FontWeight}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock x:Name="NavChevron" Grid.Column="2" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
-                                           FontSize="10" Foreground="#7794AA" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <TextBlock x:Name="NavLabel"
+                                           Grid.Column="1"
+                                           Text="{TemplateBinding Content}"
+                                           Margin="7,0,6,0"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           FontSize="{TemplateBinding FontSize}"
+                                           FontWeight="{TemplateBinding FontWeight}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock x:Name="NavChevron"
+                                           Grid.Column="2"
+                                           Text="&#xE76C;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="9"
+                                           Foreground="#7794AA"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -58,11 +86,11 @@
                                 <Setter TargetName="IconChrome" Property="Grid.ColumnSpan" Value="3" />
                                 <Setter TargetName="IconChrome" Property="Width" Value="38" />
                                 <Setter TargetName="IconChrome" Property="Height" Value="38" />
-                                <Setter TargetName="IconChrome" Property="CornerRadius" Value="11" />
+                                <Setter TargetName="IconChrome" Property="CornerRadius" Value="10" />
                                 <Setter TargetName="IconChrome" Property="HorizontalAlignment" Value="Center" />
                                 <Setter TargetName="IconChrome" Property="VerticalAlignment" Value="Center" />
-                                <Setter TargetName="NavIcon" Property="FontSize" Value="19" />
-                                <Setter TargetName="NavChrome" Property="CornerRadius" Value="12" />
+                                <Setter TargetName="NavIcon" Property="FontSize" Value="18" />
+                                <Setter TargetName="NavChrome" Property="CornerRadius" Value="10" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="NavChrome" Property="Background" Value="{StaticResource SidebarHoverBrush}" />
@@ -70,7 +98,7 @@
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="NavChrome" Property="Opacity" Value="0.88" />
+                                <Setter TargetName="NavChrome" Property="Opacity" Value="0.9" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.35" />
@@ -86,10 +114,10 @@
             <Setter Property="Foreground" Value="#86A0B6" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Height" Value="30" />
+            <Setter Property="Height" Value="28" />
             <Setter Property="Padding" Value="10,0,8,0" />
             <Setter Property="FontSize" Value="10" />
-            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Cursor" Value="Hand" />
@@ -97,15 +125,21 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="GroupChrome" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="GroupChrome"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <ContentPresenter VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="{TemplateBinding Tag}" FontSize="12"
-                                           Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding Tag}"
+                                           FontSize="12"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           VerticalAlignment="Center" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -139,49 +173,69 @@
                     <Border x:Name="FullBrand" Background="White" CornerRadius="10" Padding="10,6">
                         <views:BrandLogo HorizontalAlignment="Center" />
                     </Border>
-                    <Border x:Name="CompactBrand" Width="48" Height="48" Background="White" CornerRadius="12"
-                            HorizontalAlignment="Center" Visibility="Collapsed">
-                        <Image Source="{StaticResource SolutionCompaktIcon}" Width="34" Height="34"
-                               Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border x:Name="CompactBrand"
+                            Width="48"
+                            Height="48"
+                            Background="White"
+                            CornerRadius="12"
+                            HorizontalAlignment="Center"
+                            Visibility="Collapsed">
+                        <Image Source="{StaticResource SolutionCompaktIcon}"
+                               Width="34"
+                               Height="34"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
                     </Border>
                 </Grid>
 
-                <Border DockPanel.Dock="Bottom" BorderBrush="#27455F" BorderThickness="0,1,0,0" Padding="4,12,4,0">
+                <Border DockPanel.Dock="Bottom"
+                        BorderBrush="#27455F"
+                        BorderThickness="0,1,0,0"
+                        Padding="4,12,4,0">
                     <StackPanel>
                         <StackPanel x:Name="FooterDetails">
                             <TextBlock x:Name="SessionInfoBlock" Foreground="#D5E0EA" FontSize="12" TextWrapping="Wrap" />
-                            <Button Content="Passwort ändern" Style="{StaticResource SidebarActionButtonStyle}" Margin="0,8,0,4" Click="ChangePassword_Click" />
+                            <Button Content="Passwort ändern"
+                                    Style="{StaticResource SidebarActionButtonStyle}"
+                                    Margin="0,8,0,4"
+                                    Click="ChangePassword_Click" />
                             <TextBlock x:Name="VersionBlock" Foreground="#7F9BB4" FontSize="11" Margin="2,4,0,0" />
                             <TextBlock Text="Windows Desktop · SQLite" Foreground="#7F9BB4" FontSize="11" Margin="2,2,0,0" />
                         </StackPanel>
-                        <TextBlock x:Name="CompactFooter" Text="●" Foreground="#60A5FA" FontSize="17"
-                                   HorizontalAlignment="Center" Visibility="Collapsed" ToolTip="Angemeldet" />
+                        <TextBlock x:Name="CompactFooter"
+                                   Text="●"
+                                   Foreground="#60A5FA"
+                                   FontSize="17"
+                                   HorizontalAlignment="Center"
+                                   Visibility="Collapsed"
+                                   ToolTip="Angemeldet" />
                     </StackPanel>
                 </Border>
 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel x:Name="NavigationPanel">
                         <Button x:Name="PlanningGroupHeader" Content="ÜBERSICHT &amp; PLANUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="TogglePlanningGroup_Click" Margin="0,3" />
-                        <Button x:Name="DashboardButton" Tag="🏠" Content="Dashboard" ToolTip="Dashboard" CommandParameter="#3B82F6" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
-                        <Button x:Name="PlanningCalendarButton" Tag="📅" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" CommandParameter="#8B5CF6" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
-                        <Button x:Name="WorkTimeCalendarButton" Tag="🕒" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" CommandParameter="#06B6D4" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
+                        <Button x:Name="DashboardButton" Tag="&#xE80F;" Content="Dashboard" ToolTip="Dashboard" CommandParameter="#60A5FA" Style="{StaticResource NavButtonStyle}" Click="ShowDashboard_Click" />
+                        <Button x:Name="PlanningCalendarButton" Tag="&#xE787;" Content="Planung" ToolTip="Planung · Tag, Woche und Monat" CommandParameter="#A78BFA" Style="{StaticResource NavButtonStyle}" Click="ShowPlanningCalendar_Click" />
+                        <Button x:Name="WorkTimeCalendarButton" Tag="&#xE823;" Content="Arbeitszeit / Betrieb" ToolTip="Arbeitszeit / Betrieb" CommandParameter="#22D3EE" Style="{StaticResource NavButtonStyle}" Click="ShowWorkTimeCalendar_Click" />
 
                         <Button x:Name="ProductionGroupHeader" Content="PRODUKTION" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleProductionGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="BatchesButton" Tag="📦" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" CommandParameter="#F59E0B" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
-                        <Button x:Name="ProductionOrdersButton" Tag="📋" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" CommandParameter="#F97316" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
-                        <Button x:Name="ManufacturingControlButton" Tag="🏭" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" CommandParameter="#EF4444" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
-                        <Button x:Name="ProductionActualButton" Tag="📈" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" CommandParameter="#10B981" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
-                        <Button x:Name="AnalyticsButton" Tag="📊" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" CommandParameter="#6366F1" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
+                        <Button x:Name="BatchesButton" Tag="&#xE8B7;" Content="Abgeschlossene Chargen" ToolTip="Abgeschlossene Chargen" CommandParameter="#FBBF24" Style="{StaticResource NavButtonStyle}" Click="ShowBatches_Click" />
+                        <Button x:Name="ProductionOrdersButton" Tag="&#xE8A5;" Content="Produktionsaufträge" ToolTip="Produktionsaufträge" CommandParameter="#FB923C" Style="{StaticResource NavButtonStyle}" Click="ShowProductionOrders_Click" />
+                        <Button x:Name="ManufacturingControlButton" Tag="&#xE7F8;" Content="Auftragscockpit" ToolTip="Auftragscockpit · Status, Arbeitskarten und Abschluss" CommandParameter="#F87171" Style="{StaticResource NavButtonStyle}" Click="ShowManufacturingControl_Click" />
+                        <Button x:Name="ProductionActualButton" Tag="&#xE9D2;" Content="Ist-Produktion / OEE" ToolTip="Ist-Produktion, Ausschuss und OEE" CommandParameter="#34D399" Style="{StaticResource NavButtonStyle}" Click="ShowProductionActual_Click" />
+                        <Button x:Name="AnalyticsButton" Tag="&#xE9D9;" Content="Auswertungen / KPIs" ToolTip="Auswertungen / KPIs" CommandParameter="#818CF8" Style="{StaticResource NavButtonStyle}" Click="ShowAnalytics_Click" />
 
                         <Button x:Name="MasterDataGroupHeader" Content="STAMMDATEN &amp; PERSONAL" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleMasterDataGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="ArticlesButton" Tag="🏷️" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" CommandParameter="#14B8A6" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
-                        <Button x:Name="EmployeesButton" Tag="👥" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" CommandParameter="#EC4899" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
-                        <Button x:Name="WorkstationsButton" Tag="⚙️" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" CommandParameter="#0EA5E9" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
-                        <Button x:Name="AbsencesButton" Tag="📆" Content="Abwesenheiten" ToolTip="Abwesenheiten" CommandParameter="#A855F7" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
+                        <Button x:Name="ArticlesButton" Tag="&#xE8EC;" Content="Artikel &amp; Chargen" ToolTip="Artikel &amp; Chargen" CommandParameter="#2DD4BF" Style="{StaticResource NavButtonStyle}" Click="ShowArticles_Click" />
+                        <Button x:Name="EmployeesButton" Tag="&#xE716;" Content="Mitarbeitende &amp; Skills" ToolTip="Mitarbeiter &amp; Skills" CommandParameter="#F472B6" Style="{StaticResource NavButtonStyle}" Click="ShowEmployees_Click" />
+                        <Button x:Name="WorkstationsButton" Tag="&#xE713;" Content="Arbeitsplätze / Schichten" ToolTip="Arbeitsplätze &amp; Schichten" CommandParameter="#38BDF8" Style="{StaticResource NavButtonStyle}" Click="ShowWorkstations_Click" />
+                        <Button x:Name="AbsencesButton" Tag="&#xE8D4;" Content="Abwesenheiten" ToolTip="Abwesenheiten" CommandParameter="#C084FC" Style="{StaticResource NavButtonStyle}" Click="ShowAbsences_Click" />
 
                         <Button x:Name="SystemGroupHeader" Content="VERWALTUNG" Tag="▾" Style="{StaticResource NavGroupHeaderStyle}" Click="ToggleSystemGroup_Click" Margin="0,12,0,3" />
-                        <Button x:Name="UserAdminButton" Tag="👤" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" CommandParameter="#EAB308" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
-                        <Button x:Name="SettingsButton" Tag="🔧" Content="Einstellungen" ToolTip="Einstellungen" CommandParameter="#94A3B8" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
+                        <Button x:Name="UserAdminButton" Tag="&#xE77B;" Content="Benutzer &amp; Audit" ToolTip="Benutzerverwaltung und Audit-Log" CommandParameter="#FACC15" Style="{StaticResource NavButtonStyle}" Click="ShowUserAdmin_Click" />
+                        <Button x:Name="SettingsButton" Tag="&#xE713;" Content="Einstellungen" ToolTip="Einstellungen" CommandParameter="#94A3B8" Style="{StaticResource NavButtonStyle}" Click="ShowSettings_Click" Margin="0,2,0,12" />
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
@@ -189,11 +243,14 @@
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="64" />
+                <RowDefinition Height="60" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0"
+                    Background="{StaticResource CardBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,0,0,1">
                 <Grid Margin="16,0,24,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -201,60 +258,147 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="SidebarToggleButton" Grid.Column="0" Content="☰" Style="{StaticResource IconButtonStyle}"
-                            FontSize="17" ToolTip="Navigation ein-/ausklappen" Click="ToggleSidebar_Click" Margin="0,0,8,0" />
-                    <Button x:Name="BackButton" Grid.Column="1" Content="←  Zurück" Style="{StaticResource SecondaryButtonStyle}"
-                            Click="Back_Click" IsEnabled="False" Margin="0,0,14,0" />
+                    <Button x:Name="SidebarToggleButton"
+                            Grid.Column="0"
+                            Content="☰"
+                            Style="{StaticResource IconButtonStyle}"
+                            FontSize="17"
+                            ToolTip="Navigation ein-/ausklappen"
+                            AutomationProperties.Name="Navigation ein- oder ausklappen"
+                            Click="ToggleSidebar_Click"
+                            Margin="0,0,8,0" />
+                    <Button x:Name="BackButton"
+                            Grid.Column="1"
+                            Content="←  Zurück"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Click="Back_Click"
+                            IsEnabled="False"
+                            Margin="0,0,14,0" />
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                        <TextBlock x:Name="CurrentPageTitle" Text="Dashboard" Foreground="{StaticResource TextBrush}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock x:Name="CurrentPageHint" Text="SolutionCompakt · Produktionsplanung" Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="CurrentPageTitle"
+                                   Text="Dashboard"
+                                   Foreground="{StaticResource TextBrush}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold" />
+                        <TextBlock x:Name="CurrentPageHint"
+                                   Text="SolutionCompakt · Produktionsplanung"
+                                   Foreground="{StaticResource MutedTextBrush}"
+                                   FontSize="11"
+                                   TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                     <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border x:Name="LicenseModeBadge" Background="{StaticResource DangerBrush}" CornerRadius="10"
-                                Padding="10,4" Margin="0,0,12,0" Visibility="Collapsed"
+                        <Border x:Name="LicenseModeBadge"
+                                Background="{StaticResource DangerBrush}"
+                                CornerRadius="8"
+                                Padding="9,3"
+                                Margin="0,0,10,0"
+                                Visibility="Collapsed"
                                 ToolTip="Diese Installation läuft als Testversion.">
-                            <TextBlock Text="DEMO" Foreground="White" FontSize="11" FontWeight="Bold" />
+                            <TextBlock Text="DEMO" Foreground="White" FontSize="10" FontWeight="SemiBold" />
                         </Border>
-                        <Button x:Name="HelpButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
-                                Style="{StaticResource SecondaryButtonStyle}" Click="HelpButton_Click"
-                                ToolTip="App-Einführung und Hilfe öffnen">
-                            <TextBlock Text="?" FontSize="18" FontWeight="Bold"
+                        <Button x:Name="HelpButton"
+                                Width="38"
+                                Height="38"
+                                Padding="0"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="HelpButton_Click"
+                                ToolTip="App-Einführung und Hilfe öffnen"
+                                AutomationProperties.Name="Hilfe öffnen">
+                            <TextBlock Text="?"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
                                        Foreground="{StaticResource TextBrush}"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
                         </Button>
-                        <Button x:Name="NotificationButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
-                                Style="{StaticResource SecondaryButtonStyle}" Click="NotificationButton_Click">
-                            <Grid Width="30" Height="28">
-                                <TextBlock Text="&#xE7ED;" FontFamily="Segoe MDL2 Assets" FontSize="17"
-                                           Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <Border x:Name="NotificationCountBadge" Background="{StaticResource DangerBrush}" CornerRadius="8"
-                                        MinWidth="16" Height="16" Padding="3,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                        Margin="0,-3,-5,0" Visibility="Collapsed">
-                                    <TextBlock x:Name="NotificationCountText" Text="0" Foreground="White" FontSize="9" FontWeight="Bold"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Button x:Name="NotificationButton"
+                                Width="38"
+                                Height="38"
+                                Padding="0"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="NotificationButton_Click"
+                                ToolTip="Hinweise"
+                                AutomationProperties.Name="Hinweise öffnen">
+                            <Grid Width="28" Height="26">
+                                <TextBlock Text="&#xE7ED;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="16"
+                                           Foreground="{StaticResource TextBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                                <Border x:Name="NotificationCountBadge"
+                                        Background="{StaticResource DangerBrush}"
+                                        CornerRadius="8"
+                                        MinWidth="16"
+                                        Height="16"
+                                        Padding="3,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="0,-3,-5,0"
+                                        Visibility="Collapsed">
+                                    <TextBlock x:Name="NotificationCountText"
+                                               Text="0"
+                                               Foreground="White"
+                                               FontSize="9"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
                                 </Border>
                             </Grid>
                         </Button>
-                        <Button x:Name="MessageButton" Width="42" Height="38" Padding="0" Margin="0,0,12,0"
-                                Style="{StaticResource SecondaryButtonStyle}" Click="MessageButton_Click"
-                                ToolTip="Persönliche Hinweise">
-                            <Grid Width="30" Height="28">
-                                <TextBlock Text="&#xE715;" FontFamily="Segoe MDL2 Assets" FontSize="17"
-                                           Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <Border x:Name="MessageCountBadge" Background="{StaticResource PrimaryBrush}" CornerRadius="8"
-                                        MinWidth="16" Height="16" Padding="3,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                        Margin="0,-3,-5,0" Visibility="Collapsed">
-                                    <TextBlock x:Name="MessageCountText" Text="0" Foreground="White" FontSize="9" FontWeight="Bold"
-                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Button x:Name="MessageButton"
+                                Width="38"
+                                Height="38"
+                                Padding="0"
+                                Margin="0,0,10,0"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Click="MessageButton_Click"
+                                ToolTip="Persönliche Hinweise"
+                                AutomationProperties.Name="Persönliche Hinweise öffnen">
+                            <Grid Width="28" Height="26">
+                                <TextBlock Text="&#xE715;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="16"
+                                           Foreground="{StaticResource TextBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                                <Border x:Name="MessageCountBadge"
+                                        Background="{StaticResource PrimaryBrush}"
+                                        CornerRadius="8"
+                                        MinWidth="16"
+                                        Height="16"
+                                        Padding="3,0"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="0,-3,-5,0"
+                                        Visibility="Collapsed">
+                                    <TextBlock x:Name="MessageCountText"
+                                               Text="0"
+                                               Foreground="White"
+                                               FontSize="9"
+                                               FontWeight="Bold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center" />
                                 </Border>
                             </Grid>
                         </Button>
-                        <Border Width="36" Height="36" Background="{StaticResource PrimarySoftBrush}" CornerRadius="18" Margin="0,0,10,0">
-                            <TextBlock x:Name="TopbarInitialsBlock" Text="SC" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="12" FontWeight="Bold"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Width="34" Height="34" Background="{StaticResource PrimarySoftBrush}" CornerRadius="17" Margin="0,0,10,0">
+                            <TextBlock x:Name="TopbarInitialsBlock"
+                                       Text="SC"
+                                       Foreground="{StaticResource PrimaryDarkBrush}"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
                         </Border>
                         <StackPanel VerticalAlignment="Center" MinWidth="110">
-                            <TextBlock x:Name="TopbarUserNameBlock" Text="Benutzer" Foreground="{StaticResource TextBrush}" FontSize="12" FontWeight="SemiBold" />
+                            <TextBlock x:Name="TopbarUserNameBlock"
+                                       Text="Benutzer"
+                                       Foreground="{StaticResource TextBrush}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold" />
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="●" Foreground="{StaticResource SuccessBrush}" FontSize="9" Margin="0,0,5,0" VerticalAlignment="Center" />
                                 <TextBlock x:Name="TopbarRoleBlock" Text="Rolle" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
