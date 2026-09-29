@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Microsoft.Win32;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
@@ -19,6 +20,7 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
     public EmployeesView(int? employeeId)
     {
         InitializeComponent();
+        ConfigureHeaderActions();
         viewModel = new EmployeeManagementViewModel();
         if (employeeId.HasValue)
             viewModel.SelectEmployeeById(employeeId.Value);
@@ -45,6 +47,144 @@ public partial class EmployeesView : UserControl, IUnsavedChangesAware
     {
         viewModel.CloseEditor();
         CaptureBaseline();
+    }
+
+    private void ConfigureHeaderActions()
+    {
+        if (Content is not Grid root || root.Children.OfType<Grid>().FirstOrDefault() is not { } header)
+            return;
+
+        var newEmployeeButton = header.Children.OfType<Button>()
+            .FirstOrDefault(x => Equals(x.Content, "+ Neuer Mitarbeiter"));
+        if (newEmployeeButton is null)
+            return;
+
+        header.Children.Remove(newEmployeeButton);
+
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        Grid.SetColumn(actions, 1);
+
+        var templateButton = new Button
+        {
+            Content = "Excel-Vorlage",
+            Height = 36,
+            Padding = new Thickness(12, 0, 12, 0),
+            Margin = new Thickness(0, 0, 8, 0),
+            ToolTip = "Einfache Excel-Vorlage nur für Mitarbeitende speichern"
+        };
+        templateButton.Click += SaveEmployeeTemplate_Click;
+
+        var importButton = new Button
+        {
+            Content = "Excel importieren",
+            Height = 36,
+            Padding = new Thickness(12, 0, 12, 0),
+            Margin = new Thickness(0, 0, 8, 0),
+            ToolTip = "Mitarbeitende aus Excel importieren oder anhand der Personalnummer aktualisieren"
+        };
+        importButton.Click += ImportEmployees_Click;
+
+        newEmployeeButton.Margin = new Thickness(0);
+        actions.Children.Add(templateButton);
+        actions.Children.Add(importButton);
+        actions.Children.Add(newEmployeeButton);
+        header.Children.Add(actions);
+    }
+
+    private void SaveEmployeeTemplate_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Mitarbeiter-Excel-Vorlage speichern",
+            Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx",
+            FileName = "SolutionCompakt_Mitarbeitende.xlsx",
+            AddExtension = true,
+            DefaultExt = ".xlsx"
+        };
+
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+            return;
+
+        try
+        {
+            EmployeeExcelImportService.CreateTemplate(dialog.FileName);
+            MessageBox.Show(
+                "Die Mitarbeiter-Vorlage wurde gespeichert.",
+                "Excel-Vorlage",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Die Excel-Vorlage konnte nicht gespeichert werden:\n\n{ex.Message}",
+                "Excel-Vorlage",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void ImportEmployees_Click(object sender, RoutedEventArgs e)
+    {
+        if (!ConfirmReplaceEditor())
+            return;
+
+        var dialog = new OpenFileDialog
+        {
+            Title = "Mitarbeitende aus Excel importieren",
+            Filter = "Excel-Arbeitsmappe (*.xlsx)|*.xlsx",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog(Window.GetWindow(this)) != true)
+            return;
+
+        try
+        {
+            var preview = EmployeeExcelImportService.Import(dialog.FileName, dryRun: true);
+            var errorText = preview.Errors.Count == 0
+                ? string.Empty
+                : "\n\nFehler:\n" + string.Join("\n", preview.Errors.Take(12));
+            if (preview.Errors.Count > 12)
+                errorText += $"\n… und {preview.Errors.Count - 12} weitere.";
+
+            var prompt = $"Vorschau:\n{preview.Summary}{errorText}\n\nImport jetzt durchführen?";
+            if (MessageBox.Show(
+                    prompt,
+                    "Mitarbeiter importieren",
+                    MessageBoxButton.YesNo,
+                    preview.Errors.Count == 0 ? MessageBoxImage.Question : MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                return;
+
+            var result = EmployeeExcelImportService.Import(dialog.FileName, dryRun: false);
+            viewModel.RefreshCommand.Execute(null);
+            CaptureBaseline();
+
+            var finalErrorText = result.Errors.Count == 0
+                ? string.Empty
+                : "\n\nFehler:\n" + string.Join("\n", result.Errors.Take(12));
+            if (result.Errors.Count > 12)
+                finalErrorText += $"\n… und {result.Errors.Count - 12} weitere.";
+
+            MessageBox.Show(
+                result.Summary + finalErrorText,
+                "Mitarbeiter importieren",
+                MessageBoxButton.OK,
+                result.Errors.Count == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Der Mitarbeiter-Import konnte nicht ausgeführt werden:\n\n{ex.Message}",
+                "Mitarbeiter importieren",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
