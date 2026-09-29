@@ -55,7 +55,7 @@ public static class MasterDataExcelImportService
         var o = wb.Worksheets.Add("Produktionsaufträge");
         Header(o, "Auftragsnummer", "Artikelnummer", "Chargennummer", "Menge", "Datum", "Arbeitsplatz", "Schicht", "AnzahlSchichten", "Personalbedarf", "Priorität", "Kommentar");
         o.Cell(2, 1).Value = "IMPORT-AUF-001"; o.Cell(2, 2).Value = "0001"; o.Cell(2, 3).Value = "IMPORT-CH-001";
-        o.Cell(2, 4).Value = 1000; o.Cell(2, 5).Value = NextMonday(DateTime.Today); o.Cell(2, 6).Value = "Import Linie";
+        o.Cell(2, 4).Value = 1000; o.Cell(2, 5).Value = NextMonday(DateTime.Today); o.Cell(2, 5).Style.DateFormat.Format = "yyyy-MM-dd"; o.Cell(2, 6).Value = "Import Linie";
         o.Cell(2, 7).Value = "Import Früh"; o.Cell(2, 8).Value = 1; o.Cell(2, 9).Value = 2; o.Cell(2, 10).Value = "Normal";
 
         var info = wb.Worksheets.Add("Hinweise");
@@ -375,7 +375,7 @@ public static class MasterDataExcelImportService
                 var shift = db.Shifts.FirstOrDefault(x => x.Name == shiftName)
                     ?? throw new InvalidOperationException("Schicht nicht gefunden.");
 
-                var date = Date(Cell(ws, row, map, "Datum"), "Datum");
+                var date = Date(ws, row, map, "Datum", "Datum");
                 var quantity = Number(Cell(ws, row, map, "Menge"), article.DefaultQuantity ?? 1);
                 if (!double.IsFinite(quantity) || quantity <= 0) throw new InvalidOperationException("Menge muss grösser als 0 sein.");
                 var shiftCount = Int(Cell(ws, row, map, "AnzahlSchichten"), 1);
@@ -522,6 +522,18 @@ public static class MasterDataExcelImportService
         if (TimeSpan.TryParse(value, DeCh, out var time) || TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out time))
             return time;
         throw new InvalidOperationException($"{field} „{value}“ ist keine gültige Uhrzeit.");
+    }
+
+    private static DateTime Date(IXLWorksheet ws, int row, IReadOnlyDictionary<string, int> map, string name, string field)
+    {
+        if (!map.TryGetValue(name, out var column))
+            throw new InvalidOperationException($"{field} fehlt.");
+
+        var cell = ws.Cell(row, column);
+        if (cell.TryGetValue<DateTime>(out var date))
+            return date.Date;
+
+        return Date(cell.GetFormattedString().Trim(), field);
     }
 
     private static DateTime Date(string value, string field)
