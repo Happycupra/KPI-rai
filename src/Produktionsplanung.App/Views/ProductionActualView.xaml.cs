@@ -55,7 +55,7 @@ public partial class ProductionActualView : UserControl, IUnsavedChangesAware
     {
         if (e.PropertyName == nameof(ProductionActualViewModel.SelectedActual))
         {
-            Dispatcher.BeginInvoke(CaptureBaseline);
+            Dispatcher.BeginInvoke(new Action(CaptureBaseline));
             return;
         }
 
@@ -63,7 +63,7 @@ public partial class ProductionActualView : UserControl, IUnsavedChangesAware
             (string.Equals(viewModel.StatusMessage, "Ist-Produktion der konkreten Auftragsschicht gespeichert.", StringComparison.Ordinal) ||
              string.Equals(viewModel.StatusMessage, "Stillstand erfasst.", StringComparison.Ordinal)))
         {
-            Dispatcher.BeginInvoke(CaptureBaseline);
+            Dispatcher.BeginInvoke(new Action(CaptureBaseline));
         }
     }
 
