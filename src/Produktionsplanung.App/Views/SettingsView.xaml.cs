@@ -181,7 +181,7 @@ public partial class SettingsView : UserControl, IUnsavedChangesAware
 
     private Button CreateCard(string icon, string title, string description, string path, Action action)
     {
-        var content = new Grid { Margin = new Thickness(2) };
+        var content = new Grid { Margin = new Thickness(2), Width = 230 };
         content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -234,8 +234,8 @@ public partial class SettingsView : UserControl, IUnsavedChangesAware
             MinHeight = 142,
             Margin = new Thickness(0, 0, 12, 12),
             Padding = new Thickness(16, 14, 16, 14),
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            VerticalContentAlignment = VerticalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
             Background = ResourceBrush("CardBrush"),
             BorderBrush = ResourceBrush("BorderBrush"),
             BorderThickness = new Thickness(1),
