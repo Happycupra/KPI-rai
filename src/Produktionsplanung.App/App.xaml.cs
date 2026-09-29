@@ -9,7 +9,6 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        ApplyProfessionalUiResources();
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
@@ -92,22 +91,6 @@ public partial class App : Application
         MainWindow = main;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         main.Show();
-    }
-
-    private void ApplyProfessionalUiResources()
-    {
-        var designSystem = new ResourceDictionary
-        {
-            Source = new Uri(
-                "pack://application:,,,/SolutionCompakt;component/Themes/ProfessionalUi.xaml",
-                UriKind.Absolute)
-        };
-
-        // App.xaml already contains the legacy keys. Promote the audited resources into the
-        // primary application dictionary so existing StaticResource references keep working
-        // without requiring a second parallel component system.
-        foreach (System.Collections.DictionaryEntry entry in designSystem)
-            Resources[entry.Key] = entry.Value;
     }
 
     protected override void OnExit(ExitEventArgs e)
