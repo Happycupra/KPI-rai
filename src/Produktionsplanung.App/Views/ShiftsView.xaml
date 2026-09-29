@@ -36,8 +36,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <Border Style="{StaticResource EmptyStateStyle}"
-                        HorizontalAlignment="Center"
+                <Border HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         MaxWidth="360">
                     <Border.Style>
