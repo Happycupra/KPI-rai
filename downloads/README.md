@@ -1,10 +1,12 @@
 # SolutionCompakt – Downloads
 
-Im Hauptordner `downloads/` liegen die vier aktuellen Windows-Build-Artefakte als ZIP-Dateien:
+Im Ordner `downloads/` liegen die direkt abrufbaren Windows-Downloads.
 
-- `SolutionCompakt-Setup-0.1.0-win-x64.zip` – Windows-Installer
-- `SolutionCompakt-Portable-0.1.0-win-x64.zip` – portable Single-EXE-Version
-- `SolutionCompakt-USB-Portable-0.1.0-win-x64.zip` – USB-/Portable-Paket mit `portable.mode`
-- `SolutionCompakt-Windows-0.1.0-win-x64.zip` – vollständiger Windows-x64-Build
+Aktuelle Dateien:
 
-Der Workflow `.github/workflows/windows-build.yml` erzeugt diese vier Pakete bei einem erfolgreichen Build auf `main` und aktualisiert die Dateien in diesem Ordner.
+- `SolutionCompakt-Setup-latest.zip` – jeweils aktueller Windows-Installer
+- `SolutionCompakt-Portable-latest.zip` – jeweils aktuelle portable Single-EXE-Version
+
+Archivierte/ältere Pakete bleiben zusätzlich im Ordner erhalten, z. B. die bisherigen `0.1.0`-Builds.
+
+Der Workflow `.github/workflows/windows-build.yml` baut und testet SolutionCompakt auf `main`. Nach einem erfolgreichen Main-Build veröffentlicht `.github/workflows/publish-portable-download.yml` automatisch die aktuelle Portable-Version als `SolutionCompakt-Portable-latest.zip` in diesem Ordner.
