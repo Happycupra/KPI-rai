@@ -2,7 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
-    <Grid Margin="24">
+    <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,19 +15,17 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Mitarbeiter" FontSize="27" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextBrush}"/>
+                <TextBlock Text="Mitarbeiter" Style="{StaticResource PageTitleTextStyle}"/>
                 <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                     <TextBlock Text="{Binding VisibleEmployeeCount}" FontSize="11"
                                Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold"/>
                     <TextBlock Text=" Mitarbeitende in der Liste · aufklappen für Details"
-                               FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
+                               Style="{StaticResource SecondaryTextStyle}" FontSize="11"/>
                 </StackPanel>
             </StackPanel>
             <Button Grid.Column="1" Content="+ Neuer Mitarbeiter"
                     Click="NewEmployee_Click"
-                    Height="36" Padding="16,0"
-                    Background="{StaticResource PrimaryBrush}" Foreground="White"
+                    Style="{StaticResource PrimaryActionButtonStyle}"
                     VerticalAlignment="Center"/>
         </Grid>
 
@@ -41,11 +39,11 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0" Height="38" Padding="10,5"
+            <TextBox Grid.Column="0"
                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                      ToolTip="Nach Name, Personalnummer, Funktion, Abteilung oder Skill suchen"/>
 
-            <ComboBox Grid.Column="1" Height="38" Margin="10,0,0,0"
+            <ComboBox Grid.Column="1" Margin="10,0,0,0"
                       ItemsSource="{Binding GroupModeOptions}"
                       SelectedItem="{Binding SelectedGroupMode, Mode=TwoWay}"
                       ToolTip="Mitarbeiterliste gruppieren"/>
@@ -59,7 +57,8 @@
                        FontSize="10.5" TextTrimming="CharacterEllipsis" MaxWidth="360"/>
 
             <Expander Grid.Row="1" Grid.ColumnSpan="5" Header="Qualifikationen / Skills verwalten" Margin="0,8,0,0">
-                <Border Background="#F8FBFF" BorderBrush="#DFE8F1" BorderThickness="1" CornerRadius="8" Padding="10">
+                <Border Background="{StaticResource SubtleSurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1" CornerRadius="{StaticResource ControlCornerRadius}" Padding="10">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="260"/>
@@ -69,18 +68,18 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Height="38" Padding="8,4"
+                        <TextBox Grid.Column="0"
                                  Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}"
                                  ToolTip="Neue Qualifikation"/>
                         <Button Grid.Column="1" Content="+ Skill" Command="{Binding AddQualificationCommand}"
-                                Padding="11,5" Margin="7,0,0,0"/>
-                        <ComboBox Grid.Column="3" Height="38" ItemsSource="{Binding Qualifications}"
+                                Style="{StaticResource CompactButtonStyle}" Padding="11,5" Margin="7,0,0,0"/>
+                        <ComboBox Grid.Column="3" ItemsSource="{Binding Qualifications}"
                                   DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}"/>
                         <Button Grid.Column="4" Content="Archivieren" Command="{Binding DeleteQualificationCommand}"
-                                Padding="11,5" Margin="7,0,0,0"/>
+                                Style="{StaticResource CompactButtonStyle}" Padding="11,5" Margin="7,0,0,0"/>
                         <TextBlock Grid.Column="5" Text="Skill-Level 0–5 werden direkt beim Mitarbeiter gepflegt · Level 5 = Admin."
                                    VerticalAlignment="Center" Margin="12,0,0,0"
-                                   FontSize="10" Foreground="{StaticResource MutedTextBrush}"/>
+                                   FontSize="10" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"/>
                     </Grid>
                 </Border>
             </Expander>
@@ -93,9 +92,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource CardBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="11" Padding="10">
+            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Padding="10">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding EmployeeRows}">
@@ -103,7 +100,7 @@
                             <GroupStyle>
                                 <GroupStyle.HeaderTemplate>
                                     <DataTemplate>
-                                        <Border Background="#EEF5FB" CornerRadius="6" Padding="9,5" Margin="0,5,0,6">
+                                        <Border Background="{StaticResource PrimarySoftBrush}" CornerRadius="6" Padding="9,5" Margin="0,5,0,6">
                                             <Border.Style>
                                                 <Style TargetType="Border">
                                                     <Setter Property="Visibility" Value="Visible"/>
@@ -124,8 +121,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Expander Margin="0,0,0,6"
-                                          Background="#FCFDFE"
-                                          BorderBrush="#DFE8F1"
+                                          Background="{StaticResource CardBrush}"
+                                          BorderBrush="{StaticResource BorderBrush}"
                                           BorderThickness="1"
                                           Padding="0"
                                           ToolTip="Aufklappen für Details · Rechtsklick zum Bearbeiten">
@@ -183,7 +180,7 @@
 
                                             <Border Grid.Column="5"
                                                     Background="{Binding StatusBackground}"
-                                                    CornerRadius="11" Padding="8,3"
+                                                    CornerRadius="{StaticResource ControlCornerRadius}" Padding="8,3"
                                                     HorizontalAlignment="Right"
                                                     VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding StatusText}"
@@ -193,7 +190,7 @@
                                         </Grid>
                                     </Expander.Header>
 
-                                    <Border Background="#F8FBFF" BorderBrush="#E4ECF4"
+                                    <Border Background="{StaticResource SubtleSurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
                                             BorderThickness="0,1,0,0" Padding="16,11">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -244,12 +241,9 @@
                 </ScrollViewer>
             </Border>
 
-            <Border x:Name="EmployeeEditorPanel" Grid.Column="2" Width="430"
-                    Background="{StaticResource CardBrush}"
-                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="11" Padding="18">
+            <Border x:Name="EmployeeEditorPanel" Grid.Column="2" Width="430" Padding="18">
                 <Border.Style>
-                    <Style TargetType="Border">
+                    <Style TargetType="Border" BasedOn="{StaticResource EditorCardStyle}">
                         <Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsEditorOpen}" Value="True">
@@ -272,14 +266,12 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="{Binding EditorTitle}" FontSize="19"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionHeaderTextStyle}"/>
                             <TextBlock Text="Alle Mitarbeiter-Stammdaten"
-                                       FontSize="10" Foreground="{StaticResource MutedTextBrush}"
+                                       Style="{StaticResource SecondaryTextStyle}" FontSize="10"
                                        Margin="0,2,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="×" Width="32" Height="38"
+                        <Button Grid.Column="1" Content="×" Width="34" Height="34"
                                 FontSize="17" Padding="0"
                                 ToolTip="Bearbeitung schliessen"
                                 Click="CloseEditor_Click" Style="{StaticResource CompactButtonStyle}"/>
@@ -290,7 +282,7 @@
                         <StackPanel Margin="0,0,6,0">
                             <TextBlock Text="Personalnummer *" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding PersonnelNumber, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                     Margin="0,4,0,10"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -301,22 +293,22 @@
                                 <StackPanel>
                                     <TextBlock Text="Vorname *" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                             Margin="0,4,0,10"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Nachname *" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                             Margin="0,4,0,10"/>
                                 </StackPanel>
                             </Grid>
 
                             <TextBlock Text="Funktion" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Role, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                     Margin="0,4,0,10"/>
 
                             <TextBlock Text="Abteilung" FontWeight="SemiBold"/>
                             <TextBox Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}"
-                                     Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                     Margin="0,4,0,10"/>
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -327,25 +319,25 @@
                                 <StackPanel>
                                     <TextBlock Text="Pensum %" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding WorkloadPercent, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                             Margin="0,4,0,10"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Sollstunden / Woche" FontWeight="SemiBold"/>
                                     <TextBox Text="{Binding WeeklyTargetHours, UpdateSourceTrigger=PropertyChanged}"
-                                             Margin="0,4,0,10" Height="38" Padding="8,4"/>
+                                             Margin="0,4,0,10"/>
                                 </StackPanel>
                             </Grid>
 
                             <CheckBox Content="Mitarbeiter aktiv"
                                       IsChecked="{Binding IsActive}" Margin="0,4,0,12"/>
 
-                            <Border Background="#F8FBFF" BorderBrush="#E2EAF2"
-                                    BorderThickness="1" CornerRadius="7" Padding="10">
+                            <Border Background="{StaticResource SubtleSurfaceBrush}" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1" CornerRadius="{StaticResource ControlCornerRadius}" Padding="10">
                                 <StackPanel>
                                     <TextBlock Text="Skills / Qualifikationen" FontWeight="SemiBold"
                                                Foreground="{StaticResource TextBrush}"/>
                                     <TextBlock Text="0 = keine · 1 = Ausbildung · 2 = qualifiziert · 3 = Experte/Trainer · 4 = Level 4 · 5 = Admin"
-                                               FontSize="9" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,8"/>
+                                               FontSize="9" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,8" TextWrapping="Wrap"/>
                                     <ItemsControl ItemsSource="{Binding SkillEditorRows}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
