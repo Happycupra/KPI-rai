@@ -217,9 +217,9 @@ internal static class GlobalSearchShellService
                 MaxHeight = 430,
                 BorderThickness = new Thickness(0),
                 Background = Brushes.Transparent,
-                HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                ScrollViewer = { VerticalScrollBarVisibility = ScrollBarVisibility.Auto }
+                HorizontalContentAlignment = HorizontalAlignment.Stretch
             };
+            ScrollViewer.SetVerticalScrollBarVisibility(resultsList, ScrollBarVisibility.Auto);
             resultsList.MouseLeftButtonUp += ResultsList_MouseLeftButtonUp;
             popupContent.Children.Add(resultsList);
 
