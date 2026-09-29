@@ -34,7 +34,8 @@
                           AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Benutzer" Binding="{Binding Username}" Width="*" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="1.2*" />
+                        <DataGridTextColumn Header="Name" Binding="{Binding DisplayName}" Width="1.1*" />
+                        <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.2*" />
                         <DataGridTextColumn Header="Rolle" Binding="{Binding Role}" Width="105" />
                         <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="60" />
                         <DataGridTextColumn Header="Letzter Login" Binding="{Binding LastLoginText}" Width="130" />
@@ -60,6 +61,12 @@
 
                             <TextBlock Text="Anzeigename" FontWeight="SemiBold" />
                             <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}" Height="38" Margin="0,4,0,9" />
+
+                            <TextBlock Text="Verknüpfter Mitarbeiter" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{Binding EmployeeOptions}" SelectedItem="{Binding SelectedEmployeeLink, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayName" Height="38" Margin="0,4,0,4" />
+                            <TextBlock Text="Für Arbeitszeit / Betrieb wird jeder neue Eintrag automatisch diesem Mitarbeiter zugeordnet."
+                                       Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,9" />
 
                             <Grid Margin="0,0,0,9">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/></Grid.ColumnDefinitions>

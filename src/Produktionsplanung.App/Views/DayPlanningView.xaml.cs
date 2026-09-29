@@ -269,4 +269,30 @@ public partial class DayPlanningView : UserControl
             Host?.OpenDayPlanning(vm.SelectedDate);
     }
 
+    private void AssignmentRemoveContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (ContextAssignment(sender) is not { } row || DataContext is not DayPlanningViewModel vm)
+            return;
+        vm.SelectedAssignment = row;
+        ConfirmAndDeleteAssignment(vm, row);
+    }
+
+    private void DeleteAssignment_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is DayPlanningViewModel vm && vm.SelectedAssignment is { } row)
+            ConfirmAndDeleteAssignment(vm, row);
+    }
+
+    private void ConfirmAndDeleteAssignment(DayPlanningViewModel vm, DayAssignmentRow row)
+    {
+        var answer = MessageBox.Show(
+            Window.GetWindow(this),
+            $"{row.EmployeeName} am {vm.SelectedDate:dd.MM.yyyy} wirklich aus der Planung entfernen?\n\nDie Zuweisung wird im Papierkorb archiviert.",
+            "Geplanten Mitarbeiter entfernen",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (answer == MessageBoxResult.Yes)
+            vm.DeleteCommand.Execute(null);
+    }
+
 }
