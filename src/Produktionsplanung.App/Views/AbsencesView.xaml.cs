@@ -1,16 +1,41 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Produktionsplanung.App.Services;
 using Produktionsplanung.App.ViewModels;
 
 namespace Produktionsplanung.App.Views;
 
-public partial class AbsencesView : UserControl
+public partial class AbsencesView : UserControl, IUnsavedChangesAware
 {
+    private readonly AbsenceManagementViewModel viewModel;
+    private string baseline = string.Empty;
+
     public AbsencesView()
     {
         InitializeComponent();
-        DataContext = new AbsenceManagementViewModel();
+        viewModel = new AbsenceManagementViewModel();
+        DataContext = viewModel;
+        CaptureBaseline();
+    }
+
+    public bool HasUnsavedChanges => baseline != BuildSnapshot();
+    public string UnsavedChangesDescription => "Abwesenheit";
+
+    public bool TrySaveChanges()
+    {
+        viewModel.SaveCommand.Execute(null);
+        if (!string.Equals(viewModel.StatusMessage, "Abwesenheit gespeichert.", StringComparison.Ordinal))
+            return false;
+
+        CaptureBaseline();
+        return true;
+    }
+
+    public void DiscardChanges()
+    {
+        viewModel.NewAbsenceCommand.Execute(null);
+        CaptureBaseline();
     }
 
     private void AbsenceRow_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -18,7 +43,8 @@ public partial class AbsencesView : UserControl
         if (sender is DataGridRow { DataContext: AbsenceRow row } gridRow)
         {
             gridRow.IsSelected = true;
-            ((AbsenceManagementViewModel)DataContext).SelectedAbsence = row;
+            viewModel.SelectedAbsence = row;
+            CaptureBaseline();
         }
     }
 
@@ -47,4 +73,14 @@ public partial class AbsencesView : UserControl
     {
         if (ContextAbsence(sender) is not null) Host?.OpenPlanningCalendar();
     }
+
+    private void CaptureBaseline() => baseline = BuildSnapshot();
+
+    private string BuildSnapshot() => string.Join("\u001f",
+        viewModel.SelectedAbsence?.Id ?? 0,
+        viewModel.SelectedEmployee?.Id ?? 0,
+        viewModel.AbsenceType,
+        viewModel.StartDate.Date,
+        viewModel.EndDate.Date,
+        viewModel.Comment);
 }

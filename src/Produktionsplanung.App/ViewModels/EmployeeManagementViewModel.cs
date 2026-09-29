@@ -152,7 +152,7 @@ public partial class EmployeeManagementViewModel : ObservableObject
         var invalidSkill = SkillEditorRows.FirstOrDefault(x => !QualificationLevelCatalog.IsSupportedEmployeeLevel(x.Level));
         if (invalidSkill is not null)
         {
-            MessageBox.Show($"Ungültiges Skill-Level bei „{invalidSkill.QualificationName}“. Erlaubt sind 0, 1, 2, 3 und 5 (Admin).", "Eingabe prüfen");
+            MessageBox.Show($"Ungültiges Skill-Level bei „{invalidSkill.QualificationName}“. Erlaubt sind Skill-Level 0 bis 5.", "Eingabe prüfen");
             return;
         }
 
