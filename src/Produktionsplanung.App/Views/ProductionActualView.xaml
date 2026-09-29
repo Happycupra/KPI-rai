@@ -3,49 +3,49 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="28">
-            <Grid Margin="0,0,0,18">
+        <StackPanel Margin="{StaticResource PagePadding}">
+            <Grid Margin="{StaticResource PageHeaderSpacing}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel>
-                    <TextBlock Text="Ist-Produktion / OEE" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
+                    <TextBlock Text="Ist-Produktion / OEE" Style="{StaticResource PageTitleTextStyle}" />
                     <TextBlock Text="Ist-Mengen, Laufzeiten, Ausschuss und Stillstände erfassen und OEE direkt berechnen."
-                               FontSize="15" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0" />
+                               Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="+ Neue Erfassung" Command="{Binding NewActualCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Button Content="+ Neue Erfassung" Command="{Binding NewActualCommand}" Margin="0,0,8,0" Style="{StaticResource PrimaryActionButtonStyle}" />
                     <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
-                </StackPanel>
+                </WrapPanel>
             </Grid>
 
             <UniformGrid Columns="4" Margin="0,0,0,18">
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Verfügbarkeit" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding AvailabilityText}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Laufzeit / geplante Produktionszeit" Foreground="{StaticResource MutedTextBrush}" FontSize="11" TextWrapping="Wrap" />
+                        <TextBlock Text="Verfügbarkeit" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding AvailabilityText}" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Laufzeit / geplante Produktionszeit" Style="{StaticResource SecondaryTextStyle}" FontSize="11" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Leistung" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding PerformanceText}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Ist-Menge gegen Sollrate" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                        <TextBlock Text="Leistung" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding PerformanceText}" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Ist-Menge gegen Sollrate" Style="{StaticResource SecondaryTextStyle}" FontSize="11" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Qualität" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding QualityText}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Gutmenge / Gesamtmenge" Foreground="{StaticResource MutedTextBrush}" FontSize="11" />
+                        <TextBlock Text="Qualität" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding QualityText}" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Gutmenge / Gesamtmenge" Style="{StaticResource SecondaryTextStyle}" FontSize="11" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource SuccessSoftBrush}" CornerRadius="12" Padding="16">
+                <Border Style="{StaticResource KpiCardStyle}" Background="{StaticResource SuccessSoftBrush}" BorderBrush="{StaticResource SuccessBorderBrush}">
                     <StackPanel>
-                        <TextBlock Text="OEE" Foreground="{StaticResource SuccessBrush}" />
-                        <TextBlock Text="{Binding OeeText}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}" />
+                        <TextBlock Text="OEE" Foreground="{StaticResource SuccessBrush}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding OeeText}" FontSize="28" FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}" />
                         <TextBlock Text="Verfügbarkeit × Leistung × Qualität" Foreground="{StaticResource SuccessBrush}" FontSize="11" TextWrapping="Wrap" />
                     </StackPanel>
                 </Border>
@@ -54,21 +54,22 @@
             <Grid Margin="0,0,0,18">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.45*" />
+                    <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="430" />
                 </Grid.ColumnDefinitions>
 
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,16,0">
+                <Border Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Erfasste Ist-Produktion" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" />
-                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" />
+                            <TextBlock Text="Erfasste Ist-Produktion" Style="{StaticResource SectionHeaderTextStyle}" VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Artikel, Charge, Auftrag, Produkt oder Arbeitsplatz suchen" AutomationProperties.Name="Ist-Produktion durchsuchen" />
                         </Grid>
                         <DataGrid x:Name="ActualsGrid" ItemsSource="{Binding ActualsView}" SelectedItem="{Binding SelectedActual, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                                   HeadersVisibility="Column" MinHeight="420" MaxHeight="560">
                             <DataGrid.RowStyle>
-                                <Style TargetType="DataGridRow">
+                                <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="ActualRow_PreviewMouseRightButtonDown"/>
                                 </Style>
                             </DataGrid.RowStyle>
@@ -97,85 +98,85 @@
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="20">
+                <Border Grid.Column="2" Style="{StaticResource EditorCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Ist-Erfassung" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Artikel und Charge werden aus dem Auftrag übernommen. Historische Angaben bleiben erhalten." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,4,0,16" />
+                        <TextBlock Text="Ist-Erfassung" Style="{StaticResource DialogTitleTextStyle}" />
+                        <TextBlock Text="Artikel und Charge werden aus dem Auftrag übernommen. Historische Angaben bleiben erhalten." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,16" />
 
-                        <TextBlock Text="Produktionsauftrag" FontWeight="SemiBold" Margin="0,0,0,5" />
+                        <TextBlock Text="Produktionsauftrag" Style="{StaticResource FieldLabelTextStyle}" />
                         <ComboBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedOrder, Mode=TwoWay}"
-                                  DisplayMemberPath="DisplayName" Height="38" Margin="0,0,0,12" />
+                                  DisplayMemberPath="DisplayName" Margin="0,0,0,12" />
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Artikelnummer" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ArticleNumber}" IsReadOnly="True" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Artikelnummer" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding ArticleNumber}" IsReadOnly="True" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Charge / Los" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding BatchNumber}" IsReadOnly="True" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Charge / Los" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding BatchNumber}" IsReadOnly="True" />
                             </StackPanel>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Datum" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <DatePicker SelectedDate="{Binding ActualDate, Mode=TwoWay}" Height="38" />
+                                <TextBlock Text="Datum" Style="{StaticResource FieldLabelTextStyle}" />
+                                <DatePicker SelectedDate="{Binding ActualDate, Mode=TwoWay}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Sollrate / Stunde" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding IdealRatePerHour, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Sollrate / Stunde" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding IdealRatePerHour, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Geplante Produktionszeit (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding PlannedProductionMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Geplante Produktionszeit (min)" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding PlannedProductionMinutes, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Laufzeit (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding RunMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Laufzeit (min)" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding RunMinutes, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="Gesamtmenge" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding TotalQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Gesamtmenge" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding TotalQuantity, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Gutmenge" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding GoodQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Gutmenge" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding GoodQuantity, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                             <StackPanel Grid.Column="4">
-                                <TextBlock Text="Ausschuss" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                <TextBox Text="{Binding ScrapQuantity, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" />
+                                <TextBlock Text="Ausschuss" Style="{StaticResource FieldLabelTextStyle}" />
+                                <TextBox Text="{Binding ScrapQuantity, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </Grid>
 
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+                        <Border Style="{StaticResource FilterBarStyle}" Padding="12" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="{Binding TheoreticalQuantityText, StringFormat=Theoretische Menge bei Sollrate: {0}}" Foreground="{StaticResource MutedTextBrush}" />
-                                <TextBlock Text="Gesamtmenge muss Gutmenge + Ausschuss entsprechen." Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,3,0,0" />
+                                <TextBlock Text="{Binding TheoreticalQuantityText, StringFormat=Theoretische Menge bei Sollrate: {0}}" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="Gesamtmenge muss Gutmenge + Ausschuss entsprechen." Style="{StaticResource SecondaryTextStyle}" FontSize="11" Margin="0,3,0,0" />
                             </StackPanel>
                         </Border>
 
-                        <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
+                        <TextBlock Text="Kommentar" Style="{StaticResource FieldLabelTextStyle}" />
+                        <TextBox Text="{Binding Comment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" VerticalScrollBarVisibility="Auto"/>
 
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" MinHeight="36" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" FontWeight="SemiBold" MinHeight="36" Margin="0,0,0,8" AutomationProperties.LiveSetting="Polite" />
                         <Button Content="Ist-Erfassung speichern" Command="{Binding SaveCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
                         <Button Content="Ausgewählte Erfassung in Papierkorb" Command="{Binding DeleteActualCommand}" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
                 </Border>
             </Grid>
 
-            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18">
+            <Border Style="{StaticResource SectionCardStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.3*" />
@@ -183,9 +184,9 @@
                         <ColumnDefinition Width="420" />
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Stillstandsgründe" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="Stillstandsgründe" Style="{StaticResource SectionHeaderTextStyle}" />
                         <TextBlock Text="Stillstände werden der ausgewählten, bereits gespeicherten Ist-Erfassung zugeordnet."
-                                   Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,10" />
+                                   Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,10" />
                         <DataGrid ItemsSource="{Binding Downtimes}" SelectedItem="{Binding SelectedDowntime, Mode=TwoWay}"
                                   AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" MinHeight="190" MaxHeight="280">
                             <DataGrid.Columns>
@@ -195,17 +196,17 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <Button Content="Ausgewählten Stillstand in Papierkorb" Command="{Binding DeleteDowntimeCommand}"
-                                HorizontalAlignment="Center" Margin="0,10,0,0" Style="{StaticResource DangerActionButtonStyle}" />
+                                HorizontalAlignment="Right" Margin="0,10,0,0" Style="{StaticResource DangerActionButtonStyle}" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="Stillstand hinzufügen" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
-                        <TextBlock Text="Grund" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <ComboBox ItemsSource="{Binding DowntimeReasons}" SelectedItem="{Binding DowntimeReason, Mode=TwoWay}" Height="38" Margin="0,0,0,12" />
-                        <TextBlock Text="Dauer (min)" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding DowntimeMinutes, UpdateSourceTrigger=PropertyChanged}" Height="38" VerticalContentAlignment="Center" Margin="0,0,0,12" />
-                        <TextBlock Text="Kommentar" FontWeight="SemiBold" Margin="0,0,0,5" />
-                        <TextBox Text="{Binding DowntimeComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"  VerticalScrollBarVisibility="Auto"/>
+                        <TextBlock Text="Stillstand hinzufügen" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                        <TextBlock Text="Grund" Style="{StaticResource FieldLabelTextStyle}" />
+                        <ComboBox ItemsSource="{Binding DowntimeReasons}" SelectedItem="{Binding DowntimeReason, Mode=TwoWay}" Margin="0,0,0,12" />
+                        <TextBlock Text="Dauer (min)" Style="{StaticResource FieldLabelTextStyle}" />
+                        <TextBox Text="{Binding DowntimeMinutes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                        <TextBlock Text="Kommentar" Style="{StaticResource FieldLabelTextStyle}" />
+                        <TextBox Text="{Binding DowntimeComment, UpdateSourceTrigger=PropertyChanged}" MinHeight="72" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" VerticalScrollBarVisibility="Auto"/>
                         <Button Content="Stillstand erfassen" Command="{Binding AddDowntimeCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                     </StackPanel>
                 </Grid>
