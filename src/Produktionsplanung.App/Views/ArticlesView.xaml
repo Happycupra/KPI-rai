@@ -1,47 +1,66 @@
 <UserControl x:Class="Produktionsplanung.App.Views.ArticlesView"
- xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource SurfaceBrush}">
- <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="20">
-  <TextBlock Text="Artikel &amp; Chargenhistorie" Style="{StaticResource PageTitleTextStyle}"/>
-  <TextBlock Text="Wiederkehrende Artikel einmal hinterlegen – jede Herstellung als eigene Charge verfolgen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16"/>
-  <WrapPanel Margin="0,0,0,12">
-   <TextBlock Text="Suche" VerticalAlignment="Center" Margin="0,0,6,0"/><TextBox x:Name="Search" Width="220" TextChanged="Filter_Changed" Margin="0,0,12,0" AutomationProperties.Name="Artikel suchen"/>
-   <CheckBox x:Name="ActiveOnly" Content="Nur aktive Artikel" IsChecked="True" Checked="Active_Changed" Unchecked="Active_Changed" VerticalAlignment="Center" Margin="0,0,12,0"/>
-   <Button Content="Aktualisieren" Click="Refresh_Click" Margin="0,0,8,0"/>
-   <Button Content="Excel importieren" Click="ImportExcel_Click" Margin="0,0,8,0"/>
-   <Button Content="Excel-Vorlage" Click="SaveExcelTemplate_Click" Margin="0,0,8,0"/>
-   <Button Content="Stammdaten-Import" Click="ImportMasterData_Click" Margin="0,0,8,0"/>
-   <Button Content="Stammdaten-Vorlage" Click="SaveMasterDataTemplate_Click"/>
-  </WrapPanel>
-  <WrapPanel x:Name="EditActions" Margin="0,0,0,12" HorizontalAlignment="Center">
-   <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
-   <Button Content="Artikel bearbeiten" Click="Edit_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
-   <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0" Style="{StaticResource DangerActionButtonStyle}"/>
-   <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
-  </WrapPanel>
-  <TextBlock Text="Excel: Artikelimport separat oder Stammdaten-Vorlage mit Mitarbeitenden, Arbeitsplätzen, Schichten, Arbeitsplatz-Schichten und Produktionsaufträgen. Jeder Stammdatenimport startet mit Vorschau/Testlauf. Skill-Level 5 = Admin." Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" TextWrapping="Wrap"/>
-  <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap" FontWeight="SemiBold"/>
-  <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220">
-   <DataGrid.RowStyle>
-       <Style TargetType="DataGridRow">
-           <EventSetter Event="PreviewMouseRightButtonDown" Handler="ArticleRow_PreviewMouseRightButtonDown"/>
-       </Style>
-   </DataGrid.RowStyle>
-   <DataGrid.ContextMenu>
-       <ContextMenu>
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Background="{StaticResource SurfaceBrush}">
+ <ScrollViewer VerticalScrollBarVisibility="Auto">
+  <StackPanel Margin="{StaticResource PagePadding}">
+   <StackPanel Margin="{StaticResource PageHeaderSpacing}">
+    <TextBlock Text="Artikel &amp; Chargenhistorie" Style="{StaticResource PageTitleTextStyle}"/>
+    <TextBlock Text="Wiederkehrende Artikel einmal hinterlegen – jede Herstellung als eigene Charge verfolgen." Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0"/>
+   </StackPanel>
+
+   <Border Style="{StaticResource FilterBarStyle}" Margin="0,0,0,12">
+    <WrapPanel>
+     <TextBlock Text="Suche" VerticalAlignment="Center" Margin="0,0,6,0" Style="{StaticResource FieldLabelTextStyle}"/>
+     <TextBox x:Name="Search" Width="220" TextChanged="Filter_Changed" Margin="0,0,12,0" AutomationProperties.Name="Artikel suchen"/>
+     <CheckBox x:Name="ActiveOnly" Content="Nur aktive Artikel" IsChecked="True" Checked="Active_Changed" Unchecked="Active_Changed" VerticalAlignment="Center" Margin="0,0,16,0"/>
+     <Button Content="Aktualisieren" Click="Refresh_Click" Margin="0,0,8,0"/>
+     <Button Content="Excel importieren" Click="ImportExcel_Click" Margin="0,0,8,0"/>
+     <Button Content="Excel-Vorlage" Click="SaveExcelTemplate_Click" Margin="0,0,8,0"/>
+     <Button Content="Stammdaten-Import" Click="ImportMasterData_Click" Margin="0,0,8,0"/>
+     <Button Content="Stammdaten-Vorlage" Click="SaveMasterDataTemplate_Click"/>
+    </WrapPanel>
+   </Border>
+
+   <Grid Margin="0,0,0,12">
+    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <TextBlock Text="Excel: Artikelimport separat oder Stammdaten-Vorlage mit Mitarbeitenden, Arbeitsplätzen, Schichten, Arbeitsplatz-Schichten und Produktionsaufträgen. Jeder Stammdatenimport startet mit Vorschau/Testlauf. Skill-Level 5 = Admin."
+               Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+    <WrapPanel x:Name="EditActions" Grid.Column="1" HorizontalAlignment="Right">
+     <Button Content="Artikel anlegen" Click="New_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+     <Button Content="Artikel bearbeiten" Click="Edit_Click" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/>
+     <Button Content="Deaktivieren" Click="Deactivate_Click" Margin="0,0,8,0" Style="{StaticResource DangerActionButtonStyle}"/>
+     <Button Content="Neue Charge" Click="NewBatch_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
+    </WrapPanel>
+   </Grid>
+
+   <TextBlock x:Name="Message" Margin="0,0,0,8" TextWrapping="Wrap" FontWeight="SemiBold" AutomationProperties.LiveSetting="Polite"/>
+   <Border Style="{StaticResource SectionCardStyle}" Padding="12">
+    <DataGrid x:Name="ArticlesGrid" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionChanged="Selection_Changed" Height="220">
+     <DataGrid.RowStyle>
+      <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+       <EventSetter Event="PreviewMouseRightButtonDown" Handler="ArticleRow_PreviewMouseRightButtonDown"/>
+      </Style>
+     </DataGrid.RowStyle>
+     <DataGrid.ContextMenu>
+      <ContextMenu>
        <MenuItem Header="Artikel bearbeiten" Click="EditArticleContext_Click"/>
        <MenuItem Header="Übersicht / Chargenhistorie" Click="OverviewArticleContext_Click"/>
        <MenuItem Header="Neue Charge" Click="NewBatchArticleContext_Click"/>
-       </ContextMenu>
-   </DataGrid.ContextMenu>
-   <DataGrid.Columns>
-   <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>
-   <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="240"/>
-   <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="85"/>
-   <DataGridTextColumn Header="Standardmenge" Binding="{Binding DefaultQuantity}" Width="125"/>
-   <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
-  </DataGrid.Columns></DataGrid>
-  <TextBlock x:Name="HistoryTitle" Text="Artikel auswählen, um die Chargenhistorie zu sehen." Style="{StaticResource SectionHeaderTextStyle}" Margin="0,20,0,6"/>
-  <ContentControl x:Name="Comparison"/>
-  <ContentControl x:Name="History"/>
- </StackPanel></ScrollViewer>
+      </ContextMenu>
+     </DataGrid.ContextMenu>
+     <DataGrid.Columns>
+      <DataGridTextColumn Header="Artikelnummer" Binding="{Binding ArticleNumber}" Width="130"/>
+      <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" MinWidth="240"/>
+      <DataGridTextColumn Header="Einheit" Binding="{Binding Unit}" Width="85"/>
+      <DataGridTextColumn Header="Standardmenge" Binding="{Binding DefaultQuantity}" Width="125"/>
+      <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="70"/>
+     </DataGrid.Columns>
+    </DataGrid>
+   </Border>
+   <TextBlock x:Name="HistoryTitle" Text="Artikel auswählen, um die Chargenhistorie zu sehen." Style="{StaticResource SectionHeaderTextStyle}" Margin="0,20,0,6"/>
+   <ContentControl x:Name="Comparison"/>
+   <ContentControl x:Name="History"/>
+  </StackPanel>
+ </ScrollViewer>
 </UserControl>
