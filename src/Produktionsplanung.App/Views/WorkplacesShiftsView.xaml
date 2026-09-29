@@ -10,10 +10,9 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel>
-            <TextBlock Text="Arbeitsplätze &amp; Schichten" FontSize="27" FontWeight="SemiBold"
-                       Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="Arbeitsplätze &amp; Schichten" Style="{StaticResource PageTitleTextStyle}"/>
             <TextBlock Text="Arbeitsplätze, Besetzung, Skill-Anforderungen und Schichtzeiten an einem Ort."
-                       Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
+                       Style="{StaticResource PageSubtitleTextStyle}" Margin="0,3,0,0"/>
         </StackPanel>
         <TabControl Grid.Row="2">
             <TabItem Header="Arbeitsplätze / Schichtmodell">
