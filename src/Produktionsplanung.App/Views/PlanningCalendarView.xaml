@@ -398,13 +398,13 @@
                             </Grid>
                             <TextBlock Text="GANZTÄGIG" Style="{StaticResource CalendarMetricLabelStyle}" Margin="0,3,0,6" />
                             <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}" />
-                            <TextBlock Text="Keine ganztägigen Einträge." Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,10">
+                            <TextBlock Text="Keine ganztägigen Einträge." Margin="0,2,0,10">
                                 <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                             <Border Height="1" Background="{StaticResource GridLineBrush}" Margin="0,4,0,12" />
                             <TextBlock Text="ZEITPLAN" Style="{StaticResource CalendarMetricLabelStyle}" Margin="0,0,0,6" />
                             <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}" />
-                            <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Center" Margin="0,12,0,0">
+                            <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." HorizontalAlignment="Center" Margin="0,12,0,0">
                                 <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                         </StackPanel>
@@ -563,7 +563,7 @@
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
 
-                                            <TextBlock Text="Noch niemand eingeplant." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0">
+                                            <TextBlock Text="Noch niemand eingeplant." Margin="0,4,0,0">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}">
                                                         <Setter Property="Visibility" Value="Collapsed" />
