@@ -4,23 +4,24 @@
              Background="{StaticResource SurfaceBrush}"
              SizeChanged="PlanningCalendarView_SizeChanged">
     <UserControl.Resources>
-        <Style x:Key="CalendarModeButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="MinWidth" Value="72"/>
-            <Setter Property="Padding" Value="14,0"/>
-            <Setter Property="Margin" Value="0,0,6,0"/>
+        <Style x:Key="CalendarModeButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinWidth" Value="72" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="Margin" Value="0,0,6,0" />
         </Style>
 
         <Style x:Key="FilterChipStyle" TargetType="ToggleButton">
-            <Setter Property="Height" Value="25"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Margin" Value="0,0,5,5"/>
-            <Setter Property="FontSize" Value="9.5"/>
-            <Setter Property="Foreground" Value="#526173"/>
-            <Setter Property="Background" Value="#F8FAFC"/>
-            <Setter Property="BorderBrush" Value="#DCE6F0"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="9,0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}" />
+            <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
@@ -30,17 +31,20 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="12"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="ChipBorder" Property="Background" Value="{StaticResource PrimarySoftBrush}"/>
-                                <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
-                                <Setter Property="Foreground" Value="{StaticResource PrimaryDarkBrush}"/>
-                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter TargetName="ChipBorder" Property="Background" Value="{StaticResource PrimarySoftBrush}" />
+                                <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryDarkBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter TargetName="ChipBorder" Property="BorderBrush" Value="{StaticResource ControlHoverBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.48" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -49,18 +53,34 @@
         </Style>
 
         <Style x:Key="CalendarCardButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <ContentPresenter/>
+                        <ContentPresenter />
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="CalendarMetricLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource EyebrowTextStyle}">
+            <Setter Property="FontSize" Value="9" />
+        </Style>
+        <Style x:Key="CalendarMetricValueStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="CalendarPanelStyle" TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+            <Setter Property="Padding" Value="10" />
+        </Style>
+        <Style x:Key="CalendarSubtlePanelStyle" TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+            <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+            <Setter Property="Padding" Value="10" />
         </Style>
 
         <DataTemplate x:Key="CalendarEntryTemplate">
@@ -71,54 +91,60 @@
                     PreviewDragOver="CalendarEntry_PreviewDragOver"
                     Drop="CalendarEntry_Drop"
                     ToolTip="Klicken: Details · Mitarbeiter hier ablegen: direkt einplanen">
-                <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
-                        CornerRadius="8" Padding="9,8" Margin="0,0,0,7">
+                <Border Background="{Binding Background}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="9,8"
+                        Margin="0,0,0,7">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="4"/>
-                            <ColumnDefinition Width="9"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="4" />
+                            <ColumnDefinition Width="9" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Background="{Binding Accent}" CornerRadius="2"/>
+                        <Border Background="{Binding Accent}" CornerRadius="2" />
                         <StackPanel Grid.Column="2">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding Accent}"/>
-                                <TextBlock Text="  ·  " FontSize="9" Foreground="#94A3B8"/>
-                                <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock Text="{Binding TypeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding Accent}" />
+                                <TextBlock Text="  ·  " FontSize="9" Foreground="{StaticResource DisabledBrush}" />
+                                <TextBlock Text="{Binding TimeText}" FontSize="10" Foreground="{StaticResource MutedTextBrush}" />
                             </StackPanel>
                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"
-                                       FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,1"/>
-                            <TextBlock Text="{Binding Subtitle}" FontSize="10.5" Foreground="#526173"
-                                       TextTrimming="CharacterEllipsis"/>
+                                       FontSize="12.5" TextTrimming="CharacterEllipsis" Margin="0,2,0,1" />
+                            <TextBlock Text="{Binding Subtitle}" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"
+                                       TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding TeamText, StringFormat='Team: {0}'}" FontSize="9.5"
                                        FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"
                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding TeamNames}" Margin="0,2,0,0">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Setter Property="Visibility" Value="Visible" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TeamText}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding TeamText}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
                         </StackPanel>
-                        <Border Grid.Column="3" Background="{StaticResource CardBrush}" BorderBrush="#D7E2EE" BorderThickness="1"
-                                CornerRadius="10" Padding="7,2" VerticalAlignment="Top" Margin="8,0,0,0">
+                        <Border Grid.Column="3"
+                                Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="7,2"
+                                VerticalAlignment="Top"
+                                Margin="8,0,0,0">
                             <Border.Style>
                                 <Style TargetType="Border">
-                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Visibility" Value="Visible" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding BadgeText}" Value="">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding BadgeText}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Border.Style>
-                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" Foreground="{StaticResource TextBrush}" FontWeight="SemiBold" />
                         </Border>
                     </Grid>
                 </Border>
@@ -133,28 +159,29 @@
                     PreviewDragOver="CalendarEntry_PreviewDragOver"
                     Drop="CalendarEntry_Drop"
                     ToolTip="Mitarbeiter hier ablegen">
-                <Border Background="{Binding Background}" BorderBrush="#D7E2EE" BorderThickness="1"
-                        CornerRadius="5" Padding="5,3" Margin="0,0,0,3">
+                <Border Background="{Binding Background}"
+                        BorderBrush="{StaticResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        Padding="5,3"
+                        Margin="0,0,0,3">
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="3"/>
-                            <ColumnDefinition Width="5"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="3" />
+                            <ColumnDefinition Width="5" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Background="{Binding Accent}" CornerRadius="2"/>
+                        <Border Background="{Binding Accent}" CornerRadius="2" />
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="{Binding Title}" FontSize="9.5" Foreground="#243447"
-                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Title}" FontSize="9.5" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding TeamText}" FontSize="8.5" FontWeight="SemiBold"
                                        Foreground="{StaticResource PrimaryDarkBrush}" TextTrimming="CharacterEllipsis"
                                        ToolTip="{Binding TeamNames}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Setter Property="Visibility" Value="Visible" />
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding TeamText}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding TeamText}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
@@ -166,35 +193,32 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="22">
+    <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,14">
+        <Grid Margin="{StaticResource PageHeaderSpacing}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Planungskalender" FontSize="27" FontWeight="SemiBold" Foreground="#102A43"/>
-                <TextBlock Text="{Binding HeaderText}" FontSize="14" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
+                <TextBlock Text="Planungskalender" Style="{StaticResource PageTitleTextStyle}" />
+                <TextBlock Text="{Binding HeaderText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,3,0,0" />
             </StackPanel>
-            <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousCommand}" Margin="0,0,6,0" Style="{StaticResource CompactButtonStyle}"/>
-                <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}"/>
-                <Button Content="›" Width="38" Height="38" Command="{Binding NextCommand}" Margin="0,0,14,0" Style="{StaticResource CompactButtonStyle}"/>
+            <WrapPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="720">
+                <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousCommand}" Margin="0,0,6,6" Style="{StaticResource CompactButtonStyle}" ToolTip="Vorheriger Zeitraum" />
+                <Button Content="Heute" Command="{Binding TodayCommand}" Margin="0,0,6,6" Style="{StaticResource ActionButtonStyle}" />
+                <Button Content="›" Width="38" Height="38" Command="{Binding NextCommand}" Margin="0,0,14,6" Style="{StaticResource CompactButtonStyle}" ToolTip="Nächster Zeitraum" />
 
                 <Button Content="Tag" Command="{Binding ShowDayCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="0">
-                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Background" Value="{StaticResource PrimaryBrush}" /><Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" /><Setter Property="Foreground" Value="White" /></DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
@@ -203,10 +227,7 @@
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="1">
-                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Background" Value="{StaticResource PrimaryBrush}" /><Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" /><Setter Property="Foreground" Value="White" /></DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
@@ -215,17 +236,16 @@
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource CalendarModeButton}">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="2">
-                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Background" Value="{StaticResource PrimaryBrush}" /><Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}" /><Setter Property="Foreground" Value="White" /></DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
-                <Button Content="Ansicht als PDF exportieren" Margin="8,0,0,0" Click="ExportCalendarPdf_Click"
-                        ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren" Style="{StaticResource ActionButtonStyle}"/>
-
+                <Button Content="Ansicht als PDF exportieren"
+                        Margin="8,0,0,6"
+                        Click="ExportCalendarPdf_Click"
+                        ToolTip="Aktuelle Tag-, Wochen- oder Monatsansicht als PDF exportieren"
+                        Style="{StaticResource ActionButtonStyle}" />
             </WrapPanel>
         </Grid>
 
@@ -238,119 +258,116 @@
                 <ColumnDefinition Width="1.5*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="GEPLANT" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding PlannedEmployeesCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+            <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Padding="13,9">
+                <StackPanel>
+                    <TextBlock Text="GEPLANT" Style="{StaticResource CalendarMetricLabelStyle}" />
+                    <TextBlock Text="{Binding PlannedEmployeesCount}" Style="{StaticResource CalendarMetricValueStyle}" />
+                    <TextBlock Text="Mitarbeitende" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
             </Border>
-            <Border Grid.Column="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="AUFTRÄGE" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding OrderCount}" FontSize="21" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="am gewählten Tag" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+            <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}" Padding="13,9">
+                <StackPanel>
+                    <TextBlock Text="AUFTRÄGE" Style="{StaticResource CalendarMetricLabelStyle}" />
+                    <TextBlock Text="{Binding OrderCount}" Style="{StaticResource CalendarMetricValueStyle}" />
+                    <TextBlock Text="am gewählten Tag" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
             </Border>
-            <Border Grid.Column="4" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="ABWESEND" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding AbsenceCount}" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}"/><TextBlock Text="Mitarbeitende" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+            <Border Grid.Column="4" Style="{StaticResource SectionCardStyle}" Padding="13,9">
+                <StackPanel>
+                    <TextBlock Text="ABWESEND" Style="{StaticResource CalendarMetricLabelStyle}" />
+                    <TextBlock Text="{Binding AbsenceCount}" Style="{StaticResource CalendarMetricValueStyle}" Foreground="{StaticResource DangerBrush}" />
+                    <TextBlock Text="Mitarbeitende" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
             </Border>
-            <Border Grid.Column="6" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="9" Padding="13,9">
-                <StackPanel><TextBlock Text="IM BETRIEB" FontSize="9" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="21" FontWeight="SemiBold" Foreground="#0F766E"/><TextBlock Text="nicht abwesend" FontSize="10" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+            <Border Grid.Column="6" Style="{StaticResource SectionCardStyle}" Padding="13,9">
+                <StackPanel>
+                    <TextBlock Text="IM BETRIEB" Style="{StaticResource CalendarMetricLabelStyle}" />
+                    <TextBlock Text="{Binding AvailableEmployeeCount}" Style="{StaticResource CalendarMetricValueStyle}" Foreground="{StaticResource SuccessBrush}" />
+                    <TextBlock Text="nicht abwesend" Style="{StaticResource SecondaryTextStyle}" />
+                </StackPanel>
             </Border>
-            <Border Grid.Column="8" Background="#F8FBFF" BorderBrush="#C9DDF2" BorderThickness="1" CornerRadius="9" Padding="13,9">
+            <Border Grid.Column="8" Style="{StaticResource SectionCardStyle}" Background="{StaticResource InfoSoftBrush}" BorderBrush="{StaticResource InfoBorderBrush}" Padding="13,9">
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <Border Width="31" Height="31" CornerRadius="16" Background="{StaticResource PrimarySoftBrush}" VerticalAlignment="Center" Margin="0,0,10,0"><TextBlock Text="!" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                    <StackPanel Grid.Column="1"><TextBlock Text="Personalabdeckung" FontSize="10" FontWeight="SemiBold" Foreground="#334E68"/><TextBlock Text="{Binding DayCoverageText}" FontSize="10.5" Foreground="#526173" TextWrapping="Wrap"/></StackPanel>
+                    <Border Width="31" Height="31" CornerRadius="16" Background="{StaticResource PrimarySoftBrush}" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <TextBlock Text="!" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Personalabdeckung" Style="{StaticResource CardTitleTextStyle}" />
+                        <TextBlock Text="{Binding DayCoverageText}" Style="{StaticResource SecondaryTextStyle}" />
+                    </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition x:Name="CalendarLeftColumn" Width="198"/>
-                <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="28"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="28"/>
-                <ColumnDefinition x:Name="CalendarDetailColumn" Width="350"/>
+                <ColumnDefinition x:Name="CalendarLeftColumn" Width="198" />
+                <ColumnDefinition x:Name="CalendarLeftToggleColumn" Width="28" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="CalendarRightToggleColumn" Width="28" />
+                <ColumnDefinition x:Name="CalendarDetailColumn" Width="350" />
             </Grid.ColumnDefinitions>
 
             <ScrollViewer x:Name="CalendarLeftPanel" Grid.Column="0"
                           VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
-                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0"
-                            BorderThickness="1" CornerRadius="9" Padding="4" Margin="0,0,0,7">
+                    <Border Style="{StaticResource CalendarPanelStyle}" Padding="4" Margin="0,0,0,7">
                         <Viewbox Stretch="Uniform" StretchDirection="DownOnly" MaxHeight="182">
                             <Calendar SelectedDate="{Binding SelectedDate, Mode=TwoWay}"
                                       DisplayDate="{Binding SelectedDate, Mode=TwoWay}"
                                       SelectionMode="SingleDate"
-                                      FontSize="10"/>
+                                      FontSize="10" />
                         </Viewbox>
                     </Border>
 
-                    <Expander x:Name="PlanningFilterExpander" IsExpanded="False"
-                              Margin="0,0,0,7">
+                    <Expander x:Name="PlanningFilterExpander" IsExpanded="False" Margin="0,0,0,7">
                         <Expander.Header>
-                            <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0"
-                                    BorderThickness="1" CornerRadius="8" Padding="9,6">
+                            <Border Style="{StaticResource CalendarPanelStyle}" Padding="9,6">
                                 <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="Filter" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="{StaticResource TextBrush}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="  ▾" FontSize="9" Foreground="{StaticResource MutedTextBrush}"
-                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="Filter" Style="{StaticResource CardTitleTextStyle}" VerticalAlignment="Center" />
+                                        <TextBlock Text="  ▾" FontSize="9" Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="↺" Width="28" Height="28" Padding="0"
                                             Command="{Binding ResetFiltersCommand}"
                                             ToolTip="Filter zurücksetzen"
-                                            Foreground="{StaticResource MutedTextBrush}"
-                                            Background="Transparent" BorderThickness="0" Style="{StaticResource CompactButtonStyle}"/>
+                                            Style="{StaticResource CompactButtonStyle}" />
                                 </Grid>
                             </Border>
                         </Expander.Header>
-                        <Border Background="#FBFDFF" BorderBrush="#DCE6F0" BorderThickness="1,0,1,1"
-                                CornerRadius="0,0,8,8" Padding="9">
+                        <Border Background="{StaticResource SubtleSurfaceBrush}"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1,0,1,1"
+                                CornerRadius="0,0,8,8"
+                                Padding="9">
                             <StackPanel>
                                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                         Height="38" Padding="10,6" Margin="0,0,0,8"
-                                         ToolTip="Name, Auftrag, Linie oder Notiz suchen"/>
-
+                                         Margin="0,0,0,8"
+                                         ToolTip="Name, Auftrag, Linie oder Notiz suchen"
+                                         AutomationProperties.Name="Planung durchsuchen" />
                                 <WrapPanel>
-                                    <ToggleButton Content="Aufträge" IsChecked="{Binding ShowOrders}"
-                                                  Style="{StaticResource FilterChipStyle}"/>
-                                    <ToggleButton Content="Abwesend" IsChecked="{Binding ShowAbsences}"
-                                                  Style="{StaticResource FilterChipStyle}"/>
-                                    <ToggleButton Content="Betrieb" IsChecked="{Binding ShowOperatingCalendar}"
-                                                  Style="{StaticResource FilterChipStyle}"/>
-                                    <ToggleButton Content="WE" IsChecked="{Binding ShowWeekends}"
-                                                  Style="{StaticResource FilterChipStyle}"
-                                                  ToolTip="Wochenende anzeigen"/>
-                                    <ToggleButton Content="Sonstige" IsChecked="{Binding ShowAssignments}"
-                                                  Style="{StaticResource FilterChipStyle}"
-                                                  ToolTip="Sonstige Einsätze ausserhalb Produktionsslots"/>
+                                    <ToggleButton Content="Aufträge" IsChecked="{Binding ShowOrders}" Style="{StaticResource FilterChipStyle}" />
+                                    <ToggleButton Content="Abwesend" IsChecked="{Binding ShowAbsences}" Style="{StaticResource FilterChipStyle}" />
+                                    <ToggleButton Content="Betrieb" IsChecked="{Binding ShowOperatingCalendar}" Style="{StaticResource FilterChipStyle}" />
+                                    <ToggleButton Content="WE" IsChecked="{Binding ShowWeekends}" Style="{StaticResource FilterChipStyle}" ToolTip="Wochenende anzeigen" />
+                                    <ToggleButton Content="Sonstige" IsChecked="{Binding ShowAssignments}" Style="{StaticResource FilterChipStyle}" ToolTip="Sonstige Einsätze ausserhalb Produktionsslots" />
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
                     </Expander>
 
-                    <Border Background="#F8FBFF" BorderBrush="#DCE6F0" BorderThickness="1"
-                            CornerRadius="8" Padding="9,7">
+                    <Border Style="{StaticResource CalendarSubtlePanelStyle}" Padding="9,7">
                         <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                             <StackPanel>
-                                <TextBlock Text="{Binding SelectedDateCompactText}" FontSize="10.5"
-                                           FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Text="{Binding VisibleEntryCompactText}" FontSize="9.5"
-                                           Foreground="{StaticResource MutedTextBrush}"
-                                           TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                <TextBlock Text="{Binding SelectedDateCompactText}" Style="{StaticResource CardTitleTextStyle}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding VisibleEntryCompactText}" Style="{StaticResource SecondaryTextStyle}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="↻" Width="28" Height="28" Padding="0"
                                     Command="{Binding RefreshCommand}" Style="{StaticResource CompactButtonStyle}" Margin="7,0,0,0"
-                                    ToolTip="Aktualisieren"
-                                    Foreground="{StaticResource PrimaryDarkBrush}"
-                                    Background="{StaticResource PrimarySoftBrush}"
-                                    BorderBrush="#C9DDF2"/>
+                                    ToolTip="Aktualisieren" />
                         </Grid>
                     </Border>
                 </StackPanel>
@@ -359,58 +376,69 @@
             <Button x:Name="CalendarLeftToggleButton" Grid.Column="1" Content="‹" Width="24" Height="46"
                     Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="20"
                     Click="ToggleLeftPanel_Click" ToolTip="Linken Bereich ein-/ausblenden"
-                    Background="#FFFFFF" BorderBrush="#CBD8E6" Foreground="#526173" FontWeight="Bold"/>
+                    AutomationProperties.Name="Linken Planungsbereich ein- oder ausblenden"
+                    Style="{StaticResource CompactButtonStyle}" />
 
             <Grid Grid.Column="2">
-                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="16">
+                <Border>
                     <Border.Style>
-                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+                            <Setter Property="Padding" Value="16" />
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                        </Style>
                     </Border.Style>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Tagesplan" FontSize="19" FontWeight="SemiBold" Foreground="#102A43"/><TextBlock Text="Aufträge, Personal und Betriebskalender in einer Ansicht koordinieren." FontSize="10.5" Foreground="{StaticResource MutedTextBrush}"/></StackPanel>
+                                <StackPanel>
+                                    <TextBlock Text="Tagesplan" Style="{StaticResource SectionHeaderTextStyle}" />
+                                    <TextBlock Text="Aufträge, Personal und Betriebskalender in einer Ansicht koordinieren." Style="{StaticResource SecondaryTextStyle}" />
+                                </StackPanel>
                             </Grid>
-                            <TextBlock Text="GANZTÄGIG" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,6"/>
-                            <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
-                            <TextBlock Text="Keine ganztägigen Einträge." Foreground="#9FB3C8" FontSize="10.5" Margin="0,2,0,10">
-                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                            <TextBlock Text="GANZTÄGIG" Style="{StaticResource CalendarMetricLabelStyle}" Margin="0,3,0,6" />
+                            <ItemsControl ItemsSource="{Binding DayAllDayEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}" />
+                            <TextBlock Text="Keine ganztägigen Einträge." Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,10">
+                                <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayAllDayEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
-                            <Border Height="1" Background="#E7EEF5" Margin="0,4,0,12"/>
-                            <TextBlock Text="ZEITPLAN" FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6"/>
-                            <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
-                            <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,12,0,0">
-                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                            <Border Height="1" Background="{StaticResource GridLineBrush}" Margin="0,4,0,12" />
+                            <TextBlock Text="ZEITPLAN" Style="{StaticResource CalendarMetricLabelStyle}" Margin="0,0,0,6" />
+                            <ItemsControl ItemsSource="{Binding DayTimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}" />
+                            <TextBlock Text="Keine zeitlichen Einträge für diesen Tag." Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Center" Margin="0,12,0,0">
+                                <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding DayTimedEntries.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
 
-                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
+                <Border>
                     <Border.Style>
-                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+                            <Setter Property="Padding" Value="10" />
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="1"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                        </Style>
                     </Border.Style>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding WeekDays}">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="8" Margin="3" MinWidth="155" MinHeight="610" Background="#FCFDFE">
+                                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Margin="3" MinWidth="155" MinHeight="610" Background="{StaticResource SubtleSurfaceBrush}">
                                         <DockPanel>
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
-                                                    BorderThickness="0,0,0,1" BorderBrush="#E7EEF5" Background="#F8FBFF" Padding="8" HorizontalContentAlignment="Stretch">
+                                                    BorderThickness="0,0,0,1" BorderBrush="{StaticResource GridLineBrush}" Background="{StaticResource SubtleSurfaceBrush}" Padding="8" HorizontalContentAlignment="Stretch">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding DayName}" FontSize="10" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="#102A43" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding EntryCountText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DayName}" Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding DateText}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding EntryCountText}" Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Center" />
                                                 </StackPanel>
                                             </Button>
                                             <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="7">
                                                 <StackPanel>
-                                                    <ItemsControl ItemsSource="{Binding AllDayEntries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}"/>
-                                                    <Border Height="1" Background="#E7EEF5" Margin="0,5,0,7"/>
-                                                    <ItemsControl ItemsSource="{Binding TimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}"/>
+                                                    <ItemsControl ItemsSource="{Binding AllDayEntries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}" />
+                                                    <Border Height="1" Background="{StaticResource GridLineBrush}" Margin="0,5,0,7" />
+                                                    <ItemsControl ItemsSource="{Binding TimedEntries}" ItemTemplate="{StaticResource CalendarEntryTemplate}" />
                                                 </StackPanel>
                                             </ScrollViewer>
                                         </DockPanel>
@@ -421,38 +449,42 @@
                     </ScrollViewer>
                 </Border>
 
-                <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="11" Padding="10">
+                <Border>
                     <Border.Style>
-                        <Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+                            <Setter Property="Padding" Value="10" />
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers><DataTrigger Binding="{Binding SelectedViewIndex}" Value="2"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                        </Style>
                     </Border.Style>
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="30"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                         <UniformGrid Columns="{Binding MonthColumnCount}">
-                            <TextBlock Text="Mo" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="Di" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="Mi" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="Do" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                            <TextBlock Text="Fr" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
+                            <TextBlock Text="Mo" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="Di" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="Mi" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="Do" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold" />
+                            <TextBlock Text="Fr" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold" />
                             <TextBlock Text="Sa" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold">
-                                <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                             <TextBlock Text="So" HorizontalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold">
-                                <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers><DataTrigger Binding="{Binding ShowWeekends}" Value="False"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                             </TextBlock>
                         </UniformGrid>
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding MonthDays}">
-                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{Binding MonthColumnCount}" Rows="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{Binding MonthColumnCount}" Rows="6" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Margin="2" Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
+                                    <Border Margin="2" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="6" MinHeight="94">
                                         <DockPanel>
                                             <Button DockPanel.Dock="Top" Tag="{Binding Date}" Click="SelectCalendarDate_Click" MouseDoubleClick="OpenCalendarDate_DoubleClick"
                                                     Width="28" Height="28" HorizontalAlignment="Center" Padding="0" Margin="0,0,0,4" Style="{StaticResource CompactButtonStyle}">
-                                                <TextBlock Text="{Binding DayNumber}" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding DayNumber}" FontSize="11" FontWeight="SemiBold" />
                                             </Button>
                                             <StackPanel>
-                                                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}"/>
-                                                <TextBlock Text="{Binding MoreText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" Margin="2,1,0,0"/>
+                                                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplate="{StaticResource CompactCalendarEntryTemplate}" />
+                                                <TextBlock Text="{Binding MoreText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" Margin="2,1,0,0" />
                                             </StackPanel>
                                         </DockPanel>
                                     </Border>
@@ -466,45 +498,45 @@
             <Button x:Name="CalendarRightToggleButton" Grid.Column="3" Content="›" Width="24" Height="46"
                     Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" Panel.ZIndex="20"
                     Click="ToggleRightPanel_Click" ToolTip="Rechten Bereich ein-/ausblenden"
-                    Background="#FFFFFF" BorderBrush="#CBD8E6" Foreground="#526173" FontWeight="Bold"/>
+                    AutomationProperties.Name="Rechten Planungsbereich ein- oder ausblenden"
+                    Style="{StaticResource CompactButtonStyle}" />
 
-            <ScrollViewer x:Name="CalendarDetailPanel" Grid.Column="4" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer x:Name="CalendarDetailPanel" Grid.Column="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel>
-                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,0,10">
+                    <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Ausgewählter Eintrag" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                            <TextBlock Text="Ausgewählter Eintrag" Style="{StaticResource CardTitleTextStyle}" />
                             <Border Margin="0,11,0,0">
                                 <Border.Style>
-                                    <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
+                                    <Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style>
                                 </Border.Style>
                                 <StackPanel>
-                                    <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding SelectedEntry.Title}" FontSize="17" FontWeight="SemiBold" Foreground="#102A43" TextWrapping="Wrap" Margin="0,3,0,2"/>
-                                    <TextBlock Text="{Binding SelectedEntry.TimeText}" FontSize="11" Foreground="{StaticResource MutedTextBrush}"/>
-                                    <TextBlock Text="{Binding SelectedEntry.Subtitle}" FontSize="11" Foreground="#334E68" TextWrapping="Wrap" Margin="0,8,0,0"/>
-                                    <TextBlock Text="{Binding SelectedEntry.Detail}" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,5,0,12"/>
+                                    <TextBlock Text="{Binding SelectedEntry.TypeLabel}" FontSize="9" Foreground="{Binding SelectedEntry.Accent}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding SelectedEntry.Title}" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,3,0,2" />
+                                    <TextBlock Text="{Binding SelectedEntry.TimeText}" Style="{StaticResource SecondaryTextStyle}" />
+                                    <TextBlock Text="{Binding SelectedEntry.Subtitle}" Style="{StaticResource BodyTextStyle}" Margin="0,8,0,0" />
+                                    <TextBlock Text="{Binding SelectedEntry.Detail}" Style="{StaticResource SecondaryTextStyle}" Margin="0,5,0,12" />
 
-                                    <Border Background="#F8FBFF" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="8"
-                                            Padding="10" Margin="0,0,0,10">
+                                    <Border Background="{StaticResource SubtleSurfaceBrush}"
+                                            BorderBrush="{StaticResource BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="10"
+                                            Margin="0,0,0,10">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Setter Property="Visibility" Value="Collapsed" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SelectedEntry.EntryType}" Value="Auftrag">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding SelectedEntry.EntryType}" Value="Auftrag"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
                                         <StackPanel>
                                             <Grid Margin="0,0,0,6">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                <TextBlock Text="Eingeplantes Team" FontSize="11" FontWeight="SemiBold"
-                                                           Foreground="{StaticResource TextBrush}"/>
-                                                <Border Grid.Column="1" Background="{StaticResource PrimarySoftBrush}" CornerRadius="10"
-                                                        Padding="7,2">
-                                                    <TextBlock Text="{Binding SelectedProductionTeam.Count}" FontSize="9.5"
-                                                               FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                                <TextBlock Text="Eingeplantes Team" Style="{StaticResource CardTitleTextStyle}" />
+                                                <Border Grid.Column="1" Background="{StaticResource PrimarySoftBrush}" CornerRadius="10" Padding="7,2">
+                                                    <TextBlock Text="{Binding SelectedProductionTeam.Count}" FontSize="9.5" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" />
                                                 </Border>
                                             </Grid>
 
@@ -512,88 +544,84 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
                                                         <Grid Margin="0,3">
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="34"/>
-                                                                <ColumnDefinition Width="8"/>
-                                                                <ColumnDefinition Width="*"/>
-                                                                <ColumnDefinition Width="Auto"/>
-                                                            </Grid.ColumnDefinitions>
-                                                            <Border Width="30" Height="30" CornerRadius="15"
-                                                                    Background="{StaticResource PrimarySoftBrush}">
-                                                                <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center"
-                                                                           VerticalAlignment="Center" FontSize="8.5" FontWeight="Bold"
-                                                                           Foreground="{StaticResource PrimaryDarkBrush}"/>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="34"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                            <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource PrimarySoftBrush}">
+                                                                <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" />
                                                             </Border>
                                                             <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding EmployeeName}" FontSize="10.5"
-                                                                           FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                                                                <TextBlock Text="{Binding Role}" FontSize="9"
-                                                                           Foreground="{StaticResource MutedTextBrush}"/>
+                                                                <TextBlock Text="{Binding EmployeeName}" FontSize="10.5" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                                                <TextBlock Text="{Binding Role}" Style="{StaticResource SecondaryTextStyle}" />
                                                             </StackPanel>
                                                             <Button Grid.Column="3" Content="Entfernen"
                                                                     Command="{Binding DataContext.RemoveProductionTeamMemberCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                    CommandParameter="{Binding}" FontSize="9.5" Style="{StaticResource CompactButtonStyle}"
-                                                                    ToolTip="Mitarbeiter aus diesem Produktionsslot entfernen"/>
+                                                                    CommandParameter="{Binding}"
+                                                                    FontSize="9.5"
+                                                                    Style="{StaticResource CompactButtonStyle}"
+                                                                    ToolTip="Mitarbeiter aus diesem Produktionsslot entfernen" />
                                                         </Grid>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
                                             </ItemsControl>
 
-                                            <TextBlock Text="Noch niemand eingeplant." FontSize="9.5"
-                                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,0">
+                                            <TextBlock Text="Noch niemand eingeplant." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0">
                                                 <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding SelectedProductionTeam.Count}" Value="0">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
+                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryTextStyle}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                        <Style.Triggers><DataTrigger Binding="{Binding SelectedProductionTeam.Count}" Value="0"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
                                                     </Style>
                                                 </TextBlock.Style>
                                             </TextBlock>
                                         </StackPanel>
                                     </Border>
 
-                                    <Button Content="Auftrag / Eintrag öffnen" Click="OpenSelectedEntry_Click" Style="{StaticResource PrimaryActionButtonStyle}"/>
-                                    <Button Content="Auswahl aufheben" Margin="0,6,0,0" Click="ClearSelection_Click" Style="{StaticResource ActionButtonStyle}"/>
+                                    <Button Content="Auftrag / Eintrag öffnen" Click="OpenSelectedEntry_Click" Style="{StaticResource PrimaryActionButtonStyle}" />
+                                    <Button Content="Auswahl aufheben" Margin="0,6,0,0" Click="ClearSelection_Click" Style="{StaticResource ActionButtonStyle}" />
                                 </StackPanel>
                             </Border>
                             <StackPanel Margin="0,14,0,4">
                                 <StackPanel.Style>
-                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style>
+                                    <Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding SelectedEntry}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
                                 </StackPanel.Style>
-                                <TextBlock Text="Noch nichts ausgewählt" Foreground="{StaticResource MutedTextBrush}" FontWeight="SemiBold"/>
-                                <TextBlock Text="Klicke einen Produktionsauftrag an: rechts siehst du Details und das eingeplante Team." Foreground="{StaticResource MutedTextBrush}" FontSize="10.5" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock Text="Noch nichts ausgewählt" Style="{StaticResource CardTitleTextStyle}" />
+                                <TextBlock Text="Klicke einen Produktionsauftrag an: rechts siehst du Details und das eingeplante Team." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{StaticResource CardBrush}" BorderBrush="#DCE6F0" BorderThickness="1" CornerRadius="10" Padding="14">
+                    <Border Style="{StaticResource SectionCardStyle}" Padding="14">
                         <StackPanel>
                             <Grid Margin="0,0,0,8">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <StackPanel><TextBlock Text="Mitarbeiter" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/><TextBlock Text="Greifen und auf eine Produktion ziehen · Kürzel mit 3 Buchstaben" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap"/></StackPanel>
-                                <Border Grid.Column="1" Background="#EDF6FF" CornerRadius="10" Padding="7,2" VerticalAlignment="Top"><TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold"/></Border>
+                                <StackPanel>
+                                    <TextBlock Text="Mitarbeiter" Style="{StaticResource CardTitleTextStyle}" />
+                                    <TextBlock Text="Greifen und auf eine Produktion ziehen · Kürzel mit 3 Buchstaben" Style="{StaticResource SecondaryTextStyle}" />
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="{StaticResource PrimarySoftBrush}" CornerRadius="10" Padding="7,2" VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding AvailableEmployeeCount}" FontSize="10" Foreground="{StaticResource PrimaryDarkBrush}" FontWeight="SemiBold" />
+                                </Border>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding DayEmployees}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource CalendarCardButton}" Click="EmployeeRow_Click"
+                                        <Button Style="{StaticResource CalendarCardButton}"
+                                                Click="EmployeeRow_Click"
                                                 PreviewMouseLeftButtonDown="EmployeeRow_PreviewMouseLeftButtonDown"
                                                 PreviewMouseMove="EmployeeRow_PreviewMouseMove"
-                                                Cursor="Hand" ToolTip="Greifen: auf Produktion ziehen · Klicken: Mitarbeiterdetails">
-                                            <Border BorderBrush="#E1EAF2" BorderThickness="0,0,0,1" Padding="0,8">
+                                                Cursor="Hand"
+                                                ToolTip="Greifen: auf Produktion ziehen · Klicken: Mitarbeiterdetails">
+                                            <Border BorderBrush="{StaticResource GridLineBrush}" BorderThickness="0,0,0,1" Padding="0,8">
                                                 <Grid>
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="36"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                    <Border Width="34" Height="34" CornerRadius="17" Background="{StaticResource PrimarySoftBrush}"><TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}"/></Border>
+                                                    <Border Width="34" Height="34" CornerRadius="17" Background="{StaticResource PrimarySoftBrush}">
+                                                        <TextBlock Text="{Binding Initials}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold" Foreground="{StaticResource PrimaryDarkBrush}" />
+                                                    </Border>
                                                     <StackPanel Grid.Column="2">
-                                                        <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
-                                                        <TextBlock Text="{Binding AssignmentText}" FontSize="9.5" Foreground="{StaticResource MutedTextBrush}" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding EmployeeName}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding AssignmentText}" Style="{StaticResource SecondaryTextStyle}" TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="3" Margin="8,0,0,0">
-                                                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" HorizontalAlignment="Center"/>
-                                                        <TextBlock Text="{Binding StatusText}" FontSize="8.5" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0"/>
+                                                        <Ellipse Width="7" Height="7" Fill="{Binding StatusBrush}" HorizontalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StatusText}" FontSize="8.5" Foreground="{StaticResource MutedTextBrush}" Margin="0,2,0,0" />
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
