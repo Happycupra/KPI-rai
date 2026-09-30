@@ -16,6 +16,44 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Margin" Value="0,4,0,0" />
         </Style>
+        <Style x:Key="DashboardDayMetricButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="14" />
+            <Setter Property="MinHeight" Value="76" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="MetricChrome"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="MetricChrome" Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+                                <Setter TargetName="MetricChrome" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="MetricChrome" Property="Opacity" Value="0.9" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="MetricChrome" Property="BorderBrush" Value="{StaticResource PrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -235,27 +273,61 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="Tagesübersicht" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,8" />
-            <UniformGrid Columns="6" Margin="0,0,0,16">
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,10,0">
-                    <StackPanel><TextBlock Text="Aktiv" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding ActiveEmployees}" Style="{StaticResource DashboardCompactMetricValue}" /></StackPanel>
-                </Border>
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,10,0">
-                    <StackPanel><TextBlock Text="Verfügbar" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding AvailableEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource SuccessBrush}" /></StackPanel>
-                </Border>
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,10,0">
-                    <StackPanel><TextBlock Text="Eingeplant" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding PlannedEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource PrimaryBrush}" /></StackPanel>
-                </Border>
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,10,0">
-                    <StackPanel><TextBlock Text="Abwesend" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding AbsentEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource WarningBrush}" /></StackPanel>
-                </Border>
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14" Margin="0,0,10,0">
-                    <StackPanel><TextBlock Text="Abgeschlossen" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding CompletedOrdersToday}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource SuccessBrush}" /></StackPanel>
-                </Border>
-                <Border Style="{StaticResource SectionCardStyle}" Padding="14">
-                    <StackPanel><TextBlock Text="Unterbesetzt" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding UnderstaffedOrders}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource DangerBrush}" /></StackPanel>
-                </Border>
+            <Grid Margin="0,0,0,8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Text="Tagesübersicht" Style="{StaticResource SectionHeaderTextStyle}" />
+                <TextBlock Grid.Column="1" Text="Kachel anklicken für Details" Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" />
+            </Grid>
+            <UniformGrid Columns="6" Margin="0,0,0,12">
+                <Button Tag="Active" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" Margin="0,0,10,0" AutomationProperties.Name="Details zu aktiven Mitarbeitenden">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Aktiv" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding ActiveEmployees}" Style="{StaticResource DashboardCompactMetricValue}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Button Tag="Available" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" Margin="0,0,10,0" AutomationProperties.Name="Details zu verfügbaren Mitarbeitenden">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Verfügbar" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding AvailableEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource SuccessBrush}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Button Tag="Planned" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" Margin="0,0,10,0" AutomationProperties.Name="Details zu eingeplanten Mitarbeitenden">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Eingeplant" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding PlannedEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource PrimaryBrush}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Button Tag="Absent" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" Margin="0,0,10,0" AutomationProperties.Name="Details zu abwesenden Mitarbeitenden">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Abwesend" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding AbsentEmployees}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource WarningBrush}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Button Tag="Completed" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" Margin="0,0,10,0" AutomationProperties.Name="Details zu heute abgeschlossenen Aufträgen">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Abgeschlossen" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding CompletedOrdersToday}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource SuccessBrush}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
+                <Button Tag="Understaffed" Style="{StaticResource DashboardDayMetricButtonStyle}" Click="DailyMetric_Click" AutomationProperties.Name="Details zu unterbesetzten Aufträgen">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel><TextBlock Text="Unterbesetzt" Style="{StaticResource DashboardMetricLabel}"/><TextBlock Text="{Binding UnderstaffedOrders}" Style="{StaticResource DashboardCompactMetricValue}" Foreground="{StaticResource DangerBrush}" /></StackPanel><TextBlock Grid.Column="1" Text="›" Foreground="{StaticResource MutedTextBrush}" FontSize="18" VerticalAlignment="Center" /></Grid>
+                </Button>
             </UniformGrid>
+
+            <Border x:Name="DailyDetailCard"
+                    Style="{StaticResource SectionCardStyle}"
+                    Margin="0,0,0,16"
+                    Padding="16"
+                    Visibility="Collapsed"
+                    AutomationProperties.LiveSetting="Polite">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="DailyDetailTitle" Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Name="DailyDetailDescription" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,3,24,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="×" Style="{StaticResource IconButtonStyle}" Width="34" Height="34" Click="CloseDailyDetails_Click" ToolTip="Details schließen" AutomationProperties.Name="Tagesdetails schließen" />
+                    </Grid>
+                    <UniformGrid Columns="3" Margin="0,0,0,12">
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,10,0">
+                            <StackPanel><TextBlock x:Name="DailyDetailStat1Label" Style="{StaticResource SecondaryTextStyle}"/><TextBlock x:Name="DailyDetailStat1Value" Style="{StaticResource DashboardCompactMetricValue}"/></StackPanel>
+                        </Border>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,10,0">
+                            <StackPanel><TextBlock x:Name="DailyDetailStat2Label" Style="{StaticResource SecondaryTextStyle}"/><TextBlock x:Name="DailyDetailStat2Value" Style="{StaticResource DashboardCompactMetricValue}"/></StackPanel>
+                        </Border>
+                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12">
+                            <StackPanel><TextBlock x:Name="DailyDetailStat3Label" Style="{StaticResource SecondaryTextStyle}"/><TextBlock x:Name="DailyDetailStat3Value" Style="{StaticResource DashboardCompactMetricValue}"/></StackPanel>
+                        </Border>
+                    </UniformGrid>
+                    <Button x:Name="DailyDetailActionButton" HorizontalAlignment="Left" Style="{StaticResource PrimaryActionButtonStyle}" Click="DailyDetailAction_Click" />
+                </StackPanel>
+            </Border>
 
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
