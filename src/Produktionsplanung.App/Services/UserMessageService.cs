@@ -66,7 +66,7 @@ public static class UserMessageService
         db.UserMessages.Add(message);
         db.SaveChanges();
         TenantMessagingStore.BindMessage(db, message.Id, companyId);
-        OnlineAccessSyncService.QueueSync();
+        OnlineMessageSyncService.QueueSync();
         return message;
     }
 
@@ -142,7 +142,7 @@ public static class UserMessageService
         message.AcknowledgedAtUtc = DateTime.UtcNow;
         message.AcknowledgedByUsername = current.Username;
         db.SaveChanges();
-        OnlineAccessSyncService.QueueSync();
+        OnlineMessageSyncService.QueueSync();
         return true;
     }
 
@@ -151,6 +151,7 @@ public static class UserMessageService
 
     private static void EnsureCurrentUserTenant(AppDbContext db, UserAccount current, string companyId)
     {
+        TenantMessagingStore.BindUnassignedUsers(db, companyId);
         if (!TenantMessagingStore.UserBelongsToCompany(db, current.Id, companyId))
             throw new InvalidOperationException("Das angemeldete Benutzerkonto gehört nicht zur aktiven Firma.");
     }
