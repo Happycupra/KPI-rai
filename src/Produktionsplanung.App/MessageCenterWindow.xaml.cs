@@ -11,10 +11,10 @@ public partial class MessageCenterWindow : Window
     public MessageCenterWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshAll();
+        Loaded += async (_, _) => await RefreshAllAsync();
     }
 
-    private void RefreshAll(int? selectInboxId = null, int? selectSentId = null)
+    private void RefreshLocal(int? selectInboxId = null, int? selectSentId = null)
     {
         try
         {
@@ -41,7 +41,18 @@ public partial class MessageCenterWindow : Window
         }
     }
 
-    private void Refresh_Click(object sender, RoutedEventArgs e) => RefreshAll(
+    private async Task RefreshAllAsync(int? selectInboxId = null, int? selectSentId = null)
+    {
+        StatusText.Text = "Nachrichten werden abgeglichen…";
+        var sync = await OnlineMessageSyncService.TrySyncAsync();
+        RefreshLocal(selectInboxId, selectSentId);
+        StatusText.Text = sync.Success
+            ? string.Empty
+            : "Lokale Nachrichten sind verfügbar. Online-Abgleich: " + sync.Message;
+        MessagesChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshAllAsync(
         (InboxGrid.SelectedItem as UserMessageRow)?.Id,
         (SentGrid.SelectedItem as UserMessageRow)?.Id);
 
@@ -76,7 +87,7 @@ public partial class MessageCenterWindow : Window
         if (UserMessageService.Acknowledge(row.Id))
         {
             StatusText.Text = "Der Hinweis wurde als gelesen bestätigt.";
-            RefreshAll(selectInboxId: row.Id);
+            RefreshLocal(selectInboxId: row.Id);
             MessagesChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -96,8 +107,8 @@ public partial class MessageCenterWindow : Window
             SubjectBox.Clear();
             BodyBox.Clear();
             PriorityBox.SelectedIndex = 0;
-            StatusText.Text = $"Hinweis an {recipient.DisplayName} gesendet.";
-            RefreshAll(selectSentId: sent.Id);
+            StatusText.Text = $"Hinweis an {recipient.DisplayName} gesendet. Online-Abgleich läuft im Hintergrund.";
+            RefreshLocal(selectSentId: sent.Id);
             MessageTabs.SelectedIndex = 1;
             MessagesChanged?.Invoke(this, EventArgs.Empty);
         }
