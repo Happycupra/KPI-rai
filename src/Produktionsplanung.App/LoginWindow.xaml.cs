@@ -98,10 +98,10 @@ public partial class LoginWindow : Window
     {
         if (_hasUsers)
         {
-            var current = AppSettingsService.Load();
-            var companyText = !string.IsNullOrWhiteSpace(current.CompanyName) &&
-                              !string.Equals(current.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase)
-                ? $" für „{current.CompanyName}“"
+            var existingSettings = AppSettingsService.Load();
+            var companyText = !string.IsNullOrWhiteSpace(existingSettings.CompanyName) &&
+                              !string.Equals(existingSettings.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase)
+                ? $" für „{existingSettings.CompanyName}“"
                 : string.Empty;
 
             SetStatus($"Diese Installation ist bereits{companyText} registriert. Eine zweite Firma bzw. ein zweiter Firmenname kann hier nicht hinterlegt werden. Bitte ein bestehendes Konto verwenden.");
