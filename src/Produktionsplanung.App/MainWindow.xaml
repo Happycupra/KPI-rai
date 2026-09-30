@@ -7,7 +7,7 @@
         Background="{StaticResource SurfaceBrush}">
     <Window.Resources>
         <Style x:Key="NavButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="#C8D8E6" />
+            <Setter Property="Foreground" Value="#B9C9D6" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -31,37 +31,36 @@
                                 SnapsToDevicePixels="True">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="42" />
+                                    <ColumnDefinition Width="38" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="24" />
                                 </Grid.ColumnDefinitions>
                                 <Border x:Name="ActiveRail"
                                         Grid.Column="0"
-                                        Width="3"
-                                        Margin="0,9,0,9"
-                                        CornerRadius="0,3,3,0"
+                                        Width="2"
+                                        Margin="0,10,0,10"
+                                        CornerRadius="0,2,2,0"
                                         HorizontalAlignment="Left"
                                         Background="{TemplateBinding BorderBrush}" />
                                 <Border x:Name="IconChrome"
                                         Grid.Column="0"
-                                        Width="32"
-                                        Height="32"
-                                        CornerRadius="8"
-                                        Background="{StaticResource SidebarHoverBrush}"
+                                        Width="28"
+                                        Height="28"
+                                        Background="Transparent"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
                                     <TextBlock x:Name="NavIcon"
                                                Text="{TemplateBinding Tag}"
                                                FontFamily="Segoe MDL2 Assets"
                                                FontSize="16"
-                                               Foreground="{Binding CommandParameter, RelativeSource={RelativeSource TemplatedParent}}"
+                                               Foreground="{TemplateBinding Foreground}"
                                                VerticalAlignment="Center"
                                                HorizontalAlignment="Center" />
                                 </Border>
                                 <TextBlock x:Name="NavLabel"
                                            Grid.Column="1"
                                            Text="{TemplateBinding Content}"
-                                           Margin="7,0,6,0"
+                                           Margin="6,0,6,0"
                                            Foreground="{TemplateBinding Foreground}"
                                            FontSize="{TemplateBinding FontSize}"
                                            FontWeight="{TemplateBinding FontWeight}"
@@ -72,7 +71,7 @@
                                            Text="&#xE76C;"
                                            FontFamily="Segoe MDL2 Assets"
                                            FontSize="9"
-                                           Foreground="#7794AA"
+                                           Foreground="#708BA2"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center" />
                             </Grid>
@@ -84,9 +83,8 @@
                                 <Setter TargetName="ActiveRail" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="IconChrome" Property="Grid.Column" Value="0" />
                                 <Setter TargetName="IconChrome" Property="Grid.ColumnSpan" Value="3" />
-                                <Setter TargetName="IconChrome" Property="Width" Value="38" />
-                                <Setter TargetName="IconChrome" Property="Height" Value="38" />
-                                <Setter TargetName="IconChrome" Property="CornerRadius" Value="10" />
+                                <Setter TargetName="IconChrome" Property="Width" Value="34" />
+                                <Setter TargetName="IconChrome" Property="Height" Value="34" />
                                 <Setter TargetName="IconChrome" Property="HorizontalAlignment" Value="Center" />
                                 <Setter TargetName="IconChrome" Property="VerticalAlignment" Value="Center" />
                                 <Setter TargetName="NavIcon" Property="FontSize" Value="18" />
