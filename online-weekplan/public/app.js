@@ -7,11 +7,13 @@ const urls = {
 
 const el = id => document.getElementById(id);
 const PIN_STORAGE_KEY = "solutioncompakt.weekplan.pin.v1";
-let config, auth, db, role = "", companyId = "", companyCode = "", weekIds = [], weekIndex = 0;
+const COMPANY_CODE_STORAGE_KEY = "solutioncompakt.weekplan.company-code.v1";
+let config, auth, db, role = "", companyId = "", companyCode = "", sourceUserId = 0, weekIds = [], weekIndex = 0;
 let modules = {};
 let sessionVersion = 0, loadVersion = 0;
 let pinUnlocked = false;
 let loginInProgress = false;
+let currentMessages = [];
 
 const PIN_ITERATIONS = 150000;
 
@@ -37,6 +39,31 @@ function applyQrLoginPrefill() {
   el("accessPin").value = "";
   el("confirmAccessPin").value = "";
   setTimeout(() => el("password").focus(), 0);
+  return true;
+}
+
+function companyCodeStorage() {
+  try { return globalThis.localStorage || null; } catch { return null; }
+}
+
+function rememberedCompanyCode() {
+  try {
+    return String(companyCodeStorage()?.getItem(COMPANY_CODE_STORAGE_KEY) || "").trim().toUpperCase();
+  } catch {
+    return "";
+  }
+}
+
+function rememberCompanyCode(value) {
+  const code = String(value || "").trim().toUpperCase();
+  if (!/^[A-Z0-9-]{3,24}$/.test(code)) return;
+  try { companyCodeStorage()?.setItem(COMPANY_CODE_STORAGE_KEY, code); } catch {}
+}
+
+function applyRememberedCompanyCode() {
+  const code = rememberedCompanyCode();
+  if (!code || el("companyCode").value.trim()) return false;
+  el("companyCode").value = code;
   return true;
 }
 
@@ -94,7 +121,6 @@ async function verifyPinRecord(userId, pin) {
   } catch { return false; }
 }
 
-
 bootstrap();
 
 async function bootstrap() {
@@ -111,8 +137,6 @@ async function bootstrap() {
     auth = authMod.getAuth(app);
     db = fsMod.getFirestore(app);
 
-    // A scanned user QR code must always lead to an explicit password prompt,
-    // never silently reuse a previously stored browser session/PIN.
     if (qrLoginParameters()) {
       clearPinRecord();
       await authMod.signOut(auth);
@@ -125,7 +149,7 @@ async function bootstrap() {
       if (!user) {
         pinUnlocked = false;
         show("loginView");
-        applyQrLoginPrefill();
+        if (!applyQrLoginPrefill()) applyRememberedCompanyCode();
         return;
       }
       const pinRecord = getPinRecord();
@@ -158,7 +182,9 @@ function wireEvents() {
   el("unlockPin").addEventListener("keydown", e => { if (e.key === "Enter") unlockWithPin(); });
   el("pinSwitchAccountButton").addEventListener("click", switchAccount);
   el("logoutButton").addEventListener("click", logout);
-  el("reloadButton").addEventListener("click", () => loadWeeks(weekIds[weekIndex]));
+  el("reloadButton").addEventListener("click", async () => {
+    await Promise.all([loadWeeks(weekIds[weekIndex]), refreshMessageBadge()]);
+  });
   el("prevWeek").addEventListener("click", () => navigateWeek(1));
   el("nextWeek").addEventListener("click", () => navigateWeek(-1));
   el("publishButton").addEventListener("click", publishPackage);
@@ -167,7 +193,6 @@ function wireEvents() {
 
 async function login() {
   if (loginInProgress) return;
-  // Capture once before awaiting Firebase: auth callbacks may reset the form.
   const credentials = {
     companyCode: el("companyCode").value.trim(),
     username: el("username").value.trim(),
@@ -206,6 +231,7 @@ async function login() {
     });
     const payload = await response.json();
     if (!response.ok || !payload.customToken) throw new Error(payload.error || "Anmeldung nicht möglich.");
+    rememberCompanyCode(credentials.companyCode);
     const credential = await modules.authMod.signInWithCustomToken(auth, payload.customToken);
     if (remember) await savePinRecord(credential.user.uid, pin);
     el("password").value = "";
@@ -257,18 +283,21 @@ async function activateAuthenticatedUser(user, session) {
     role = token.claims.role || "Beobachter";
     companyId = String(token.claims.companyId || "");
     companyCode = String(token.claims.companyCode || "");
-    if (!companyId) {
+    sourceUserId = Number(token.claims.sourceUserId || 0);
+    if (!companyId || !Number.isInteger(sourceUserId) || sourceUserId < 1) {
       clearPinRecord();
       await modules.authMod.signOut(auth);
       el("loginStatus").textContent = "Das Benutzerkonto ist keiner Firma zugeordnet.";
       return;
     }
+    rememberCompanyCode(companyCode);
     el("userName").textContent = token.claims.displayName || token.claims.username || user.uid;
     el("roleBadge").textContent = role;
     el("userBox").classList.remove("hidden");
     el("adminPublish").classList.toggle("hidden", role !== "Administrator");
+    ensureMessageUi();
     show("planView");
-    await loadWeeks();
+    await Promise.all([loadWeeks(), refreshMessageBadge()]);
   } catch {
     if (session !== sessionVersion) return;
     show("loginView");
@@ -279,6 +308,8 @@ async function activateAuthenticatedUser(user, session) {
 function resetPlan() {
   ++loadVersion;
   role = companyId = companyCode = "";
+  sourceUserId = 0;
+  currentMessages = [];
   weekIds = [];
   weekIndex = 0;
   for (const id of ["planGrid", "publishedMeta", "planStatus", "publishStatus", "userName", "roleBadge", "loginStatus"])
@@ -290,6 +321,8 @@ function resetPlan() {
   el("editDialog").close();
   el("userBox").classList.add("hidden");
   el("adminPublish").classList.add("hidden");
+  if (el("messageBadge")) el("messageBadge").textContent = "";
+  if (el("messageDialog")?.open) el("messageDialog").close();
   updateWeekButtons();
 }
 
@@ -387,7 +420,6 @@ function render(entries, weekStart, productionSlots = []) {
     if (!byDate.has(entry.date)) byDate.set(entry.date, []);
     byDate.get(entry.date).push(entry);
   }
-  // The selected snapshot defines the week, including empty historical weeks.
   const monday = new Date(weekStart + "T12:00:00");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStart) || Number.isNaN(monday.getTime()))
     throw new Error("Ungültiger Wochenbeginn.");
@@ -454,18 +486,18 @@ async function saveOverride(event) {
   el("saveOverrideButton").disabled = true;
   el("editStatus").textContent = "Wird gespeichert…";
   try {
-  await setDoc(doc(db, "companies", companyId, "weekPlans", weekId, "overrides", entryId), {
-    employeeName: el("editEmployee").value.trim(),
-    workstationName: el("editWorkstation").value.trim(),
-    shiftName: el("editShift").value.trim(),
-    start: el("editStart").value,
-    end: el("editEnd").value,
-    note: el("editNote").value.trim(),
-    updatedBy: auth.currentUser.uid,
-    updatedAt: serverTimestamp()
-  });
-  el("editDialog").close();
-  await loadWeek(weekId);
+    await setDoc(doc(db, "companies", companyId, "weekPlans", weekId, "overrides", entryId), {
+      employeeName: el("editEmployee").value.trim(),
+      workstationName: el("editWorkstation").value.trim(),
+      shiftName: el("editShift").value.trim(),
+      start: el("editStart").value,
+      end: el("editEnd").value,
+      note: el("editNote").value.trim(),
+      updatedBy: auth.currentUser.uid,
+      updatedAt: serverTimestamp()
+    });
+    el("editDialog").close();
+    await loadWeek(weekId);
   } catch {
     el("editStatus").textContent = "Speichern fehlgeschlagen. Deine Eingaben bleiben erhalten. Bitte erneut versuchen.";
   } finally {
@@ -492,6 +524,226 @@ async function publishPackage() {
   } catch (error) {
     el("publishStatus").textContent = error.message;
   }
+}
+
+function ensureMessageUi() {
+  if (el("messageDialog")) return;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    #messagesButton{position:relative}.message-badge{display:inline-flex;min-width:20px;height:20px;padding:0 6px;margin-left:6px;border-radius:10px;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:#c62828;color:#fff}.message-badge:empty{display:none}
+    .message-dialog{width:min(960px,94vw);max-height:90vh;border:0;border-radius:18px;padding:0;box-shadow:0 24px 80px rgba(0,0,0,.28)}.message-dialog::backdrop{background:rgba(15,23,42,.52)}
+    .message-shell{padding:22px}.message-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.message-header h2{margin:0}.message-compose{display:grid;grid-template-columns:1.3fr 1.7fr .8fr;gap:10px;align-items:end;margin:18px 0}.message-compose label{margin:0}.message-compose textarea{grid-column:1/-1;min-height:90px}.message-send-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;justify-content:flex-end}.message-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.message-list{display:grid;gap:10px;max-height:360px;overflow:auto}.message-card{border:1px solid rgba(100,116,139,.25);border-radius:12px;padding:12px;background:rgba(248,250,252,.72)}.message-card.unread{border-left:4px solid #2563eb}.message-card-top{display:flex;justify-content:space-between;gap:12px}.message-card-title{font-weight:800}.message-card-meta{font-size:12px;opacity:.72;margin-top:2px}.message-card-body{white-space:pre-wrap;margin-top:9px}.message-card-actions{display:flex;justify-content:flex-end;margin-top:10px}.message-empty{opacity:.65;padding:12px 0}.message-close{flex:0 0 auto}
+    @media(max-width:760px){.message-compose,.message-columns{grid-template-columns:1fr}.message-compose textarea,.message-send-row{grid-column:1}.message-list{max-height:none}}
+  `;
+  document.head.appendChild(style);
+
+  const button = document.createElement("button");
+  button.id = "messagesButton";
+  button.className = "ghost";
+  button.type = "button";
+  button.innerHTML = `Nachrichten <span id="messageBadge" class="message-badge"></span>`;
+  button.addEventListener("click", openMessageCenter);
+  const toolbar = document.querySelector("#planView .toolbar-actions");
+  toolbar?.insertBefore(button, el("reloadButton"));
+
+  const dialog = document.createElement("dialog");
+  dialog.id = "messageDialog";
+  dialog.className = "message-dialog";
+  dialog.innerHTML = `
+    <div class="message-shell">
+      <div class="message-header">
+        <div><span class="eyebrow">FIRMENINTERN</span><h2>Nachrichten</h2><p>Nur Benutzer deiner Firma können hier miteinander schreiben.</p></div>
+        <button id="messageCloseButton" class="ghost message-close" type="button">Schliessen</button>
+      </div>
+      <div class="message-compose">
+        <label>Empfänger<select id="messageRecipient"></select></label>
+        <label>Betreff<input id="messageSubject" maxlength="120" placeholder="Hinweis"></label>
+        <label>Priorität<select id="messagePriority"><option>Normal</option><option>Wichtig</option></select></label>
+        <label style="grid-column:1/-1">Nachricht<textarea id="messageBody" maxlength="4000" placeholder="Nachricht schreiben…"></textarea></label>
+        <div class="message-send-row"><span id="messageStatus" class="status"></span><button id="messageSendButton" class="primary" type="button">Senden</button></div>
+      </div>
+      <div class="message-columns">
+        <section><h3>Posteingang</h3><div id="messageInbox" class="message-list"></div></section>
+        <section><h3>Gesendet</h3><div id="messageSent" class="message-list"></div></section>
+      </div>
+    </div>`;
+  document.body.appendChild(dialog);
+  el("messageCloseButton").addEventListener("click", () => dialog.close());
+  el("messageSendButton").addEventListener("click", sendOnlineMessage);
+}
+
+async function apiRequest(endpoint, method = "GET", body = null) {
+  if (!endpoint || !auth?.currentUser) throw new Error("Online-Nachrichten sind nicht verfügbar.");
+  const token = await auth.currentUser.getIdToken();
+  const options = { method, headers: { "Authorization": "Bearer " + token } };
+  if (body !== null) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+  const response = await fetch(endpoint, options);
+  let payload = {};
+  try { payload = await response.json(); } catch {}
+  if (!response.ok) throw new Error(payload.error || payload.message || "Online-Anfrage fehlgeschlagen.");
+  return payload;
+}
+
+async function refreshMessageBadge() {
+  if (!sourceUserId || !config?.messageListEndpoint) return;
+  try {
+    const payload = await apiRequest(config.messageListEndpoint);
+    currentMessages = Array.isArray(payload.messages) ? payload.messages : [];
+    updateMessageBadge();
+  } catch {
+    if (el("messageBadge")) el("messageBadge").textContent = "";
+  }
+}
+
+function updateMessageBadge() {
+  const unread = currentMessages.filter(x => Number(x.recipientUserId) === sourceUserId && !x.acknowledgedAtUtc).length;
+  if (el("messageBadge")) el("messageBadge").textContent = unread ? (unread > 99 ? "99+" : String(unread)) : "";
+}
+
+async function openMessageCenter() {
+  ensureMessageUi();
+  el("messageDialog").showModal();
+  await loadMessageCenter();
+}
+
+async function loadMessageCenter() {
+  el("messageStatus").textContent = "Nachrichten werden geladen…";
+  try {
+    const [messagesPayload, recipientsPayload] = await Promise.all([
+      apiRequest(config.messageListEndpoint),
+      apiRequest(config.messageRecipientsEndpoint)
+    ]);
+    currentMessages = Array.isArray(messagesPayload.messages) ? messagesPayload.messages : [];
+    const recipients = Array.isArray(recipientsPayload.recipients) ? recipientsPayload.recipients : [];
+    const select = el("messageRecipient");
+    const selected = select.value;
+    select.innerHTML = "";
+    for (const recipient of recipients) {
+      const option = document.createElement("option");
+      option.value = String(recipient.id);
+      option.textContent = recipient.displayName && recipient.displayName !== recipient.username
+        ? `${recipient.displayName} (${recipient.username})`
+        : recipient.username;
+      select.appendChild(option);
+    }
+    if (recipients.some(x => String(x.id) === selected)) select.value = selected;
+    renderOnlineMessages();
+    updateMessageBadge();
+    el("messageStatus").textContent = recipients.length ? "" : "Keine weiteren aktiven Benutzer in dieser Firma vorhanden.";
+  } catch (error) {
+    el("messageStatus").textContent = error.message;
+  }
+}
+
+function renderOnlineMessages() {
+  const inbox = currentMessages
+    .filter(x => Number(x.recipientUserId) === sourceUserId)
+    .sort((a,b) => new Date(b.createdAtUtc || 0) - new Date(a.createdAtUtc || 0));
+  const sent = currentMessages
+    .filter(x => Number(x.senderUserId) === sourceUserId)
+    .sort((a,b) => new Date(b.createdAtUtc || 0) - new Date(a.createdAtUtc || 0));
+  renderMessageList(el("messageInbox"), inbox, false);
+  renderMessageList(el("messageSent"), sent, true);
+}
+
+function renderMessageList(container, messages, sent) {
+  container.innerHTML = "";
+  if (!messages.length) {
+    const empty = document.createElement("div");
+    empty.className = "message-empty";
+    empty.textContent = sent ? "Noch keine Nachrichten gesendet." : "Keine Nachrichten im Posteingang.";
+    container.appendChild(empty);
+    return;
+  }
+  for (const message of messages) {
+    const card = document.createElement("article");
+    card.className = "message-card" + (!sent && !message.acknowledgedAtUtc ? " unread" : "");
+    const top = document.createElement("div");
+    top.className = "message-card-top";
+    const left = document.createElement("div");
+    const title = document.createElement("div");
+    title.className = "message-card-title";
+    title.textContent = message.subject || "Hinweis";
+    const meta = document.createElement("div");
+    meta.className = "message-card-meta";
+    const partner = sent ? message.recipientDisplayNameSnapshot : message.senderDisplayNameSnapshot;
+    const state = sent
+      ? (message.acknowledgedAtUtc ? " · gelesen " + messageTime(message.acknowledgedAtUtc) : " · noch nicht bestätigt")
+      : (message.acknowledgedAtUtc ? " · gelesen bestätigt" : " · ungelesen");
+    meta.textContent = `${sent ? "An" : "Von"} ${partner || "Benutzer"} · ${messageTime(message.createdAtUtc)} · ${message.priority || "Normal"}${state}`;
+    left.append(title, meta);
+    top.appendChild(left);
+    const body = document.createElement("div");
+    body.className = "message-card-body";
+    body.textContent = message.body || "";
+    card.append(top, body);
+    if (!sent && !message.acknowledgedAtUtc) {
+      const actions = document.createElement("div");
+      actions.className = "message-card-actions";
+      const ack = document.createElement("button");
+      ack.type = "button";
+      ack.className = "ghost";
+      ack.textContent = "Gelesen bestätigen";
+      ack.addEventListener("click", () => acknowledgeOnlineMessage(message.onlineMessageId));
+      actions.appendChild(ack);
+      card.appendChild(actions);
+    }
+    container.appendChild(card);
+  }
+}
+
+async function sendOnlineMessage() {
+  const recipientUserId = Number(el("messageRecipient").value);
+  const body = el("messageBody").value.trim();
+  if (!Number.isInteger(recipientUserId) || recipientUserId < 1) {
+    el("messageStatus").textContent = "Bitte einen Empfänger auswählen.";
+    return;
+  }
+  if (!body) {
+    el("messageStatus").textContent = "Bitte eine Nachricht eingeben.";
+    return;
+  }
+  el("messageSendButton").disabled = true;
+  el("messageStatus").textContent = "Wird gesendet…";
+  try {
+    await apiRequest(config.messageSendEndpoint, "POST", {
+      recipientUserId,
+      subject: el("messageSubject").value.trim() || "Hinweis",
+      body,
+      priority: el("messagePriority").value
+    });
+    el("messageSubject").value = "";
+    el("messageBody").value = "";
+    el("messagePriority").value = "Normal";
+    await loadMessageCenter();
+    el("messageStatus").textContent = "Nachricht gesendet.";
+  } catch (error) {
+    el("messageStatus").textContent = error.message;
+  } finally {
+    el("messageSendButton").disabled = false;
+  }
+}
+
+async function acknowledgeOnlineMessage(messageId) {
+  el("messageStatus").textContent = "Lesebestätigung wird gespeichert…";
+  try {
+    await apiRequest(config.messageAcknowledgeEndpoint, "POST", { messageId });
+    await loadMessageCenter();
+    el("messageStatus").textContent = "Als gelesen bestätigt.";
+  } catch (error) {
+    el("messageStatus").textContent = error.message;
+  }
+}
+
+function messageTime(value) {
+  if (!value) return "Zeit unbekannt";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Zeit unbekannt";
+  return date.toLocaleString("de-CH", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
 }
 
 function show(id) {

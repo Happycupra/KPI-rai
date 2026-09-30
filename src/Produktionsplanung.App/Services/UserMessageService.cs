@@ -9,8 +9,11 @@ public static class UserMessageService
     public static IReadOnlyList<UserMessageRecipient> GetRecipients()
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         using var db = new AppDbContext();
-        return db.UserAccounts.AsNoTracking()
+        EnsureCurrentUserTenant(db, current, companyId);
+        return TenantMessagingStore.CompanyUsers(db, companyId)
+            .AsNoTracking()
             .Where(x => x.IsActive && x.Id != current.Id)
             .OrderBy(x => x.DisplayName)
             .ThenBy(x => x.Username)
@@ -21,6 +24,7 @@ public static class UserMessageService
     public static UserMessage Send(int recipientUserId, string? subject, string body, string priority = "Normal")
     {
         var sender = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         var normalizedBody = (body ?? string.Empty).Trim();
         if (normalizedBody.Length == 0)
             throw new InvalidOperationException("Bitte einen Hinweistext eingeben.");
@@ -36,8 +40,11 @@ public static class UserMessageService
             : "Normal";
 
         using var db = new AppDbContext();
-        var recipient = db.UserAccounts.AsNoTracking().SingleOrDefault(x => x.Id == recipientUserId && x.IsActive)
-            ?? throw new InvalidOperationException("Der ausgewählte Empfänger ist nicht mehr aktiv.");
+        EnsureCurrentUserTenant(db, sender, companyId);
+        var recipient = TenantMessagingStore.CompanyUsers(db, companyId)
+            .AsNoTracking()
+            .SingleOrDefault(x => x.Id == recipientUserId && x.IsActive)
+            ?? throw new InvalidOperationException("Der ausgewählte Empfänger ist nicht mehr aktiv oder gehört zu einer anderen Firma.");
 
         if (recipient.Id == sender.Id)
             throw new InvalidOperationException("Ein Hinweis kann nicht an das eigene Konto gesendet werden.");
@@ -58,14 +65,19 @@ public static class UserMessageService
 
         db.UserMessages.Add(message);
         db.SaveChanges();
+        TenantMessagingStore.BindMessage(db, message.Id, companyId);
+        OnlineMessageSyncService.QueueSync();
         return message;
     }
 
     public static IReadOnlyList<UserMessageRow> GetInbox()
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         using var db = new AppDbContext();
-        return db.UserMessages.AsNoTracking()
+        EnsureCurrentUserTenant(db, current, companyId);
+        return TenantMessagingStore.CompanyMessages(db, companyId)
+            .AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
             .AsEnumerable()
@@ -76,8 +88,11 @@ public static class UserMessageService
     public static IReadOnlyList<UserMessageRow> GetSent()
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         using var db = new AppDbContext();
-        return db.UserMessages.AsNoTracking()
+        EnsureCurrentUserTenant(db, current, companyId);
+        return TenantMessagingStore.CompanyMessages(db, companyId)
+            .AsNoTracking()
             .Where(x => x.SenderUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
             .AsEnumerable()
@@ -88,8 +103,11 @@ public static class UserMessageService
     public static IReadOnlyList<UserMessageRow> GetUnread()
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         using var db = new AppDbContext();
-        return db.UserMessages.AsNoTracking()
+        EnsureCurrentUserTenant(db, current, companyId);
+        return TenantMessagingStore.CompanyMessages(db, companyId)
+            .AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id && x.AcknowledgedAtUtc == null)
             .OrderBy(x => x.CreatedAtUtc)
             .AsEnumerable()
@@ -100,16 +118,23 @@ public static class UserMessageService
     public static int GetUnreadCount()
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
+        OnlineMessageSyncService.QueueSync();
         using var db = new AppDbContext();
-        return db.UserMessages.AsNoTracking()
+        EnsureCurrentUserTenant(db, current, companyId);
+        return TenantMessagingStore.CompanyMessages(db, companyId)
+            .AsNoTracking()
             .Count(x => x.RecipientUserId == current.Id && x.AcknowledgedAtUtc == null);
     }
 
     public static bool Acknowledge(int messageId)
     {
         var current = RequireCurrentUser();
+        var companyId = TenantMessagingStore.RequireCompanyId();
         using var db = new AppDbContext();
-        var message = db.UserMessages.SingleOrDefault(x => x.Id == messageId && x.RecipientUserId == current.Id);
+        EnsureCurrentUserTenant(db, current, companyId);
+        var message = TenantMessagingStore.CompanyMessages(db, companyId)
+            .SingleOrDefault(x => x.Id == messageId && x.RecipientUserId == current.Id);
         if (message is null)
             return false;
         if (message.AcknowledgedAtUtc.HasValue)
@@ -118,11 +143,19 @@ public static class UserMessageService
         message.AcknowledgedAtUtc = DateTime.UtcNow;
         message.AcknowledgedByUsername = current.Username;
         db.SaveChanges();
+        OnlineMessageSyncService.QueueSync();
         return true;
     }
 
     private static UserAccount RequireCurrentUser() =>
         SessionService.CurrentUser ?? throw new InvalidOperationException("Für Hinweise ist eine Anmeldung erforderlich.");
+
+    private static void EnsureCurrentUserTenant(AppDbContext db, UserAccount current, string companyId)
+    {
+        TenantMessagingStore.BindUnassignedUsers(db, companyId);
+        if (!TenantMessagingStore.UserBelongsToCompany(db, current.Id, companyId))
+            throw new InvalidOperationException("Das angemeldete Benutzerkonto gehört nicht zur aktiven Firma.");
+    }
 
     private static UserMessageRow ToRow(UserMessage x, bool sent) => new()
     {

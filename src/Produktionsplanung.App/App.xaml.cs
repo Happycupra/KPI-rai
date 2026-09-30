@@ -33,6 +33,10 @@ public partial class App : Application
         }
 
         CompanyIdentityService.EnsureExistingInstallationIdentity();
+        using (var db = new AppDbContext())
+        {
+            TenantMessagingStore.ApplySchemaAndBackfill(db);
+        }
 
         var licenseGate = await LicenseService.EvaluateStartupAsync();
         if (!licenseGate.Allowed &&
