@@ -73,6 +73,12 @@ service cloud.firestore {
       match /authUsers/{userId} {
         allow read, write: if false;
       }
+
+      // Internal messages are accessed only through Cloud Functions. Those functions
+      // revalidate the authenticated user, company and sender/recipient relationship.
+      match /messages/{messageId} {
+        allow read, write: if false;
+      }
     }
   }
 }
