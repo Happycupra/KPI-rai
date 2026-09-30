@@ -119,6 +119,7 @@ public static class UserMessageService
     {
         var current = RequireCurrentUser();
         var companyId = TenantMessagingStore.RequireCompanyId();
+        OnlineMessageSyncService.QueueSync();
         using var db = new AppDbContext();
         EnsureCurrentUserTenant(db, current, companyId);
         return TenantMessagingStore.CompanyMessages(db, companyId)
