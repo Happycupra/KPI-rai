@@ -62,7 +62,11 @@ public static class TenantMessagingStore
 
     public static string RequireCompanyId()
     {
-        var companyId = AppSettingsService.Load().CompanyId.Trim();
+        var settings = AppSettingsService.Load();
+        if (string.IsNullOrWhiteSpace(settings.CompanyId))
+            settings = CompanyIdentityService.EnsureExistingInstallationIdentity();
+
+        var companyId = settings.CompanyId.Trim();
         if (string.IsNullOrWhiteSpace(companyId))
             throw new InvalidOperationException("Diese Installation ist noch keiner Firma zugeordnet.");
         return companyId;
@@ -70,6 +74,7 @@ public static class TenantMessagingStore
 
     public static void BindUnassignedUsers(AppDbContext db, string? companyId = null)
     {
+        ApplySchemaAndBackfill(db);
         var tenant = string.IsNullOrWhiteSpace(companyId) ? RequireCompanyId() : companyId.Trim();
         db.Database.ExecuteSqlInterpolated($"UPDATE UserAccounts SET CompanyId={tenant} WHERE CompanyId IS NULL OR TRIM(CompanyId)=''");
     }
@@ -85,11 +90,13 @@ public static class TenantMessagingStore
 
     public static void BindMessage(AppDbContext db, int messageId, string companyId)
     {
+        ApplySchemaAndBackfill(db);
         db.Database.ExecuteSqlInterpolated($"UPDATE UserMessages SET CompanyId={companyId} WHERE Id={messageId} AND (CompanyId IS NULL OR TRIM(CompanyId)='' OR CompanyId={companyId})");
     }
 
     public static IReadOnlyList<TenantMessageSyncRow> LoadForSync(AppDbContext db, string companyId)
     {
+        ApplySchemaAndBackfill(db);
         var connection = db.Database.GetDbConnection();
         var closeAfter = connection.State != System.Data.ConnectionState.Open;
         if (closeAfter) connection.Open();
@@ -142,6 +149,7 @@ public static class TenantMessagingStore
 
     public static void MergeCloudMessages(AppDbContext db, string companyId, string installationId, IReadOnlyList<TenantCloudMessage> messages)
     {
+        ApplySchemaAndBackfill(db);
         var knownUsers = CompanyUsers(db, companyId).AsNoTracking().Select(x => x.Id).ToHashSet();
         foreach (var message in messages)
         {
@@ -204,6 +212,7 @@ public static class TenantMessagingStore
 
     public static string? GetOnlineMessageId(AppDbContext db, int localMessageId, string companyId)
     {
+        ApplySchemaAndBackfill(db);
         var connection = db.Database.GetDbConnection();
         var closeAfter = connection.State != System.Data.ConnectionState.Open;
         if (closeAfter) connection.Open();
