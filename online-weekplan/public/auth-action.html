@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#102a43">
+  <meta name="theme-color" content="#0e2539">
   <title>SolutionCompakt · Passwort</title>
   <style>
-    :root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#102a43;background:#f4f7fa}
-    *{box-sizing:border-box}body{margin:0}.wrap{max-width:560px;margin:7vh auto;padding:18px}
-    .card{background:#fff;border:1px solid #d9e2ec;border-radius:14px;padding:24px;box-shadow:0 5px 18px rgba(16,42,67,.06)}
-    h1{margin:0 0 8px}.sub{color:#627d98;margin-bottom:18px}label{display:block;font-weight:650;margin:12px 0 5px}
-    input,button{font:inherit}input{width:100%;padding:11px 12px;border:1px solid #bcccdc;border-radius:9px}
-    button{width:100%;margin-top:16px;border:1px solid #1261a0;border-radius:9px;padding:11px 13px;background:#1261a0;color:#fff;font-weight:700;cursor:pointer}
-    button.secondary{background:#fff;color:#102a43;border-color:#9fb3c8}.status{margin-top:14px;min-height:24px;color:#b42318}.ok{color:#166534}.hidden{display:none}
+    :root{font-family:Inter,"Segoe UI",Arial,sans-serif;color:#172033;background:#f5f7fa;--surface:#fff;--border:#d9e2ec;--border-strong:#b8c8d8;--muted:#64748b;--primary:#2563eb;--primary-hover:#1d4ed8;--danger:#c92a2a;--success:#168a45;--focus:#93c5fd}
+    *{box-sizing:border-box}body{margin:0;background:#f5f7fa;line-height:1.45}.wrap{max-width:560px;margin:7vh auto;padding:18px}.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 1px 2px rgba(15,23,42,.035)}
+    h1{margin:0 0 8px;font-size:26px;line-height:1.2}.sub{color:var(--muted);margin-bottom:18px}label{display:block;font-weight:650;color:#475569;margin:12px 0 5px}
+    input,button{font:inherit}input{width:100%;min-height:40px;padding:9px 11px;border:1px solid var(--border-strong);border-radius:10px;background:#fff;color:#172033;outline:none;transition:border-color .16s ease,box-shadow .16s ease}input:hover{border-color:#9fb3c6}input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.13)}
+    button{width:100%;min-height:42px;margin-top:16px;border:1px solid var(--primary);border-radius:10px;padding:9px 13px;background:var(--primary);color:#fff;font-weight:650;cursor:pointer;transition:background-color .16s ease,border-color .16s ease}button:hover{background:var(--primary-hover);border-color:var(--primary-hover)}button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}button.secondary{background:#fff;color:#172033;border-color:var(--border-strong)}button.secondary:hover{background:#f1f6fc;border-color:#9fb3c6}.status{margin-top:14px;min-height:24px;color:var(--danger)}.ok{color:var(--success)}.hidden{display:none}
+    @media(max-width:480px){.wrap{margin:3vh auto;padding:10px}.card{padding:18px}h1{font-size:23px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
   </style>
 </head>
 <body>
   <div class="wrap"><div class="card">
     <h1>SolutionCompakt</h1>
     <div class="sub">Passwort für die Lizenzverwaltung festlegen.</div>
-    <div id="loading">Link wird geprüft…</div>
+    <div id="loading" role="status" aria-live="polite">Link wird geprüft…</div>
     <div id="form" class="hidden">
       <div id="emailText" class="sub"></div>
       <label for="password">Neues Passwort</label>
@@ -32,7 +32,7 @@
       <div class="status ok">Passwort wurde gespeichert.</div>
       <button id="backButton" class="secondary">Zur Admin-Anmeldung</button>
     </div>
-    <div id="status" class="status"></div>
+    <div id="status" class="status" role="status" aria-live="polite"></div>
   </div></div>
   <script type="module" src="auth-action.js"></script>
 </body>

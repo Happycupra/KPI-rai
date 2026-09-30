@@ -4,20 +4,20 @@
              Background="{StaticResource SurfaceBrush}">
     <UserControl.Resources>
         <Style x:Key="WorkflowStepStyle" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="12,10"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,8,0" />
             <Style.Triggers>
                 <Trigger Property="Tag" Value="Done">
-                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource SuccessSoftBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}" />
                 </Trigger>
                 <Trigger Property="Tag" Value="Active">
-                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource InfoBrush}"/>
+                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -25,129 +25,133 @@
 
     <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="14"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="14" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="Auftragscockpit" Style="{StaticResource PageTitleTextStyle}"/>
+                <TextBlock Text="Auftragscockpit" Style="{StaticResource PageTitleTextStyle}" />
                 <TextBlock Text="Auftrag → Planung → Besetzung → Arbeitsgänge → Produktion → Qualität → Abschluss"
-                           Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0"/>
+                           Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
             </StackPanel>
             <Button Grid.Column="1" Content="↻ Aktualisieren" Command="{Binding RefreshCommand}"
-                    VerticalAlignment="Center" Style="{StaticResource ActionButtonStyle}"/>
+                    VerticalAlignment="Center" Style="{StaticResource ActionButtonStyle}" />
         </Grid>
 
         <TabControl Grid.Row="2">
-
-            <!-- 1. AUFTRAGS-COCKPIT -->
             <TabItem Header="Statusboard &amp; Übersicht">
                 <Grid Margin="14">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="340"/>
-                        <ColumnDefinition Width="18"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="340" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}" Padding="14">
                         <Grid>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="10"/>
-                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="10" />
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock Text="Aufträge im Cockpit" Style="{StaticResource SectionHeaderTextStyle}"/>
-                                    <TextBlock Text="Status, Fortschritt und nächster Arbeitsschritt" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                    <TextBlock Text="Aufträge im Cockpit" Style="{StaticResource SectionHeaderTextStyle}" />
+                                    <TextBlock Text="Status, Fortschritt und nächster Arbeitsschritt" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" Content="Nur Handlungsbedarf" IsChecked="{Binding ShowOnlyActionNeeded}" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" Content="Nur Handlungsbedarf" IsChecked="{Binding ShowOnlyActionNeeded}" VerticalAlignment="Center" />
                             </Grid>
 
-                            <ListBox Grid.Row="2" ItemsSource="{Binding CockpitOrders}" SelectedItem="{Binding SelectedCockpitOrder, Mode=TwoWay}"
-                                     BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border x:Name="OrderCard" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
-                                                CornerRadius="9" Padding="12" Margin="0,0,0,8" Background="{StaticResource CardBrush}">
-                                            <StackPanel>
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding OrderNumber}" FontWeight="SemiBold" FontSize="14"/>
-                                                    <Border Grid.Column="1" x:Name="OrderChip" Style="{StaticResource StatusChipStyle}">
-                                                        <TextBlock x:Name="OrderChipText" Text="{Binding ReadinessText}" FontSize="10" FontWeight="SemiBold"/>
-                                                    </Border>
-                                                </Grid>
-                                                <TextBlock Text="{Binding Product}" FontWeight="SemiBold" Margin="0,5,0,0"/>
-                                                <TextBlock Text="{Binding WorkstationName, StringFormat='Arbeitsplatz: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
-                                                <TextBlock Text="{Binding CurrentOperation}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,8" TextWrapping="Wrap"/>
-                                                <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="7"/>
-                                                <Grid Margin="0,5,0,0">
-                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                    <TextBlock Text="{Binding ProgressText}" Style="{StaticResource SecondaryTextStyle}"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding IssueText}" Style="{StaticResource SecondaryTextStyle}"/>
-                                                </Grid>
-                                            </StackPanel>
-                                        </Border>
-                                        <DataTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding ReadinessKind}" Value="Success">
-                                                <Setter TargetName="OrderChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/>
-                                                <Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource SuccessBrush}"/>
-                                                <Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource SuccessBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ReadinessKind}" Value="Warning">
-                                                <Setter TargetName="OrderChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/>
-                                                <Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource WarningBrush}"/>
-                                                <Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource WarningBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding ReadinessKind}" Value="Danger">
-                                                <Setter TargetName="OrderChip" Property="Background" Value="{StaticResource DangerSoftBrush}"/>
-                                                <Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
-                                                <Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource DangerBrush}"/>
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                            <Grid Grid.Row="2">
+                                <ListBox x:Name="CockpitOrdersList"
+                                         ItemsSource="{Binding CockpitOrders}"
+                                         SelectedItem="{Binding SelectedCockpitOrder, Mode=TwoWay}"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         HorizontalContentAlignment="Stretch">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border x:Name="OrderCard" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                                    CornerRadius="9" Padding="12" Margin="0,0,0,8" Background="{StaticResource CardBrush}">
+                                                <StackPanel>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding OrderNumber}" FontWeight="SemiBold" FontSize="14" />
+                                                        <Border Grid.Column="1" x:Name="OrderChip" Style="{StaticResource StatusChipStyle}">
+                                                            <TextBlock x:Name="OrderChipText" Text="{Binding ReadinessText}" FontSize="10" FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Text="{Binding Product}" FontWeight="SemiBold" Margin="0,5,0,0" />
+                                                    <TextBlock Text="{Binding WorkstationName, StringFormat='Arbeitsplatz: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
+                                                    <TextBlock Text="{Binding CurrentOperation}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,8" />
+                                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding ProgressPercent}" Height="7" />
+                                                    <Grid Margin="0,5,0,0">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                        <TextBlock Text="{Binding ProgressText}" Style="{StaticResource SecondaryTextStyle}" />
+                                                        <TextBlock Grid.Column="1" Text="{Binding IssueText}" Style="{StaticResource SecondaryTextStyle}" />
+                                                    </Grid>
+                                                </StackPanel>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding ReadinessKind}" Value="Success"><Setter TargetName="OrderChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/><Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding ReadinessKind}" Value="Warning"><Setter TargetName="OrderChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/><Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding ReadinessKind}" Value="Danger"><Setter TargetName="OrderChip" Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter TargetName="OrderChip" Property="BorderBrush" Value="{StaticResource DangerBorderBrush}"/><Setter TargetName="OrderChipText" Property="Foreground" Value="{StaticResource DangerBrush}"/></DataTrigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                                <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="280">
+                                    <Border.Style>
+                                        <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=CockpitOrdersList}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <TextBlock Text="Keine passenden Aufträge." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Passe den Filter an oder aktualisiere das Cockpit." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
                         </Grid>
                     </Border>
 
-                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,12">
                                 <StackPanel>
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                         <StackPanel>
-                                            <TextBlock Text="{Binding SelectedCockpitOrder.OrderNumber}" FontSize="22" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding SelectedCockpitOrder.Product}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,3,0,0"/>
+                                            <TextBlock Text="{Binding SelectedCockpitOrder.OrderNumber}" Style="{StaticResource DialogTitleTextStyle}" />
+                                            <TextBlock Text="{Binding SelectedCockpitOrder.Product}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,3,0,0" />
                                         </StackPanel>
                                         <Border Grid.Column="1" Padding="12,6" CornerRadius="9" BorderThickness="1">
                                             <Border.Style>
                                                 <Style TargetType="Border">
-                                                    <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}"/>
-                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                                                    <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Success"><Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}"/></DataTrigger>
-                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Warning"><Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource WarningBrush}"/></DataTrigger>
-                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Danger"><Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/></DataTrigger>
+                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Success"><Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/></DataTrigger>
+                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Warning"><Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/></DataTrigger>
+                                                        <DataTrigger Binding="{Binding ReadinessStatusKind}" Value="Danger"><Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource DangerBorderBrush}"/></DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <TextBlock Text="{Binding ReadinessStatusText}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding ReadinessStatusText}" FontWeight="SemiBold" />
                                         </Border>
                                     </Grid>
 
-                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding OrderProgressPercent}" Height="10" Margin="0,16,0,4"/>
-                                    <TextBlock Text="{Binding OrderProgressText}" Style="{StaticResource SecondaryTextStyle}"/>
+                                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding OrderProgressPercent}" Height="10" Margin="0,16,0,4" />
+                                    <TextBlock Text="{Binding OrderProgressText}" Style="{StaticResource SecondaryTextStyle}" />
 
                                     <UniformGrid Columns="5" Margin="0,18,0,0">
                                         <Border Style="{StaticResource WorkflowStepStyle}" Tag="{Binding WorkflowPlanState}"><StackPanel><TextBlock Text="1" FontWeight="Bold"/><TextBlock Text="Geplant" FontWeight="SemiBold"/></StackPanel></Border>
@@ -161,53 +165,51 @@
 
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="0.9*"/></Grid.ColumnDefinitions>
-
                                 <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}">
                                     <StackPanel>
-                                        <TextBlock Text="Produktionsbereitschaft" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
-                                        <TextBlock Text="{Binding WorkstationReadinessText}" Margin="0,3"/>
-                                        <TextBlock Text="{Binding CapacityReadinessText}" Margin="0,3"/>
-                                        <TextBlock Text="{Binding StaffReadinessText}" Margin="0,3"/>
-                                        <TextBlock Text="{Binding SkillReadinessText}" Margin="0,3"/>
-                                        <TextBlock Text="{Binding MaterialReadinessText}" Margin="0,3" Foreground="{StaticResource MutedTextBrush}"/>
+                                        <TextBlock Text="Produktionsbereitschaft" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                                        <TextBlock Text="{Binding WorkstationReadinessText}" Margin="0,3" />
+                                        <TextBlock Text="{Binding CapacityReadinessText}" Margin="0,3" />
+                                        <TextBlock Text="{Binding StaffReadinessText}" Margin="0,3" />
+                                        <TextBlock Text="{Binding SkillReadinessText}" Margin="0,3" />
+                                        <TextBlock Text="{Binding MaterialReadinessText}" Margin="0,3" Foreground="{StaticResource MutedTextBrush}" />
                                     </StackPanel>
                                 </Border>
-
                                 <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
                                     <StackPanel>
-                                        <TextBlock Text="Aktueller Workflow" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
-                                        <TextBlock Text="Aktuell" Style="{StaticResource EyebrowTextStyle}"/>
-                                        <TextBlock Text="{Binding CurrentOperationText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,3,0,12"/>
-                                        <TextBlock Text="Danach" Style="{StaticResource EyebrowTextStyle}"/>
-                                        <TextBlock Text="{Binding NextOperationText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                                        <TextBlock Text="Aktueller Workflow" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                                        <TextBlock Text="Aktuell" Style="{StaticResource EyebrowTextStyle}" />
+                                        <TextBlock Text="{Binding CurrentOperationText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,3,0,12" />
+                                        <TextBlock Text="Danach" Style="{StaticResource EyebrowTextStyle}" />
+                                        <TextBlock Text="{Binding NextOperationText}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,3,0,0" />
                                     </StackPanel>
                                 </Border>
                             </Grid>
 
                             <Border Style="{StaticResource SectionCardStyle}">
                                 <StackPanel>
-                                    <TextBlock Text="Arbeitsgang-Prozess" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
+                                    <TextBlock Text="Arbeitsgang-Prozess" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
                                     <ItemsControl ItemsSource="{Binding JobCards}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Grid Margin="0,0,0,8">
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="52"/><ColumnDefinition Width="*"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>
                                                     <Border Width="36" Height="36" CornerRadius="18" Background="{StaticResource PrimarySoftBrush}" HorizontalAlignment="Center">
-                                                        <TextBlock Text="{Binding SequenceNumber}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
+                                                        <TextBlock Text="{Binding SequenceNumber}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
                                                     </Border>
                                                     <StackPanel Grid.Column="1">
-                                                        <TextBlock Text="{Binding OperationName}" FontWeight="SemiBold"/>
-                                                        <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}"/>
-                                                        <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                                        <TextBlock Text="{Binding OperationName}" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}" />
+                                                        <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
                                                     </StackPanel>
                                                     <Border Grid.Column="2" x:Name="ProcessStatus" Style="{StaticResource StatusChipStyle}" HorizontalAlignment="Right">
-                                                        <TextBlock x:Name="ProcessStatusText" Text="{Binding Status}" FontWeight="SemiBold" FontSize="11"/>
+                                                        <TextBlock x:Name="ProcessStatusText" Text="{Binding Status}" FontWeight="SemiBold" FontSize="11" />
                                                     </Border>
                                                 </Grid>
                                                 <DataTemplate.Triggers>
-                                                    <DataTrigger Binding="{Binding Status}" Value="Fertig"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="In Produktion"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource InfoSoftBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource InfoBrush}"/></DataTrigger>
-                                                    <DataTrigger Binding="{Binding Status}" Value="Pausiert"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Fertig"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="ProcessStatus" Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="In Produktion"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource InfoSoftBrush}"/><Setter TargetName="ProcessStatus" Property="BorderBrush" Value="{StaticResource InfoBorderBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource InfoBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Pausiert"><Setter TargetName="ProcessStatus" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="ProcessStatus" Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/><Setter TargetName="ProcessStatusText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
                                                 </DataTemplate.Triggers>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
@@ -219,7 +221,6 @@
                 </Grid>
             </TabItem>
 
-            <!-- 2. ARBEITSKARTEN -->
             <TabItem Header="Arbeitskarten">
                 <Grid Margin="14">
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="12"/><RowDefinition Height="*"/></Grid.RowDefinitions>
@@ -227,27 +228,24 @@
                     <Border Grid.Row="0" Style="{StaticResource FilterBarStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <ComboBox ItemsSource="{Binding ProductionOrders}" SelectedItem="{Binding SelectedProductionOrder, Mode=TwoWay}" DisplayMemberPath="DisplayName" MinWidth="420"/>
+                            <ComboBox ItemsSource="{Binding ProductionOrders}" SelectedItem="{Binding SelectedProductionOrder, Mode=TwoWay}" DisplayMemberPath="DisplayName" MinWidth="260" />
                             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button Content="Prozess" Command="{Binding ShowProcessCommand}" Margin="0,0,6,0"/>
-                                <Button Content="Tabelle" Command="{Binding ShowTableCommand}"/>
+                                <Button Content="Prozess" Command="{Binding ShowProcessCommand}" Margin="0,0,6,0" Style="{StaticResource ActionButtonStyle}" />
+                                <Button Content="Tabelle" Command="{Binding ShowTableCommand}" Style="{StaticResource ActionButtonStyle}" />
                             </StackPanel>
-                            <Button Grid.Column="3" Content="Arbeitskarten erzeugen" Command="{Binding GenerateJobCardsCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                            <Button Grid.Column="3" Content="Arbeitskarten erzeugen" Command="{Binding GenerateJobCardsCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                         </Grid>
                     </Border>
 
                     <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="390"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
 
                         <Grid Grid.Column="0">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <ScrollViewer.Style>
-                                    <Style TargetType="ScrollViewer">
-                                        <Setter Property="Visibility" Value="Visible"/>
-                                        <Style.Triggers><DataTrigger Binding="{Binding ShowProcessView}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
-                                    </Style>
+                                    <Style TargetType="ScrollViewer"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding ShowProcessView}" Value="False"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style>
                                 </ScrollViewer.Style>
-                                <ItemsControl ItemsSource="{Binding JobCards}">
+                                <ItemsControl x:Name="JobCardsProcessList" ItemsSource="{Binding JobCards}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <Button Command="{Binding DataContext.SelectJobCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -255,28 +253,24 @@
                                                 <Border x:Name="JobProcessCard" Padding="16" CornerRadius="10" BorderThickness="1" Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="56"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                        <Border Width="38" Height="38" CornerRadius="19" Background="{StaticResource PrimarySoftBrush}">
-                                                            <TextBlock Text="{Binding SequenceNumber}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
-                                                        </Border>
+                                                        <Border Width="38" Height="38" CornerRadius="19" Background="{StaticResource PrimarySoftBrush}"><TextBlock Text="{Binding SequenceNumber}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
                                                         <StackPanel Grid.Column="1">
-                                                            <TextBlock Text="{Binding OperationName}" FontSize="16" FontWeight="SemiBold"/>
-                                                            <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
-                                                            <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
-                                                            <TextBlock Text="{Binding RequirementText, StringFormat='Skill: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                                                            <TextBlock Text="{Binding OperationName}" Style="{StaticResource CardTitleTextStyle}" />
+                                                            <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
+                                                            <TextBlock Text="{Binding EmployeeName, StringFormat='Mitarbeiter: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
+                                                            <TextBlock Text="{Binding RequirementText, StringFormat='Skill: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
                                                         </StackPanel>
                                                         <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                                            <Border x:Name="CardStatusChip" Style="{StaticResource StatusChipStyle}" HorizontalAlignment="Right">
-                                                                <TextBlock x:Name="CardStatusText" Text="{Binding Status}" FontWeight="SemiBold"/>
-                                                            </Border>
-                                                            <TextBlock Text="{Binding TimeText}" Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Right" Margin="0,8,0,0"/>
+                                                            <Border x:Name="CardStatusChip" Style="{StaticResource StatusChipStyle}" HorizontalAlignment="Right"><TextBlock x:Name="CardStatusText" Text="{Binding Status}" FontWeight="SemiBold" /></Border>
+                                                            <TextBlock Text="{Binding TimeText}" Style="{StaticResource SecondaryTextStyle}" HorizontalAlignment="Right" Margin="0,8,0,0" />
                                                         </StackPanel>
                                                     </Grid>
                                                 </Border>
                                             </Button>
                                             <DataTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding Status}" Value="Fertig"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
-                                                <DataTrigger Binding="{Binding Status}" Value="In Produktion"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource InfoSoftBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource InfoBrush}"/></DataTrigger>
-                                                <DataTrigger Binding="{Binding Status}" Value="Pausiert"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Fertig"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="CardStatusChip" Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="In Produktion"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource InfoSoftBrush}"/><Setter TargetName="CardStatusChip" Property="BorderBrush" Value="{StaticResource InfoBorderBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource InfoBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Pausiert"><Setter TargetName="CardStatusChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="CardStatusChip" Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/><Setter TargetName="CardStatusText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -285,12 +279,9 @@
 
                             <Border>
                                 <Border.Style>
-                                    <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers><DataTrigger Binding="{Binding ShowProcessView}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
-                                    </Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource SectionCardStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding ShowProcessView}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style>
                                 </Border.Style>
-                                <DataGrid ItemsSource="{Binding JobCards}" SelectedItem="{Binding SelectedJobCard, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid x:Name="JobCardsTable" ItemsSource="{Binding JobCards}" SelectedItem="{Binding SelectedJobCard, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="#" Binding="{Binding SequenceNumber}" Width="50"/>
                                         <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding OperationName}" Width="*"/>
@@ -302,51 +293,64 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
+
+                            <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=JobCardsProcessList}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="Noch keine Arbeitskarten vorhanden." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Wähle einen Produktionsauftrag und erzeuge die Arbeitskarten." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                                </StackPanel>
+                            </Border>
                         </Grid>
 
-                        <Border Grid.Column="2" Style="{StaticResource EditorCardStyle}" Padding="18">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Border Grid.Column="2" Style="{StaticResource EditorCardStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel>
-                                    <TextBlock Text="Arbeitskarte" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,12"/>
-                                    <TextBlock Text="{Binding SelectedJobCard.OperationName}" FontSize="19" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding SelectedJobCard.WorkstationName}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,8"/>
-                                    <TextBlock Text="{Binding SelectedJobCard.RequirementText, StringFormat='Pflichtqualifikation: {0}'}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                                    <TextBlock Text="Arbeitskarte" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,12" />
+                                    <TextBlock Text="{Binding SelectedJobCard.OperationName}" Style="{StaticResource DialogTitleTextStyle}" />
+                                    <TextBlock Text="{Binding SelectedJobCard.WorkstationName}" Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,8" />
+                                    <TextBlock Text="{Binding SelectedJobCard.RequirementText, StringFormat='Pflichtqualifikation: {0}'}" FontWeight="SemiBold" Margin="0,0,0,12" />
 
                                     <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <ComboBox ItemsSource="{Binding JobCardEmployeeChoices}" SelectedItem="{Binding SelectedJobCardEmployeeChoice, Mode=TwoWay}" DisplayMemberPath="DisplayText"/>
-                                        <Button Grid.Column="2" Content="Beste Wahl" Command="{Binding AutoAssignBestEmployeeCommand}" ToolTip="Skill, Abwesenheit, Planung und aktive Arbeitskarten berücksichtigen"/>
+                                        <ComboBox ItemsSource="{Binding JobCardEmployeeChoices}" SelectedItem="{Binding SelectedJobCardEmployeeChoice, Mode=TwoWay}" DisplayMemberPath="DisplayText" />
+                                        <Button Grid.Column="2" Content="Beste Wahl" Command="{Binding AutoAssignBestEmployeeCommand}" Style="{StaticResource ActionButtonStyle}" ToolTip="Skill, Abwesenheit, Planung und aktive Arbeitskarten berücksichtigen" />
                                     </Grid>
 
-                                    <Border CornerRadius="8" Padding="10,8" Margin="0,0,0,14" BorderThickness="1">
+                                    <Border Margin="0,0,0,14">
                                         <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="{StaticResource InfoSoftBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+                                            <Style TargetType="Border" BasedOn="{StaticResource AlertCardStyle}">
+                                                <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Success"><Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource SuccessBrush}"/></DataTrigger>
-                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Warning"><Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource WarningBrush}"/></DataTrigger>
-                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Danger"><Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Success"><Setter Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Warning"><Setter Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding QualificationStatusKind}" Value="Danger"><Setter Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter Property="BorderBrush" Value="{StaticResource DangerBorderBrush}"/></DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-                                        <TextBlock Text="{Binding QualificationStatusText}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding QualificationStatusText}" TextWrapping="Wrap" FontWeight="SemiBold" AutomationProperties.LiveSetting="Polite" />
                                     </Border>
 
                                     <UniformGrid Columns="2" Margin="0,0,0,12">
-                                        <Button Content="▶ Start / Weiter" Command="{Binding StartJobCardCommand}" Style="{StaticResource PrimaryButtonStyle}" Height="44" Margin="0,0,6,0"/>
-                                        <Button Content="⏸ Pause" Command="{Binding PauseJobCardCommand}" Height="44" Margin="6,0,0,0"/>
+                                        <Button Content="▶ Start / Weiter" Command="{Binding StartJobCardCommand}" Style="{StaticResource PrimaryActionButtonStyle}" Height="44" Margin="0,0,6,0" />
+                                        <Button Content="⏸ Pause" Command="{Binding PauseJobCardCommand}" Style="{StaticResource ActionButtonStyle}" Height="44" Margin="6,0,0,0" />
                                     </UniformGrid>
 
                                     <Grid Margin="0,0,0,12">
                                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="10"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                                        <StackPanel><TextBlock Text="Gutmenge" FontWeight="SemiBold"/><TextBox Text="{Binding FinishGoodQuantity}" Margin="0,5,0,0"/></StackPanel>
-                                        <StackPanel Grid.Column="2"><TextBlock Text="Ausschuss" FontWeight="SemiBold"/><TextBox Text="{Binding FinishScrapQuantity}" Margin="0,5,0,0"/></StackPanel>
+                                        <StackPanel><TextBlock Text="Gutmenge" Style="{StaticResource FieldLabelTextStyle}"/><TextBox Text="{Binding FinishGoodQuantity}" /></StackPanel>
+                                        <StackPanel Grid.Column="2"><TextBlock Text="Ausschuss" Style="{StaticResource FieldLabelTextStyle}"/><TextBox Text="{Binding FinishScrapQuantity}" /></StackPanel>
                                     </Grid>
 
-                                    <TextBlock Text="Kommentar" FontWeight="SemiBold"/>
-                                    <TextBox Text="{Binding JobCardComment, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Margin="0,5,0,12" VerticalScrollBarVisibility="Auto"/>
-                                    <Button Content="✓ Arbeitsgang fertig → nächster Schritt" Command="{Binding FinishJobCardCommand}" Style="{StaticResource PrimaryButtonStyle}" Height="44"/>
+                                    <TextBlock Text="Kommentar" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBox Text="{Binding JobCardComment, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12" VerticalScrollBarVisibility="Auto" />
+                                    <Button Content="✓ Arbeitsgang fertig → nächster Schritt" Command="{Binding FinishJobCardCommand}" Style="{StaticResource PrimaryActionButtonStyle}" Height="44" />
                                 </StackPanel>
                             </ScrollViewer>
                         </Border>
@@ -354,109 +358,120 @@
                 </Grid>
             </TabItem>
 
-            <!-- 3. KAPAZITÄT -->
             <TabItem Header="Kapazität">
                 <Grid Margin="14">
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="12"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                     <Grid>
                         <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Kapazitätsvorschau · nächste 7 Tage" Style="{StaticResource SectionHeaderTextStyle}"/>
-                            <TextBlock Text="Arbeitsplatz anklicken, um die verursachenden Arbeitskarten zu sehen." Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0"/>
+                            <TextBlock Text="Kapazitätsvorschau · nächste 7 Tage" Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock Text="Arbeitsplatz anklicken, um die verursachenden Arbeitskarten zu sehen." Style="{StaticResource SecondaryTextStyle}" Margin="0,2,0,0" />
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Neu berechnen" Command="{Binding RefreshCapacityCommand}"/>
+                        <Button Grid.Column="1" Content="Neu berechnen" Command="{Binding RefreshCapacityCommand}" Style="{StaticResource ActionButtonStyle}" />
                     </Grid>
 
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="0.9*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="1.1*"/></Grid.ColumnDefinitions>
 
-                        <ListBox Grid.Column="0" ItemsSource="{Binding CapacityRows}" SelectedItem="{Binding SelectedCapacityRow, Mode=TwoWay}"
-                                 BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <Border x:Name="CapacityCard" Style="{StaticResource SectionCardStyle}" Margin="0,0,0,9" Padding="14">
-                                        <StackPanel>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding WorkstationName}" FontWeight="SemiBold" FontSize="15"/>
-                                                    <TextBlock Text="{Binding Area}" Style="{StaticResource SecondaryTextStyle}"/>
-                                                </StackPanel>
-                                                <Border Grid.Column="1" x:Name="CapacityChip" Style="{StaticResource StatusChipStyle}">
-                                                    <TextBlock x:Name="CapacityChipText" Text="{Binding Status}" FontWeight="SemiBold"/>
-                                                </Border>
-                                            </Grid>
-                                            <ProgressBar Minimum="0" Maximum="120" Value="{Binding BarValue, Mode=OneWay}" Height="10" Margin="0,12,0,5"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding UtilizationText}" FontWeight="SemiBold"/>
-                                                <TextBlock Grid.Column="1" Text="{Binding DeltaText}" Style="{StaticResource SecondaryTextStyle}"/>
-                                            </Grid>
-                                            <TextBlock Text="{Binding PlannedText, StringFormat='Geplant: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0"/>
-                                            <TextBlock Text="{Binding AvailableText, StringFormat='Verfügbar: {0}'}" Style="{StaticResource SecondaryTextStyle}"/>
-                                        </StackPanel>
-                                    </Border>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding Status}" Value="Frei"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
-                                        <DataTrigger Binding="{Binding Status}" Value="Knapp"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
-                                        <DataTrigger Binding="{Binding Status}" Value="Überlastet"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource DangerBrush}"/></DataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <Grid Grid.Column="0">
+                            <ListBox x:Name="CapacityRowsList" ItemsSource="{Binding CapacityRows}" SelectedItem="{Binding SelectedCapacityRow, Mode=TwoWay}"
+                                     BorderThickness="0" Background="Transparent" HorizontalContentAlignment="Stretch">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="CapacityCard" Style="{StaticResource SectionCardStyle}" Margin="0,0,0,9" Padding="14">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding WorkstationName}" Style="{StaticResource CardTitleTextStyle}" />
+                                                        <TextBlock Text="{Binding Area}" Style="{StaticResource SecondaryTextStyle}" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" x:Name="CapacityChip" Style="{StaticResource StatusChipStyle}"><TextBlock x:Name="CapacityChipText" Text="{Binding Status}" FontWeight="SemiBold" /></Border>
+                                                </Grid>
+                                                <ProgressBar Minimum="0" Maximum="120" Value="{Binding BarValue, Mode=OneWay}" Height="10" Margin="0,12,0,5" />
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Text="{Binding UtilizationText}" FontWeight="SemiBold" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding DeltaText}" Style="{StaticResource SecondaryTextStyle}" />
+                                                </Grid>
+                                                <TextBlock Text="{Binding PlannedText, StringFormat='Geplant: {0}'}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
+                                                <TextBlock Text="{Binding AvailableText, StringFormat='Verfügbar: {0}'}" Style="{StaticResource SecondaryTextStyle}" />
+                                            </StackPanel>
+                                        </Border>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="Frei"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource SuccessSoftBrush}"/><Setter TargetName="CapacityChip" Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource SuccessBrush}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Knapp"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource WarningSoftBrush}"/><Setter TargetName="CapacityChip" Property="BorderBrush" Value="{StaticResource WarningBorderBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource WarningBrush}"/></DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Überlastet"><Setter TargetName="CapacityChip" Property="Background" Value="{StaticResource DangerSoftBrush}"/><Setter TargetName="CapacityChip" Property="BorderBrush" Value="{StaticResource DangerBorderBrush}"/><Setter TargetName="CapacityChipText" Property="Foreground" Value="{StaticResource DangerBrush}"/></DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="340">
+                                <Border.Style><Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=CapacityRowsList}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                <StackPanel><TextBlock Text="Keine Kapazitätsdaten vorhanden." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center"/><TextBlock Text="Berechne die Vorschau neu, sobald Arbeitskarten geplant sind." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center"/></StackPanel>
+                            </Border>
+                        </Grid>
 
                         <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
                             <StackPanel>
-                                <TextBlock Text="{Binding SelectedCapacityRow.WorkstationName, StringFormat='Belastung durch Arbeitskarten · {0}'}" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10"/>
-                                <DataGrid ItemsSource="{Binding CapacityJobCards}" AutoGenerateColumns="False" IsReadOnly="True">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Datum" Binding="{Binding PlannedDate, StringFormat=dd.MM.}" Width="70"/>
-                                        <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="95"/>
-                                        <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding OperationName}" Width="*"/>
-                                        <DataGridTextColumn Header="Soll" Binding="{Binding PlannedMinutes, StringFormat={}{0:N0} min}" Width="75"/>
-                                        <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="140"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                <TextBlock Text="{Binding SelectedCapacityRow.WorkstationName, StringFormat='Belastung durch Arbeitskarten · {0}'}" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                                <Grid>
+                                    <DataGrid x:Name="CapacityJobCardsGrid" ItemsSource="{Binding CapacityJobCards}" AutoGenerateColumns="False" IsReadOnly="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Datum" Binding="{Binding PlannedDate, StringFormat=dd.MM.}" Width="70"/>
+                                            <DataGridTextColumn Header="Auftrag" Binding="{Binding OrderNumber}" Width="95"/>
+                                            <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding OperationName}" Width="*"/>
+                                            <DataGridTextColumn Header="Soll" Binding="{Binding PlannedMinutes, StringFormat={}{0:N0} min}" Width="75"/>
+                                            <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="140"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="340">
+                                        <Border.Style><Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=CapacityJobCardsGrid}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                        <TextBlock Text="Keine Arbeitskarten für diese Auswahl." Style="{StaticResource SecondaryTextStyle}" TextAlignment="Center" />
+                                    </Border>
+                                </Grid>
                             </StackPanel>
                         </Border>
                     </Grid>
                 </Grid>
             </TabItem>
 
-            <!-- 4. STAMMDATEN -->
             <TabItem Header="Stammdaten">
                 <TabControl Margin="14">
                     <TabItem Header="Arbeitsgänge">
                         <Grid Margin="12">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="1.15*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="0.85*"/></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}">
-                                <DataGrid ItemsSource="{Binding Operations}" SelectedItem="{Binding SelectedOperation, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="90"/>
-                                        <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding Name}" Width="*"/>
-                                        <DataGridTextColumn Header="Soll min" Binding="{Binding DefaultMinutes, StringFormat=N0}" Width="80"/>
-                                        <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70"/>
-                                        <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="60"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                <Grid>
+                                    <DataGrid x:Name="OperationsGrid" ItemsSource="{Binding Operations}" SelectedItem="{Binding SelectedOperation, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Code" Binding="{Binding Code}" Width="90"/>
+                                            <DataGridTextColumn Header="Arbeitsgang" Binding="{Binding Name}" Width="*"/>
+                                            <DataGridTextColumn Header="Soll min" Binding="{Binding DefaultMinutes, StringFormat=N0}" Width="80"/>
+                                            <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70"/>
+                                            <DataGridCheckBoxColumn Header="Aktiv" Binding="{Binding IsActive}" Width="60"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360"><Border.Style><Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=OperationsGrid}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Border.Style><TextBlock Text="Noch keine Arbeitsgänge definiert." Style="{StaticResource SecondaryTextStyle}" TextAlignment="Center" /></Border>
+                                </Grid>
                             </Border>
 
                             <Border Grid.Column="2" Style="{StaticResource EditorCardStyle}">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                     <StackPanel>
-                                        <TextBlock Text="Arbeitsgang definieren" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,14"/>
-                                        <TextBlock Text="Code" FontWeight="SemiBold"/><TextBox Text="{Binding OperationCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10"/>
-                                        <TextBlock Text="Bezeichnung" FontWeight="SemiBold"/><TextBox Text="{Binding OperationName, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,10"/>
-                                        <TextBlock Text="Beschreibung" FontWeight="SemiBold"/><TextBox Text="{Binding OperationDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="72" Margin="0,5,0,10" VerticalScrollBarVisibility="Auto"/>
-                                        <TextBlock Text="Standard-Arbeitsplatz" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedDefaultWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,10"/>
+                                        <TextBlock Text="Arbeitsgang definieren" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,14" />
+                                        <TextBlock Text="Code" Style="{StaticResource FieldLabelTextStyle}" /><TextBox Text="{Binding OperationCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                                        <TextBlock Text="Bezeichnung" Style="{StaticResource FieldLabelTextStyle}" /><TextBox Text="{Binding OperationName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+                                        <TextBlock Text="Beschreibung" Style="{StaticResource FieldLabelTextStyle}" /><TextBox Text="{Binding OperationDescription, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto" />
+                                        <TextBlock Text="Standard-Arbeitsplatz" Style="{StaticResource FieldLabelTextStyle}" /><ComboBox ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedDefaultWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,0,0,10" />
                                         <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="10"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                                            <StackPanel><TextBlock Text="Sollzeit (min)" FontWeight="SemiBold"/><TextBox Text="{Binding DefaultMinutes}" Margin="0,5,0,0"/></StackPanel>
-                                            <StackPanel Grid.Column="2"><TextBlock Text="Personalbedarf" FontWeight="SemiBold"/><TextBox Text="{Binding OperationRequiredStaff}" Margin="0,5,0,0"/></StackPanel>
+                                            <StackPanel><TextBlock Text="Sollzeit (min)" Style="{StaticResource FieldLabelTextStyle}" /><TextBox Text="{Binding DefaultMinutes}" /></StackPanel>
+                                            <StackPanel Grid.Column="2"><TextBlock Text="Personalbedarf" Style="{StaticResource FieldLabelTextStyle}" /><TextBox Text="{Binding OperationRequiredStaff}" /></StackPanel>
                                         </Grid>
-                                        <TextBlock Text="Pflichtqualifikation" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,5,0,10"/>
-                                        <TextBlock Text="Mindest-Level" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding QualificationLevelChoices}" DisplayMemberPath="Name" SelectedValuePath="Level" SelectedValue="{Binding RequiredQualificationLevel, Mode=TwoWay}" Margin="0,5,0,10"/>
-                                        <CheckBox Content="Arbeitsgang aktiv" IsChecked="{Binding OperationIsActive}" Margin="0,0,0,16"/>
-                                        <WrapPanel HorizontalAlignment="Center"><Button Content="Neu" Command="{Binding NewOperationCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="Speichern" Command="{Binding SaveOperationCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></WrapPanel>
+                                        <TextBlock Text="Pflichtqualifikation" Style="{StaticResource FieldLabelTextStyle}" /><ComboBox ItemsSource="{Binding Qualifications}" SelectedItem="{Binding SelectedRequiredQualification, Mode=TwoWay}" DisplayMemberPath="Name" Margin="0,0,0,10" />
+                                        <TextBlock Text="Mindest-Level" Style="{StaticResource FieldLabelTextStyle}" /><ComboBox ItemsSource="{Binding QualificationLevelChoices}" DisplayMemberPath="Name" SelectedValuePath="Level" SelectedValue="{Binding RequiredQualificationLevel, Mode=TwoWay}" Margin="0,0,0,10" />
+                                        <CheckBox Content="Arbeitsgang aktiv" IsChecked="{Binding OperationIsActive}" Margin="0,0,0,16" />
+                                        <WrapPanel HorizontalAlignment="Right"><Button Content="Neu" Command="{Binding NewOperationCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="Speichern" Command="{Binding SaveOperationCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></WrapPanel>
                                     </StackPanel>
                                 </ScrollViewer>
                             </Border>
@@ -469,10 +484,13 @@
                             <Border Grid.Column="0" Style="{StaticResource SectionCardStyle}">
                                 <Grid>
                                     <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                                    <DataGrid ItemsSource="{Binding Routings}" SelectedItem="{Binding SelectedRouting, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
-                                        <DataGrid.Columns><DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="*"/><DataGridTextColumn Header="Arbeitsplan" Binding="{Binding Name}" Width="*"/></DataGrid.Columns>
-                                    </DataGrid>
-                                    <Button Grid.Row="1" Content="+ Neuer Arbeitsplan" Command="{Binding NewRoutingCommand}" Margin="0,10,0,0" Style="{StaticResource ActionButtonStyle}"/>
+                                    <Grid>
+                                        <DataGrid x:Name="RoutingsGrid" ItemsSource="{Binding Routings}" SelectedItem="{Binding SelectedRouting, Mode=TwoWay}" AutoGenerateColumns="False" IsReadOnly="True">
+                                            <DataGrid.Columns><DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="*"/><DataGridTextColumn Header="Arbeitsplan" Binding="{Binding Name}" Width="*"/></DataGrid.Columns>
+                                        </DataGrid>
+                                        <Border HorizontalAlignment="Center" VerticalAlignment="Center"><Border.Style><Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=RoutingsGrid}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></Border.Style><TextBlock Text="Noch keine Arbeitspläne." Style="{StaticResource SecondaryTextStyle}" /></Border>
+                                    </Grid>
+                                    <Button Grid.Row="1" Content="+ Neuer Arbeitsplan" Command="{Binding NewRoutingCommand}" Margin="0,10,0,0" Style="{StaticResource ActionButtonStyle}" />
                                 </Grid>
                             </Border>
 
@@ -481,8 +499,8 @@
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="12"/><RowDefinition Height="*"/><RowDefinition Height="12"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                     <Grid>
                                         <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                        <StackPanel><TextBlock Text="Produkt" FontWeight="SemiBold"/><TextBox Text="{Binding RoutingProduct, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0"/></StackPanel>
-                                        <StackPanel Grid.Column="2"><TextBlock Text="Name des Arbeitsplans" FontWeight="SemiBold"/><TextBox Text="{Binding RoutingName, UpdateSourceTrigger=PropertyChanged}" Margin="0,5,0,0"/></StackPanel>
+                                        <StackPanel><TextBlock Text="Produkt" Style="{StaticResource FieldLabelTextStyle}"/><TextBox Text="{Binding RoutingProduct, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
+                                        <StackPanel Grid.Column="2"><TextBlock Text="Name des Arbeitsplans" Style="{StaticResource FieldLabelTextStyle}"/><TextBox Text="{Binding RoutingName, UpdateSourceTrigger=PropertyChanged}" /></StackPanel>
                                         <StackPanel Grid.Column="4" VerticalAlignment="Bottom"><CheckBox Content="Aktiv" IsChecked="{Binding RoutingIsActive}" Margin="0,0,0,8"/><Button Content="Speichern" Command="{Binding SaveRoutingCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></StackPanel>
                                     </Grid>
 
@@ -497,19 +515,19 @@
                                             <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="150"/>
                                             <DataGridTextColumn Header="Soll min" Binding="{Binding PlannedMinutes, StringFormat=N0}" Width="75"/>
                                             <DataGridTextColumn Header="Personal" Binding="{Binding RequiredStaff}" Width="70"/>
-                                            <DataGridTemplateColumn Header="" Width="70">
-                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Archivieren" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource CompactButtonStyle}"/></DataTemplate></DataGridTemplateColumn.CellTemplate>
+                                            <DataGridTemplateColumn Header="" Width="80">
+                                                <DataGridTemplateColumn.CellTemplate><DataTemplate><Button Content="Archivieren" Command="{Binding DataContext.DeleteRoutingStepCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource CompactButtonStyle}" /></DataTemplate></DataGridTemplateColumn.CellTemplate>
                                             </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
 
-                                    <Border Grid.Row="4" Background="{StaticResource PrimarySoftBrush}" CornerRadius="8" Padding="12">
+                                    <Border Grid.Row="4" Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource InfoBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="1.2*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="1.1*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="90"/><ColumnDefinition Width="10"/><ColumnDefinition Width="80"/><ColumnDefinition Width="10"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <ComboBox ItemsSource="{Binding Operations}" SelectedItem="{Binding SelectedStepOperation, Mode=TwoWay}" DisplayMemberPath="Name"/>
-                                            <ComboBox Grid.Column="2" ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedStepWorkstation, Mode=TwoWay}" DisplayMemberPath="Name"/>
-                                            <TextBox Grid.Column="4" Text="{Binding StepMinutes}" ToolTip="Sollzeit in Minuten"/>
-                                            <TextBox Grid.Column="6" Text="{Binding StepRequiredStaff}" ToolTip="Personalbedarf"/>
+                                            <ComboBox ItemsSource="{Binding Operations}" SelectedItem="{Binding SelectedStepOperation, Mode=TwoWay}" DisplayMemberPath="Name" />
+                                            <ComboBox Grid.Column="2" ItemsSource="{Binding Workstations}" SelectedItem="{Binding SelectedStepWorkstation, Mode=TwoWay}" DisplayMemberPath="Name" />
+                                            <TextBox Grid.Column="4" Text="{Binding StepMinutes}" ToolTip="Sollzeit in Minuten" />
+                                            <TextBox Grid.Column="6" Text="{Binding StepRequiredStaff}" ToolTip="Personalbedarf" />
                                             <StackPanel Grid.Column="8" Orientation="Horizontal"><Button Content="Standard" Command="{Binding UseOperationDefaultsCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}"/><Button Content="+ Schritt" Command="{Binding AddRoutingStepCommand}" Style="{StaticResource PrimaryActionButtonStyle}"/></StackPanel>
                                         </Grid>
                                     </Border>
@@ -521,9 +539,16 @@
             </TabItem>
         </TabControl>
 
-        <Border Grid.Row="3" Margin="0,12,0,0" Padding="10,7" CornerRadius="8"
-                Background="{StaticResource PrimarySoftBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
-            <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+        <Border Grid.Row="3" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource AlertCardStyle}">
+                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers><DataTrigger Binding="{Binding StatusMessage}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" TextWrapping="Wrap" />
         </Border>
     </Grid>
 </UserControl>

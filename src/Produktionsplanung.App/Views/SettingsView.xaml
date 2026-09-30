@@ -9,7 +9,7 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid Grid.Row="0" Margin="{StaticResource PageHeaderSpacing}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -26,7 +26,7 @@
 
         <TabControl Grid.Row="1">
             <TabItem Header="Allgemein">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="6,14,6,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -40,16 +40,20 @@
                                     <TextBlock Text="Unternehmen" Style="{StaticResource SectionHeaderTextStyle}" />
                                     <TextBlock Text="Firmen- und Standortangaben für Berichte und Exporte."
                                                Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16" />
-                                    <TextBlock Text="Firmenname" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                    <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
-                                    <TextBlock Text="Firmen-Code" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                    <TextBox Text="{Binding CompanyCode}" IsReadOnly="True" Margin="0,0,0,8" />
-                                    <TextBlock Text="Stabile Firmen-ID" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                    <TextBox Text="{Binding CompanyId}" IsReadOnly="True" Margin="0,0,0,8" />
+                                    <TextBlock Text="Firmenname" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Firmenname" Margin="0,0,0,12" />
+                                    <TextBlock Text="Firmen-Code" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBox Text="{Binding CompanyCode}" IsReadOnly="True"
+                                             AutomationProperties.Name="Firmen-Code" Margin="0,0,0,8" />
+                                    <TextBlock Text="Stabile Firmen-ID" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBox Text="{Binding CompanyId}" IsReadOnly="True"
+                                             AutomationProperties.Name="Stabile Firmen-ID" Margin="0,0,0,8" />
                                     <TextBlock Text="{Binding CompanyRegistrationMode, StringFormat=Registrierung: {0}}"
-                                               Foreground="{StaticResource MutedTextBrush}" FontSize="11" Margin="0,0,0,12" />
-                                    <TextBlock Text="Standort / Werk" FontWeight="SemiBold" Margin="0,0,0,5" />
-                                    <TextBox Text="{Binding SiteName, UpdateSourceTrigger=PropertyChanged}" />
+                                               Style="{StaticResource SecondaryTextStyle}" Margin="0,0,0,12" />
+                                    <TextBlock Text="Standort / Werk" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBox Text="{Binding SiteName, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Standort oder Werk" />
                                 </StackPanel>
                             </Border>
 
@@ -58,11 +62,11 @@
                                     <TextBlock Text="Lokale Speicherorte" Style="{StaticResource SectionHeaderTextStyle}" />
                                     <TextBlock Text="Die operative Datenbank und Anwendungseinstellungen liegen lokal bzw. im Portable-Datenpfad."
                                                Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16" />
-                                    <TextBlock Text="Datenbank" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding DatabasePath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,3,0,10" />
-                                    <TextBlock Text="Einstellungen" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding SettingsPath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,3,0,14" />
-                                    <Button Content="Datenordner öffnen" HorizontalAlignment="Center"
+                                    <TextBlock Text="Datenbank" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBlock Text="{Binding DatabasePath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                    <TextBlock Text="Einstellungen" Style="{StaticResource FieldLabelTextStyle}" />
+                                    <TextBlock Text="{Binding SettingsPath}" Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" Margin="0,0,0,14" />
+                                    <Button Content="Datenordner öffnen" HorizontalAlignment="Right"
                                             Command="{Binding OpenDataDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
                                 </StackPanel>
                             </Border>
@@ -72,7 +76,7 @@
             </TabItem>
 
             <TabItem Header="Daten &amp; Backup">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="6,14,6,16">
                         <Border Style="{StaticResource SectionCardStyle}">
                             <StackPanel>
@@ -87,11 +91,12 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Backup-Ordner" VerticalAlignment="Center" FontWeight="SemiBold" />
-                                    <TextBox Grid.Column="1" Text="{Binding DefaultBackupDirectory, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                    <TextBlock Text="Backup-Ordner" Style="{StaticResource FieldLabelTextStyle}" VerticalAlignment="Center" Margin="0" />
+                                    <TextBox Grid.Column="1" Text="{Binding DefaultBackupDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Backup-Ordner" Margin="0,0,8,0" />
                                     <Button Grid.Column="2" Content="Auswählen" Margin="0,0,8,0"
-                                            Command="{Binding BrowseBackupDirectoryCommand}" />
-                                    <Button Grid.Column="3" Content="Öffnen" Command="{Binding OpenBackupDirectoryCommand}" />
+                                            Command="{Binding BrowseBackupDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
+                                    <Button Grid.Column="3" Content="Öffnen" Command="{Binding OpenBackupDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
                                 </Grid>
 
                                 <Grid Margin="0,0,0,16">
@@ -101,24 +106,22 @@
                                         <ColumnDefinition Width="180" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Automatik" VerticalAlignment="Center" FontWeight="SemiBold" />
-                                    <CheckBox Grid.Column="1" Content="Auto-Backup beim Beenden"
-                                              IsChecked="{Binding AutoBackupOnExit}" />
+                                    <TextBlock Text="Automatik" Style="{StaticResource FieldLabelTextStyle}" VerticalAlignment="Center" Margin="0" />
+                                    <CheckBox Grid.Column="1" Content="Auto-Backup beim Beenden" IsChecked="{Binding AutoBackupOnExit}" />
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="Behalten:" VerticalAlignment="Center" Margin="0,0,6,0" />
                                         <TextBox Text="{Binding BackupRetentionCount, UpdateSourceTrigger=PropertyChanged}"
-                                                 Width="52" HorizontalAlignment="Left" />
+                                                 Width="52" HorizontalAlignment="Left" AutomationProperties.Name="Anzahl aufzubewahrender Backups" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="3"
                                                Text="Automatische Backups werden nach Anzahl begrenzt; manuelle Sicherheitsbackups bleiben erhalten."
-                                               Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                               Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" />
                                 </Grid>
 
-                                <WrapPanel HorizontalAlignment="Center">
-                                    <Button Content="Backup jetzt erstellen" Command="{Binding CreateBackupCommand}" Margin="0,0,8,8"
-                                            Style="{StaticResource PrimaryActionButtonStyle}" />
+                                <WrapPanel HorizontalAlignment="Right">
                                     <Button Content="Backup wiederherstellen" Command="{Binding RestoreBackupCommand}" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}" />
-                                    <Button Content="SolutionCompakt neu starten" Command="{Binding RestartApplicationCommand}" Margin="0,0,0,8" Style="{StaticResource ActionButtonStyle}" />
+                                    <Button Content="SolutionCompakt neu starten" Command="{Binding RestartApplicationCommand}" Margin="0,0,8,8" Style="{StaticResource ActionButtonStyle}" />
+                                    <Button Content="Backup jetzt erstellen" Command="{Binding CreateBackupCommand}" Margin="0,0,0,8" Style="{StaticResource PrimaryActionButtonStyle}" />
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
@@ -129,46 +132,58 @@
             <TabItem Header="Papierkorb">
                 <Grid Margin="6,14,6,16">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Text="Nachvollziehbarer Papierkorb" Style="{StaticResource SectionHeaderTextStyle}"/>
+                            <TextBlock Text="Nachvollziehbarer Papierkorb" Style="{StaticResource SectionHeaderTextStyle}" />
                             <TextBlock Text="Gelöschte Datensätze werden nicht endgültig entfernt. Die Löschung bleibt mit Benutzer und Zeitpunkt erhalten; wiederhergestellte Einträge bleiben ebenfalls als Historie sichtbar."
-                                       Foreground="{StaticResource WarningBrush}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                       Foreground="{StaticResource WarningBrush}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,4,0,0" />
                         </StackPanel>
                     </Border>
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding RecycleBinItems}" SelectedItem="{Binding SelectedRecycleBinItem, Mode=TwoWay}"
-                              AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Gelöscht am" Binding="{Binding DeletedAtText}" Width="150"/>
-                            <DataGridTextColumn Header="Typ" Binding="{Binding TypeText}" Width="125"/>
-                            <DataGridTextColumn Header="Datensatz" Binding="{Binding DisplayName}" Width="2*"/>
-                            <DataGridTextColumn Header="Gelöscht von" Binding="{Binding DeletedBy}" Width="110"/>
-                            <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.4*"/>
-                            <DataGridTextColumn Header="Grund" Binding="{Binding Reason}" Width="1.2*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <WrapPanel Grid.Row="2" HorizontalAlignment="Center" Margin="0,12,0,0">
-                        <Button Content="Aktualisieren" Command="{Binding RefreshRecycleBinCommand}" Margin="0,0,8,0"
-                                Style="{StaticResource ActionButtonStyle}"/>
+                    <Grid Grid.Row="1">
+                        <DataGrid x:Name="RecycleBinGrid"
+                                  ItemsSource="{Binding RecycleBinItems}"
+                                  SelectedItem="{Binding SelectedRecycleBinItem, Mode=TwoWay}"
+                                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" HeadersVisibility="Column">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Gelöscht am" Binding="{Binding DeletedAtText}" Width="150" />
+                                <DataGridTextColumn Header="Typ" Binding="{Binding TypeText}" Width="125" />
+                                <DataGridTextColumn Header="Datensatz" Binding="{Binding DisplayName}" Width="2*" />
+                                <DataGridTextColumn Header="Gelöscht von" Binding="{Binding DeletedBy}" Width="110" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="1.4*" />
+                                <DataGridTextColumn Header="Grund" Binding="{Binding Reason}" Width="1.2*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="430">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=RecycleBinGrid}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="Der Papierkorb ist leer." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Gelöschte Datensätze erscheinen hier mit Benutzer und Zeitpunkt." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <Button Content="Aktualisieren" Command="{Binding RefreshRecycleBinCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
                         <Button Content="Ausgewählten Datensatz wiederherstellen" Command="{Binding RestoreRecycleBinItemCommand}"
-                                IsEnabled="{Binding SelectedRecycleBinItem.CanRestore}" Style="{StaticResource PrimaryActionButtonStyle}"/>
+                                IsEnabled="{Binding SelectedRecycleBinItem.CanRestore}" Style="{StaticResource PrimaryActionButtonStyle}" />
                     </WrapPanel>
                 </Grid>
             </TabItem>
 
             <TabItem Header="Sicherheit">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="6,14,6,16">
                         <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,14">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="Recovery-Code" Style="{StaticResource SectionHeaderTextStyle}" />
                                     <TextBlock Text="Der Recovery-Code ist der Notfallzugang für ein vergessenes Passwort. Gespeichert werden nur Hash und Salt."
@@ -184,10 +199,7 @@
 
                         <Border Style="{StaticResource SectionCardStyle}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="Automatische Sitzungssperre" Style="{StaticResource SectionHeaderTextStyle}" />
                                     <TextBlock Text="Bei Inaktivität wird die Anwendung gesperrt. Entsperren kann nur derselbe Benutzer mit seinem Passwort; offene Eingaben bleiben erhalten."
@@ -196,7 +208,7 @@
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <CheckBox Content="Aktiv" IsChecked="{Binding AutoLockEnabled}" Margin="0,0,14,0" />
                                     <TextBlock Text="Nach" VerticalAlignment="Center" Margin="0,0,7,0" />
-                                    <ComboBox ItemsSource="{Binding AutoLockOptions}" SelectedItem="{Binding AutoLockMinutes}" Width="78" />
+                                    <ComboBox ItemsSource="{Binding AutoLockOptions}" SelectedItem="{Binding AutoLockMinutes}" Width="78" AutomationProperties.Name="Zeit bis zur automatischen Sitzungssperre" />
                                     <TextBlock Text="Min." VerticalAlignment="Center" Margin="7,0,0,0" />
                                 </StackPanel>
                             </Grid>
@@ -206,7 +218,7 @@
             </TabItem>
 
             <TabItem Header="Export">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="6,14,6,16">
                         <Border Style="{StaticResource SectionCardStyle}">
                             <StackPanel>
@@ -221,11 +233,12 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Export-Ordner" VerticalAlignment="Center" FontWeight="SemiBold" />
-                                    <TextBox Grid.Column="1" Text="{Binding DefaultExportDirectory, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                    <TextBlock Text="Export-Ordner" Style="{StaticResource FieldLabelTextStyle}" VerticalAlignment="Center" Margin="0" />
+                                    <TextBox Grid.Column="1" Text="{Binding DefaultExportDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Export-Ordner" Margin="0,0,8,0" />
                                     <Button Grid.Column="2" Content="Auswählen" Margin="0,0,8,0"
-                                            Command="{Binding BrowseExportDirectoryCommand}" />
-                                    <Button Grid.Column="3" Content="Öffnen" Command="{Binding OpenExportDirectoryCommand}" />
+                                            Command="{Binding BrowseExportDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
+                                    <Button Grid.Column="3" Content="Öffnen" Command="{Binding OpenExportDirectoryCommand}" Style="{StaticResource ActionButtonStyle}" />
                                 </Grid>
 
                                 <Grid Margin="0,0,0,16">
@@ -235,15 +248,15 @@
                                         <ColumnDefinition Width="220" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="CSV-Trennzeichen" VerticalAlignment="Center" FontWeight="SemiBold" />
+                                    <TextBlock Text="CSV-Trennzeichen" Style="{StaticResource FieldLabelTextStyle}" VerticalAlignment="Center" Margin="0" />
                                     <TextBox Grid.Column="1" Text="{Binding CsvDelimiter, UpdateSourceTrigger=PropertyChanged}"
-                                             MaxLength="1" Width="48" HorizontalAlignment="Left" />
+                                             MaxLength="1" Width="48" HorizontalAlignment="Left" AutomationProperties.Name="CSV-Trennzeichen" />
                                     <CheckBox Grid.Column="2" Content="UTF-8 BOM für Excel" IsChecked="{Binding IncludeUtf8Bom}" />
                                     <TextBlock Grid.Column="3" Text="Semikolon ist für deutschsprachige Excel-Installationen meist am praktischsten."
-                                               Style="{StaticResource SecondaryTextStyle}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                               Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" />
                                 </Grid>
 
-                                <Button Content="Alle Daten als CSV exportieren" HorizontalAlignment="Center"
+                                <Button Content="Alle Daten als CSV exportieren" HorizontalAlignment="Right"
                                         Command="{Binding ExportAllCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
                             </StackPanel>
                         </Border>
@@ -252,27 +265,29 @@
             </TabItem>
 
             <TabItem Header="Benutzeroberfläche">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="6,14,6,16">
                         <Border Style="{StaticResource SectionCardStyle}">
                             <StackPanel>
                                 <TextBlock Text="Persönliche Ansicht" Style="{StaticResource SectionHeaderTextStyle}" />
                                 <TextBlock Text="Sidebar, aufgeklappte Menügruppen sowie Kalenderansicht und Filter werden pro angemeldetem Benutzer gespeichert. Änderungen anderer Benutzer beeinflussen deine Ansicht nicht."
                                            Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,16" />
-                                <Border Background="{StaticResource InfoSoftBrush}" BorderBrush="{StaticResource BorderBrush}"
-                                        BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,14">
+                                <Border Style="{StaticResource AlertCardStyle}"
+                                        Background="{StaticResource InfoSoftBrush}"
+                                        BorderBrush="{StaticResource InfoBorderBrush}"
+                                        Margin="0,0,0,14">
                                     <TextBlock Text="Mit Zurücksetzen werden Navigation und Kalenderfilter auf die Standardansicht gestellt. Die vollständige Navigation wird beim nächsten Anmelden neu geladen."
                                                Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" />
                                 </Border>
                                 <CheckBox Content="Kurze Kontext-Hinweise unter dem Seitentitel anzeigen"
                                           IsChecked="{Binding ShowContextHints, Mode=TwoWay}"
-                                          Margin="0,0,0,14" HorizontalAlignment="Center"/>
-                                <WrapPanel HorizontalAlignment="Center">
+                                          Margin="0,0,0,14" HorizontalAlignment="Left" />
+                                <WrapPanel HorizontalAlignment="Right">
+                                    <Button Content="Persönliche Ansicht zurücksetzen"
+                                            Command="{Binding ResetUiPreferencesCommand}" Style="{StaticResource ActionButtonStyle}" Margin="0,0,8,0" />
                                     <Button Content="App-Einführung erneut starten"
                                             Command="{Binding StartGuidedTourCommand}"
-                                            Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,8,0" />
-                                    <Button Content="Persönliche Ansicht zurücksetzen"
-                                            Command="{Binding ResetUiPreferencesCommand}" Style="{StaticResource ActionButtonStyle}" />
+                                            Style="{StaticResource PrimaryActionButtonStyle}" />
                                 </WrapPanel>
                             </StackPanel>
                         </Border>
@@ -281,8 +296,15 @@
             </TabItem>
         </TabControl>
 
-        <Border Grid.Row="2" Background="{StaticResource InfoSoftBrush}" BorderBrush="{StaticResource BorderBrush}"
-                BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,4,0,0">
+        <Border Grid.Row="2" Margin="0,8,0,0" AutomationProperties.LiveSetting="Polite">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource AlertCardStyle}">
+                    <Setter Property="Background" Value="{StaticResource InfoSoftBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers><DataTrigger Binding="{Binding StatusMessage}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                </Style>
+            </Border.Style>
             <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource PrimaryDarkBrush}" TextWrapping="Wrap" FontWeight="SemiBold" />
         </Border>
     </Grid>

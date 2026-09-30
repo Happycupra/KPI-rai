@@ -3,25 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:views="clr-namespace:Produktionsplanung.App.Views"
              Background="{StaticResource SurfaceBrush}">
-    <Grid Margin="14">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="10"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <StackPanel>
-            <TextBlock Text="Arbeitsplätze &amp; Schichten" FontSize="27" FontWeight="SemiBold"
-                       Foreground="{StaticResource TextBrush}"/>
-            <TextBlock Text="Arbeitsplätze, Besetzung, Skill-Anforderungen und Schichtzeiten an einem Ort."
-                       Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0"/>
-        </StackPanel>
-        <TabControl Grid.Row="2">
-            <TabItem Header="Arbeitsplätze / Schichtmodell">
-                <views:WorkstationsView/>
-            </TabItem>
-            <TabItem Header="Schichtzeiten">
-                <views:ShiftsView/>
-            </TabItem>
-        </TabControl>
-    </Grid>
+    <TabControl Margin="8,8,8,0">
+        <TabItem Header="Arbeitsplätze / Schichtmodell">
+            <views:WorkstationsView />
+        </TabItem>
+        <TabItem Header="Schichtzeiten">
+            <views:ShiftsView />
+        </TabItem>
+    </TabControl>
 </UserControl>

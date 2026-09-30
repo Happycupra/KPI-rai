@@ -1,7 +1,8 @@
 <UserControl x:Class="Produktionsplanung.App.Views.SkillMatrixView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid Margin="32">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="{StaticResource PagePadding}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -9,29 +10,46 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel>
-            <TextBlock Text="Skill-Matrix" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer, 4 = Level 4, 5 = Admin" Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,18" />
+        <StackPanel Margin="{StaticResource PageHeaderSpacing}">
+            <TextBlock Text="Skill-Matrix" Style="{StaticResource PageTitleTextStyle}" />
+            <TextBlock Text="Qualifikationen verwalten und Skill-Level pro Mitarbeiter pflegen: 0 = keine, 1 = in Ausbildung, 2 = qualifiziert, 3 = Experte/Trainer, 4 = Level 4, 5 = Admin"
+                       Style="{StaticResource PageSubtitleTextStyle}"
+                       Margin="0,4,0,0" />
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="260" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="30" />
-                <ColumnDefinition Width="240" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <Border Grid.Row="1" Style="{StaticResource FilterBarStyle}" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="30" />
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0" Height="38" Padding="10,6" Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Neue Qualifikation" />
-            <Button Grid.Column="1" Content="+ Qualifikation" Command="{Binding AddQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource ActionButtonStyle}" />
+                <TextBox Grid.Column="0"
+                         Text="{Binding NewQualificationName, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="Neue Qualifikation" />
+                <Button Grid.Column="1"
+                        Content="+ Qualifikation"
+                        Command="{Binding AddQualificationCommand}"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource ActionButtonStyle}" />
 
-            <ComboBox Grid.Column="3" Height="38" ItemsSource="{Binding Qualifications}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedQualification}" />
-            <Button Grid.Column="4" Content="Qualifikation löschen" Command="{Binding DeleteQualificationCommand}" Margin="8,0,0,0" Style="{StaticResource DangerActionButtonStyle}" />
-        </Grid>
+                <ComboBox Grid.Column="3"
+                          ItemsSource="{Binding Qualifications}"
+                          DisplayMemberPath="Name"
+                          SelectedItem="{Binding SelectedQualification}" />
+                <Button Grid.Column="4"
+                        Content="Qualifikation löschen"
+                        Command="{Binding DeleteQualificationCommand}"
+                        Margin="8,0,0,0"
+                        Style="{StaticResource DangerActionButtonStyle}" />
+            </Grid>
+        </Border>
 
-        <Border Grid.Row="2" Background="{StaticResource CardBrush}" CornerRadius="10" Padding="12">
+        <Border Grid.Row="2" Style="{StaticResource SectionCardStyle}" Padding="12">
             <DataGrid x:Name="MatrixGrid"
                       ItemsSource="{Binding Rows}"
                       AutoGenerateColumns="False"
@@ -41,13 +59,23 @@
                       FrozenColumnCount="3" />
         </Border>
 
-        <StackPanel Grid.Row="3" Margin="0,16,0,0">
-            <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Foreground="{StaticResource MutedTextBrush}"
-                       Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern." />
-            <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
-                <Button Content="Neu laden" Command="{Binding LoadCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
-                <Button Content="Skill-Matrix speichern" Command="{Binding SaveMatrixCommand}" Style="{StaticResource PrimaryActionButtonStyle}" />
+        <Grid Grid.Row="3" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Tipp: Level direkt in der Matrix auswählen und anschliessend speichern."
+                       Style="{StaticResource SecondaryTextStyle}"
+                       VerticalAlignment="Center" />
+            <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
+                <Button Content="Neu laden"
+                        Command="{Binding LoadCommand}"
+                        Margin="0,0,8,0"
+                        Style="{StaticResource ActionButtonStyle}" />
+                <Button Content="Skill-Matrix speichern"
+                        Command="{Binding SaveMatrixCommand}"
+                        Style="{StaticResource PrimaryActionButtonStyle}" />
             </WrapPanel>
-        </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
