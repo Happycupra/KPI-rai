@@ -85,9 +85,13 @@ public partial class UserAdminViewModel : ObservableObject
         var editingId = SelectedUser?.Id;
         var invalidateQuickAccess = editingId.HasValue &&
             (!IsActive || !string.IsNullOrWhiteSpace(NewPassword) || !string.IsNullOrWhiteSpace(ConfirmNewPassword));
-        if (db.UserAccounts.AsNoTracking().Any(x => x.Username == normalizedUsername && (!editingId.HasValue || x.Id != editingId.Value)))
+        var duplicateUsername = db.UserAccounts.AsNoTracking()
+            .AsEnumerable()
+            .Any(x => string.Equals(x.Username.Trim(), normalizedUsername, StringComparison.OrdinalIgnoreCase) &&
+                      (!editingId.HasValue || x.Id != editingId.Value));
+        if (duplicateUsername)
         {
-            StatusMessage = "Dieser Benutzername existiert bereits.";
+            StatusMessage = "Dieser Benutzername existiert bereits. Gross-/Kleinschreibung wird dabei nicht unterschieden.";
             return;
         }
 
