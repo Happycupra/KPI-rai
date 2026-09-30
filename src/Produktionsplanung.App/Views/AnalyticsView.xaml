@@ -2,9 +2,26 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{StaticResource SurfaceBrush}">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <UserControl.Resources>
+        <Style x:Key="AnalyticsMetricValueStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="LineHeight" Value="32" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+        </Style>
+        <Style x:Key="AnalyticsCompactMetricValueStyle" TargetType="TextBlock" BasedOn="{StaticResource AnalyticsMetricValueStyle}">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="LineHeight" Value="28" />
+        </Style>
+        <Style x:Key="AnalyticsSubtleCardStyle" TargetType="Border" BasedOn="{StaticResource SectionCardStyle}">
+            <Setter Property="Background" Value="{StaticResource SubtleSurfaceBrush}" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="{StaticResource PagePadding}">
-            <Grid Margin="0,0,0,18">
+            <Grid Margin="{StaticResource PageHeaderSpacing}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -15,75 +32,91 @@
                     <TextBlock Text="{Binding PeriodText}" Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ComboBox ItemsSource="{Binding PeriodModes}" SelectedItem="{Binding SelectedPeriodMode, Mode=TwoWay}"
-                              Width="105" Height="38" Margin="0,0,8,0" />
-                    <Button Content="‹" Width="38" Height="38" Command="{Binding PreviousPeriodCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
-                    <Button Content="Aktuell" Command="{Binding CurrentPeriodCommand}" Margin="0,0,8,0" Style="{StaticResource ActionButtonStyle}" />
-                    <DatePicker SelectedDate="{Binding AnchorDate, Mode=TwoWay}" Width="145" Height="38" Margin="0,0,8,0" />
-                    <Button Content="›" Width="38" Height="38" Command="{Binding NextPeriodCommand}" Margin="0,0,8,0" Style="{StaticResource CompactButtonStyle}" />
-                    <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" Style="{StaticResource ActionButtonStyle}" />
-                </StackPanel>
+                <WrapPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="620">
+                    <ComboBox ItemsSource="{Binding PeriodModes}"
+                              SelectedItem="{Binding SelectedPeriodMode, Mode=TwoWay}"
+                              Width="105" Margin="0,0,8,8" />
+                    <Button Content="‹" Width="38" Height="38"
+                            Command="{Binding PreviousPeriodCommand}"
+                            Margin="0,0,8,8"
+                            Style="{StaticResource CompactButtonStyle}"
+                            ToolTip="Vorheriger Zeitraum" />
+                    <Button Content="Aktuell"
+                            Command="{Binding CurrentPeriodCommand}"
+                            Margin="0,0,8,8"
+                            Style="{StaticResource ActionButtonStyle}" />
+                    <DatePicker SelectedDate="{Binding AnchorDate, Mode=TwoWay}"
+                                Width="145" Margin="0,0,8,8" />
+                    <Button Content="›" Width="38" Height="38"
+                            Command="{Binding NextPeriodCommand}"
+                            Margin="0,0,8,8"
+                            Style="{StaticResource CompactButtonStyle}"
+                            ToolTip="Nächster Zeitraum" />
+                    <Button Content="Aktualisieren"
+                            Command="{Binding RefreshCommand}"
+                            Margin="0,0,0,8"
+                            Style="{StaticResource ActionButtonStyle}" />
+                </WrapPanel>
             </Grid>
 
-            <UniformGrid Columns="4" Margin="0,0,0,14">
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+            <UniformGrid Columns="4" Margin="0,0,0,12">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Geplante Stunden" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding PlannedHoursText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="{Binding TargetHoursText, StringFormat=Soll: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+                        <TextBlock Text="Geplante Stunden" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding PlannedHoursText}" Style="{StaticResource AnalyticsMetricValueStyle}" />
+                        <TextBlock Text="{Binding TargetHoursText, StringFormat=Soll: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Stundendifferenz" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding HoursDifferenceText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Plan minus Soll" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+                        <TextBlock Text="Stundendifferenz" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding HoursDifferenceText}" Style="{StaticResource AnalyticsMetricValueStyle}" />
+                        <TextBlock Text="Plan minus Soll" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource KpiCardStyle}" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Personalabdeckung" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding PersonnelCoverageText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="{Binding UnderstaffedOrders, StringFormat=Unterbesetzte Aufträge: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+                        <TextBlock Text="Personalabdeckung" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding PersonnelCoverageText}" Style="{StaticResource AnalyticsMetricValueStyle}" />
+                        <TextBlock Text="{Binding UnderstaffedOrders, StringFormat=Unterbesetzte Aufträge: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16">
+                <Border Style="{StaticResource KpiCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Fehlzeitenquote" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding AbsenceRateText}" FontSize="27" FontWeight="Bold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="{Binding AbsenceDays, StringFormat=Abwesenheitstage: {0}}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+                        <TextBlock Text="Fehlzeitenquote" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding AbsenceRateText}" Style="{StaticResource AnalyticsMetricValueStyle}" />
+                        <TextBlock Text="{Binding AbsenceDays, StringFormat=Abwesenheitstage: {0}}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
 
             <UniformGrid Columns="4" Margin="0,0,0,20">
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource SectionCardStyle}" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Aktive Mitarbeiter" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding ActiveEmployees}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding PlannedEmployeeCount, StringFormat=Mit Planung: {0}}" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="Aktive Mitarbeiter" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding ActiveEmployees}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                        <TextBlock Text="{Binding PlannedEmployeeCount, StringFormat=Mit Planung: {0}}" Style="{StaticResource SecondaryTextStyle}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource SectionCardStyle}" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Aufträge gesamt" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding TotalOrders}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding OpenOrders, StringFormat=Offen: {0}}" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="Aufträge gesamt" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding TotalOrders}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                        <TextBlock Text="{Binding OpenOrders, StringFormat=Offen: {0}}" Style="{StaticResource SecondaryTextStyle}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16" Margin="0,0,10,0">
+                <Border Style="{StaticResource SectionCardStyle}" Padding="16" Margin="0,0,10,0">
                     <StackPanel>
-                        <TextBlock Text="Abschlussquote" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding CompletionRateText}" FontSize="24" FontWeight="Bold" />
-                        <TextBlock Text="{Binding CompletedOrders, StringFormat=Abgeschlossen: {0}}" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="Abschlussquote" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding CompletionRateText}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                        <TextBlock Text="{Binding CompletedOrders, StringFormat=Abgeschlossen: {0}}" Style="{StaticResource SecondaryTextStyle}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="16">
+                <Border Style="{StaticResource SectionCardStyle}" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="Auftragsprobleme" Foreground="{StaticResource MutedTextBrush}" />
-                        <TextBlock Text="{Binding ProblemOrders}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource DangerBrush}" />
-                        <TextBlock Text="{Binding RunningOrders, StringFormat=Laufend: {0}}" Foreground="{StaticResource MutedTextBrush}" />
+                        <TextBlock Text="Auftragsprobleme" Style="{StaticResource SecondaryTextStyle}" />
+                        <TextBlock Text="{Binding ProblemOrders}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" Foreground="{StaticResource DangerBrush}" />
+                        <TextBlock Text="{Binding RunningOrders, StringFormat=Laufend: {0}}" Style="{StaticResource SecondaryTextStyle}" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -91,38 +124,58 @@
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.45*" />
+                    <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,16,0">
+                <Border Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Verlauf im Zeitraum" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                        <TextBlock Text="Geplante Stunden je Tag; der Balken ist relativ zum stärksten Tag im gewählten Zeitraum." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,12" />
-                        <ItemsControl ItemsSource="{Binding DailyRows}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="82" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="72" />
-                                            <ColumnDefinition Width="80" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="{Binding DayText}" VerticalAlignment="Center" Foreground="{StaticResource TextBrush}" />
-                                        <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding HoursChartPercent}"
-                                                     Height="16" VerticalAlignment="Center" Margin="8,0" />
-                                        <TextBlock Grid.Column="2" Text="{Binding PlannedHoursText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="3" Text="{Binding CoverageText}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource MutedTextBrush}" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                        <TextBlock Text="Verlauf im Zeitraum" Style="{StaticResource SectionHeaderTextStyle}" />
+                        <TextBlock Text="Geplante Stunden je Tag; der Balken ist relativ zum stärksten Tag im gewählten Zeitraum."
+                                   Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,12" />
+                        <Grid>
+                            <ItemsControl x:Name="DailyRowsList" ItemsSource="{Binding DailyRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="82" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="72" />
+                                                <ColumnDefinition Width="80" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding DayText}" VerticalAlignment="Center" />
+                                            <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding HoursChartPercent}"
+                                                         Height="16" VerticalAlignment="Center" Margin="8,0" />
+                                            <TextBlock Grid.Column="2" Text="{Binding PlannedHoursText}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{Binding CoverageText}" HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource SecondaryTextStyle}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Border HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasItems, ElementName=DailyRowsList}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel>
+                                    <TextBlock Text="Keine Verlaufsdaten im gewählten Zeitraum." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Wähle einen anderen Zeitraum oder aktualisiere die Auswertung." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </StackPanel>
                 </Border>
 
-                <Border Grid.Column="1" Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18">
+                <Border Grid.Column="2" Style="{StaticResource SectionCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Auftragsstatus" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,12" />
+                        <TextBlock Text="Auftragsstatus" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,12" />
                         <ItemsControl ItemsSource="{Binding OrderStatusRows}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -133,7 +186,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding Status}" FontWeight="SemiBold" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="{StaticResource MutedTextBrush}" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Count}" Style="{StaticResource SecondaryTextStyle}" />
                                         </Grid>
                                         <ProgressBar Minimum="0" Maximum="100" Value="{Binding Percent}" Height="12" />
                                     </StackPanel>
@@ -144,118 +197,207 @@
                 </Border>
             </Grid>
 
-            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Mitarbeiterstunden" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                    <TextBlock Text="Sollstunden werden aus den hinterlegten Wochen-Sollstunden auf eine Mo–Fr-Basis umgerechnet." Foreground="{StaticResource MutedTextBrush}" Margin="0,4,0,10" />
-                    <DataGrid ItemsSource="{Binding EmployeeRows}" AutoGenerateColumns="False" IsReadOnly="True"
-                              CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220" MaxHeight="340">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*" />
-                            <DataGridTextColumn Header="Funktion" Binding="{Binding Role}" Width="1.2*" />
-                            <DataGridTextColumn Header="Soll" Binding="{Binding TargetHoursText}" Width="85" />
-                            <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedHoursText}" Width="85" />
-                            <DataGridTextColumn Header="Differenz" Binding="{Binding DifferenceText}" Width="90" />
-                            <DataGridTextColumn Header="Abwesenheitstage" Binding="{Binding AbsenceDays}" Width="115" />
-                            <DataGridTemplateColumn Header="Planabdeckung" Width="150">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding HoursCoveragePercent}" Height="14" Margin="4" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <TextBlock Text="Mitarbeiterstunden" Style="{StaticResource SectionHeaderTextStyle}" />
+                    <TextBlock Text="Sollstunden werden aus den hinterlegten Wochen-Sollstunden auf eine Mo–Fr-Basis umgerechnet."
+                               Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,10" />
+                    <Grid>
+                        <DataGrid x:Name="EmployeeRowsGrid" ItemsSource="{Binding EmployeeRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="220" MaxHeight="340">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Mitarbeiter" Binding="{Binding EmployeeName}" Width="1.5*" />
+                                <DataGridTextColumn Header="Funktion" Binding="{Binding Role}" Width="1.2*" />
+                                <DataGridTextColumn Header="Soll" Binding="{Binding TargetHoursText}" Width="85" />
+                                <DataGridTextColumn Header="Geplant" Binding="{Binding PlannedHoursText}" Width="85" />
+                                <DataGridTextColumn Header="Differenz" Binding="{Binding DifferenceText}" Width="90" />
+                                <DataGridTextColumn Header="Abwesenheitstage" Binding="{Binding AbsenceDays}" Width="115" />
+                                <DataGridTemplateColumn Header="Planabdeckung" Width="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ProgressBar Minimum="0" Maximum="100" Value="{Binding HoursCoveragePercent}" Height="14" Margin="4" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasItems, ElementName=EmployeeRowsGrid}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="Keine Mitarbeiterstunden vorhanden." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Für den gewählten Zeitraum liegen noch keine Planwerte vor." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Auswertung nach Arbeitsplatz / Linie" FontSize="19" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10" />
-                    <DataGrid ItemsSource="{Binding WorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
-                              CanUserAddRows="False" HeadersVisibility="Column" MinHeight="200" MaxHeight="320">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.4*" />
-                            <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="1.1*" />
-                            <DataGridTextColumn Header="Aufträge" Binding="{Binding Orders}" Width="70" />
-                            <DataGridTextColumn Header="Abgeschlossen" Binding="{Binding CompletedOrders}" Width="95" />
-                            <DataGridTextColumn Header="Personalbedarf" Binding="{Binding RequiredStaff}" Width="95" />
-                            <DataGridTextColumn Header="Gedeckt" Binding="{Binding CoveredStaff}" Width="70" />
-                            <DataGridTextColumn Header="Abdeckung" Binding="{Binding CoverageText}" Width="85" />
-                            <DataGridTextColumn Header="Planstunden" Binding="{Binding PlannedHoursText}" Width="90" />
-                            <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="105" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <TextBlock Text="Auswertung nach Arbeitsplatz / Linie" Style="{StaticResource SectionHeaderTextStyle}" Margin="0,0,0,10" />
+                    <Grid>
+                        <DataGrid x:Name="WorkstationRowsGrid" ItemsSource="{Binding WorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="200" MaxHeight="320">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.4*" />
+                                <DataGridTextColumn Header="Bereich" Binding="{Binding Area}" Width="1.1*" />
+                                <DataGridTextColumn Header="Aufträge" Binding="{Binding Orders}" Width="70" />
+                                <DataGridTextColumn Header="Abgeschlossen" Binding="{Binding CompletedOrders}" Width="95" />
+                                <DataGridTextColumn Header="Personalbedarf" Binding="{Binding RequiredStaff}" Width="95" />
+                                <DataGridTextColumn Header="Gedeckt" Binding="{Binding CoveredStaff}" Width="70" />
+                                <DataGridTextColumn Header="Abdeckung" Binding="{Binding CoverageText}" Width="85" />
+                                <DataGridTextColumn Header="Planstunden" Binding="{Binding PlannedHoursText}" Width="90" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="105" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasItems, ElementName=WorkstationRowsGrid}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="Keine Arbeitsplatzdaten vorhanden." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Für den gewählten Zeitraum gibt es keine auswertbaren Aufträge." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <Border Background="{StaticResource CardBrush}" CornerRadius="12" Padding="18" Margin="0,0,0,16">
+            <Border Style="{StaticResource SectionCardStyle}" Margin="0,0,0,16">
                 <StackPanel>
                     <Grid Margin="0,0,0,12">
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="OEE / Ist-Produktion" FontSize="21" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                            <TextBlock Text="{Binding OeeDataState}" Foreground="{StaticResource MutedTextBrush}" Margin="0,3,0,0" />
+                            <TextBlock Text="OEE / Ist-Produktion" Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock Text="{Binding OeeDataState}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding OeeRecords, StringFormat=Ist-Erfassungen: {0}}" Foreground="{StaticResource MutedTextBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding OeeRecords, StringFormat=Ist-Erfassungen: {0}}" Style="{StaticResource SecondaryTextStyle}" VerticalAlignment="Center" />
                     </Grid>
 
                     <UniformGrid Columns="4" Margin="0,0,0,14">
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Verfügbarkeit" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeAvailabilityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Verfügbarkeit" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeAvailabilityText}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Leistung" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeePerformanceText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Leistung" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeePerformanceText}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="10" Padding="14" Margin="0,0,10,0">
-                            <StackPanel><TextBlock Text="Qualität" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeQualityText}" FontSize="24" FontWeight="Bold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="Qualität" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeQualityText}" Style="{StaticResource AnalyticsCompactMetricValueStyle}" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SuccessSoftBrush}" CornerRadius="10" Padding="14">
-                            <StackPanel><TextBlock Text="OEE" Foreground="{StaticResource SuccessBrush}"/><TextBlock Text="{Binding OeeText}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Background="{StaticResource SuccessSoftBrush}" BorderBrush="{StaticResource SuccessBorderBrush}">
+                            <StackPanel>
+                                <TextBlock Text="OEE" Foreground="{StaticResource SuccessBrush}" />
+                                <TextBlock Text="{Binding OeeText}" Style="{StaticResource AnalyticsMetricValueStyle}" Foreground="{StaticResource SuccessBrush}" />
+                            </StackPanel>
                         </Border>
                     </UniformGrid>
 
                     <UniformGrid Columns="4" Margin="0,0,0,14">
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Gesamtmenge" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeTotalQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Padding="12" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Gesamtmenge" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeTotalQuantityText}" Style="{StaticResource CardTitleTextStyle}" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Gutmenge" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeGoodQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Padding="12" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Gutmenge" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeGoodQuantityText}" Style="{StaticResource CardTitleTextStyle}" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,0,8,0">
-                            <StackPanel><TextBlock Text="Ausschuss" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeScrapQuantityText}" TextWrapping="Wrap" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Padding="12" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="Ausschuss" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeScrapQuantityText}" Style="{StaticResource CardTitleTextStyle}" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Border>
-                        <Border Background="{StaticResource SubtleSurfaceBrush}" CornerRadius="8" Padding="12">
-                            <StackPanel><TextBlock Text="Erfasster Stillstand" Foreground="{StaticResource MutedTextBrush}"/><TextBlock Text="{Binding OeeDowntimeText}" FontSize="19" FontWeight="SemiBold"/></StackPanel>
+                        <Border Style="{StaticResource AnalyticsSubtleCardStyle}" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="Erfasster Stillstand" Style="{StaticResource SecondaryTextStyle}" />
+                                <TextBlock Text="{Binding OeeDowntimeText}" Style="{StaticResource CardTitleTextStyle}" Margin="0,3,0,0" />
+                            </StackPanel>
                         </Border>
                     </UniformGrid>
 
-                    <DataGrid ItemsSource="{Binding OeeWorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
-                              CanUserAddRows="False" HeadersVisibility="Column" MinHeight="160" MaxHeight="280">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Linie / Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.5*" />
-                            <DataGridTextColumn Header="Erfassungen" Binding="{Binding Records}" Width="80" />
-                            <DataGridTextColumn Header="Menge" Binding="{Binding TotalQuantityText}" Width="160" />
-                            <DataGridTextColumn Header="Ausschuss" Binding="{Binding ScrapQuantityText}" Width="160" />
-                            <DataGridTextColumn Header="Stillstand" Binding="{Binding DowntimeMinutes, StringFormat={}{0:N0} min}" Width="90" />
-                            <DataGridTextColumn Header="Verfügbarkeit" Binding="{Binding AvailabilityText}" Width="95" />
-                            <DataGridTextColumn Header="Leistung" Binding="{Binding PerformanceText}" Width="85" />
-                            <DataGridTextColumn Header="Qualität" Binding="{Binding QualityText}" Width="85" />
-                            <DataGridTextColumn Header="OEE" Binding="{Binding OeeText}" Width="85" />
-                        </DataGrid.Columns>
-                    </DataGrid>
+                    <Grid>
+                        <DataGrid x:Name="OeeRowsGrid" ItemsSource="{Binding OeeWorkstationRows}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserAddRows="False" HeadersVisibility="Column" MinHeight="160" MaxHeight="280">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Linie / Arbeitsplatz" Binding="{Binding WorkstationName}" Width="1.5*" />
+                                <DataGridTextColumn Header="Erfassungen" Binding="{Binding Records}" Width="80" />
+                                <DataGridTextColumn Header="Menge" Binding="{Binding TotalQuantityText}" Width="160" />
+                                <DataGridTextColumn Header="Ausschuss" Binding="{Binding ScrapQuantityText}" Width="160" />
+                                <DataGridTextColumn Header="Stillstand" Binding="{Binding DowntimeMinutes, StringFormat={}{0:N0} min}" Width="90" />
+                                <DataGridTextColumn Header="Verfügbarkeit" Binding="{Binding AvailabilityText}" Width="95" />
+                                <DataGridTextColumn Header="Leistung" Binding="{Binding PerformanceText}" Width="85" />
+                                <DataGridTextColumn Header="Qualität" Binding="{Binding QualityText}" Width="85" />
+                                <DataGridTextColumn Header="OEE" Binding="{Binding OeeText}" Width="85" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <Border HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                            <Border.Style>
+                                <Style TargetType="Border" BasedOn="{StaticResource EmptyStateStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasItems, ElementName=OeeRowsGrid}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel>
+                                <TextBlock Text="Keine OEE-Erfassungen vorhanden." Style="{StaticResource CardTitleTextStyle}" HorizontalAlignment="Center" />
+                                <TextBlock Text="Sobald Ist-Produktion erfasst wurde, erscheinen hier Kennzahlen pro Arbeitsplatz." Style="{StaticResource SecondaryTextStyle}" Margin="0,4,0,0" TextAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </StackPanel>
             </Border>
 
-            <Border Background="{StaticResource InfoSoftBrush}" CornerRadius="10" Padding="14">
+            <Border Style="{StaticResource AlertCardStyle}"
+                    Background="{StaticResource InfoSoftBrush}"
+                    BorderBrush="{StaticResource InfoBorderBrush}">
                 <StackPanel>
-                    <TextBlock Text="OEE-Berechnung" FontWeight="SemiBold" Foreground="{StaticResource PrimaryDarkBrush}" />
+                    <TextBlock Text="OEE-Berechnung" Style="{StaticResource CardTitleTextStyle}" Foreground="{StaticResource PrimaryDarkBrush}" />
                     <TextBlock Text="Verfügbarkeit = Laufzeit / geplante Produktionszeit · Leistung = Ist-Menge / theoretische Menge bei Sollrate · Qualität = Gutmenge / Gesamtmenge · OEE = Verfügbarkeit × Leistung × Qualität. Leistung wird für OEE auf maximal 100 % begrenzt; Werte über der hinterlegten Sollrate sollten als Stammdatenhinweis geprüft werden."
-                               TextWrapping="Wrap" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,3,0,0" />
+                               TextWrapping="Wrap" Style="{StaticResource SecondaryTextStyle}" Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,3,0,0" />
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource MutedTextBrush}" Margin="0,10,0,0" HorizontalAlignment="Right" />
+            <TextBlock Text="{Binding StatusMessage}"
+                       Style="{StaticResource SecondaryTextStyle}"
+                       Margin="0,10,0,0"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Right"
+                       AutomationProperties.LiveSetting="Polite" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>
