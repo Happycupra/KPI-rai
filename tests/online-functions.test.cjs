@@ -113,7 +113,6 @@ test('concurrent publishers never mix their entries and production slots', async
   assert.equal(h.data.has(`${path}/productionSlots/b`), !a);
 });
 
-
 test('publish returns the server write time only after the new version is committed', async () => {
   const h = harness();
   const response = await h.publish();
@@ -126,4 +125,17 @@ test('publish returns the server write time only after the new version is commit
   const error = await failed.publish();
   assert.equal(error.code, 500);
   assert.equal(error.body.publishedAtUtc, undefined);
+});
+
+test('messaging functions parse and enforce company-scoped storage', () => {
+  const source = fs.readFileSync('online-weekplan/functions/messages.js', 'utf8');
+  assert.doesNotThrow(() => new vm.Script(source));
+  assert.match(source, /companyRef\.collection\("messages"\)/);
+  assert.match(source, /requestedCompanyId !== companyId/);
+  assert.match(source, /recipientUserId.*access\.sourceUserId/s);
+  assert.match(source, /String\(data\.companyId \|\| ""\) !== access\.companyId/);
+
+  const entry = fs.readFileSync('online-weekplan/functions/entry.js', 'utf8');
+  assert.match(entry, /require\("\.\/index"\)/);
+  assert.match(entry, /require\("\.\/messages"\)/);
 });
