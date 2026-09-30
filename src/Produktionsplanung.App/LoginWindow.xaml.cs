@@ -6,7 +6,8 @@ namespace Produktionsplanung.App;
 
 public partial class LoginWindow : Window
 {
-    private readonly bool _setupMode;
+    private readonly bool _hasUsers;
+    private bool _registrationMode;
     private bool _quickAccessMode;
     private bool _updatingCompanyCode;
     private bool _companyCodeTouched;
@@ -15,50 +16,149 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
-        _setupMode = !AuthenticationService.HasUsers();
+        _hasUsers = AuthenticationService.HasUsers();
 
-        if (_setupMode)
-        {
-            Title = "SolutionCompakt Ersteinrichtung";
-            ModeTitle.Text = "Firmenregistrierung & Ersteinrichtung";
-            ModeDescription.Text = "Registriere diese Installation für eine Firma und lege den ersten lokalen Administrator an.";
-            CompanyPanel.Visibility = Visibility.Visible;
-            DisplayNamePanel.Visibility = Visibility.Visible;
-            ConfirmPasswordPanel.Visibility = Visibility.Visible;
-            ForgotPasswordButton.Visibility = Visibility.Collapsed;
-            SubmitButton.Content = "Administrator anlegen und anmelden";
-            UsernameBox.Text = "admin";
-        }
+        if (_hasUsers)
+            ApplyLoginMode(preferQuickAccess: true);
         else
-        {
-            var remembered = QuickAccessService.GetRememberedUser();
-            if (remembered is not null)
-            {
-                _quickAccessMode = true;
-                StandardLoginPanel.Visibility = Visibility.Collapsed;
-                QuickAccessPanel.Visibility = Visibility.Visible;
-                ModeTitle.Text = "Willkommen zurück";
-                ModeDescription.Text = "Diese Anmeldung bleibt auf diesem Gerät gespeichert und ist mit deinem 4-stelligen PIN geschützt.";
-                QuickAccessUserBlock.Text = $"{remembered.DisplayName} · {remembered.Username}";
-                UsernameBox.Text = remembered.Username;
-                RememberMeCheckBox.IsChecked = true;
-                SubmitButton.Content = "Mit PIN anmelden";
-            }
-            else
-            {
-                ApplyCompanyDescription();
-            }
-        }
+            ApplyRegistrationMode();
 
         Loaded += (_, _) =>
         {
             if (_quickAccessMode)
                 QuickPinBox.Focus();
-            else if (_setupMode)
+            else if (_registrationMode)
                 CompanyNameBox.Focus();
             else
                 UsernameBox.Focus();
         };
+    }
+
+    private void LoginMode_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyLoginMode(preferQuickAccess: true);
+    }
+
+    private void RegisterMode_Click(object sender, RoutedEventArgs e)
+    {
+        ApplyRegistrationMode();
+    }
+
+    private void ApplyLoginMode(bool preferQuickAccess)
+    {
+        _registrationMode = false;
+        _failedPinAttempts = 0;
+        Title = "SolutionCompakt Anmeldung";
+        CompanyPanel.Visibility = Visibility.Collapsed;
+        DisplayNamePanel.Visibility = Visibility.Collapsed;
+        ConfirmPasswordPanel.Visibility = Visibility.Collapsed;
+        ForgotPasswordButton.Visibility = Visibility.Visible;
+        ConfirmPasswordBox.Clear();
+        UpdateModeButtonStyles();
+
+        var remembered = preferQuickAccess && _hasUsers
+            ? QuickAccessService.GetRememberedUser()
+            : null;
+
+        if (remembered is not null)
+        {
+            _quickAccessMode = true;
+            StandardLoginPanel.Visibility = Visibility.Collapsed;
+            QuickAccessPanel.Visibility = Visibility.Visible;
+            ModeTitle.Text = "Willkommen zurück";
+            ModeDescription.Text = "Diese Anmeldung bleibt auf diesem Gerät gespeichert und ist mit deinem 4-stelligen PIN geschützt.";
+            QuickAccessUserBlock.Text = $"{remembered.DisplayName} · {remembered.Username}";
+            UsernameBox.Text = remembered.Username;
+            RememberMeCheckBox.IsChecked = true;
+            SubmitButton.Content = "Mit PIN anmelden";
+            SetStatus(string.Empty);
+            QuickPinBox.Focus();
+            return;
+        }
+
+        _quickAccessMode = false;
+        QuickAccessPanel.Visibility = Visibility.Collapsed;
+        StandardLoginPanel.Visibility = Visibility.Visible;
+        ModeTitle.Text = "Anmeldung";
+        ApplyCompanyDescription();
+        SubmitButton.Content = "Anmelden";
+
+        if (!_hasUsers)
+        {
+            SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Bitte zuerst „Registrieren“ wählen.");
+        }
+        else
+        {
+            SetStatus(string.Empty);
+            UsernameBox.Focus();
+        }
+    }
+
+    private void ApplyRegistrationMode()
+    {
+        if (_hasUsers)
+        {
+            var existingSettings = AppSettingsService.Load();
+            var companyText = !string.IsNullOrWhiteSpace(existingSettings.CompanyName) &&
+                              !string.Equals(existingSettings.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase)
+                ? $" für „{existingSettings.CompanyName}“"
+                : string.Empty;
+
+            SetStatus($"Diese Installation ist bereits{companyText} registriert. Eine zweite Firma bzw. ein zweiter Firmenname kann hier nicht hinterlegt werden. Bitte ein bestehendes Konto verwenden.");
+            UpdateModeButtonStyles();
+            return;
+        }
+
+        _registrationMode = true;
+        _quickAccessMode = false;
+        _failedPinAttempts = 0;
+        Title = "SolutionCompakt Registrierung";
+        QuickAccessPanel.Visibility = Visibility.Collapsed;
+        StandardLoginPanel.Visibility = Visibility.Visible;
+        CompanyPanel.Visibility = Visibility.Visible;
+        DisplayNamePanel.Visibility = Visibility.Visible;
+        ConfirmPasswordPanel.Visibility = Visibility.Visible;
+        ForgotPasswordButton.Visibility = Visibility.Collapsed;
+        ModeTitle.Text = "Firma registrieren";
+        ModeDescription.Text = "Firma einmalig registrieren und den ersten lokalen Administrator anlegen.";
+        SubmitButton.Content = "Firma registrieren und anmelden";
+
+        var current = AppSettingsService.Load();
+        if (CompanyIdentityService.IsRegistered())
+        {
+            CompanyNameBox.Text = current.CompanyName;
+            _updatingCompanyCode = true;
+            CompanyCodeBox.Text = current.CompanyCode;
+            _updatingCompanyCode = false;
+            _companyCodeTouched = true;
+            ModeDescription.Text = "Die Firmenangaben wurden bereits gespeichert. Schließe die Ersteinrichtung mit dem ersten Administratorkonto ab.";
+        }
+
+        if (string.IsNullOrWhiteSpace(UsernameBox.Text))
+            UsernameBox.Text = "admin";
+
+        SetStatus(string.Empty);
+        UpdateModeButtonStyles();
+        CompanyNameBox.Focus();
+    }
+
+    private void UpdateModeButtonStyles()
+    {
+        if (LoginModeButton is null || RegisterModeButton is null)
+            return;
+
+        LoginModeButton.Style = (Style)FindResource(_registrationMode
+            ? "ActionButtonStyle"
+            : "PrimaryActionButtonStyle");
+        RegisterModeButton.Style = (Style)FindResource(_registrationMode
+            ? "PrimaryActionButtonStyle"
+            : "ActionButtonStyle");
+    }
+
+    private void SetStatus(string message, bool success = false)
+    {
+        StatusBlock.Foreground = (System.Windows.Media.Brush)FindResource(success ? "SuccessBrush" : "DangerBrush");
+        StatusBlock.Text = message;
     }
 
     private void ApplyCompanyDescription()
@@ -77,7 +177,7 @@ public partial class LoginWindow : Window
 
     private void CompanyNameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (!_setupMode || CompanyCodeBox is null || _companyCodeTouched)
+        if (!_registrationMode || CompanyCodeBox is null || _companyCodeTouched)
             return;
         _updatingCompanyCode = true;
         CompanyCodeBox.Text = CompanyIdentityService.SuggestCode(CompanyNameBox.Text);
@@ -87,7 +187,7 @@ public partial class LoginWindow : Window
 
     private void CompanyCodeBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (_setupMode && !_updatingCompanyCode)
+        if (_registrationMode && !_updatingCompanyCode)
             _companyCodeTouched = true;
     }
 
@@ -105,22 +205,18 @@ public partial class LoginWindow : Window
 
     private void SwitchToPassword_Click(object sender, RoutedEventArgs e)
     {
-        _quickAccessMode = false;
-        _failedPinAttempts = 0;
-        QuickAccessPanel.Visibility = Visibility.Collapsed;
-        StandardLoginPanel.Visibility = Visibility.Visible;
+        ApplyLoginMode(preferQuickAccess: false);
         RememberMeCheckBox.IsChecked = true;
         PinSetupPanel.Visibility = Visibility.Visible;
         ModeTitle.Text = "Anmeldung mit Passwort";
         ApplyCompanyDescription();
         SubmitButton.Content = "Anmelden";
-        StatusBlock.Text = string.Empty;
         PasswordBox.Focus();
     }
 
     private void Submit_Click(object sender, RoutedEventArgs e)
     {
-        StatusBlock.Text = string.Empty;
+        SetStatus(string.Empty);
 
         if (_quickAccessMode)
         {
@@ -129,11 +225,11 @@ public partial class LoginWindow : Window
             if (!quick.Success)
             {
                 _failedPinAttempts++;
-                StatusBlock.Text = quick.Message;
+                SetStatus(quick.Message);
                 if (_failedPinAttempts >= 5)
                 {
                     SwitchToPassword_Click(sender, e);
-                    StatusBlock.Text = "Zu viele falsche PIN-Versuche. Bitte einmal mit dem Passwort anmelden.";
+                    SetStatus("Zu viele falsche PIN-Versuche. Bitte einmal mit dem Passwort anmelden.");
                 }
                 else
                 {
@@ -148,6 +244,12 @@ public partial class LoginWindow : Window
             return;
         }
 
+        if (!_registrationMode && !_hasUsers)
+        {
+            SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Bitte zuerst „Registrieren“ wählen.");
+            return;
+        }
+
         var username = UsernameBox.Text.Trim();
         var password = PasswordBox.Password;
         string? newlyCreatedRecoveryCode = null;
@@ -157,16 +259,16 @@ public partial class LoginWindow : Window
             var pinValidation = QuickAccessService.ValidatePinPair(AccessPinBox.Password, ConfirmAccessPinBox.Password);
             if (pinValidation is not null)
             {
-                StatusBlock.Text = pinValidation;
+                SetStatus(pinValidation);
                 return;
             }
         }
 
-        if (_setupMode)
+        if (_registrationMode)
         {
             if (password != ConfirmPasswordBox.Password)
             {
-                StatusBlock.Text = "Die Passwörter stimmen nicht überein.";
+                SetStatus("Die Passwörter stimmen nicht überein.");
                 return;
             }
 
@@ -178,7 +280,7 @@ public partial class LoginWindow : Window
                 password);
             if (!created.Success)
             {
-                StatusBlock.Text = created.Message;
+                SetStatus(created.Message);
                 return;
             }
 
@@ -189,7 +291,7 @@ public partial class LoginWindow : Window
         var login = AuthenticationService.Login(username, password);
         if (!login.Success || login.User is null)
         {
-            StatusBlock.Text = login.Message;
+            SetStatus(login.Message);
             return;
         }
 
@@ -198,7 +300,7 @@ public partial class LoginWindow : Window
             var configured = QuickAccessService.Configure(login.User, AccessPinBox.Password, ConfirmAccessPinBox.Password);
             if (!configured.Success)
             {
-                StatusBlock.Text = configured.Message;
+                SetStatus(configured.Message);
                 SessionService.SignOut();
                 return;
             }
@@ -224,8 +326,7 @@ public partial class LoginWindow : Window
         var dialog = new PasswordRecoveryWindow(UsernameBox.Text) { Owner = this };
         if (dialog.ShowDialog() == true)
         {
-            StatusBlock.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(22, 163, 74));
-            StatusBlock.Text = "Passwort zurückgesetzt. Ein gespeicherter PIN-Zugang wurde aus Sicherheitsgründen ebenfalls aufgehoben.";
+            SetStatus("Passwort zurückgesetzt. Ein gespeicherter PIN-Zugang wurde aus Sicherheitsgründen ebenfalls aufgehoben.", success: true);
             PasswordBox.Clear();
             RememberMeCheckBox.IsChecked = false;
             PasswordBox.Focus();
