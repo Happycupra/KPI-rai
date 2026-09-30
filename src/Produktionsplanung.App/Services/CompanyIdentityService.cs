@@ -42,9 +42,9 @@ public static class CompanyIdentityService
     {
         using var db = new AppDbContext();
         if (db.UserAccounts.AsNoTracking().Any())
-            return (false, "Die Firmenregistrierung ist nach der Ersteinrichtung gesperrt.", null);
+            return (false, "Die Firmenregistrierung wurde bereits abgeschlossen. Eine zweite Firma kann in dieser Installation nicht angelegt werden.", null);
 
-        var name = (companyName ?? string.Empty).Trim();
+        var name = NormalizeDisplayName(companyName);
         if (name.Length < 2)
             return (false, "Bitte einen gültigen Firmennamen eingeben.", null);
 
@@ -55,6 +55,40 @@ public static class CompanyIdentityService
             return (false, "Der Firmen-Code darf nur Buchstaben, Zahlen und Bindestriche enthalten.", null);
 
         var current = AppSettingsService.Load();
+        var hasExistingIdentity =
+            !string.IsNullOrWhiteSpace(current.CompanyId) &&
+            !string.IsNullOrWhiteSpace(current.CompanyCode) &&
+            !string.IsNullOrWhiteSpace(current.CompanyName) &&
+            !string.Equals(current.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase);
+
+        if (hasExistingIdentity)
+        {
+            var sameName = string.Equals(
+                NormalizeNameForComparison(current.CompanyName),
+                NormalizeNameForComparison(name),
+                StringComparison.Ordinal);
+            var sameCode = string.Equals(
+                NormalizeCode(current.CompanyCode),
+                code,
+                StringComparison.Ordinal);
+
+            if (!sameName || !sameCode)
+            {
+                return (false,
+                    $"Diese Installation ist bereits für „{current.CompanyName}“ ({current.CompanyCode}) registriert. " +
+                    "Eine zweite Firma bzw. ein zweiter Firmenname ist nicht zulässig.",
+                    null);
+            }
+
+            if (!string.Equals(current.CompanyRegistrationMode, LocalRegistrationMode, StringComparison.Ordinal))
+                return (false, "Diese Installation ist bereits einer Firma zugeordnet.", null);
+
+            // An interrupted first setup may have persisted the company identity before the
+            // administrator account was created. Reusing the exact same identity is safe and
+            // lets the user finish setup without creating or overwriting another company.
+            return (true, "Die bereits gespeicherte Firmenregistrierung wird fortgesetzt.", current);
+        }
+
         if (!string.IsNullOrWhiteSpace(current.CompanyId) &&
             !string.IsNullOrWhiteSpace(current.CompanyCode) &&
             !string.Equals(current.CompanyRegistrationMode, LocalRegistrationMode, StringComparison.Ordinal))
@@ -80,7 +114,8 @@ public static class CompanyIdentityService
         var settings = AppSettingsService.Load();
         return !string.IsNullOrWhiteSpace(settings.CompanyId) &&
                !string.IsNullOrWhiteSpace(settings.CompanyCode) &&
-               !string.IsNullOrWhiteSpace(settings.CompanyName);
+               !string.IsNullOrWhiteSpace(settings.CompanyName) &&
+               !string.Equals(settings.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase);
     }
 
     public static string NormalizeCode(string? value)
@@ -114,6 +149,13 @@ public static class CompanyIdentityService
             baseCode = baseCode[..18].Trim('-');
         return baseCode;
     }
+
+    private static string NormalizeDisplayName(string? value) =>
+        string.Join(' ', (value ?? string.Empty)
+            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+    private static string NormalizeNameForComparison(string? value) =>
+        NormalizeDisplayName(value).ToUpperInvariant();
 
     private static string BuildUniqueLocalCode(string? companyName)
     {
