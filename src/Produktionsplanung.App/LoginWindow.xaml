@@ -5,7 +5,7 @@
         Title="SolutionCompakt Anmeldung"
         Icon="{StaticResource SolutionCompaktIcon}"
         Width="540"
-        Height="940"
+        Height="860"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource SurfaceBrush}">
@@ -15,7 +15,8 @@
                 <StackPanel VerticalAlignment="Center">
                     <views:BrandLogo HorizontalAlignment="Center" Margin="0,0,0,20" />
 
-                    <Border Background="{StaticResource SubtleSurfaceBrush}"
+                    <Border x:Name="ModeSwitchContainer"
+                            Background="{StaticResource SubtleSurfaceBrush}"
                             BorderBrush="{StaticResource BorderBrush}"
                             BorderThickness="1"
                             CornerRadius="10"
@@ -78,28 +79,11 @@
 
                     <StackPanel x:Name="StandardLoginPanel">
                         <StackPanel x:Name="CompanyPanel" Visibility="Collapsed">
-                            <Border Background="{StaticResource PrimarySoftBrush}"
-                                    BorderBrush="{StaticResource InfoBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12"
-                                    Margin="0,0,0,14">
-                                <TextBlock Text="Diese Installation wird genau einer Firma zugeordnet. Firmenname und Firmen-Code können danach nicht durch eine zweite Registrierung ersetzt werden."
-                                           Foreground="{StaticResource PrimaryDarkBrush}"
-                                           TextWrapping="Wrap" />
-                            </Border>
                             <TextBlock Text="Firmenname" Style="{StaticResource FieldLabelTextStyle}" />
-                            <TextBox x:Name="CompanyNameBox" Margin="0,0,0,14" TextChanged="CompanyNameBox_TextChanged" />
-                            <TextBlock Text="Firmen-Code" Style="{StaticResource FieldLabelTextStyle}" />
-                            <TextBox x:Name="CompanyCodeBox" Margin="0,0,0,5" TextChanged="CompanyCodeBox_TextChanged" />
-                            <TextBlock Text="3–24 Zeichen · Buchstaben, Zahlen und Bindestriche. Beispiel: MUSTER-AG"
+                            <TextBox x:Name="CompanyNameBox" Margin="0,0,0,5" />
+                            <TextBlock Text="Der technische Firmen-Code wird automatisch erstellt."
                                        Style="{StaticResource SecondaryTextStyle}"
                                        Margin="0,0,0,14" />
-                        </StackPanel>
-
-                        <StackPanel x:Name="DisplayNamePanel" Visibility="Collapsed">
-                            <TextBlock Text="Anzeigename" Style="{StaticResource FieldLabelTextStyle}" />
-                            <TextBox x:Name="DisplayNameBox" Margin="0,0,0,14" />
                         </StackPanel>
 
                         <TextBlock Text="Benutzername" Style="{StaticResource FieldLabelTextStyle}" />
