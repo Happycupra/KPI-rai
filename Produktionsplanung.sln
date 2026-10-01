@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Produktionsplanung.App", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Produktionsplanung.RegressionTests", "tests\Produktionsplanung.RegressionTests\Produktionsplanung.RegressionTests.csproj", "{32752782-AC55-4FB1-9B46-4E35BAA647A8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionCompakt.Server", "src\SolutionCompakt.Server\SolutionCompakt.Server.csproj", "{9B3666D6-8992-4FB1-8F19-A82C21B54817}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,5 +23,9 @@ Global
 		{32752782-AC55-4FB1-9B46-4E35BAA647A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32752782-AC55-4FB1-9B46-4E35BAA647A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32752782-AC55-4FB1-9B46-4E35BAA647A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B3666D6-8992-4FB1-8F19-A82C21B54817}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B3666D6-8992-4FB1-8F19-A82C21B54817}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B3666D6-8992-4FB1-8F19-A82C21B54817}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B3666D6-8992-4FB1-8F19-A82C21B54817}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

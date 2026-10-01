@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: solutioncompakt
+      POSTGRES_USER: solutioncompakt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - solutioncompakt-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solutioncompakt -d solutioncompakt"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: src/SolutionCompakt.Server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8088:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__CentralDatabase: Host=postgres;Port=5432;Database=solutioncompakt;Username=solutioncompakt;Password=${POSTGRES_PASSWORD}
+      Authentication__Issuer: SolutionCompakt.Server
+      Authentication__Audience: SolutionCompakt.Desktop
+      Authentication__JwtSigningKey: ${SOLUTIONCOMPAKT_JWT_KEY}
+      Database__EnsureCreatedOnStartup: "true"
+
+volumes:
+  solutioncompakt-postgres:
