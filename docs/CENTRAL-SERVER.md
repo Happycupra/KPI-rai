@@ -1,101 +1,144 @@
-# Zentraler Mehrbenutzerbetrieb – Serverbasis
+# Zentraler Echtzeit-Mehrbenutzerbetrieb
 
-Diese Ausbaustufe ergänzt SolutionCompakt um eine optionale zentrale Serverarchitektur. Der bestehende lokale SQLite-Betrieb bleibt unverändert und ist weiterhin der Standard, bis einzelne Desktop-Module bewusst auf den Server-Datenprovider umgestellt werden.
+SolutionCompakt unterstützt neben dem bisherigen lokalen SQLite-Modus einen optionalen zentralen Mehrbenutzerbetrieb mit PostgreSQL und SignalR.
 
-## Zielarchitektur
-
-```text
-SolutionCompakt WPF
-       |
-       | HTTPS / SignalR
-       v
-SolutionCompakt.Server (.NET 8)
-       |
-       +-- PostgreSQL 16
-       +-- SignalR Echtzeitgruppen pro CompanyId
-```
-
-Firebase bleibt vorerst für Lizenzierung und den bestehenden Online-Wochenplan bestehen. Die zentrale relationale Produktionsdatenbank liegt bewusst in PostgreSQL.
-
-## Enthalten
-
-- neues ASP.NET-Core-Projekt `src/SolutionCompakt.Server`
-- PostgreSQL über EF Core/Npgsql
-- JWT-Authentifizierungsgrenze
-- verpflichtende Mandantenkennung `company_id`
-- Benutzerkennung `source_user_id`
-- SignalR-Hub `/hubs/company`
-- serverseitige SignalR-Gruppen strikt nach Firma
-- EF-Queryfilter für mandantenbezogene Tabellen
-- Schutz vor firmenübergreifenden Schreibvorgängen
-- optimistische Concurrency-Grundlage über `ConcurrencyToken`
-- `ChangeEvents` als Grundlage für inkrementelle Synchronisation
-- Dockerfile und lokale PostgreSQL-Compose-Konfiguration
-- `/health`, `/api/v1/me` und geschützter Echtzeit-Ping zum Integrationstest
-
-## Token-Claims
-
-Ein gültiger Desktop-Token muss mindestens enthalten:
+## Architektur
 
 ```text
-company_id      = bestehende SolutionCompakt CompanyId (GUID; N-Format ist gültig)
-source_user_id  = lokale UserAccount.Id
-role            = Administrator | Planer | Beobachter
+PC A SolutionCompakt ----\
+                          +---- PostgreSQL 16 (gemeinsame operative Daten)
+PC B SolutionCompakt ----/
+          |                         ^
+          +---- HTTPS/SignalR ------+
+                    |
+             SolutionCompakt.Server
 ```
 
-Der Server erzeugt in dieser Stufe absichtlich noch keine Tokens. Die nächste Integrationsstufe verbindet die vorhandene SolutionCompakt-Anmeldung/Lizenzidentität mit einer serverseitigen Token-Ausgabe. Dadurch entsteht kein zweites unkoordiniertes Passwortsystem.
+Die vorhandenen WPF-Services verwenden im Zentralmodus denselben `AppDbContext`, aber mit Npgsql/PostgreSQL statt SQLite. Dadurch sind Mitarbeiter, Qualifikationen, Planung, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion/OEE, Benutzer, Audit, Schichtübergaben und persönliche Nachrichten gemeinsam verfügbar, ohne jedes Modul separat als REST-Client neu zu implementieren.
 
-## Lokal starten
-
-Benötigt werden zwei Geheimnisse als Umgebungsvariablen. Keine Produktionsgeheimnisse in Git einchecken.
-
-PowerShell:
-
-```powershell
-$env:POSTGRES_PASSWORD = '<starkes-lokales-passwort>'
-$env:SOLUTIONCOMPAKT_JWT_KEY = '<mindestens-32-zufällige-zeichen-besser-64>'
-docker compose -f docker-compose.central.yml up --build
-```
-
-Danach:
-
-```text
-GET http://localhost:8088/health
-```
-
-liefert bei erreichbarer PostgreSQL-Datenbank HTTP 200.
-
-## Datenbankbereitstellung
-
-`Database__EnsureCreatedOnStartup=true` ist nur für die aktuelle Entwicklungs-/Pilotstufe gedacht. Vor dem produktiven Rollout wird auf versionierte EF-Core-Migrationen umgestellt und `EnsureCreatedOnStartup` deaktiviert.
+Der lokale SQLite-Betrieb bleibt Standard und funktioniert unverändert, solange `central-mode.json` nicht aktiviert ist.
 
 ## Mandantentrennung
 
-Mandantenbezogene Entitäten implementieren `ITenantEntity`. Der `CentralDbContext` blendet Datensätze anderer Firmen über globale Queryfilter aus. Bei Schreibvorgängen wird zusätzlich geprüft, dass `CompanyId` des Datensatzes exakt dem authentifizierten Claim entspricht. Ein Client darf seine Firma daher nicht über Request-Payloads frei wählen.
+Jede SolutionCompakt-Firma erhält in PostgreSQL ein eigenes Schema:
+
+```text
+company_<CompanyId als GUID-N>
+```
+
+Die Tabellen des bestehenden operativen Datenmodells liegen ausschliesslich in diesem Firmenschema. Die Server-/Realtime-Metadaten liegen getrennt davon.
+
+## Erster PC – bestehende lokale Daten übernehmen
+
+Voraussetzung: Die vorhandene lokale Installation besitzt bereits Firma, CompanyId/CompanyCode und mindestens einen Benutzer.
+
+1. `.env.central.example` nach `.env.central` kopieren.
+2. Sichere Werte für `POSTGRES_PASSWORD` und `SOLUTIONCOMPAKT_JWT_KEY` setzen.
+3. Server starten:
+
+```powershell
+docker compose --env-file .env.central -f docker-compose.central.yml up -d --build
+```
+
+4. Health prüfen:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8088/health
+```
+
+5. Zentralmodus für die Desktop-App aktivieren:
+
+```powershell
+.\scripts\Enable-CentralMode.ps1 `
+  -PostgresPassword '<gleiches-passwort-wie-in-.env.central>' `
+  -ServerHost '127.0.0.1' `
+  -ServerUrl 'http://127.0.0.1:8088'
+```
+
+6. SolutionCompakt neu starten.
+
+Beim ersten Zentralstart wird das Firmenschema erstellt. Ist es leer, werden die lokalen SQLite-Daten einmalig in einer Transaktion übernommen. Die vorhandenen Primärschlüssel bleiben erhalten und PostgreSQL-Sequenzen werden anschliessend auf die importierten Maximalwerte gesetzt.
+
+Nach erfolgreicher Übernahme ergänzt SolutionCompakt `CompanyId`, `CompanyCode` und `CompanyName` automatisch in `central-mode.json`.
+
+## Zweiter PC derselben Firma
+
+Am einfachsten wird das bereits vervollständigte `central-mode.json` des ersten PCs sicher auf den zweiten PC kopiert. Die Datei enthält die Datenbank-Verbindungsinformation und ist deshalb wie ein Kennwort zu behandeln.
+
+Alternativ:
+
+```powershell
+.\scripts\Enable-CentralMode.ps1 `
+  -PostgresPassword '<passwort>' `
+  -ServerHost '192.168.1.20' `
+  -ServerUrl 'http://192.168.1.20:8088' `
+  -CompanyId '<CompanyId des ersten PCs>' `
+  -CompanyCode '<CompanyCode>' `
+  -CompanyName '<Firmenname>' `
+  -NoAutoMigrate
+```
+
+Beim Start übernimmt die frische Installation diese Firmenidentität und verwendet sofort die bereits zentral vorhandenen Benutzer. Es wird keine zweite Firmen-ID angelegt.
+
+Jede Windows-Installation behält weiterhin ihre eigene Lizenzidentität. Für die SignalR-Anmeldung muss die Installation online als aktive Lizenz bestätigt werden können.
+
+## LAN-Zugriff
+
+PostgreSQL wird standardmässig nur an `127.0.0.1:5432` gebunden. Für einen zweiten Rechner muss in `.env.central` z. B. gesetzt werden:
+
+```text
+POSTGRES_BIND_IP=0.0.0.0
+SERVER_BIND_IP=0.0.0.0
+```
+
+Danach den Stack neu starten. Port 5432 darf **nicht offen ins Internet** gestellt werden. Zugriff nur aus einem vertrauenswürdigen LAN/VPN zulassen und die Host-Firewall entsprechend einschränken. Für produktive externe Verbindungen PostgreSQL-TLS bzw. VPN verwenden und in `central-mode.json` `SSL Mode=Require` setzen.
 
 ## Echtzeit
 
-Authentifizierte Clients verbinden sich mit:
+Nach dem normalen SolutionCompakt-Login fordert der Desktop beim Server ein kurzlebiges JWT an. Der Server:
+
+1. prüft die Installationslizenz über den bestehenden `licenseStatus`-Dienst,
+2. prüft `source_user_id`, Benutzername, Rolle und Aktivstatus direkt gegen `company_<id>.UserAccounts`,
+3. signiert erst danach das JWT,
+4. ordnet die SignalR-Verbindung ausschliesslich der Firmen-Gruppe aus dem signierten `company_id`-Claim zu.
+
+Jeder erfolgreiche zentrale Schreibvorgang meldet die betroffenen Entitätstypen an SignalR. Andere PCs derselben Firma aktualisieren Hinweise, Nachrichten und die aktuell sichtbare Ansicht. Bei ungespeicherten Eingaben wird nicht automatisch neu geladen; stattdessen bleibt die Eingabe erhalten.
+
+## Gleichzeitige Änderungen
+
+Im Zentralmodus besitzt jede EF-Entität zusätzlich einen Shadow-`ConcurrencyToken`. Bei `UPDATE` wird der ursprünglich geladene Token mitgeprüft. Hat ein anderer Benutzer denselben Datensatz inzwischen geändert, wird die zweite Änderung abgelehnt und der Benutzer zum Aktualisieren aufgefordert. Dadurch gilt nicht einfach unbemerkt „last writer wins“.
+
+## Backup
+
+`.kpibackup` ist ein SQLite-Backupformat und deshalb im Zentralmodus bewusst deaktiviert. PostgreSQL muss serverseitig gesichert werden, z. B. mit `pg_dump` und einer externen/zweiten Aufbewahrung.
+
+Der lokale SQLite-Datenbestand wird bei der Erstübernahme nicht gelöscht und kann als Rückfallkopie erhalten bleiben. Mit `scripts/Disable-CentralMode.ps1` kann die Anwendung wieder im lokalen Modus gestartet werden; Änderungen, die zwischenzeitlich nur zentral erfolgt sind, werden dabei nicht automatisch zurück in die alte SQLite-Datei synchronisiert.
+
+## Konfiguration ohne Klartext-Verbindungsstring in der Datei
+
+Für verwaltete Installationen können Umgebungsvariablen die Datei überschreiben:
 
 ```text
-/hubs/company
+SOLUTIONCOMPAKT_CENTRAL_ENABLED=true
+SOLUTIONCOMPAKT_CENTRAL_DB=Host=...;Database=...;Username=...;Password=...;SSL Mode=Require
+SOLUTIONCOMPAKT_CENTRAL_SERVER=https://server.example.ch
 ```
 
-Der Server ordnet die Verbindung anhand des signierten `company_id`-Claims einer Gruppe zu. Die Desktop-App soll Änderungen später über das Ereignis `change` empfangen und anschließend nur die betroffenen Datensätze nachladen.
+## Testmatrix
 
-Für mehrere gleichzeitig laufende Serverinstanzen ist später ein SignalR-Backplane/Managed-SignalR-Dienst erforderlich. Die aktuelle Stufe ist für eine Serverinstanz ausgelegt.
+Für den Funktionstest mindestens:
 
-## Nächste Migration
+1. PC A: Mitarbeiter ändern -> PC B sieht Aktualisierung.
+2. PC A: persönliche Nachricht an Benutzer auf PC B -> PC B erhält Nachricht/Popup.
+3. PC B: Lesebestätigung -> PC A sieht den bestätigten Status.
+4. Beide PCs öffnen denselben Datensatz, PC A speichert zuerst, PC B versucht danach zu speichern -> Concurrency-Konflikt statt stiller Überschreibung.
+5. Planung/Produktionsauftrag auf PC A anlegen -> PC B sieht denselben Datensatz.
+6. App auf PC B schliessen/öffnen -> Daten bleiben vollständig zentral vorhanden.
+7. Benutzer zentral deaktivieren -> erneute Anmeldung/Realtime-Token für diesen Benutzer wird abgelehnt.
+8. Server/SignalR kurz stoppen -> zentrale PostgreSQL-Daten bleiben nutzbar, Realtime-Warnung erscheint; nach Serverwiederherstellung beim nächsten Start wieder verbinden.
 
-Die Desktop-Migration sollte nicht als Big Bang erfolgen. Empfohlene Reihenfolge:
+## Technische Grenzen dieser Betriebsart
 
-1. zentrale Authentifizierung/Token-Ausgabe mit bestehender Firmen- und Lizenzidentität verbinden
-2. Desktop-`CentralServerClient` + SignalR-Verbindung ergänzen
-3. Benutzer und persönliche Nachrichten zentralisieren
-4. Schichtübergabe zentralisieren
-5. Wochen-/Personalplanung zentralisieren
-6. Produktionsaufträge, Chargen und Ist-Produktion umstellen
-7. Offline-Outbox/Retry und Konfliktauflösung ergänzen
-8. SQLite als Offline-Cache statt alleinige Datenquelle verwenden
-
-Damit bleibt die bestehende Desktop-App während der Migration funktionsfähig.
+- PostgreSQL ist im Zentralmodus die führende operative Datenbank; es gibt noch keinen Offline-Schreibcache für Arbeiten ohne Datenbankverbindung.
+- Für mehrere parallel laufende `SolutionCompakt.Server`-Instanzen ist eine SignalR-Backplane/Managed-SignalR-Lösung erforderlich. Eine einzelne Serverinstanz ist vollständig unterstützt.
+- Schemaänderungen am operativen Datenmodell benötigen für spätere Releases einen versionierten PostgreSQL-Migrationspfad. Die Erstbereitstellung des aktuellen Schemas ist automatisiert.
