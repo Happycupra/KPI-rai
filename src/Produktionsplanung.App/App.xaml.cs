@@ -14,6 +14,8 @@ public partial class App : Application
 
         AppPaths.InitializeStorageMode(e.Args);
         CentralModeService.EnsureTemplateExists();
+        if (CentralModeService.IsEnabled)
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
         if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
         {
