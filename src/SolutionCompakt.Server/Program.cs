@@ -22,6 +22,7 @@ if (string.IsNullOrWhiteSpace(signingKey) || Encoding.UTF8.GetByteCount(signingK
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddDbContext<CentralDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddScoped<CentralOperationalUserVerifier>();
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient<DesktopLicenseVerifier>(client => client.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddSingleton<DesktopTokenIssuer>();
@@ -80,6 +81,7 @@ app.MapGet("/health", async (CentralDbContext db, CancellationToken cancellation
 app.MapPost("/api/v1/auth/desktop", async (
     DesktopAuthRequest request,
     DesktopLicenseVerifier licenseVerifier,
+    CentralOperationalUserVerifier userVerifier,
     DesktopTokenIssuer tokenIssuer,
     CancellationToken cancellationToken) =>
 {
@@ -99,6 +101,15 @@ app.MapPost("/api/v1/auth/desktop", async (
         cancellationToken);
     if (!license.Allowed)
         return Results.Json(new { error = license.Message }, statusCode: StatusCodes.Status403Forbidden);
+
+    var user = await userVerifier.VerifyAsync(
+        companyId,
+        request.SourceUserId,
+        request.Username,
+        request.Role,
+        cancellationToken);
+    if (!user.Allowed)
+        return Results.Json(new { error = user.Message }, statusCode: StatusCodes.Status403Forbidden);
 
     return Results.Ok(tokenIssuer.Issue(request, companyId));
 }).AllowAnonymous();
