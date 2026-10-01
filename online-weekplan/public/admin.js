@@ -65,7 +65,6 @@ async function verifyPinRecord(userId, pin) {
   } catch { return false; }
 }
 
-
 bootstrap();
 
 async function bootstrap() {
@@ -90,7 +89,7 @@ async function bootstrap() {
     el("pinSwitchAccountButton").addEventListener("click", switchAccount);
     el("resetButton").addEventListener("click", resetPassword);
     el("logoutButton").addEventListener("click", logout);
-    el("reloadButton").addEventListener("click", loadLicenses);
+    el("reloadButton").addEventListener("click", () => loadLicenses());
 
     authMod.onAuthStateChanged(auth, async user => {
       el("adminView").classList.add("hidden");
@@ -208,7 +207,8 @@ async function resetPassword() {
   }
 }
 
-async function loadLicenses() {
+async function loadLicenses(successMessage = "") {
+  el("adminStatus").style.color = "";
   el("adminStatus").textContent = "Registrierungen werden geladen…";
   try {
     const data = await adminCall(config.adminLicensesEndpoint, {});
@@ -217,8 +217,14 @@ async function loadLicenses() {
     el("countLabel").textContent = `${licenses.length} Registrierung(en)`;
     el("licenseRows").innerHTML = "";
     for (const item of licenses) el("licenseRows").appendChild(renderRow(item));
-    el("adminStatus").textContent = licenses.length ? "" : "Noch keine Registrierungsanfragen vorhanden.";
+    if (successMessage) {
+      el("adminStatus").style.color = "#166534";
+      el("adminStatus").textContent = successMessage;
+    } else {
+      el("adminStatus").textContent = licenses.length ? "" : "Noch keine Registrierungsanfragen vorhanden.";
+    }
   } catch (error) {
+    el("adminStatus").style.color = "#b42318";
     el("adminStatus").textContent = error.message;
   }
 }
@@ -313,48 +319,117 @@ function renderRow(item) {
   for (const days of [7,30,90,365]) {
     const button = document.createElement("button");
     button.textContent = `+${days} T`;
-    button.addEventListener("click", () => extend(item.installationId, days));
+    button.addEventListener("click", () => extend(item.installationId, days, item.companyName));
     actions.appendChild(button);
   }
+
   const custom = document.createElement("input");
-  custom.type = "number"; custom.min = "1"; custom.max = "3650"; custom.placeholder = "Tage"; custom.className = "custom";
+  custom.type = "number";
+  custom.min = "1";
+  custom.max = "3650";
+  custom.placeholder = "Tage";
+  custom.className = "custom";
+  custom.setAttribute("aria-label", `Eigene Anzahl Tage für ${item.companyName || "Firma"}`);
   actions.appendChild(custom);
+
   const customButton = document.createElement("button");
   customButton.textContent = "+ Tage";
   customButton.addEventListener("click", () => {
     const days = Number(custom.value);
     if (!Number.isInteger(days) || days < 1 || days > 3650) return alert("Bitte 1 bis 3650 Tage eingeben.");
-    extend(item.installationId, days);
+    extend(item.installationId, days, item.companyName);
   });
   actions.appendChild(customButton);
+
+  const expiryLabel = document.createElement("span");
+  expiryLabel.className = "muted";
+  expiryLabel.textContent = "Gültig bis:";
+  expiryLabel.style.flexBasis = "100%";
+  expiryLabel.style.marginTop = "4px";
+  actions.appendChild(expiryLabel);
+
+  const expiry = document.createElement("input");
+  expiry.type = "date";
+  expiry.value = dateInputValue(item.validUntilUtc);
+  expiry.style.width = "155px";
+  expiry.style.maxWidth = "100%";
+  expiry.setAttribute("aria-label", `Gültig bis für ${item.companyName || "Firma"}`);
+  actions.appendChild(expiry);
+
+  const expiryButton = document.createElement("button");
+  expiryButton.textContent = "Datum speichern";
+  expiryButton.addEventListener("click", () => setExactExpiry(item.installationId, expiry.value, item.companyName));
+  actions.appendChild(expiryButton);
+
   const suspend = document.createElement("button");
-  suspend.textContent = "Sperren"; suspend.className = "danger";
-  suspend.addEventListener("click", () => setStatus(item.installationId, "suspended"));
+  suspend.textContent = "Sperren";
+  suspend.className = "danger";
+  suspend.addEventListener("click", () => setStatus(item.installationId, "suspended", item.companyName));
   actions.appendChild(suspend);
+
   tr.appendChild(actions);
   return tr;
 }
 
-async function extend(installationId, days) {
+async function extend(installationId, days, companyName = "") {
+  el("adminStatus").style.color = "";
   el("adminStatus").textContent = `Freischaltung +${days} Tage wird gespeichert…`;
   try {
     await adminCall(config.adminExtendLicenseEndpoint, { installationId, days });
-    await loadLicenses();
-  } catch (error) { el("adminStatus").textContent = error.message; }
+    await loadLicenses(`Lizenz für ${companyName || "die Firma"} wurde um ${days} Tag(e) verlängert.`);
+  } catch (error) {
+    el("adminStatus").style.color = "#b42318";
+    el("adminStatus").textContent = error.message;
+  }
 }
 
-async function setStatus(installationId, status) {
+async function setExactExpiry(installationId, localDate, companyName = "") {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(localDate || ""))) {
+    alert("Bitte ein gültiges Ablaufdatum auswählen.");
+    return;
+  }
+
+  const [year, month, day] = localDate.split("-").map(Number);
+  const endOfLocalDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+  if (Number.isNaN(endOfLocalDay.getTime()) ||
+      endOfLocalDay.getFullYear() !== year ||
+      endOfLocalDay.getMonth() !== month - 1 ||
+      endOfLocalDay.getDate() !== day) {
+    alert("Bitte ein gültiges Ablaufdatum auswählen.");
+    return;
+  }
+
+  el("adminStatus").style.color = "";
+  el("adminStatus").textContent = `Ablaufdatum für ${companyName || "die Firma"} wird gespeichert…`;
+  try {
+    await adminCall(config.adminSetLicenseExpiryEndpoint, {
+      installationId,
+      validUntilUtc: endOfLocalDay.toISOString()
+    });
+    await loadLicenses(`Lizenz für ${companyName || "die Firma"} ist jetzt bis ${endOfLocalDay.toLocaleDateString("de-CH")} gültig.`);
+  } catch (error) {
+    el("adminStatus").style.color = "#b42318";
+    el("adminStatus").textContent = error.message;
+  }
+}
+
+async function setStatus(installationId, status, companyName = "") {
   if (status === "suspended" && !confirm("Diese Installation wirklich sperren?")) return;
+  el("adminStatus").style.color = "";
   el("adminStatus").textContent = "Status wird gespeichert…";
   try {
     await adminCall(config.adminSetLicenseStatusEndpoint, { installationId, status });
-    await loadLicenses();
-  } catch (error) { el("adminStatus").textContent = error.message; }
+    await loadLicenses(status === "suspended" ? `Lizenz für ${companyName || "die Firma"} wurde gesperrt.` : "Status wurde gespeichert.");
+  } catch (error) {
+    el("adminStatus").style.color = "#b42318";
+    el("adminStatus").textContent = error.message;
+  }
 }
 
 async function adminCall(endpoint, body) {
   const user = auth.currentUser;
   if (!user) throw new Error("Nicht angemeldet.");
+  if (!endpoint) throw new Error("Admin-Funktion ist noch nicht konfiguriert.");
   const token = await user.getIdToken(true);
   const response = await fetch(endpoint, {
     method: "POST",
@@ -376,6 +451,15 @@ function humanAuthError(error) {
   if (code.includes("too-many-requests")) return "Zu viele Versuche. Bitte später erneut versuchen.";
   if (code.includes("operation-not-allowed")) return "E-Mail/Passwort-Anmeldung ist im Firebase-Projekt noch nicht aktiviert.";
   return error?.message || "Anmeldung fehlgeschlagen.";
+}
+function dateInputValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = String(date.getFullYear()).padStart(4, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 function formatDateTime(value) { return value ? new Date(value).toLocaleString("de-CH") : "—"; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
