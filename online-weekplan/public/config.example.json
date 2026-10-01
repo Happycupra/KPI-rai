@@ -13,5 +13,6 @@
   "adminLicensesEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminLicenses",
   "adminGetRecoveryCodeEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminGetRecoveryCode",
   "adminExtendLicenseEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminExtendLicense",
+  "adminSetLicenseExpiryEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminSetLicenseExpiry",
   "adminSetLicenseStatusEndpoint": "https://europe-west1-PROJECT_ID.cloudfunctions.net/adminSetLicenseStatus"
 }
