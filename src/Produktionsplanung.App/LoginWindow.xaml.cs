@@ -1,6 +1,7 @@
 using System.Windows;
 using Produktionsplanung.App.Models;
 using Produktionsplanung.App.Services;
+using Produktionsplanung.App.Views;
 
 namespace Produktionsplanung.App;
 
@@ -17,6 +18,7 @@ public partial class LoginWindow : Window
     {
         InitializeComponent();
         _hasUsers = AuthenticationService.HasUsers();
+        AddProviderAdminEntry();
 
         if (_hasUsers)
             ApplyLoginMode(preferQuickAccess: true);
@@ -32,6 +34,28 @@ public partial class LoginWindow : Window
             else
                 UsernameBox.Focus();
         };
+    }
+
+    private void AddProviderAdminEntry()
+    {
+        if (SubmitButton.Parent is not System.Windows.Controls.StackPanel panel)
+            return;
+
+        var button = new System.Windows.Controls.Button
+        {
+            Content = "Anbieter-Verwaltung",
+            Margin = new Thickness(0, 14, 0, 0),
+            Style = (Style)FindResource("GhostButtonStyle"),
+            ToolTip = "Online-Firmen und Lizenzen mit dem Anbieter-Konto verwalten"
+        };
+        button.Click += ProviderAdmin_Click;
+        panel.Children.Add(button);
+    }
+
+    private void ProviderAdmin_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new ProviderAdminWindow { Owner = this };
+        window.ShowDialog();
     }
 
     private void LoginMode_Click(object sender, RoutedEventArgs e)
