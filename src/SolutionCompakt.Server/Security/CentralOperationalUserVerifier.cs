@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.EntityFrameworkCore;
 using SolutionCompakt.Server.Data;
 
 namespace SolutionCompakt.Server.Security;
