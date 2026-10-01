@@ -29,12 +29,9 @@ public partial class App : Application
         {
             if (CentralModeService.IsEnabled)
             {
-                var appSettings = AppSettingsService.Load();
-                if (string.IsNullOrWhiteSpace(appSettings.CompanyId) || string.IsNullOrWhiteSpace(appSettings.CompanyCode))
-                    throw new InvalidOperationException(
-                        "Der Zentralbetrieb kann erst aktiviert werden, nachdem diese Installation lokal einer Firma zugeordnet und mindestens ein Benutzer angelegt wurde.");
-
+                CentralModeService.EnsureLocalCompanyIdentityFromProfile();
                 var initialization = await CentralDatabaseService.InitializeAsync();
+                CentralModeService.UpdateProfileFromLocalIdentity();
                 if (initialization.Migrated)
                 {
                     MessageBox.Show(
