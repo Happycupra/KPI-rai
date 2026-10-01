@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Produktionsplanung.App.Services;
 
@@ -82,6 +83,7 @@ public partial class ProviderAdminWindow : Window
             CountLabel.Text = $"{licenses.Count} Registrierung(en)";
             LicenseGrid.SelectedItem = licenses.FirstOrDefault(x => x.InstallationId == selectedId) ?? licenses.FirstOrDefault();
             AdminStatus.Text = successMessage ?? (licenses.Count == 0 ? "Noch keine Registrierungen vorhanden." : string.Empty);
+            UpdateExpiryPicker();
         }
         catch (Exception ex)
         {
@@ -103,10 +105,50 @@ public partial class ProviderAdminWindow : Window
     {
         ProviderAdminService.SignOut();
         LicenseGrid.ItemsSource = null;
+        ValidUntilPicker.SelectedDate = null;
         OwnerPassword.Clear();
         LoginStatus.Text = string.Empty;
         ShowLogin();
         OwnerPassword.Focus();
+    }
+
+    private void LicenseGrid_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateExpiryPicker();
+
+    private void UpdateExpiryPicker()
+    {
+        ValidUntilPicker.SelectedDate = SelectedLicense?.ValidUntilUtc?.ToLocalTime().Date;
+    }
+
+    private async void SetExpiry_Click(object sender, RoutedEventArgs e)
+    {
+        var item = SelectedLicense;
+        if (item is null)
+        {
+            AdminStatus.Text = "Bitte zuerst eine Firma auswählen.";
+            return;
+        }
+        if (!ValidUntilPicker.SelectedDate.HasValue)
+        {
+            AdminStatus.Text = "Bitte ein Ablaufdatum auswählen.";
+            return;
+        }
+
+        var endOfLocalDay = DateTime.SpecifyKind(
+            ValidUntilPicker.SelectedDate.Value.Date.AddDays(1).AddTicks(-1),
+            DateTimeKind.Local);
+        var validUntilUtc = endOfLocalDay.ToUniversalTime();
+
+        SetAdminBusy(true, $"Ablaufdatum für {item.CompanyName} wird gespeichert…");
+        try
+        {
+            await ProviderAdminService.SetLicenseExpiryAsync(item.InstallationId, validUntilUtc);
+            await LoadLicensesAsync($"Lizenz für {item.CompanyName} ist jetzt bis {endOfLocalDay:dd.MM.yyyy} gültig.");
+        }
+        catch (Exception ex)
+        {
+            AdminStatus.Text = ex.Message;
+            SetAdminBusy(false);
+        }
     }
 
     private async void Extend_Click(object sender, RoutedEventArgs e)

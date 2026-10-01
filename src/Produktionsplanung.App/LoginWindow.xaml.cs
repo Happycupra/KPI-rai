@@ -10,15 +10,13 @@ public partial class LoginWindow : Window
     private readonly bool _hasUsers;
     private bool _registrationMode;
     private bool _quickAccessMode;
-    private bool _updatingCompanyCode;
-    private bool _companyCodeTouched;
     private int _failedPinAttempts;
 
     public LoginWindow()
     {
         InitializeComponent();
         _hasUsers = AuthenticationService.HasUsers();
-        AddProviderAdminEntry();
+        ModeSwitchContainer.Visibility = _hasUsers ? Visibility.Collapsed : Visibility.Visible;
 
         if (_hasUsers)
             ApplyLoginMode(preferQuickAccess: true);
@@ -34,28 +32,6 @@ public partial class LoginWindow : Window
             else
                 UsernameBox.Focus();
         };
-    }
-
-    private void AddProviderAdminEntry()
-    {
-        if (SubmitButton.Parent is not System.Windows.Controls.StackPanel panel)
-            return;
-
-        var button = new System.Windows.Controls.Button
-        {
-            Content = "Anbieter-Verwaltung",
-            Margin = new Thickness(0, 14, 0, 0),
-            Style = (Style)FindResource("GhostButtonStyle"),
-            ToolTip = "Online-Firmen und Lizenzen mit dem Anbieter-Konto verwalten"
-        };
-        button.Click += ProviderAdmin_Click;
-        panel.Children.Add(button);
-    }
-
-    private void ProviderAdmin_Click(object sender, RoutedEventArgs e)
-    {
-        var window = new ProviderAdminWindow { Owner = this };
-        window.ShowDialog();
     }
 
     private void LoginMode_Click(object sender, RoutedEventArgs e)
@@ -74,7 +50,6 @@ public partial class LoginWindow : Window
         _failedPinAttempts = 0;
         Title = "SolutionCompakt Anmeldung";
         CompanyPanel.Visibility = Visibility.Collapsed;
-        DisplayNamePanel.Visibility = Visibility.Collapsed;
         ConfirmPasswordPanel.Visibility = Visibility.Collapsed;
         ForgotPasswordButton.Visibility = Visibility.Visible;
         ConfirmPasswordBox.Clear();
@@ -108,28 +83,16 @@ public partial class LoginWindow : Window
         SubmitButton.Content = "Anmelden";
 
         if (!_hasUsers)
-        {
-            SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Bitte zuerst „Registrieren“ wählen.");
-        }
+            SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Du kannst dich mit dem Anbieter-Konto anmelden oder die Firma zuerst registrieren.");
         else
-        {
             SetStatus(string.Empty);
-            UsernameBox.Focus();
-        }
     }
 
     private void ApplyRegistrationMode()
     {
         if (_hasUsers)
         {
-            var existingSettings = AppSettingsService.Load();
-            var companyText = !string.IsNullOrWhiteSpace(existingSettings.CompanyName) &&
-                              !string.Equals(existingSettings.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase)
-                ? $" für „{existingSettings.CompanyName}“"
-                : string.Empty;
-
-            SetStatus($"Diese Installation ist bereits{companyText} registriert. Eine zweite Firma bzw. ein zweiter Firmenname kann hier nicht hinterlegt werden. Bitte ein bestehendes Konto verwenden.");
-            UpdateModeButtonStyles();
+            ApplyLoginMode(preferQuickAccess: true);
             return;
         }
 
@@ -140,22 +103,17 @@ public partial class LoginWindow : Window
         QuickAccessPanel.Visibility = Visibility.Collapsed;
         StandardLoginPanel.Visibility = Visibility.Visible;
         CompanyPanel.Visibility = Visibility.Visible;
-        DisplayNamePanel.Visibility = Visibility.Visible;
         ConfirmPasswordPanel.Visibility = Visibility.Visible;
         ForgotPasswordButton.Visibility = Visibility.Collapsed;
         ModeTitle.Text = "Firma registrieren";
-        ModeDescription.Text = "Firma einmalig registrieren und den ersten lokalen Administrator anlegen.";
+        ModeDescription.Text = "Firmenname und erstes Administratorkonto einrichten.";
         SubmitButton.Content = "Firma registrieren und anmelden";
 
         var current = AppSettingsService.Load();
         if (CompanyIdentityService.IsRegistered())
         {
             CompanyNameBox.Text = current.CompanyName;
-            _updatingCompanyCode = true;
-            CompanyCodeBox.Text = current.CompanyCode;
-            _updatingCompanyCode = false;
-            _companyCodeTouched = true;
-            ModeDescription.Text = "Die Firmenangaben wurden bereits gespeichert. Schließe die Ersteinrichtung mit dem ersten Administratorkonto ab.";
+            ModeDescription.Text = "Die Firma wurde bereits gespeichert. Schließe die Ersteinrichtung mit dem Administratorkonto ab.";
         }
 
         if (string.IsNullOrWhiteSpace(UsernameBox.Text))
@@ -191,28 +149,12 @@ public partial class LoginWindow : Window
         if (!string.IsNullOrWhiteSpace(company.CompanyName) &&
             !string.Equals(company.CompanyName, "SolutionCompakt", StringComparison.OrdinalIgnoreCase))
         {
-            ModeDescription.Text = $"{company.CompanyName} · {company.CompanyCode}\nMit deinem lokalen Benutzerkonto anmelden.";
+            ModeDescription.Text = $"{company.CompanyName}\nMit deinem lokalen Benutzerkonto anmelden.";
         }
         else
         {
             ModeDescription.Text = "Mit deinem lokalen Benutzerkonto anmelden.";
         }
-    }
-
-    private void CompanyNameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        if (!_registrationMode || CompanyCodeBox is null || _companyCodeTouched)
-            return;
-        _updatingCompanyCode = true;
-        CompanyCodeBox.Text = CompanyIdentityService.SuggestCode(CompanyNameBox.Text);
-        CompanyCodeBox.CaretIndex = CompanyCodeBox.Text.Length;
-        _updatingCompanyCode = false;
-    }
-
-    private void CompanyCodeBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
-    {
-        if (_registrationMode && !_updatingCompanyCode)
-            _companyCodeTouched = true;
     }
 
     private void RememberMe_Changed(object sender, RoutedEventArgs e)
@@ -238,7 +180,7 @@ public partial class LoginWindow : Window
         PasswordBox.Focus();
     }
 
-    private void Submit_Click(object sender, RoutedEventArgs e)
+    private async void Submit_Click(object sender, RoutedEventArgs e)
     {
         SetStatus(string.Empty);
 
@@ -268,14 +210,21 @@ public partial class LoginWindow : Window
             return;
         }
 
+        var username = UsernameBox.Text.Trim();
+        var password = PasswordBox.Password;
+
+        if (!_registrationMode && string.Equals(username, ProviderAdminService.OwnerEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            await OpenProviderAdministrationAsync(password);
+            return;
+        }
+
         if (!_registrationMode && !_hasUsers)
         {
             SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Bitte zuerst „Registrieren“ wählen.");
             return;
         }
 
-        var username = UsernameBox.Text.Trim();
-        var password = PasswordBox.Password;
         string? newlyCreatedRecoveryCode = null;
 
         if (RememberMeCheckBox.IsChecked == true)
@@ -296,11 +245,16 @@ public partial class LoginWindow : Window
                 return;
             }
 
+            var current = AppSettingsService.Load();
+            var companyCode = CompanyIdentityService.IsRegistered()
+                ? current.CompanyCode
+                : CompanyIdentityService.CreateRegistrationCode(CompanyNameBox.Text);
+
             var created = AuthenticationService.CreateInitialAdministrator(
                 CompanyNameBox.Text,
-                CompanyCodeBox.Text,
+                companyCode,
                 username,
-                DisplayNameBox.Text,
+                username,
                 password);
             if (!created.Success)
             {
@@ -343,6 +297,28 @@ public partial class LoginWindow : Window
         OnlineAccessSyncService.QueueSync();
         DialogResult = true;
         Close();
+    }
+
+    private async Task OpenProviderAdministrationAsync(string password)
+    {
+        SubmitButton.IsEnabled = false;
+        SetStatus("Lizenzverwaltung wird geöffnet…", success: true);
+        try
+        {
+            await ProviderAdminService.SignInAsync(password);
+            PasswordBox.Clear();
+            SetStatus(string.Empty);
+            var window = new ProviderAdminWindow { Owner = this };
+            window.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            SetStatus(ex.Message);
+        }
+        finally
+        {
+            SubmitButton.IsEnabled = true;
+        }
     }
 
     private void ForgotPassword_Click(object sender, RoutedEventArgs e)

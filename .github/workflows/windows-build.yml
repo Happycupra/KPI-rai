@@ -63,6 +63,7 @@ jobs:
         shell: pwsh
         run: |
           node --check online-weekplan/functions/index.js
+          node --check online-weekplan/functions/main.js
           node --check online-weekplan/functions/bootstrap-owner-admin.js
           node --check online-weekplan/public/app.js
           node --check online-weekplan/public/admin.js

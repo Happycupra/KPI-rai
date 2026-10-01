@@ -150,6 +150,8 @@ public static class CompanyIdentityService
         return baseCode;
     }
 
+    public static string CreateRegistrationCode(string? companyName) => BuildUniqueLocalCode(companyName);
+
     private static string NormalizeDisplayName(string? value) =>
         string.Join(' ', (value ?? string.Empty)
             .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
@@ -162,6 +164,8 @@ public static class CompanyIdentityService
         var prefix = SuggestCode(companyName);
         if (string.IsNullOrWhiteSpace(prefix) || string.Equals(prefix, "SOLUTIONCOMPAKT", StringComparison.Ordinal))
             prefix = "SC";
+        if (prefix.Length > 17)
+            prefix = prefix[..17].Trim('-');
         var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         return $"{prefix}-{suffix}";
     }

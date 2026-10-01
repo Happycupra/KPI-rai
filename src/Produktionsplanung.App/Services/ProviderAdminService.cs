@@ -37,6 +37,7 @@ public static class ProviderAdminService
     private const string AdminLicensesEndpoint = "https://europe-west1-solution-compact.cloudfunctions.net/adminLicenses";
     private const string AdminRecoveryEndpoint = "https://europe-west1-solution-compact.cloudfunctions.net/adminGetRecoveryCode";
     private const string AdminExtendEndpoint = "https://europe-west1-solution-compact.cloudfunctions.net/adminExtendLicense";
+    private const string AdminSetExpiryEndpoint = "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseExpiry";
     private const string AdminStatusEndpoint = "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseStatus";
 
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
@@ -89,6 +90,22 @@ public static class ProviderAdminService
         if (days is < 1 or > 3650)
             throw new InvalidOperationException("Bitte 1 bis 3650 Tage eingeben.");
         await AdminCallAsync<BasicResponse>(AdminExtendEndpoint, new { installationId, days }, cancellationToken);
+    }
+
+    public static async Task SetLicenseExpiryAsync(string installationId, DateTime validUntilUtc, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(installationId))
+            throw new InvalidOperationException("Bitte zuerst eine Firma auswählen.");
+
+        var utc = validUntilUtc.Kind == DateTimeKind.Utc ? validUntilUtc : validUntilUtc.ToUniversalTime();
+        if (utc.Year is < 2000 or > 2100)
+            throw new InvalidOperationException("Bitte ein gültiges Ablaufdatum auswählen.");
+
+        await AdminCallAsync<BasicResponse>(AdminSetExpiryEndpoint, new
+        {
+            installationId,
+            validUntilUtc = utc.ToString("O")
+        }, cancellationToken);
     }
 
     public static async Task SuspendLicenseAsync(string installationId, CancellationToken cancellationToken = default) =>
