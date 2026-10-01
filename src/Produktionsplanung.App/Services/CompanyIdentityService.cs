@@ -164,6 +164,8 @@ public static class CompanyIdentityService
         var prefix = SuggestCode(companyName);
         if (string.IsNullOrWhiteSpace(prefix) || string.Equals(prefix, "SOLUTIONCOMPAKT", StringComparison.Ordinal))
             prefix = "SC";
+        if (prefix.Length > 17)
+            prefix = prefix[..17].Trim('-');
         var suffix = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         return $"{prefix}-{suffix}";
     }
