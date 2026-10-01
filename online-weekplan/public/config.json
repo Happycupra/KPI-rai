@@ -16,5 +16,6 @@
   "adminLicensesEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminLicenses",
   "adminGetRecoveryCodeEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminGetRecoveryCode",
   "adminExtendLicenseEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminExtendLicense",
+  "adminSetLicenseExpiryEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseExpiry",
   "adminSetLicenseStatusEndpoint": "https://europe-west1-solution-compact.cloudfunctions.net/adminSetLicenseStatus"
 }
