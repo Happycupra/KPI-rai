@@ -6,6 +6,8 @@ services:
       POSTGRES_DB: solutioncompakt
       POSTGRES_USER: solutioncompakt
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_BIND_IP:-127.0.0.1}:5432:5432"
     volumes:
       - solutioncompakt-postgres:/var/lib/postgresql/data
     healthcheck:
@@ -23,13 +25,14 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8088:8080"
+      - "${SERVER_BIND_IP:-0.0.0.0}:8088:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__CentralDatabase: Host=postgres;Port=5432;Database=solutioncompakt;Username=solutioncompakt;Password=${POSTGRES_PASSWORD}
       Authentication__Issuer: SolutionCompakt.Server
       Authentication__Audience: SolutionCompakt.Desktop
       Authentication__JwtSigningKey: ${SOLUTIONCOMPAKT_JWT_KEY}
+      License__StatusEndpoint: https://europe-west1-solution-compact.cloudfunctions.net/licenseStatus
       Database__EnsureCreatedOnStartup: "true"
 
 volumes:
