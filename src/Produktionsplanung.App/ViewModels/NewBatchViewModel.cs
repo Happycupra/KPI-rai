@@ -10,6 +10,7 @@ namespace Produktionsplanung.App.ViewModels;
 /// <summary>
 /// Small, purpose-built state model for the "Neue Charge" dialog.
 /// It intentionally does not load production-order history or the order browser.
+/// Initialization errors are surfaced in the dialog instead of escaping into the WPF dispatcher.
 /// </summary>
 public partial class NewBatchViewModel : ObservableObject
 {
@@ -30,13 +31,21 @@ public partial class NewBatchViewModel : ObservableObject
 
     public NewBatchViewModel()
     {
-        using var db = new AppDbContext();
-        foreach (var workstation in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name))
-            Workstations.Add(workstation);
+        try
+        {
+            using var db = new AppDbContext();
+            foreach (var workstation in db.Workstations.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name))
+                Workstations.Add(workstation);
 
-        SelectedWorkstation = Workstations.FirstOrDefault();
-        if (SelectedWorkstation is null)
-            PlanningError = "Bitte zuerst einen aktiven Arbeitsplatz anlegen.";
+            SelectedWorkstation = Workstations.FirstOrDefault();
+            if (SelectedWorkstation is null)
+                PlanningError = "Bitte zuerst einen aktiven Arbeitsplatz anlegen.";
+        }
+        catch (Exception ex)
+        {
+            SelectedWorkstation = null;
+            PlanningError = "Arbeitsplätze konnten nicht geladen werden: " + ex.Message;
+        }
     }
 
     partial void OnPlannedDateChanged(DateTime value) => RefreshAllowedShifts(SelectedShift?.Id);
