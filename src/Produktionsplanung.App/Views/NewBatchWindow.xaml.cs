@@ -10,22 +10,43 @@ namespace Produktionsplanung.App.Views;
 
 public partial class NewBatchWindow : Window
 {
-    private readonly NewBatchViewModel plan;
+    private readonly NewBatchViewModel plan = new();
     public int CreatedId { get; private set; }
 
     public NewBatchWindow(int? articleId = null)
     {
         InitializeComponent();
+        DataContext = plan;
+
+        LoadRoutingsSafely();
+        LoadArticlesSafely(articleId);
+
+        if (!string.IsNullOrWhiteSpace(plan.PlanningError))
+            AppendMessage(plan.PlanningError);
+    }
+
+    private void LoadRoutingsSafely()
+    {
         try
         {
-            plan = new NewBatchViewModel();
-            DataContext = plan;
-
             using var db = new AppDbContext();
             var routings = db.ManufacturingRoutings.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Name).ToList();
             routings.Insert(0, new ManufacturingRouting { Id = 0, Name = "Artikelvorgabe / ohne Arbeitsplan" });
             Routing.ItemsSource = routings;
+            Routing.SelectedValue = 0;
+        }
+        catch (Exception ex)
+        {
+            Routing.ItemsSource = new[] { new ManufacturingRouting { Id = 0, Name = "Ohne Arbeitsplan" } };
+            Routing.SelectedValue = 0;
+            AppendMessage("Arbeitspläne konnten nicht geladen werden: " + ex.Message);
+        }
+    }
 
+    private void LoadArticlesSafely(int? articleId)
+    {
+        try
+        {
             var articles = ArticleService.Search(activeOnly: true);
             Article.ItemsSource = articles;
             Article.SelectedItem = articleId.HasValue
@@ -33,17 +54,14 @@ public partial class NewBatchWindow : Window
                 : articles.FirstOrDefault();
 
             if (articleId.HasValue && Article.SelectedItem is null)
-                Message.Text = "Der ausgewählte Artikel ist nicht aktiv. Bitte einen aktiven Artikel auswählen.";
+                AppendMessage("Der ausgewählte Artikel ist nicht aktiv. Bitte einen aktiven Artikel auswählen.");
             else if (articles.Count == 0)
-                Message.Text = "Bitte zuerst unter Artikel einen aktiven Artikel anlegen.";
-            else if (!string.IsNullOrWhiteSpace(plan.PlanningError))
-                Message.Text = plan.PlanningError;
+                AppendMessage("Bitte zuerst unter Artikel einen aktiven Artikel anlegen.");
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException(
-                "Die Chargenerfassung konnte nicht initialisiert werden. Die bestehenden Daten wurden nicht verändert. " + ex.Message,
-                ex);
+            Article.ItemsSource = Array.Empty<ArticleMaster>();
+            AppendMessage("Artikel konnten nicht geladen werden: " + ex.Message);
         }
     }
 
@@ -60,7 +78,7 @@ public partial class NewBatchWindow : Window
         }
         catch (Exception ex)
         {
-            Message.Text = "Artikel konnte nicht übernommen werden: " + ex.Message;
+            AppendMessage("Artikel konnte nicht übernommen werden: " + ex.Message);
         }
     }
 
@@ -95,5 +113,14 @@ public partial class NewBatchWindow : Window
         {
             Message.Text = ex.Message;
         }
+    }
+
+    private void AppendMessage(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+        Message.Text = string.IsNullOrWhiteSpace(Message.Text)
+            ? text
+            : Message.Text + Environment.NewLine + text;
     }
 }
