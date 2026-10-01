@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,6 +23,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddDbContext<CentralDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddSignalR();
+builder.Services.AddHttpClient<DesktopLicenseVerifier>(client => client.Timeout = TimeSpan.FromSeconds(20));
+builder.Services.AddSingleton<DesktopTokenIssuer>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -39,7 +42,6 @@ builder.Services
             ClockSkew = TimeSpan.FromMinutes(1)
         };
 
-        // SignalR clients can pass the bearer token as ?access_token=... during the WebSocket handshake.
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -75,6 +77,32 @@ app.MapGet("/health", async (CentralDbContext db, CancellationToken cancellation
         : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
 }).AllowAnonymous();
 
+app.MapPost("/api/v1/auth/desktop", async (
+    DesktopAuthRequest request,
+    DesktopLicenseVerifier licenseVerifier,
+    DesktopTokenIssuer tokenIssuer,
+    CancellationToken cancellationToken) =>
+{
+    if (!Guid.TryParse(request.CompanyId, out var companyId) || companyId == Guid.Empty)
+        return Results.BadRequest(new { error = "Ungültige Firmen-ID." });
+    if (!Regex.IsMatch(request.CompanyCode?.Trim() ?? string.Empty, "^[A-Za-z0-9-]{3,24}$"))
+        return Results.BadRequest(new { error = "Ungültiger Firmen-Code." });
+    if (request.SourceUserId < 1 || string.IsNullOrWhiteSpace(request.Username) || request.Username.Length > 100)
+        return Results.BadRequest(new { error = "Ungültiger Benutzer." });
+    if (request.Role is not ("Administrator" or "Planer" or "Beobachter"))
+        return Results.BadRequest(new { error = "Ungültige Benutzerrolle." });
+
+    var license = await licenseVerifier.VerifyAsync(
+        request.InstallationId,
+        request.Secret,
+        request.AppVersion,
+        cancellationToken);
+    if (!license.Allowed)
+        return Results.Json(new { error = license.Message }, statusCode: StatusCodes.Status403Forbidden);
+
+    return Results.Ok(tokenIssuer.Issue(request, companyId));
+}).AllowAnonymous();
+
 app.MapGet("/api/v1/me", (ITenantContext tenant) => Results.Ok(new
 {
     companyId = tenant.RequireCompanyId().ToString("N"),
@@ -92,7 +120,8 @@ app.MapPost("/api/v1/realtime/ping", async (
         "server.ping",
         Guid.NewGuid().ToString("N"),
         DateTime.UtcNow,
-        tenant.RequireSourceUserId());
+        tenant.RequireSourceUserId(),
+        Array.Empty<string>());
     await hub.Clients.Group(CompanyHub.GroupName(companyId))
         .SendAsync("change", payload, cancellationToken);
     return Results.Accepted(value: payload);
