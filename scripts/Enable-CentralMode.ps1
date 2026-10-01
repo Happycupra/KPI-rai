@@ -21,6 +21,15 @@ param(
     [string] $DataDirectory = (Join-Path $env:LOCALAPPDATA "Produktionsplanung"),
 
     [Parameter(Mandatory = $false)]
+    [string] $CompanyId = "",
+
+    [Parameter(Mandatory = $false)]
+    [string] $CompanyCode = "",
+
+    [Parameter(Mandatory = $false)]
+    [string] $CompanyName = "",
+
+    [Parameter(Mandatory = $false)]
     [switch] $RequireSsl,
 
     [Parameter(Mandatory = $false)]
@@ -29,12 +38,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if ([string]::IsNullOrWhiteSpace($PostgresPassword)) {
-    throw "PostgresPassword darf nicht leer sein."
-}
-if ([string]::IsNullOrWhiteSpace($ServerHost)) {
-    throw "ServerHost darf nicht leer sein."
-}
+if ([string]::IsNullOrWhiteSpace($PostgresPassword)) { throw "PostgresPassword darf nicht leer sein." }
+if ([string]::IsNullOrWhiteSpace($ServerHost)) { throw "ServerHost darf nicht leer sein." }
+if ($CompanyId -and $CompanyId -notmatch '^[0-9a-fA-F-]{32,36}$') { throw "CompanyId hat kein gültiges GUID-Format." }
 
 New-Item -ItemType Directory -Path $DataDirectory -Force | Out-Null
 $sslMode = if ($RequireSsl) { "Require" } else { "Disable" }
@@ -45,6 +51,9 @@ $config = [ordered]@{
     DatabaseConnectionString = $connection
     ServerUrl = $ServerUrl.TrimEnd('/')
     AutoMigrateLocalData = -not $NoAutoMigrate
+    CompanyId = $CompanyId
+    CompanyCode = $CompanyCode.ToUpperInvariant()
+    CompanyName = $CompanyName
 }
 
 $path = Join-Path $DataDirectory "central-mode.json"
@@ -53,4 +62,10 @@ $config | ConvertTo-Json | Set-Content -Path $path -Encoding UTF8
 Write-Host "Zentralbetrieb aktiviert: $path"
 Write-Host "PostgreSQL: $ServerHost`:$PostgresPort / $Database"
 Write-Host "Realtime-Server: $($config.ServerUrl)"
-Write-Host "SolutionCompakt jetzt neu starten. Beim ersten Zentralstart werden lokale Daten automatisch übernommen, falls das Firmenschema auf dem Server noch leer ist."
+if ($CompanyId) {
+    Write-Host "Bestehende Firma: $CompanyCode / $CompanyId"
+    Write-Host "Dieser PC tritt beim nächsten Start der bestehenden zentralen Firma bei."
+} else {
+    Write-Host "Erstinstallation: Beim ersten Zentralstart werden lokale Daten automatisch übernommen und CompanyId/CompanyCode in central-mode.json ergänzt."
+}
+Write-Host "SolutionCompakt jetzt neu starten."
