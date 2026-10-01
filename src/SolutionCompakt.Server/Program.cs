@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SolutionCompakt.Server.Data;
@@ -123,7 +124,7 @@ app.MapGet("/api/v1/me", (ITenantContext tenant) => Results.Ok(new
 
 app.MapPost("/api/v1/realtime/ping", async (
     ITenantContext tenant,
-    Microsoft.AspNetCore.SignalR.IHubContext<CompanyHub> hub,
+    IHubContext<CompanyHub> hub,
     CancellationToken cancellationToken) =>
 {
     var companyId = tenant.RequireCompanyId();
