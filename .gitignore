@@ -13,6 +13,7 @@ artifacts/
 .env
 .env.*
 !.env.example
-
+!.env.central.example
+central-mode.json
 
 node_modules/
