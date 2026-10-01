@@ -150,6 +150,8 @@ public static class CompanyIdentityService
         return baseCode;
     }
 
+    public static string CreateRegistrationCode(string? companyName) => BuildUniqueLocalCode(companyName);
+
     private static string NormalizeDisplayName(string? value) =>
         string.Join(' ', (value ?? string.Empty)
             .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
