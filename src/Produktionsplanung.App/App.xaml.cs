@@ -13,6 +13,8 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         AppPaths.InitializeStorageMode(e.Args);
+        CentralModeService.EnsureTemplateExists();
+
         if (!StartupHealthService.TryPrepare(out var startupError, out var startupWarning))
         {
             MessageBox.Show(startupError, "SolutionCompakt – Startprüfung", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -21,22 +23,53 @@ public partial class App : Application
         }
 
         if (!string.IsNullOrWhiteSpace(startupWarning))
-        {
             MessageBox.Show(startupWarning, "SolutionCompakt – Speicherhinweis", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
 
-        using (var db = new AppDbContext())
+        try
         {
-            db.Database.EnsureCreated();
-            DatabaseSchemaUpdater.Apply(db);
-            DemoDataSeeder.Seed(db);
-        }
+            if (CentralModeService.IsEnabled)
+            {
+                var appSettings = AppSettingsService.Load();
+                if (string.IsNullOrWhiteSpace(appSettings.CompanyId) || string.IsNullOrWhiteSpace(appSettings.CompanyCode))
+                    throw new InvalidOperationException(
+                        "Der Zentralbetrieb kann erst aktiviert werden, nachdem diese Installation lokal einer Firma zugeordnet und mindestens ein Benutzer angelegt wurde.");
 
-        CompanyIdentityService.EnsureExistingInstallationIdentity();
+                var initialization = await CentralDatabaseService.InitializeAsync();
+                if (initialization.Migrated)
+                {
+                    MessageBox.Show(
+                        "Der zentrale Mehrbenutzerbetrieb wurde eingerichtet.\n\n" +
+                        "Die vorhandene lokale Datenbank wurde einmalig auf PostgreSQL übertragen. Ab jetzt arbeiten alle entsprechend konfigurierten PCs auf derselben zentralen Datenbank.",
+                        "SolutionCompakt – Zentralbetrieb aktiviert",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            else
+            {
+                using var db = new AppDbContext(AppDatabaseMode.Local);
+                db.Database.EnsureCreated();
+                DatabaseSchemaUpdater.Apply(db);
+                DemoDataSeeder.Seed(db);
+                CompanyIdentityService.EnsureExistingInstallationIdentity();
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                "SolutionCompakt konnte den Datenspeicher nicht initialisieren.\n\n" + ex.Message +
+                (CentralModeService.IsEnabled
+                    ? $"\n\nZentralmodus-Konfiguration: {CentralModeService.ConfigPath}"
+                    : string.Empty),
+                "SolutionCompakt – Datenbank",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
 
         var licenseGate = await LicenseService.EvaluateStartupAsync();
-        if (!licenseGate.Allowed &&
-            string.Equals(licenseGate.Status, "suspended", StringComparison.OrdinalIgnoreCase))
+        if (!licenseGate.Allowed && string.Equals(licenseGate.Status, "suspended", StringComparison.OrdinalIgnoreCase))
         {
             MessageBox.Show(
                 LicenseService.SuspendedMessage,
@@ -79,7 +112,6 @@ public partial class App : Application
                 MessageBoxImage.Information);
         }
 
-        ShutdownMode = ShutdownMode.OnExplicitShutdown;
         var login = new LoginWindow();
         if (login.ShowDialog() != true || !SessionService.IsAuthenticated)
         {
@@ -91,6 +123,19 @@ public partial class App : Application
         MainWindow = main;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         main.Show();
+
+        if (CentralModeService.IsEnabled)
+        {
+            var realtime = await CentralRealtimeService.StartAsync();
+            if (!realtime.Success)
+            {
+                MessageBox.Show(
+                    realtime.Message + "\n\nDie zentrale Datenbank bleibt nutzbar, aber automatische Echtzeit-Aktualisierungen zwischen PCs sind bis zur Wiederherstellung der Serververbindung eingeschränkt.",
+                    "SolutionCompakt – Echtzeitverbindung",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -101,7 +146,7 @@ public partial class App : Application
                 AuditService.Log("Abmeldung", "Session", SessionService.CurrentUser?.Id.ToString(), null);
 
             var settings = AppSettingsService.Load();
-            if (settings.AutoBackupOnExit && !SessionService.RequiresRestart)
+            if (!CentralModeService.IsEnabled && settings.AutoBackupOnExit && !SessionService.RequiresRestart)
                 BackupService.CreateAutomaticBackup(settings);
         }
         catch
@@ -110,6 +155,10 @@ public partial class App : Application
         }
         finally
         {
+            if (CentralModeService.IsEnabled)
+            {
+                try { CentralRealtimeService.StopAsync().GetAwaiter().GetResult(); } catch { }
+            }
             SessionService.SignOut();
             StartupHealthService.Release();
         }
