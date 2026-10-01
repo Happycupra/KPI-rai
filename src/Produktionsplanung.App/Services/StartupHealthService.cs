@@ -30,9 +30,9 @@ public static class StartupHealthService
             }
 
             if (available >= 0 && available < WarningFreeBytes)
-                warningMessage = $"Hinweis: Am SolutionCompakt-Datenspeicher sind nur noch {FormatBytes(available)} frei. Bitte Backup erstellen und Speicherplatz prüfen.";
+                warningMessage = $"Hinweis: Am SolutionCompakt-Datenspeicher sind nur noch {FormatBytes(available)} frei. Bitte Speicherplatz prüfen.";
 
-            if (File.Exists(AppPaths.DatabasePath))
+            if (!CentralModeService.IsEnabled && File.Exists(AppPaths.DatabasePath))
             {
                 var integrity = CheckDatabaseIntegrity();
                 if (!string.Equals(integrity, "ok", StringComparison.OrdinalIgnoreCase))
@@ -65,8 +65,7 @@ public static class StartupHealthService
         {
             instanceLock?.Dispose();
             instanceLock = null;
-            if (File.Exists(LockPath))
-                File.Delete(LockPath);
+            if (File.Exists(LockPath)) File.Delete(LockPath);
         }
         catch
         {
@@ -91,7 +90,7 @@ public static class StartupHealthService
         using var writer = new StreamWriter(instanceLock, Encoding.UTF8, 1024, leaveOpen: true);
         writer.WriteLine($"PID={Environment.ProcessId}");
         writer.WriteLine($"StartedUtc={DateTime.UtcNow:O}");
-        writer.WriteLine($"Mode={AppPaths.StorageModeText}");
+        writer.WriteLine($"Mode={(CentralModeService.IsEnabled ? "Central/PostgreSQL" : AppPaths.StorageModeText)}");
         writer.Flush();
         instanceLock.Flush(flushToDisk: true);
     }
@@ -103,7 +102,6 @@ public static class StartupHealthService
             DataSource = AppPaths.DatabasePath,
             Mode = SqliteOpenMode.ReadOnly
         };
-
         using var connection = new SqliteConnection(builder.ConnectionString);
         connection.Open();
         using var command = connection.CreateCommand();
@@ -119,10 +117,7 @@ public static class StartupHealthService
             if (string.IsNullOrWhiteSpace(root)) return -1;
             return new DriveInfo(root).AvailableFreeSpace;
         }
-        catch
-        {
-            return -1;
-        }
+        catch { return -1; }
     }
 
     private static string FormatBytes(long bytes)
