@@ -9,10 +9,14 @@ public sealed class CentralModeSettings
     public string DatabaseConnectionString { get; set; } = string.Empty;
     public string ServerUrl { get; set; } = "http://localhost:8088";
     public bool AutoMigrateLocalData { get; set; } = true;
+    public string CompanyId { get; set; } = string.Empty;
+    public string CompanyCode { get; set; } = string.Empty;
+    public string CompanyName { get; set; } = string.Empty;
 }
 
 public static class CentralModeService
 {
+    public const string CentralJoinRegistrationMode = "CentralJoin";
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     public static string ConfigPath => Path.Combine(AppPaths.RootDirectory, "central-mode.json");
@@ -48,6 +52,9 @@ public static class CentralModeService
         settings.ServerUrl = string.IsNullOrWhiteSpace(settings.ServerUrl)
             ? "http://localhost:8088"
             : settings.ServerUrl.Trim().TrimEnd('/');
+        settings.CompanyId = settings.CompanyId?.Trim() ?? string.Empty;
+        settings.CompanyCode = settings.CompanyCode?.Trim().ToUpperInvariant() ?? string.Empty;
+        settings.CompanyName = settings.CompanyName?.Trim() ?? string.Empty;
         return settings;
     }
 
@@ -64,7 +71,7 @@ public static class CentralModeService
             ServerUrl = "http://localhost:8088",
             AutoMigrateLocalData = true
         };
-        File.WriteAllText(ConfigPath, JsonSerializer.Serialize(template, JsonOptions));
+        Save(template);
     }
 
     public static CentralModeSettings RequireEnabledSettings()
@@ -80,11 +87,73 @@ public static class CentralModeService
         return settings;
     }
 
+    public static void EnsureLocalCompanyIdentityFromProfile()
+    {
+        var central = RequireEnabledSettings();
+        var local = AppSettingsService.Load();
+
+        if (!string.IsNullOrWhiteSpace(local.CompanyId))
+        {
+            if (!string.IsNullOrWhiteSpace(central.CompanyId) &&
+                !string.Equals(local.CompanyId, central.CompanyId, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Das Zentralprofil gehört zu einer anderen Firma als diese Installation.");
+            return;
+        }
+
+        if (!Guid.TryParse(central.CompanyId, out var companyId) || companyId == Guid.Empty ||
+            string.IsNullOrWhiteSpace(central.CompanyCode))
+        {
+            throw new InvalidOperationException(
+                "Diese frische Installation kann der zentralen Firma noch nicht beitreten. Kopieren Sie das central-mode.json einer bereits verbundenen Installation oder tragen Sie CompanyId und CompanyCode in das Zentralprofil ein.");
+        }
+
+        AppSettingsService.Update(value =>
+        {
+            value.CompanyId = companyId.ToString("N");
+            value.CompanyCode = central.CompanyCode;
+            value.CompanyName = string.IsNullOrWhiteSpace(central.CompanyName) ? "SolutionCompakt" : central.CompanyName;
+            value.CompanyRegistrationMode = CentralJoinRegistrationMode;
+            value.CompanyRegisteredAtUtc ??= DateTime.UtcNow;
+        });
+    }
+
+    public static void UpdateProfileFromLocalIdentity()
+    {
+        if (!File.Exists(ConfigPath)) return;
+        var profile = Load();
+        var local = AppSettingsService.Load();
+        if (!Guid.TryParse(local.CompanyId, out var companyId) || companyId == Guid.Empty ||
+            string.IsNullOrWhiteSpace(local.CompanyCode))
+            return;
+
+        profile.CompanyId = companyId.ToString("N");
+        profile.CompanyCode = local.CompanyCode.Trim().ToUpperInvariant();
+        profile.CompanyName = local.CompanyName.Trim();
+        Save(profile);
+    }
+
     public static string GetCompanySchemaName()
     {
-        var companyId = AppSettingsService.Load().CompanyId?.Trim();
-        if (string.IsNullOrWhiteSpace(companyId) || !Guid.TryParse(companyId, out var id))
-            throw new InvalidOperationException("Vor Aktivierung des Zentralbetriebs muss die lokale Firmenregistrierung vollständig abgeschlossen sein.");
+        var localId = AppSettingsService.Load().CompanyId?.Trim();
+        var profileId = Load().CompanyId;
+        var raw = string.IsNullOrWhiteSpace(localId) ? profileId : localId;
+        if (string.IsNullOrWhiteSpace(raw) || !Guid.TryParse(raw, out var id))
+            throw new InvalidOperationException("Für den Zentralbetrieb fehlt eine gültige CompanyId.");
         return "company_" + id.ToString("N");
+    }
+
+    private static void Save(CentralModeSettings settings)
+    {
+        AppPaths.EnsureDirectories();
+        var pending = ConfigPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            File.WriteAllText(pending, JsonSerializer.Serialize(settings, JsonOptions));
+            File.Move(pending, ConfigPath, true);
+        }
+        finally
+        {
+            try { File.Delete(pending); } catch { }
+        }
     }
 }
