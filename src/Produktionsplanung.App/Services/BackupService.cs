@@ -12,6 +12,9 @@ public static class BackupService
 
     public static string CreateBackup(string targetPath, AppSettings settings)
     {
+        if (CentralModeService.IsEnabled)
+            throw new InvalidOperationException("Im zentralen Mehrbenutzerbetrieb liegen die operativen Daten in PostgreSQL. Lokale .kpibackup-Dateien sind deshalb deaktiviert; sichern Sie die PostgreSQL-Datenbank serverseitig.");
+
         AppPaths.EnsureDirectories();
         if (!File.Exists(AppPaths.DatabasePath))
             throw new InvalidOperationException("Die SolutionCompakt-Datenbank wurde nicht gefunden.");
@@ -19,7 +22,6 @@ public static class BackupService
         if (!targetPath.EndsWith(".kpibackup", StringComparison.OrdinalIgnoreCase)) targetPath += ".kpibackup";
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var temp = Path.Combine(Path.GetTempPath(), $"solutioncompakt-backup-{Guid.NewGuid():N}");
-        // The completed archive is moved on the same volume; an existing backup survives failures.
         var stagedArchive = targetPath + $".{Guid.NewGuid():N}.tmp";
         Directory.CreateDirectory(temp);
         try
@@ -60,9 +62,10 @@ public static class BackupService
 
     private static void RestoreBackupCore(string backupPath)
     {
+        if (CentralModeService.IsEnabled)
+            throw new InvalidOperationException("Eine lokale SQLite-Wiederherstellung ist im zentralen Mehrbenutzerbetrieb gesperrt. Deaktivieren Sie den Zentralmodus nur für eine bewusst lokale Wiederherstellung oder stellen Sie PostgreSQL serverseitig wieder her.");
         if (!File.Exists(backupPath)) throw new FileNotFoundException("Die ausgewählte Backup-Datei wurde nicht gefunden.", backupPath);
         AppPaths.EnsureDirectories();
-        // Keep staging and rollback files on the database volume for atomic file replacement.
         var temp = Path.Combine(AppPaths.RootDirectory, $"restore-{Guid.NewGuid():N}");
         Directory.CreateDirectory(temp);
         var preserveRecoveryFiles = false;
@@ -90,7 +93,6 @@ public static class BackupService
                 File.WriteAllText(settingsPath, JsonSerializer.Serialize(settings, JsonOptions));
             }
 
-            // Flush WAL before swapping database files. Busy writers abort before any replacement.
             SqliteConnection.ClearAllPools();
             if (File.Exists(AppPaths.DatabasePath))
             {
@@ -144,7 +146,6 @@ public static class BackupService
                 }
                 throw;
             }
-            // A failed restore with successful rollback leaves the current session intact.
             SessionService.InvalidateAfterRestore();
         }
         finally { if (!preserveRecoveryFiles) TryDeleteDirectory(temp); }
@@ -190,6 +191,7 @@ public static class BackupService
             .OrderByDescending(x => x.LastWriteTimeUtc).Skip(count))
             TryDeleteFile(file.FullName);
     }
+
     private static void TryDeleteFile(string path) { try { File.Delete(path); } catch { } }
     private static void TryDeleteDirectory(string path) { try { if (Directory.Exists(path)) Directory.Delete(path, true); } catch { } }
 }
