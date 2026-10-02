@@ -14,7 +14,9 @@ PC B SolutionCompakt ----/
              SolutionCompakt.Server
 ```
 
-Die vorhandenen WPF-Services verwenden im Zentralmodus denselben `AppDbContext`, aber mit Npgsql/PostgreSQL statt SQLite. Dadurch sind Mitarbeiter, Qualifikationen, Planung, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion/OEE, Benutzer, Audit, Schichtübergaben und persönliche Nachrichten gemeinsam verfügbar, ohne jedes Modul separat als REST-Client neu zu implementieren.
+Die vorhandenen WPF-Services verwenden im Zentralmodus überwiegend denselben `AppDbContext`, aber mit Npgsql/PostgreSQL statt SQLite. Dadurch sind Mitarbeiter, Qualifikationen, Planung, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion/OEE, Benutzer, Audit und Schichtübergaben gemeinsam verfügbar, ohne jedes Modul separat als REST-Client neu zu implementieren.
+
+Persönliche Nachrichten sind bewusst eine Ausnahme: Sie laufen im Zentralmodus über die authentifizierte Server-API und benutzerspezifische SignalR-Gruppen. Dadurch können Nachrichten und Lesebestätigungen gezielt an die beteiligten Benutzer verteilt werden, statt als allgemeines Firmenereignis an alle Clients zu gehen.
 
 Der lokale SQLite-Betrieb bleibt Standard und funktioniert unverändert, solange `central-mode.json` nicht aktiviert ist.
 
@@ -100,9 +102,33 @@ Nach dem normalen SolutionCompakt-Login fordert der Desktop beim Server ein kurz
 1. prüft die Installationslizenz über den bestehenden `licenseStatus`-Dienst,
 2. prüft `source_user_id`, Benutzername, Rolle und Aktivstatus direkt gegen `company_<id>.UserAccounts`,
 3. signiert erst danach das JWT,
-4. ordnet die SignalR-Verbindung ausschliesslich der Firmen-Gruppe aus dem signierten `company_id`-Claim zu.
+4. ordnet die SignalR-Verbindung der Firmen-Gruppe und zusätzlich einer benutzerspezifischen Gruppe aus den signierten Claims zu.
 
-Jeder erfolgreiche zentrale Schreibvorgang meldet die betroffenen Entitätstypen an SignalR. Andere PCs derselben Firma aktualisieren Hinweise, Nachrichten und die aktuell sichtbare Ansicht. Bei ungespeicherten Eingaben wird nicht automatisch neu geladen; stattdessen bleibt die Eingabe erhalten.
+Jeder erfolgreiche zentrale Schreibvorgang meldet die betroffenen Entitätstypen an SignalR. Andere PCs derselben Firma aktualisieren Hinweise und die aktuell sichtbare Ansicht. Bei ungespeicherten Eingaben wird nicht automatisch neu geladen; stattdessen bleibt die Eingabe erhalten.
+
+### Persönliche Nachrichten über mehrere PCs
+
+Im Zentralmodus verwendet `UserMessageService` folgende geschützte Server-Endpunkte:
+
+```text
+GET  /api/v1/messages/recipients
+GET  /api/v1/messages/inbox
+GET  /api/v1/messages/sent
+GET  /api/v1/messages/unread
+GET  /api/v1/messages/unread-count
+POST /api/v1/messages/
+POST /api/v1/messages/{messageId}/acknowledge
+```
+
+Beim Senden validiert der Server den Empfänger gegen die zentrale `UserAccounts`-Tabelle und erzeugt die Absender-/Empfänger-Snapshots selbst. Der Client kann dadurch keine fremde Absenderidentität in den Nachrichtendatensatz schreiben.
+
+Nach erfolgreichem Speichern wird `message.received` nur an die benutzerspezifische SignalR-Gruppe des Empfängers gesendet. Der Empfänger lädt die Nachricht anschliessend über seine autorisierte API-Verbindung und erhält den bestehenden Popup-Dialog. Andere Benutzer derselben Firma erhalten weder den Nachrichteninhalt noch ein persönliches Nachrichtenereignis.
+
+Bei „Gelesen bestätigen“ wird der Status zentral gespeichert und `message.acknowledged` gezielt an Absender und weitere Sitzungen des Empfängers gesendet. Ein geöffnetes Nachrichtencenter aktualisiert sich unmittelbar. Posteingang, Gesendet, Wichtig/Normal, Ungelesen und „Gelesen um …“ bleiben erhalten.
+
+Der bisherige 15-Sekunden-Timer blockiert im Zentralmodus nicht mehr die WPF-Oberfläche. Dort läuft ein asynchroner Fallback-Poll zusätzlich zum SignalR-Push. Offene Betreff-/Text-Eingaben und die gewählte Empfängerperson werden bei Realtime-Aktualisierungen nicht verworfen.
+
+Senden und Lesebestätigung werden weiterhin in `AuditLogs` protokolliert. Der lokale SQLite-Modus verwendet unverändert die bisherige lokale Nachrichtenlogik.
 
 ## Gleichzeitige Änderungen
 
@@ -124,18 +150,20 @@ SOLUTIONCOMPAKT_CENTRAL_DB=Host=...;Database=...;Username=...;Password=...;SSL M
 SOLUTIONCOMPAKT_CENTRAL_SERVER=https://server.example.ch
 ```
 
-## Testmatrix
+## Testmatrix – erst nach Fertigstellung ausführen
 
-Für den Funktionstest mindestens:
+Für den späteren Gesamtfunktionstest mindestens:
 
 1. PC A: Mitarbeiter ändern -> PC B sieht Aktualisierung.
-2. PC A: persönliche Nachricht an Benutzer auf PC B -> PC B erhält Nachricht/Popup.
-3. PC B: Lesebestätigung -> PC A sieht den bestätigten Status.
-4. Beide PCs öffnen denselben Datensatz, PC A speichert zuerst, PC B versucht danach zu speichern -> Concurrency-Konflikt statt stiller Überschreibung.
-5. Planung/Produktionsauftrag auf PC A anlegen -> PC B sieht denselben Datensatz.
-6. App auf PC B schliessen/öffnen -> Daten bleiben vollständig zentral vorhanden.
-7. Benutzer zentral deaktivieren -> erneute Anmeldung/Realtime-Token für diesen Benutzer wird abgelehnt.
-8. Server/SignalR kurz stoppen -> zentrale PostgreSQL-Daten bleiben nutzbar, Realtime-Warnung erscheint; nach Serverwiederherstellung beim nächsten Start wieder verbinden.
+2. PC A: persönliche Nachricht an Benutzer auf PC B -> PC B erhält Nachricht/Popup unmittelbar.
+3. Ein anderer Benutzer derselben Firma darf die persönliche Nachricht nicht in seinem Posteingang sehen.
+4. PC B: Lesebestätigung -> PC A sieht den bestätigten Status ohne manuellen Refresh.
+5. Betreff/Text im Nachrichtencenter beginnen, während ein Realtime-Ereignis eintrifft -> Entwurf und Empfängerauswahl bleiben erhalten.
+6. Beide PCs öffnen denselben Datensatz, PC A speichert zuerst, PC B versucht danach zu speichern -> Concurrency-Konflikt statt stiller Überschreibung.
+7. Planung/Produktionsauftrag auf PC A anlegen -> PC B sieht denselben Datensatz.
+8. App auf PC B schliessen/öffnen -> Daten bleiben vollständig zentral vorhanden.
+9. Benutzer zentral deaktivieren -> erneute Anmeldung/Realtime-Token für diesen Benutzer wird abgelehnt.
+10. Server/SignalR kurz stoppen -> zentrale PostgreSQL-Daten bleiben nutzbar; nach Serverwiederherstellung verbindet sich Realtime beim nächsten Start wieder.
 
 ## Technische Grenzen dieser Betriebsart
 
