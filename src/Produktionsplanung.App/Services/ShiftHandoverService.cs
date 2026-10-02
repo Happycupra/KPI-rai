@@ -7,21 +7,27 @@ namespace Produktionsplanung.App.Services;
 public static class ShiftHandoverService
 {
     public static IReadOnlyList<ShiftHandover> GetOpen(DateTime? date = null)
+        => Get(date, includeResolved: false, criticalOnly: false);
+
+    public static IReadOnlyList<ShiftHandover> Get(DateTime? date = null, bool includeResolved = false, bool criticalOnly = false)
     {
         using var db = new AppDbContext();
         var query = db.ShiftHandovers.AsNoTracking()
             .Include(x => x.FromShift).Include(x => x.ToShift)
             .Include(x => x.Workstation).Include(x => x.ProductionOrder)
-            .Where(x => x.Status != "Erledigt");
+            .AsQueryable();
+        if (!includeResolved) query = query.Where(x => x.Status != "Erledigt");
+        if (criticalOnly) query = query.Where(x => x.Priority == "Kritisch");
         if (date.HasValue) query = query.Where(x => x.HandoverDate.Date == date.Value.Date);
         return query.OrderByDescending(x => x.Priority == "Kritisch")
             .ThenByDescending(x => x.Priority == "Hoch")
-            .ThenBy(x => x.HandoverDate).ThenBy(x => x.CreatedAtUtc).ToList();
+            .ThenByDescending(x => x.HandoverDate).ThenByDescending(x => x.CreatedAtUtc).ToList();
     }
 
     public static ShiftHandover Create(DateTime date, int? fromShiftId, int? toShiftId, int? workstationId,
         int? productionOrderId, string priority, string subject, string details)
     {
+        EnsureCanEdit();
         if (string.IsNullOrWhiteSpace(subject)) throw new ArgumentException("Betreff ist erforderlich.", nameof(subject));
         if (string.IsNullOrWhiteSpace(details)) throw new ArgumentException("Übergabeinformation ist erforderlich.", nameof(details));
         using var db = new AppDbContext();
@@ -32,26 +38,41 @@ public static class ShiftHandoverService
             Priority = NormalizePriority(priority), Subject = subject.Trim(), Details = details.Trim(),
             CreatedBy = SessionService.CurrentUser?.Username ?? "System"
         };
-        db.ShiftHandovers.Add(item); db.SaveChanges(); return item;
+        db.ShiftHandovers.Add(item);
+        db.SaveChanges();
+        AuditService.Log("Schichtübergabe erstellt", nameof(ShiftHandover), item.Id.ToString(),
+            $"{item.Priority} · {item.HandoverDate:dd.MM.yyyy} · {item.Subject}");
+        return item;
     }
 
     public static void Acknowledge(int id)
     {
+        EnsureCanEdit();
         using var db = new AppDbContext();
         var item = db.ShiftHandovers.FirstOrDefault(x => x.Id == id) ?? throw new InvalidOperationException("Übergabe existiert nicht mehr.");
         if (item.Status == "Erledigt") return;
         item.Status = "Bestätigt"; item.AcknowledgedBy = SessionService.CurrentUser?.Username ?? "System";
-        item.AcknowledgedAtUtc = DateTime.UtcNow; db.SaveChanges();
+        item.AcknowledgedAtUtc = DateTime.UtcNow;
+        db.SaveChanges();
+        AuditService.Log("Schichtübergabe bestätigt", nameof(ShiftHandover), item.Id.ToString(), item.Subject);
     }
 
     public static void Resolve(int id, string resolution)
     {
+        EnsureCanEdit();
         if (string.IsNullOrWhiteSpace(resolution)) throw new ArgumentException("Abschlussnotiz ist erforderlich.", nameof(resolution));
         using var db = new AppDbContext();
         var item = db.ShiftHandovers.FirstOrDefault(x => x.Id == id) ?? throw new InvalidOperationException("Übergabe existiert nicht mehr.");
         item.Status = "Erledigt"; item.Resolution = resolution.Trim(); item.ResolvedAtUtc = DateTime.UtcNow;
         if (!item.AcknowledgedAtUtc.HasValue) { item.AcknowledgedBy = SessionService.CurrentUser?.Username ?? "System"; item.AcknowledgedAtUtc = DateTime.UtcNow; }
         db.SaveChanges();
+        AuditService.Log("Schichtübergabe abgeschlossen", nameof(ShiftHandover), item.Id.ToString(), item.Subject);
+    }
+
+    private static void EnsureCanEdit()
+    {
+        if (!SessionService.IsPlannerOrAdmin)
+            throw new UnauthorizedAccessException("Für Schichtübergaben ist die Rolle Planer oder Administrator erforderlich.");
     }
 
     private static string NormalizePriority(string value) => value?.Trim() switch { "Kritisch" => "Kritisch", "Hoch" => "Hoch", "Niedrig" => "Niedrig", _ => "Normal" };

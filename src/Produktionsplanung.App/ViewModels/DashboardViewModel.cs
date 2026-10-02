@@ -236,6 +236,28 @@ public partial class DashboardViewModel : ObservableObject
                 EntityId = order.Id
             });
         }
+
+        var criticalHandovers = db.ShiftHandovers.AsNoTracking()
+            .Include(x => x.FromShift)
+            .Include(x => x.ToShift)
+            .Include(x => x.Workstation)
+            .Where(x => x.Status != "Erledigt" && x.Priority == "Kritisch")
+            .OrderBy(x => x.HandoverDate)
+            .ThenBy(x => x.CreatedAtUtc)
+            .Take(8)
+            .ToList();
+
+        foreach (var handover in criticalHandovers)
+        {
+            Issues.Add(new DashboardIssue
+            {
+                Severity = "Rot",
+                Title = $"Kritische Schichtübergabe · {handover.Subject}",
+                Message = $"{handover.Workstation?.Name ?? "Ohne Arbeitsplatz"} · {handover.FromShift?.Name ?? "Ohne Schicht"} → {handover.ToShift?.Name ?? "Ohne Schicht"} · {handover.HandoverDate:dd.MM.yyyy}",
+                Route = "ShiftHandover",
+                EntityId = handover.Id
+            });
+        }
     }
 
     private void BuildOrders(List<ProductionRunSlot> runSlots, List<ProductionOrderCoverageRow> coverage)

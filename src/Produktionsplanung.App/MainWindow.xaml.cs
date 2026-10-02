@@ -77,8 +77,9 @@ public partial class MainWindow : Window
         TopbarInitialsBlock.Text = GetInitials(user?.DisplayName);
         VersionBlock.Text = $"Version {Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0"}";
         var canOperate = SessionService.IsPlannerOrAdmin;
-        PlanningCalendarButton.IsEnabled = canOperate;
+        PlanningCalendarButton.IsEnabled = canOperate; WhatIfPlanningButton.IsEnabled = canOperate;
         WorkTimeCalendarButton.IsEnabled = canOperate; ProductionOrdersButton.IsEnabled = canOperate; ManufacturingControlButton.IsEnabled = canOperate; ProductionActualButton.IsEnabled = canOperate;
+        ShiftHandoverButton.IsEnabled = canOperate;
         EmployeesButton.IsEnabled = canOperate; WorkstationsButton.IsEnabled = canOperate;
         AbsencesButton.IsEnabled = canOperate;
         UserAdminButton.IsEnabled = SessionService.IsAdministrator; SettingsButton.IsEnabled = SessionService.IsAdministrator;
@@ -248,6 +249,9 @@ public partial class MainWindow : Window
             case "worktime":
                 OpenWorkTimeCalendar();
                 break;
+            case "whatif":
+                OpenWhatIfPlanning();
+                break;
             case "orders":
                 OpenProductionOrders();
                 break;
@@ -259,6 +263,9 @@ public partial class MainWindow : Window
                 break;
             case "actual":
                 OpenProductionActual();
+                break;
+            case "handover":
+                OpenShiftHandover();
                 break;
             case "analytics":
                 Navigate(CreateEntry(NavigationRoute.Analytics));
@@ -292,10 +299,12 @@ public partial class MainWindow : Window
 
     private void ShowDashboard_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Dashboard));
     private void ShowPlanningCalendar_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar)); }
+    private void ShowWhatIfPlanning_Click(object sender, RoutedEventArgs e) => OpenWhatIfPlanning();
     private void ShowWorkTimeCalendar_Click(object sender, RoutedEventArgs e) => OpenWorkTimeCalendar();
     private void ShowProductionOrders_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders)); }
     private void ShowManufacturingControl_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl)); }
     private void ShowProductionActual_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual)); }
+    private void ShowShiftHandover_Click(object sender, RoutedEventArgs e) => OpenShiftHandover();
     private void ShowAnalytics_Click(object sender, RoutedEventArgs e) => Navigate(CreateEntry(NavigationRoute.Analytics));
     private void ShowEmployees_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees)); }
     private void ShowWorkstations_Click(object sender, RoutedEventArgs e) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Workstations)); }
@@ -305,9 +314,11 @@ public partial class MainWindow : Window
 
     public void OpenDayPlanning(DateTime date) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar, date: date.Date)); }
     public void OpenPlanningCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.PlanningCalendar)); }
+    public void OpenWhatIfPlanning() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WhatIfPlanning)); }
     public void OpenProductionOrders() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionOrders)); }
     public void OpenManufacturingControl(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ManufacturingControl, productionOrderId: id)); }
     public void OpenProductionActual(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ProductionActual, productionOrderId: id)); }
+    public void OpenShiftHandover(int? id = null) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.ShiftHandover, shiftHandoverId: id)); }
     public void OpenSettings() { if (SessionService.IsAdministrator) Navigate(CreateEntry(NavigationRoute.Settings)); }
     public void OpenWorkTimeCalendar() { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.WorkTimeCalendar)); }
     public void OpenEmployee(int employeeId) { if (SessionService.IsPlannerOrAdmin) Navigate(CreateEntry(NavigationRoute.Employees, employeeId: employeeId)); }
@@ -351,16 +362,19 @@ public partial class MainWindow : Window
         NavigationRoute route,
         DateTime? date = null,
         int? employeeId = null,
-        int? productionOrderId = null) => route switch
+        int? productionOrderId = null,
+        int? shiftHandoverId = null) => route switch
     {
         NavigationRoute.Dashboard => new(route, "Dashboard", nameof(DashboardButton), () => new DashboardView()),
         NavigationRoute.PlanningCalendar => new(route, "Planung", nameof(PlanningCalendarButton),
             () => new PlanningCalendarView(date?.Date, date.HasValue ? (int?)0 : null), Date: date?.Date),
+        NavigationRoute.WhatIfPlanning => new(route, "What-if-Simulation", nameof(WhatIfPlanningButton), () => new WhatIfPlanningView()),
         NavigationRoute.WorkTimeCalendar => new(route, "Arbeitszeit / Betrieb", nameof(WorkTimeCalendarButton), () => new WorkTimeCalendarView()),
         NavigationRoute.ProductionOrders when productionOrderId.HasValue => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView(productionOrderId.Value), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionOrders => new(route, "Produktionsaufträge", nameof(ProductionOrdersButton), () => new ProductionOrdersView()),
         NavigationRoute.ManufacturingControl => new(route, "Auftragscockpit", nameof(ManufacturingControlButton), () => new ManufacturingControlView(productionOrderId), ProductionOrderId: productionOrderId),
         NavigationRoute.ProductionActual => new(route, "Ist-Produktion / OEE", nameof(ProductionActualButton), () => new ProductionActualView(productionOrderId), ProductionOrderId: productionOrderId),
+        NavigationRoute.ShiftHandover => new(route, "Schichtübergabe", nameof(ShiftHandoverButton), () => new ShiftHandoverView(shiftHandoverId), ShiftHandoverId: shiftHandoverId),
         NavigationRoute.Analytics => new(route, "Auswertungen / KPIs", nameof(AnalyticsButton), () => new AnalyticsView()),
         NavigationRoute.Employees when employeeId.HasValue => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView(employeeId.Value), EmployeeId: employeeId),
         NavigationRoute.Employees => new(route, "Mitarbeiter & Skills", nameof(EmployeesButton), () => new EmployeesView()),
@@ -570,9 +584,9 @@ public partial class MainWindow : Window
     private void ApplyGroupVisibility()
     {
         ApplyGroup(PlanningGroupHeader, "ÜBERSICHT & PLANUNG", planningGroupCollapsed,
-            DashboardButton, PlanningCalendarButton, WorkTimeCalendarButton);
+            DashboardButton, PlanningCalendarButton, WhatIfPlanningButton, WorkTimeCalendarButton);
         ApplyGroup(ProductionGroupHeader, "PRODUKTION", productionGroupCollapsed,
-            ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, AnalyticsButton, BatchesButton);
+            ProductionOrdersButton, ManufacturingControlButton, ProductionActualButton, ShiftHandoverButton, AnalyticsButton, BatchesButton);
         ApplyGroup(MasterDataGroupHeader, "STAMMDATEN & PERSONAL", masterDataGroupCollapsed,
             EmployeesButton, WorkstationsButton, AbsencesButton, ArticlesButton);
         ApplyGroup(SystemGroupHeader, "VERWALTUNG", systemGroupCollapsed,
@@ -802,8 +816,8 @@ public partial class MainWindow : Window
 
     private enum NavigationRoute
     {
-        Batch, Articles, BatchArchive, Dashboard, PlanningCalendar, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
-        ProductionActual, Analytics, Employees, Workstations, Absences, UserAdmin, Settings
+        Batch, Articles, BatchArchive, Dashboard, PlanningCalendar, WhatIfPlanning, WorkTimeCalendar, ProductionOrders, ManufacturingControl,
+        ProductionActual, ShiftHandover, Analytics, Employees, Workstations, Absences, UserAdmin, Settings
     }
 
     private sealed record NavigationEntry(
@@ -813,7 +827,8 @@ public partial class MainWindow : Window
         Func<object> CreateContent,
         DateTime? Date = null,
         int? EmployeeId = null,
-        int? ProductionOrderId = null)
+        int? ProductionOrderId = null,
+        int? ShiftHandoverId = null)
     {
         private object? content;
         public object GetContent() => content ??= CreateContent();

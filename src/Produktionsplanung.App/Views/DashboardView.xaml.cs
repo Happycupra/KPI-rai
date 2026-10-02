@@ -190,5 +190,9 @@ public partial class DashboardView : UserControl
         {
             HostWindow.OpenSettings();
         }
+        else if (issue.Route == "ShiftHandover")
+        {
+            HostWindow.OpenShiftHandover(issue.EntityId);
+        }
     }
 }

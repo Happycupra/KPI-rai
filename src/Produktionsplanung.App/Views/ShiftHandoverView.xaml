@@ -1,0 +1,157 @@
+<UserControl x:Class="Produktionsplanung.App.Views.ShiftHandoverView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource SurfaceBrush}">
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="{StaticResource PageHeaderSpacing}">
+            <TextBlock Text="Schichtübergabe" Style="{StaticResource PageTitleTextStyle}" />
+            <TextBlock Text="Offene Punkte strukturiert übergeben, bestätigen und mit Abschlussnotiz erledigen."
+                       Style="{StaticResource PageSubtitleTextStyle}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Style="{StaticResource FilterBarStyle}" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="170" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Ansicht" Style="{StaticResource FieldLabelTextStyle}" />
+                    <ComboBox ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding SelectedFilter}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Arbeitsplatz" Style="{StaticResource FieldLabelTextStyle}" />
+                    <ComboBox ItemsSource="{Binding FilterWorkstationOptions}"
+                              SelectedItem="{Binding SelectedFilterWorkstation}"
+                              DisplayMemberPath="DisplayText" />
+                </StackPanel>
+                <StackPanel Grid.Column="4">
+                    <TextBlock Text="Schicht" Style="{StaticResource FieldLabelTextStyle}" />
+                    <ComboBox ItemsSource="{Binding FilterShiftOptions}"
+                              SelectedItem="{Binding SelectedFilterShift}"
+                              DisplayMemberPath="DisplayText" />
+                </StackPanel>
+                <Button Grid.Column="6" Content="Aktualisieren" Command="{Binding RefreshCommand}"
+                        Style="{StaticResource ActionButtonStyle}" VerticalAlignment="Bottom" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.6*" MinWidth="400" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" MinWidth="330" />
+            </Grid.ColumnDefinitions>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="12" />
+                    <RowDefinition Height="Auto" MinHeight="230" />
+                </Grid.RowDefinitions>
+
+                <DataGrid ItemsSource="{Binding Handovers}"
+                          SelectedItem="{Binding SelectedHandover}"
+                          AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Priorität" Binding="{Binding Priority}" Width="85" />
+                        <DataGridTextColumn Header="Datum" Binding="{Binding HandoverDate, StringFormat=dd.MM.yyyy}" Width="100" />
+                        <DataGridTextColumn Header="Übergabe" Binding="{Binding ShiftText}" Width="1.2*" />
+                        <DataGridTextColumn Header="Arbeitsplatz" Binding="{Binding WorkstationText}" Width="*" />
+                        <DataGridTextColumn Header="Betreff" Binding="{Binding Subject}" Width="1.5*" />
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Grid.Row="2" Style="{StaticResource SectionCardStyle}">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{Binding SelectedHandover.Subject, TargetNullValue=Keine Übergabe ausgewählt}" Style="{StaticResource SectionHeaderTextStyle}" />
+                                <TextBlock Text="{Binding SelectedHandover.ShiftText}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource StatusChipStyle}" VerticalAlignment="Top">
+                                <TextBlock Text="{Binding SelectedHandover.Priority}" FontWeight="SemiBold" FontSize="11" />
+                            </Border>
+                        </Grid>
+                        <TextBlock Text="{Binding SelectedHandover.Details}" Style="{StaticResource BodyTextStyle}" Margin="0,0,0,10" />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}">
+                            <Run Text="{Binding SelectedHandover.WorkstationText}"/><Run Text=" · "/><Run Text="{Binding SelectedHandover.ProductionOrderText}"/>
+                        </TextBlock>
+                        <TextBlock Text="{Binding SelectedHandover.AcknowledgementText}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
+                        <TextBlock Text="{Binding SelectedHandover.ResolutionText}" Style="{StaticResource SecondaryTextStyle}" Margin="0,3,0,0" />
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBox Text="{Binding Resolution, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" MinHeight="52"
+                                     ToolTip="Abschlussnotiz" />
+                            <Button Grid.Column="1" Content="Bestätigen" Command="{Binding AcknowledgeCommand}"
+                                    IsEnabled="{Binding CanAcknowledge}" Style="{StaticResource ActionButtonStyle}" Margin="10,0,0,0" />
+                            <Button Grid.Column="3" Content="Erledigen" Command="{Binding ResolveCommand}"
+                                    IsEnabled="{Binding CanResolve}" Style="{StaticResource PrimaryActionButtonStyle}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Column="2" Style="{StaticResource EditorCardStyle}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="Neue Übergabe" Style="{StaticResource DialogTitleTextStyle}" Margin="0,0,0,16" />
+
+                        <TextBlock Text="Datum" Style="{StaticResource FieldLabelTextStyle}" />
+                        <DatePicker SelectedDate="{Binding HandoverDate}" Margin="0,0,0,12" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Von Schicht" Style="{StaticResource FieldLabelTextStyle}" />
+                                <ComboBox ItemsSource="{Binding ShiftOptions}" SelectedItem="{Binding SelectedFromShift}" DisplayMemberPath="DisplayText" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="An Schicht" Style="{StaticResource FieldLabelTextStyle}" />
+                                <ComboBox ItemsSource="{Binding ShiftOptions}" SelectedItem="{Binding SelectedToShift}" DisplayMemberPath="DisplayText" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="Arbeitsplatz" Style="{StaticResource FieldLabelTextStyle}" />
+                        <ComboBox ItemsSource="{Binding WorkstationOptions}" SelectedItem="{Binding SelectedWorkstation}"
+                                  DisplayMemberPath="DisplayText" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Produktionsauftrag" Style="{StaticResource FieldLabelTextStyle}" />
+                        <ComboBox ItemsSource="{Binding ProductionOrderOptions}" SelectedItem="{Binding SelectedProductionOrder}"
+                                  DisplayMemberPath="DisplayText" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Priorität" Style="{StaticResource FieldLabelTextStyle}" />
+                        <ComboBox ItemsSource="{Binding Priorities}" SelectedItem="{Binding Priority}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Betreff" Style="{StaticResource FieldLabelTextStyle}" />
+                        <TextBox Text="{Binding Subject, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Übergabeinformation" Style="{StaticResource FieldLabelTextStyle}" />
+                        <TextBox Text="{Binding Details, UpdateSourceTrigger=PropertyChanged}"
+                                 AcceptsReturn="True" TextWrapping="Wrap" MinHeight="100"
+                                 VerticalScrollBarVisibility="Auto" Margin="0,0,0,16" />
+
+                        <Button Content="Übergabe erstellen" Command="{Binding CreateCommand}"
+                                Style="{StaticResource PrimaryActionButtonStyle}" HorizontalAlignment="Right" />
+                        <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryDarkBrush}" Margin="0,14,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

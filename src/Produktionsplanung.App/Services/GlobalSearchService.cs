@@ -33,11 +33,13 @@ internal static class GlobalSearchService
     {
         Entry("🏠", "Dashboard", "Übersicht und aktuelle Hinweise", "Navigation", "Übersicht & Planung › Dashboard", "dashboard", keywords: "start übersicht home"),
         Entry("📅", "Planung", "Tag, Woche und Monat planen", "Navigation", "Übersicht & Planung › Planung", "planning", planner: true, keywords: "kalender personalplanung wochenplanung tagesplanung"),
+        Entry("🧪", "What-if-Simulation", "Personalengpässe ohne direkte Planänderung simulieren", "Navigation", "Übersicht & Planung › What-if-Simulation", "whatif", planner: true, keywords: "simulation alternative personal engpass vorschlag"),
         Entry("🕒", "Arbeitszeit / Betrieb", "Arbeitszeiten und Betriebstage", "Navigation", "Übersicht & Planung › Arbeitszeit / Betrieb", "worktime", planner: true, keywords: "arbeitszeit betrieb kalender sollzeit"),
         Entry("📆", "Abwesenheiten", "Ferien, Krankheit und sonstige Abwesenheiten", "Navigation", "Übersicht & Planung › Abwesenheiten", "absences", planner: true, keywords: "ferien krank urlaub absence"),
         Entry("📋", "Produktionsaufträge", "Aufträge planen und verwalten", "Produktion", "Produktion › Produktionsaufträge", "orders", planner: true, keywords: "auftrag order produktion planen"),
         Entry("🏭", "Auftragscockpit", "Status, Arbeitskarten und Auftragsfortschritt", "Produktion", "Produktion › Auftragscockpit", "cockpit", planner: true, keywords: "fertigung arbeitskarte job card status"),
         Entry("📈", "Ist-Produktion / OEE", "Ist-Mengen, Ausschuss, Stillstände und OEE", "Produktion", "Produktion › Ist-Produktion / OEE", "actual", planner: true, keywords: "oee ist ausschuss stillstand downtime gutmenge"),
+        Entry("🔁", "Schichtübergabe", "Offene Übergaben bestätigen und erledigen", "Produktion", "Produktion › Schichtübergabe", "handover", planner: true, keywords: "übergabe schicht kritisch bestätigen erledigen"),
         Entry("📦", "Abgeschlossene Chargen", "Archiv abgeschlossener Produktionschargen", "Produktion", "Produktion › Abgeschlossene Chargen", "batches", keywords: "charge batch archiv abgeschlossen"),
         Entry("📊", "Auswertungen / KPIs", "Kennzahlen und Produktionsauswertungen", "Produktion", "Produktion › Auswertungen / KPIs", "analytics", keywords: "kpi analyse auswertung statistik kennzahl"),
 
