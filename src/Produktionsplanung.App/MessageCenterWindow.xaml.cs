@@ -14,6 +14,14 @@ public partial class MessageCenterWindow : Window
         Loaded += (_, _) => RefreshAll();
     }
 
+    public void RefreshFromServer()
+    {
+        if (!IsLoaded) return;
+        RefreshAll(
+            (InboxGrid.SelectedItem as UserMessageRow)?.Id,
+            (SentGrid.SelectedItem as UserMessageRow)?.Id);
+    }
+
     private void RefreshAll(int? selectInboxId = null, int? selectSentId = null)
     {
         try
@@ -34,6 +42,7 @@ public partial class MessageCenterWindow : Window
 
             ShowInboxDetails(InboxGrid.SelectedItem as UserMessageRow);
             ShowSentDetails(SentGrid.SelectedItem as UserMessageRow);
+            StatusText.Text = string.Empty;
         }
         catch (Exception ex)
         {
@@ -73,11 +82,18 @@ public partial class MessageCenterWindow : Window
         if (InboxGrid.SelectedItem is not UserMessageRow row)
             return;
 
-        if (UserMessageService.Acknowledge(row.Id))
+        try
         {
-            StatusText.Text = "Der Hinweis wurde als gelesen bestätigt.";
-            RefreshAll(selectInboxId: row.Id);
-            MessagesChanged?.Invoke(this, EventArgs.Empty);
+            if (UserMessageService.Acknowledge(row.Id))
+            {
+                StatusText.Text = "Der Hinweis wurde als gelesen bestätigt.";
+                RefreshAll(selectInboxId: row.Id);
+                MessagesChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = ex.Message;
         }
     }
 
