@@ -125,6 +125,7 @@ public partial class App : Application
 
         if (CentralModeService.IsEnabled)
         {
+            main.EnableCentralMessageMode();
             var realtime = await CentralRealtimeService.StartAsync();
             if (!realtime.Success)
             {
