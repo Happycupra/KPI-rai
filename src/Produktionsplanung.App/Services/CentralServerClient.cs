@@ -159,7 +159,7 @@ public static class CentralServerClient
                 request.Content = JsonContent.Create(body, body.GetType());
 
             using var http = CreateHttpClient();
-            var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+            var response = await http.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken)
                 .ConfigureAwait(false);
             if (response.StatusCode == HttpStatusCode.Unauthorized && attempt == 0)
             {
