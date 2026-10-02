@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http;
+using Produktionsplanung.App.Data;
+using Produktionsplanung.App.Models;
 using Produktionsplanung.App.Services;
 
 internal static partial class Program
@@ -34,6 +36,17 @@ internal static partial class Program
 
     private static void OnlineSyncRetryHttpFailure()
     {
+        var (hash, salt) = PasswordService.HashPassword("RetryTest123");
+        using (var db = new AppDbContext())
+        {
+            db.UserAccounts.Add(new UserAccount
+            {
+                Username = "retry-user", DisplayName = "Retry User", Role = UserRoles.Administrator,
+                IsActive = true, PasswordHash = hash, PasswordSalt = salt
+            });
+            db.SaveChanges();
+        }
+        var requests = 0;
         AppSettingsService.Update(settings =>
         {
             settings.CompanyId = "0123456789abcdef0123456789abcdef";
@@ -44,21 +57,31 @@ internal static partial class Program
             settings.PendingOnlineAccessSync = new PendingOnlineAccessSync { PayloadVersion = "http-edit" };
         });
         var original = OnlineAccessSyncService.Http;
-        using var failedHttp = new HttpClient(new PublicationHandler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+        using var failedHttp = new HttpClient(new PublicationHandler(_ =>
         {
-            Content = new StringContent("{\"error\":\"Offline\"}")
-        })));
+            requests++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+            {
+                Content = new StringContent("{\"error\":\"Offline\"}")
+            });
+        }));
         try
         {
             OnlineAccessSyncService.Http = failedHttp;
-            Check(!OnlineAccessSyncService.TrySyncAsync().GetAwaiter().GetResult().Success, "HTTP failure must report failure");
+            var failed = OnlineAccessSyncService.TrySyncAsync().GetAwaiter().GetResult();
+            Check(!failed.Success && requests == 1 && failed.Message == "Offline", "HTTP failure must report the server error after a request");
             Check(AppSettingsService.Load().PendingOnlineAccessSync?.Attempts == 1, "HTTP failure must persist a retry");
-            using var successfulHttp = new HttpClient(new PublicationHandler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            using var successfulHttp = new HttpClient(new PublicationHandler(_ =>
             {
-                Content = new StringContent("{\"ok\":true,\"message\":\"OK\"}")
-            })));
+                requests++;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"ok\":true,\"message\":\"OK\"}")
+                });
+            }));
             OnlineAccessSyncService.Http = successfulHttp;
-            Check(OnlineAccessSyncService.TrySyncAsync().GetAwaiter().GetResult().Success, "Retry must synchronize current users successfully");
+            var retried = OnlineAccessSyncService.TrySyncAsync().GetAwaiter().GetResult();
+            Check(retried.Success && requests == 2 && retried.UserCount == 1, "Retry must synchronize current users successfully: " + retried.Message);
             Check(AppSettingsService.Load().PendingOnlineAccessSync is null, "Successful HTTP retry must clear pending intent");
         }
         finally { OnlineAccessSyncService.Http = original; }
