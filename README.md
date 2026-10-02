@@ -1,9 +1,27 @@
 # SolutionCompakt – Planen · Organisieren · Voranbringen
 
-**SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten in einer lokal nutzbaren Desktop-Anwendung.
+**SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten.
 
 > **Aktueller Entwicklungsstand: 02.10.2026**
-> Auslieferungsversion: **1.0.<Buildnummer>** (aktuell im [Update-Manifest](downloads/update.json)) · Plattform: **Windows 10/11 · .NET 8 · WPF · SQLite**
+>
+> Plattform: **Windows 10/11 · .NET 8 · WPF**
+> Datenbetrieb: **lokal/offline mit SQLite** oder optional **zentraler Mehrbenutzerbetrieb mit PostgreSQL + SignalR**
+
+## Zentraler Mehrbenutzerbetrieb
+
+SolutionCompakt besitzt zusätzlich zum bisherigen lokalen SQLite-Modus einen optionalen zentralen Betriebsmodus:
+
+- gemeinsame PostgreSQL-Datenbank für mehrere PCs derselben Firma
+- automatische einmalige Übernahme einer bestehenden lokalen SQLite-Installation
+- firmenbezogenes PostgreSQL-Schema anhand der stabilen `CompanyId`
+- bestehende Benutzer, Planung, Aufträge, Chargen, Ist-Daten, OEE, Audit, Schichtübergaben und persönliche Nachrichten werden gemeinsam genutzt
+- Echtzeit-Aktualisierung über `SolutionCompakt.Server` und SignalR
+- Serverzugang nur mit aktiver SolutionCompakt-Lizenz und bestätigtem zentralen Benutzer
+- Optimistic Concurrency verhindert stilles Überschreiben paralleler Änderungen
+- weitere PCs können einer bestehenden zentralen Firma über dieselbe `CompanyId`/`CompanyCode` beitreten
+- lokaler SQLite-Betrieb bleibt vollständig erhalten und ist weiterhin der Standard
+
+Die vollständige Einrichtung und Testmatrix stehen in [`docs/CENTRAL-SERVER.md`](docs/CENTRAL-SERVER.md).
 
 ## Funktionsumfang
 
@@ -11,7 +29,7 @@
 - Dashboard mit live berechneten Produktions- und Personal-KPIs
 - zentrale Hinweise für relevante Planungs- und Betriebsprobleme
 - Navigation aus Hinweisen in die betroffenen Bereiche
-- Anzeige des letzten erfolgreichen Backups
+- Anzeige des letzten erfolgreichen lokalen Backups im SQLite-Betrieb
 
 ### Interne Hinweise & Lesebestätigung
 - persönliche Hinweise zwischen SolutionCompakt-Benutzern
@@ -23,103 +41,70 @@
 - Priorität Normal / Wichtig
 - vollständige Speicherung mit Absender-/Empfänger-Snapshot, Betreff, Inhalt und Zeitstempeln
 - Audit-Einbindung für Senden und Lesebestätigung
-
-**Hinweis zur aktuellen Architektur:** Die Nachrichten arbeiten mit der lokalen SQLite-Datenbank der jeweiligen Installation. Ein gleichzeitiger Austausch zwischen getrennten PCs setzt künftig den zentralen Mehrbenutzer-/Serverbetrieb voraus.
+- im Zentralbetrieb PC-übergreifend über die gemeinsame PostgreSQL-Datenbank und SignalR-Aktualisierung
 
 ### Firmenregistrierung & Mandantenfähigkeit
-- stabile technische `CompanyId` pro Installation
-- lesbarer `CompanyCode` für den späteren Online-Login
-- Firmenname + Firmen-Code werden bei echter lokaler Ersteinrichtung einmalig registriert
-- bestehende Installationen werden automatisch und ohne Benutzer-/Datenverlust migriert
-- lokale Datenhaltung; nach der 7-tägigen Testphase ist eine erfolgreiche Online-Lizenzprüfung erforderlich
-- während der Arbeit pausiert eine fehlgeschlagene Lizenzprüfung die Bedienung und erhält offene Eingaben; nach erfolgreicher Prüfung wird die Bedienung wieder freigegeben
-- Firebase-Daten werden unter `companies/{companyId}/...` strikt nach Firma getrennt
-- Firmen-Code + Benutzername + Passwort erlauben gleiche Benutzernamen in unterschiedlichen Firmen
-- Verkäufer-Provisionierung ist vorbereitet: online per Aktivierungscode oder später offline per digital signierter `.sccompany`-Datei
+- stabile technische `CompanyId` pro Firma
+- lesbarer `CompanyCode`
+- bestehende Installationen werden rückwärtskompatibel migriert
+- Firebase-Lizenz- und Online-Wochenplan-Daten bleiben unter `companies/{companyId}/...` getrennt
+- zentraler Datenbetrieb verwendet ein separates PostgreSQL-Schema `company_<CompanyId>`
 
-Siehe `docs/COMPANY-PROVISIONING.md` für Verkaufs-, Aktivierungs- und Offline-Konzept.
-
-### Online-Wochenplan · direkt veröffentlichen
+### Online-Wochenplan
 - veröffentlichbarer, versionierter Wochenplan-Snapshot als JSON
-- enthält Personaleinsätze und Produktionsschichten, jedoch keine Abwesenheitsgründe/-kommentare
-- **Wochenplanung → Veröffentlichen**: ausgewählte Woche nach Passwortbestätigung direkt aus der App hochladen (Administrator)
-- bestätigtes Veröffentlichungsdatum mit Uhrzeit je Firma/Woche lokal gespeichert; der Online-Plan zeigt den serverseitigen Zeitpunkt
-- Änderungen werden bewusst erst beim erneuten Veröffentlichen übernommen; JSON-Paketexport bleibt als Alternative verfügbar
-- Firebase-Konfigurationsdialog für Project ID, Web API Key, Login-, Hosting- und Publish-Endpunkt
-- separate Web-App unter `online-weekplan/`
-- normale Web-Benutzer: nur lesen
-- Administratoren: JSON-Wochenplan veröffentlichen und minimale Online-Korrekturen
-- Online-Korrekturen werden getrennt vom Desktop-Snapshot gespeichert, damit SolutionCompakt führend bleibt
-- Benutzer-Synchronisation und Online-Anmeldung mit denselben Zugangsdaten wie in SolutionCompakt
-- Benutzer-QR-Codes mit Firmen-Code und Benutzername, ohne Passwort, inklusive PDF-Export
-- Rollen werden als Firebase Custom Claims verwendet
-
-**Status:** Firebase-Konfiguration und Deployment-Workflow sind eingerichtet. Online-Zugriff setzt eine aktive Lizenz und synchronisierte Benutzer voraus. Serverseitige Regeln prüfen auch bestehende Sitzungen auf Lizenz, Benutzerstatus, Rolle und Passwortversion. Wochenpläne werden erst nach vollständigem Upload einer neuen Version veröffentlicht.
-
-### App-Einführung & kontextbezogene Hilfe
-- geführter Rundgang beim ersten Start pro Benutzer
-- rollenabhängige Schritte für Beobachter, Planer und Administratoren
-- deckt alle Hauptbereiche der Navigation ab
-- „Bereich öffnen“ springt direkt zum erklärten Modul
-- Hilfe-? oben rechts startet die Einführung jederzeit erneut
-- kurzer Kontext-Hinweis unter dem aktuellen Seitentitel
-- Tooltips ergänzen die Hilfe direkt an Feldern und Schaltflächen
-- Einstellungen erlauben Kontext-Hinweise ein-/auszuschalten und die Einführung erneut von vorne zu starten
+- Personaleinsätze und Produktionsschichten
+- direkte Veröffentlichung aus der Wochenplanung
+- Firebase-basierte Online-Anmeldung und rollenabhängiger Zugriff
+- Online-Korrekturen bleiben vom Desktop-Snapshot getrennt
 
 ### Personal- & Einsatzplanung
 - Outlook-ähnlicher Planungskalender mit Tag-, Woche- und Monatsansicht
 - Tages- und Wochenplanung
 - automatische Mitarbeitervorschläge
-- Auto-Besetzung für fehlende Personalpositionen bei Produktionsaufträgen
+- Auto-Besetzung für fehlende Personalpositionen
 - Prüfung von Abwesenheiten, Überschneidungen, Schichten und Qualifikationen
 - Mindest-, Optimal- und Maximalbesetzung je Arbeitsplatz
-- Warnungen bei Unter- und Überbesetzung
 - Soll-, Plan-, Ist- und Saldo-Stunden
-- Mitarbeiter-Schnellansicht aus der Planung
-- Betriebskalender mit Feiertagen, Betriebsferien, Sonderarbeitstagen und Sollstunden-Faktoren
-- PDF-Export des Planungskalenders und Wochenplans
+- Betriebskalender
+- PDF-Export
 
 ### Mitarbeiter & Qualifikationen
 - Mitarbeiterverwaltung
 - frei definierbare Qualifikationen
-- Skill-Matrix mit Level 0–5 (Level 5 = Admin)
+- Skill-Matrix mit Level 0–5
 - Pflichtqualifikationen je Arbeitsplatz
 - qualifikationsbasierte Mitarbeitervorschläge
-- Berücksichtigung der Qualifikation bei der Fertigungssteuerung
 
 ### Arbeitsplätze & Schichten
 - Arbeitsplätze und Produktionslinien
 - Mindest-, optimale und maximale Personalstärke
 - Schichtverwaltung
 - zulässige Schichten je Arbeitsplatz und Datum
-- Schicht- und Besetzungskonflikte in der Planung
+- Schicht- und Besetzungskonflikte
 
 ### Produktionsaufträge & Fertigungssteuerung
 - Produktionsaufträge mit Produkt, Menge, Termin, Priorität, Status und Personalbedarf
-- Auftragscockpit für die operative Fertigungssteuerung
+- Auftragscockpit
 - Arbeitsgänge und Arbeitskarten
 - Fertigungsrouten und Arbeitsfolgen
-- Mitarbeiterzuweisung zu Arbeitskarten
-- Funktion **Beste Wahl** zur Auswahl geeigneter verfügbarer Mitarbeiter
-- Start-, Pause- und Abschlussinformationen der Fertigung
-- Plan-/Ist-Verknüpfung zwischen Auftrag, Personal und Produktion
+- Mitarbeiterzuweisung
+- Funktion **Beste Wahl**
+- Start-, Pause- und Abschlussinformationen
 
 ### Artikel & Chargen
 - Artikelverwaltung
-- Chargenerstellung aus Artikeln
+- Chargenerstellung
 - Chargendetails und Chargenhistorie
 - Archiv abgeschlossener Chargen
-- Arbeitsgänge, Ist-Erfassungen und Stillstände je Charge
+- Arbeitsgänge, Ist-Erfassungen und Stillstände
 - Chargenvergleich
-- PDF-Chargenbericht mit Produktionszeitraum, Mengen, Kennzahlen, Arbeitsgängen, Stillständen und Bemerkungen
+- PDF-Chargenbericht
 
 ### Ist-Produktion & OEE
-- Erfassung von Gesamt-, Gut- und Ausschussmenge
+- Gesamt-, Gut- und Ausschussmenge
 - geplante Produktionszeit und Laufzeit
 - Stillstandsgründe und Stillstandsdauer
-- Berechnung von Verfügbarkeit, Leistung und Qualität
-- OEE-Berechnung
-- Zuordnung zu Produktionsauftrag und Produktionsschicht
+- Verfügbarkeit, Leistung, Qualität und OEE
 - Wochen- und Monatsauswertungen
 
 ### What-if-Planung
@@ -155,58 +140,72 @@ Die Daten- und Servicebasis für eine strukturierte Schichtübergabe ist impleme
 - Benutzeranmeldung
 - Rollen und Berechtigungen
 - Administrator-, Planer- und eingeschränkte Zugriffe
-- Audit-Log für relevante Datenänderungen
-- automatische Sitzungssperre nach konfigurierbarer Inaktivität
-- Recovery-Code für die lokale Passwortwiederherstellung
-- Warnung bei ungespeicherten Änderungen mit Speichern / Verwerfen / Abbrechen
-- Startup-Health-Check für Speicher, Schreibzugriff, Datenbankintegrität und Einzelinstanz
-- SQLite-Integritätsprüfung beim Start
+- Audit-Log
+- automatische Sitzungssperre
+- Recovery-Code
+- Warnung bei ungespeicherten Änderungen
+- Startup-Health-Check
+- SQLite-Integritätsprüfung im lokalen Modus
+- zentrale Lizenz- und Benutzerprüfung für SignalR-Zugriff
+- Optimistic Concurrency im PostgreSQL-Modus
 
 ## Datensicherung & Export
+
+### Lokaler SQLite-Modus
 - manuelles Backup und Restore
 - automatische Backups
-- konfigurierbare Aufbewahrung automatischer Backups
-- Datenbank-Snapshot für konsistente Sicherungen
-- Backup-Format `.kpibackup`
-- CSV-Komplettexport der betrieblichen Daten
-- PDF-Exporte für Planung und Chargenberichte
-- lokaler und USB-/Portable-Speichermodus
+- `.kpibackup`
+- konfigurierbare Aufbewahrung
 
-## Benutzeroberfläche
-- rollenabhängige Navigation
-- einklappbare Seitenleiste und Navigationsgruppen
-- benutzerspezifische UI-Einstellungen
-- Navigationshistorie mit Zurück-Funktion
-- Hinweis-/Benachrichtigungsbereich
-- Deep Links zwischen Aufträgen, Fertigungssteuerung, Ist-Produktion, Mitarbeitern und Chargen
+### Zentraler PostgreSQL-Modus
+- PostgreSQL ist die führende Datenbank
+- lokale `.kpibackup`-Erstellung und -Wiederherstellung sind bewusst gesperrt, damit keine veraltete lokale Sicherung fälschlich als vollständiges Backup gilt
+- PostgreSQL muss serverseitig gesichert werden, z. B. per `pg_dump`
 
 ## Technologie
 - **C# / .NET 8**
 - **WPF**
 - **MVVM** mit CommunityToolkit.Mvvm
 - **Entity Framework Core 8**
-- **SQLite**
+- **SQLite** für lokalen Betrieb
+- **PostgreSQL / Npgsql** für zentralen Betrieb
+- **ASP.NET Core + SignalR** für Authentifizierung und Echtzeit
+- **Docker Compose** für PostgreSQL und `SolutionCompakt.Server`
 - **PDFsharp-WPF**
 - GitHub Actions für Build, Regressionstests, Publishing, Portable-Pakete, Installer und Releases
 
 ## Architektur
-SolutionCompakt ist aktuell als lokale, offline-fähige Windows-Anwendung ausgelegt. Die Produktionsdaten werden in SQLite gespeichert. Das Datenbankschema wird beim Start rückwärtskompatibel ergänzt, sodass bestehende Installationen weiterverwendet werden können.
 
-Die bestehende Architektur eignet sich für Einzelplatz-, Notebook- und USB-/Portable-Betrieb. Zentraler Netzwerk-/Mehrbenutzerbetrieb und eine Server-Datenbank sind noch keine Bestandteile des aktuellen Produktstands.
+### Lokal
 
-## Installation & Betrieb
+```text
+SolutionCompakt WPF
+        |
+      SQLite
+```
 
-### Lokale Entwicklung
-Voraussetzungen:
-- Windows 10/11
-- .NET 8 SDK
-- Visual Studio 2022 mit Workload **.NET-Desktopentwicklung** oder `dotnet` CLI
+### Zentral
+
+```text
+PC A ----\
+          +---- PostgreSQL
+PC B ----/       gemeinsame operative Daten
+  |                  ^
+  +---- SignalR -----+
+       SolutionCompakt.Server
+```
+
+Der Zentralmodus ist optional. Ohne aktivierte `central-mode.json` arbeitet SolutionCompakt weiterhin wie bisher lokal mit SQLite.
+
+## Installation & Entwicklung
 
 ```powershell
 dotnet restore Produktionsplanung.sln
 dotnet build Produktionsplanung.sln
 dotnet run --project src/Produktionsplanung.App/Produktionsplanung.App.csproj
 ```
+
+Für den Zentralbetrieb siehe `docs/CENTRAL-SERVER.md`.
 
 Die erzeugte Anwendung heißt `SolutionCompakt.exe`.
 
@@ -237,14 +236,17 @@ Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Instal
 
 **In der Bedienoberfläche integriert:** What-if-/Neuplanung und digitale Schichtübergabe einschließlich Dashboard-Hinweisen.
 
-**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung, zentraler Mehrbenutzerbetrieb und weitergehende automatische Neuplanung.
+**Optional verfügbar:** zentraler Mehrbenutzerbetrieb mit PostgreSQL, SignalR und PC-übergreifenden Nachrichten.
+
+**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung und weitergehende automatische Neuplanung.
 
 ## Entwicklungsprinzipien
 - automatische Vorschläge verändern keine Produktionsdaten ohne explizite Benutzeraktion
-- Qualifikationen, Abwesenheiten und Planungskonflikte werden vor Zuweisungen geprüft
-- bestehende Daten und Backups sollen über Updates hinweg kompatibel bleiben
-- wichtige Änderungen sind nachvollziehbar und auditierbar
-- Offline-Fähigkeit bleibt ein Kernziel
+- Qualifikationen, Abwesenheiten und Planungskonflikte werden geprüft
+- bestehende lokale Daten und Backups bleiben über Updates kompatibel
+- wichtige Änderungen sind auditierbar
+- Offline-Fähigkeit des lokalen Modus bleibt erhalten
+- zentrale Änderungen dürfen parallele Benutzeränderungen nicht still überschreiben
 
 ---
 

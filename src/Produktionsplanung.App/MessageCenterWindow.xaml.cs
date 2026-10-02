@@ -6,28 +6,49 @@ namespace Produktionsplanung.App;
 
 public partial class MessageCenterWindow : Window
 {
+    private int refreshGeneration;
     public event EventHandler? MessagesChanged;
 
     public MessageCenterWindow()
     {
         InitializeComponent();
-        Loaded += (_, _) => RefreshAll();
+        Loaded += async (_, _) => await RefreshAllAsync();
     }
 
-    private void RefreshAll(int? selectInboxId = null, int? selectSentId = null)
+    public async Task RefreshFromServerAsync()
     {
+        if (!IsLoaded) return;
+        await RefreshAllAsync(
+            (InboxGrid.SelectedItem as UserMessageRow)?.Id,
+            (SentGrid.SelectedItem as UserMessageRow)?.Id);
+    }
+
+    private async Task RefreshAllAsync(int? selectInboxId = null, int? selectSentId = null)
+    {
+        var generation = ++refreshGeneration;
+        var selectedRecipientId = (RecipientBox.SelectedItem as UserMessageRecipient)?.Id;
         try
         {
-            var inbox = UserMessageService.GetInbox();
-            var sent = UserMessageService.GetSent();
-            var recipients = UserMessageService.GetRecipients();
+            var inboxTask = UserMessageService.GetInboxAsync();
+            var sentTask = UserMessageService.GetSentAsync();
+            var recipientsTask = UserMessageService.GetRecipientsAsync();
+            await Task.WhenAll(inboxTask, sentTask, recipientsTask);
+
+            if (generation != refreshGeneration || !IsLoaded)
+                return;
+
+            var inbox = await inboxTask;
+            var sent = await sentTask;
+            var recipients = await recipientsTask;
 
             InboxGrid.ItemsSource = inbox;
             SentGrid.ItemsSource = sent;
             RecipientBox.ItemsSource = recipients;
 
-            if (RecipientBox.SelectedItem is null && recipients.Count > 0)
-                RecipientBox.SelectedIndex = 0;
+            var selectedRecipient = selectedRecipientId.HasValue
+                ? recipients.FirstOrDefault(x => x.Id == selectedRecipientId.Value)
+                : null;
+            RecipientBox.SelectedItem = selectedRecipient ?? recipients.FirstOrDefault();
 
             InboxGrid.SelectedItem = selectInboxId.HasValue ? inbox.FirstOrDefault(x => x.Id == selectInboxId.Value) : inbox.FirstOrDefault();
             SentGrid.SelectedItem = selectSentId.HasValue ? sent.FirstOrDefault(x => x.Id == selectSentId.Value) : sent.FirstOrDefault();
@@ -37,11 +58,12 @@ public partial class MessageCenterWindow : Window
         }
         catch (Exception ex)
         {
-            StatusText.Text = "Hinweise konnten nicht geladen werden: " + ex.Message;
+            if (generation == refreshGeneration)
+                StatusText.Text = "Hinweise konnten nicht geladen werden: " + ex.Message;
         }
     }
 
-    private void Refresh_Click(object sender, RoutedEventArgs e) => RefreshAll(
+    private async void Refresh_Click(object sender, RoutedEventArgs e) => await RefreshAllAsync(
         (InboxGrid.SelectedItem as UserMessageRow)?.Id,
         (SentGrid.SelectedItem as UserMessageRow)?.Id);
 
@@ -68,20 +90,32 @@ public partial class MessageCenterWindow : Window
         SentStatus.Text = row?.StatusText ?? string.Empty;
     }
 
-    private void AcknowledgeSelected_Click(object sender, RoutedEventArgs e)
+    private async void AcknowledgeSelected_Click(object sender, RoutedEventArgs e)
     {
         if (InboxGrid.SelectedItem is not UserMessageRow row)
             return;
 
-        if (UserMessageService.Acknowledge(row.Id))
+        try
         {
-            StatusText.Text = "Der Hinweis wurde als gelesen bestätigt.";
-            RefreshAll(selectInboxId: row.Id);
-            MessagesChanged?.Invoke(this, EventArgs.Empty);
+            AcknowledgeButton.IsEnabled = false;
+            if (await UserMessageService.AcknowledgeAsync(row.Id))
+            {
+                StatusText.Text = "Der Hinweis wurde als gelesen bestätigt.";
+                await RefreshAllAsync(selectInboxId: row.Id);
+                MessagesChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = ex.Message;
+        }
+        finally
+        {
+            ShowInboxDetails(InboxGrid.SelectedItem as UserMessageRow);
         }
     }
 
-    private void Send_Click(object sender, RoutedEventArgs e)
+    private async void Send_Click(object sender, RoutedEventArgs e)
     {
         if (RecipientBox.SelectedItem is not UserMessageRecipient recipient)
         {
@@ -92,12 +126,12 @@ public partial class MessageCenterWindow : Window
         try
         {
             var priority = (PriorityBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Normal";
-            var sent = UserMessageService.Send(recipient.Id, SubjectBox.Text, BodyBox.Text, priority);
+            var sent = await UserMessageService.SendAsync(recipient.Id, SubjectBox.Text, BodyBox.Text, priority);
             SubjectBox.Clear();
             BodyBox.Clear();
             PriorityBox.SelectedIndex = 0;
             StatusText.Text = $"Hinweis an {recipient.DisplayName} gesendet.";
-            RefreshAll(selectSentId: sent.Id);
+            await RefreshAllAsync(selectSentId: sent.Id);
             MessageTabs.SelectedIndex = 1;
             MessagesChanged?.Invoke(this, EventArgs.Empty);
         }
