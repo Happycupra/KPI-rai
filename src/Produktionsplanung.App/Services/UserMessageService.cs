@@ -6,6 +6,10 @@ namespace Produktionsplanung.App.Services;
 
 public static class UserMessageService
 {
+    private static readonly object CentralUnreadCacheGate = new();
+    private static List<UserMessageRow> centralUnreadCache = new();
+    private static int centralUnreadCount;
+
     public static IReadOnlyList<UserMessageRecipient> GetRecipients() =>
         GetRecipientsAsync().GetAwaiter().GetResult();
 
@@ -77,8 +81,15 @@ public static class UserMessageService
         return messages.Select(x => ToRow(x, true)).ToList();
     }
 
-    public static IReadOnlyList<UserMessageRow> GetUnread() =>
-        GetUnreadAsync().GetAwaiter().GetResult();
+    public static IReadOnlyList<UserMessageRow> GetUnread()
+    {
+        var current = RequireCurrentUser();
+        if (!CentralModeService.IsEnabled)
+            return GetUnreadLocal(current);
+
+        lock (CentralUnreadCacheGate)
+            return centralUnreadCache.ToList();
+    }
 
     public static async Task<IReadOnlyList<UserMessageRow>> GetUnreadAsync(CancellationToken cancellationToken = default)
     {
@@ -89,11 +100,24 @@ public static class UserMessageService
         var messages = await CentralServerClient
             .GetAsync<List<CentralMessageDto>>("api/v1/messages/unread", cancellationToken)
             .ConfigureAwait(false);
-        return messages.Select(x => ToRow(x, false)).ToList();
+        var rows = messages.Select(x => ToRow(x, false)).ToList();
+        lock (CentralUnreadCacheGate)
+        {
+            centralUnreadCache = rows;
+            centralUnreadCount = rows.Count;
+        }
+        return rows;
     }
 
-    public static int GetUnreadCount() =>
-        GetUnreadCountAsync().GetAwaiter().GetResult();
+    public static int GetUnreadCount()
+    {
+        var current = RequireCurrentUser();
+        if (!CentralModeService.IsEnabled)
+            return GetUnreadCountLocal(current);
+
+        lock (CentralUnreadCacheGate)
+            return centralUnreadCount;
+    }
 
     public static async Task<int> GetUnreadCountAsync(CancellationToken cancellationToken = default)
     {
@@ -104,6 +128,8 @@ public static class UserMessageService
         var result = await CentralServerClient
             .GetAsync<CentralMessageCountDto>("api/v1/messages/unread-count", cancellationToken)
             .ConfigureAwait(false);
+        lock (CentralUnreadCacheGate)
+            centralUnreadCount = result.Count;
         return result.Count;
     }
 
@@ -119,7 +145,24 @@ public static class UserMessageService
         var result = await CentralServerClient
             .PostAsync<CentralMessageAcknowledgeDto>($"api/v1/messages/{messageId}/acknowledge", cancellationToken)
             .ConfigureAwait(false);
+        if (result.Found)
+        {
+            lock (CentralUnreadCacheGate)
+            {
+                centralUnreadCache.RemoveAll(x => x.Id == messageId);
+                centralUnreadCount = centralUnreadCache.Count;
+            }
+        }
         return result.Found;
+    }
+
+    public static void ResetCentralUnreadCache()
+    {
+        lock (CentralUnreadCacheGate)
+        {
+            centralUnreadCache = new List<UserMessageRow>();
+            centralUnreadCount = 0;
+        }
     }
 
     private static IReadOnlyList<UserMessageRecipient> GetRecipientsLocal(UserAccount current)
