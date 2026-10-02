@@ -114,6 +114,16 @@ public sealed class CentralMessageStore
         command.Parameters.AddWithValue("token", Guid.NewGuid());
 
         var id = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        await WriteAuditAsync(
+            connection,
+            transaction,
+            companyId,
+            sender.Username,
+            "Erstellt",
+            id,
+            $"Empfänger: {recipient.Username}; Betreff: {subject}; Priorität: {priority}",
+            now,
+            cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return new MessageDto(
@@ -166,6 +176,7 @@ public sealed class CentralMessageStore
         var recipient = await GetActiveUserAsync(connection, transaction, companyId, recipientUserId, cancellationToken)
             ?? throw new MessageValidationException("Der angemeldete Benutzer ist nicht mehr aktiv.");
 
+        var now = DateTime.UtcNow;
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
         command.CommandText = $"""
@@ -176,22 +187,35 @@ public sealed class CentralMessageStore
             WHERE "Id" = @messageId AND "RecipientUserId" = @recipientUserId
             RETURNING "SenderUserId", "AcknowledgedAtUtc";
             """;
-        command.Parameters.AddWithValue("now", DateTime.UtcNow);
+        command.Parameters.AddWithValue("now", now);
         command.Parameters.AddWithValue("username", recipient.Username);
         command.Parameters.AddWithValue("token", Guid.NewGuid());
         command.Parameters.AddWithValue("messageId", messageId);
         command.Parameters.AddWithValue("recipientUserId", recipientUserId);
 
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
+        int senderUserId;
+        DateTime acknowledgedAtUtc;
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
         {
-            await transaction.RollbackAsync(cancellationToken);
-            return new(false, 0, null);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return new(false, 0, null);
+            }
+            senderUserId = reader.GetInt32(0);
+            acknowledgedAtUtc = reader.GetDateTime(1);
         }
 
-        var senderUserId = reader.GetInt32(0);
-        var acknowledgedAtUtc = reader.GetDateTime(1);
-        await reader.DisposeAsync();
+        await WriteAuditAsync(
+            connection,
+            transaction,
+            companyId,
+            recipient.Username,
+            "Geändert",
+            messageId,
+            "Persönlicher Hinweis als gelesen bestätigt.",
+            now,
+            cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new(true, senderUserId, acknowledgedAtUtc);
     }
@@ -273,6 +297,34 @@ public sealed class CentralMessageStore
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken)) return null;
         return new(reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
+    }
+
+    private static async Task WriteAuditAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        Guid companyId,
+        string username,
+        string action,
+        int messageId,
+        string details,
+        DateTime timestampUtc,
+        CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"""
+            INSERT INTO {Qualified(companyId, "AuditLogs")}
+                ("TimestampUtc", "Username", "Action", "EntityType", "EntityId", "Details", "ConcurrencyToken")
+            VALUES
+                (@timestamp, @username, @action, 'UserMessage', @entityId, @details, @token);
+            """;
+        command.Parameters.AddWithValue("timestamp", timestampUtc);
+        command.Parameters.AddWithValue("username", username);
+        command.Parameters.AddWithValue("action", action);
+        command.Parameters.AddWithValue("entityId", messageId.ToString());
+        command.Parameters.AddWithValue("details", details);
+        command.Parameters.AddWithValue("token", Guid.NewGuid());
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private static string Qualified(Guid companyId, string table) =>
