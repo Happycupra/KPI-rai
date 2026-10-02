@@ -6,7 +6,18 @@ public partial class MainWindow
 {
     public void ApplyCentralRealtimeChange(CentralRealtimeNotice notice)
     {
-        if (!CentralModeService.IsEnabled || notice.SourceUserId == SessionService.CurrentUser?.Id)
+        if (!CentralModeService.IsEnabled)
+            return;
+
+        if (notice.Type.StartsWith("message.", StringComparison.OrdinalIgnoreCase))
+        {
+            var showPopup = string.Equals(notice.Type, "message.received", StringComparison.OrdinalIgnoreCase);
+            RefreshPersonalMessages(showPopup);
+            messageCenterWindow?.RefreshFromServer();
+            return;
+        }
+
+        if (notice.SourceUserId == SessionService.CurrentUser?.Id)
             return;
 
         RefreshNotifications();
