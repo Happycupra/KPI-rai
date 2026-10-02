@@ -15,7 +15,7 @@ internal static partial class Program
 
         using (var db = new AppDbContext())
         {
-            var shift = db.Shifts.OrderBy(x => x.StartTime).First();
+            var shift = db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).First();
             var employee = new Employee
             {
                 PersonnelNumber = "WHATIF-001",
@@ -103,7 +103,7 @@ internal static partial class Program
         int workstationId;
         using (var db = new AppDbContext())
         {
-            var shifts = db.Shifts.OrderBy(x => x.StartTime).Take(2).ToList();
+            var shifts = db.Shifts.AsNoTracking().AsEnumerable().OrderBy(x => x.StartTime).Take(2).ToList();
             Check(shifts.Count == 2, "Shift handover test requires two shifts");
             fromShiftId = shifts[0].Id;
             toShiftId = shifts[1].Id;
