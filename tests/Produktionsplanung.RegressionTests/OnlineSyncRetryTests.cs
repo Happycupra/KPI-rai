@@ -86,4 +86,59 @@ internal static partial class Program
         }
         finally { OnlineAccessSyncService.Http = original; }
     }
+
+    private static void OnlineSyncQueuedWaiters()
+    {
+        var (hash, salt) = PasswordService.HashPassword("ConcurrentTest123");
+        using (var db = new AppDbContext())
+        {
+            db.UserAccounts.Add(new UserAccount
+            {
+                Username = "queued-user", DisplayName = "Queued User", Role = UserRoles.Administrator,
+                IsActive = true, PasswordHash = hash, PasswordSalt = salt
+            });
+            db.SaveChanges();
+        }
+        AppSettingsService.Update(settings =>
+        {
+            settings.LicenseStatus = "active";
+            settings.LicenseValidUntilUtc = DateTime.UtcNow.AddDays(1);
+            settings.CompanyId = "0123456789abcdef0123456789abcdef";
+            settings.CompanyCode = "SC-TEST";
+        });
+        var original = OnlineAccessSyncService.Http;
+        try
+        {
+            foreach (var success in new[] { true, false })
+            {
+                var requests = 0;
+                var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                using var http = new HttpClient(new PublicationHandler(async _ =>
+                {
+                    Interlocked.Increment(ref requests);
+                    entered.TrySetResult(true);
+                    await release.Task.ConfigureAwait(false);
+                    return new HttpResponseMessage(success ? HttpStatusCode.OK : HttpStatusCode.ServiceUnavailable)
+                    {
+                        Content = new StringContent(success ? "{\"message\":\"OK\"}" : "{\"error\":\"Offline\"}")
+                    };
+                }));
+                OnlineAccessSyncService.Http = http;
+                var revision = Guid.NewGuid().ToString("N");
+                AppSettingsService.Update(settings => settings.PendingOnlineAccessSync = new PendingOnlineAccessSync { PayloadVersion = revision });
+                var first = Task.Run(() => OnlineAccessSyncService.TrySyncPendingAsync(revision));
+                Check(entered.Task.Wait(TimeSpan.FromSeconds(5)), "First queued request did not enter HTTP");
+                var second = Task.Run(() => OnlineAccessSyncService.TrySyncPendingAsync(revision));
+                release.TrySetResult(true);
+                Task.WhenAll(first, second).GetAwaiter().GetResult();
+                Check(requests == 1, "A waiting queued task uploaded the completed/backed-off revision again");
+                var pending = AppSettingsService.Load().PendingOnlineAccessSync;
+                Check(success ? pending is null : pending?.Attempts == 1 && pending.NextRetryAtUtc > DateTime.UtcNow,
+                    "A redundant queued task changed the retry state");
+            }
+        }
+        finally { OnlineAccessSyncService.Http = original; }
+    }
+
 }

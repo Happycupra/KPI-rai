@@ -60,6 +60,7 @@ internal static partial class Program
             ("Online access sync preserves desktop credentials and tenant identity", OnlineAccessSyncPayload),
             ("Online sync retry survives reload and preserves newer edits", OnlineSyncRetryPersistence),
             ("Online sync persists HTTP failure and clears successful retry", OnlineSyncRetryHttpFailure),
+            ("Concurrent queued syncs skip completed and backed-off revisions", OnlineSyncQueuedWaiters),
             ("User login QR contains only login URL identity data", UserLoginQrCodePayload),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),

@@ -204,7 +204,7 @@ public partial class LoginWindow : Window
                 return;
             }
 
-            OnlineAccessSyncService.QueueSync();
+            OnlineAccessSyncService.QueueSync(preservePending: true);
             DialogResult = true;
             Close();
             return;
@@ -294,7 +294,7 @@ public partial class LoginWindow : Window
         if (!string.IsNullOrWhiteSpace(newlyCreatedRecoveryCode))
             ShowRecoveryCode(newlyCreatedRecoveryCode);
 
-        OnlineAccessSyncService.QueueSync();
+        OnlineAccessSyncService.QueueSync(preservePending: true);
         DialogResult = true;
         Close();
     }

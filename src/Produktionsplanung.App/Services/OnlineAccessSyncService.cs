@@ -50,8 +50,9 @@ public static class OnlineAccessSyncService
             if (!preservePending || value.PendingOnlineAccessSync is null)
                 value.PendingOnlineAccessSync = new PendingOnlineAccessSync();
         });
-        if (BackgroundSyncEnabled && settings.PendingOnlineAccessSync!.NextRetryAtUtc <= DateTime.UtcNow)
-            _ = Task.Run(SyncIgnoringErrorsAsync);
+        var pending = settings.PendingOnlineAccessSync!;
+        if (BackgroundSyncEnabled && pending.NextRetryAtUtc <= DateTime.UtcNow)
+            _ = Task.Run(() => SyncIgnoringErrorsAsync(pending.PayloadVersion));
     }
 
     public static void StartRetryWorker()
@@ -80,7 +81,7 @@ public static class OnlineAccessSyncService
                 {
                     var pending = AppSettingsService.Load().PendingOnlineAccessSync;
                     if (pending is not null && pending.NextRetryAtUtc <= DateTime.UtcNow)
-                        await TrySyncAsync(cancellationToken).ConfigureAwait(false);
+                        await TrySyncPendingAsync(pending.PayloadVersion, cancellationToken).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch (Exception ex)
@@ -93,7 +94,13 @@ public static class OnlineAccessSyncService
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
     }
 
-    public static async Task<OnlineAccessSyncResult> TrySyncAsync(CancellationToken cancellationToken = default)
+    public static Task<OnlineAccessSyncResult> TrySyncAsync(CancellationToken cancellationToken = default) =>
+        TrySyncCoreAsync(null, cancellationToken);
+
+    internal static Task<OnlineAccessSyncResult> TrySyncPendingAsync(string payloadVersion, CancellationToken cancellationToken = default) =>
+        TrySyncCoreAsync(payloadVersion, cancellationToken);
+
+    private static async Task<OnlineAccessSyncResult> TrySyncCoreAsync(string? queuedVersion, CancellationToken cancellationToken)
     {
         await SyncLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         string? payloadVersion = null;
@@ -106,6 +113,13 @@ public static class OnlineAccessSyncService
 
         try
         {
+            if (queuedVersion is not null)
+            {
+                var pending = AppSettingsService.Load().PendingOnlineAccessSync;
+                // Another waiter may have completed this revision, or scheduled its retry.
+                if (pending is null || pending.PayloadVersion != queuedVersion || pending.NextRetryAtUtc > DateTime.UtcNow)
+                    return new OnlineAccessSyncResult(true, "Kein fälliger Synchronisationsauftrag.", 0);
+            }
             LicenseService.EnsureLocalLicenseIdentity();
             var settings = AppSettingsService.Update(value =>
                 value.PendingOnlineAccessSync ??= new PendingOnlineAccessSync());
@@ -210,11 +224,11 @@ public static class OnlineAccessSyncService
         };
     }
 
-    private static async Task SyncIgnoringErrorsAsync()
+    private static async Task SyncIgnoringErrorsAsync(string payloadVersion)
     {
         try
         {
-            await TrySyncAsync();
+            await TrySyncPendingAsync(payloadVersion).ConfigureAwait(false);
         }
         catch
         {
