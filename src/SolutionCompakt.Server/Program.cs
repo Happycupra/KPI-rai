@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SolutionCompakt.Server.Data;
+using SolutionCompakt.Server.Messaging;
 using SolutionCompakt.Server.Realtime;
 using SolutionCompakt.Server.Security;
 
@@ -24,6 +25,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddDbContext<CentralDbContext>(options => options.UseNpgsql(connectionString));
 builder.Services.AddScoped<CentralOperationalUserVerifier>();
+builder.Services.AddScoped<CentralMessageStore>();
 builder.Services.AddSignalR();
 builder.Services.AddHttpClient<DesktopLicenseVerifier>(client => client.Timeout = TimeSpan.FromSeconds(20));
 builder.Services.AddSingleton<DesktopTokenIssuer>();
@@ -121,6 +123,128 @@ app.MapGet("/api/v1/me", (ITenantContext tenant) => Results.Ok(new
     sourceUserId = tenant.RequireSourceUserId(),
     role = tenant.Role
 })).RequireAuthorization();
+
+var messages = app.MapGroup("/api/v1/messages").RequireAuthorization();
+
+messages.MapGet("/recipients", async (
+    ITenantContext tenant,
+    CentralMessageStore store,
+    CancellationToken cancellationToken) =>
+{
+    var result = await store.GetRecipientsAsync(
+        tenant.RequireCompanyId(),
+        tenant.RequireSourceUserId(),
+        cancellationToken);
+    return Results.Ok(result);
+});
+
+messages.MapGet("/inbox", async (
+    ITenantContext tenant,
+    CentralMessageStore store,
+    CancellationToken cancellationToken) => Results.Ok(await store.GetInboxAsync(
+        tenant.RequireCompanyId(),
+        tenant.RequireSourceUserId(),
+        cancellationToken)));
+
+messages.MapGet("/sent", async (
+    ITenantContext tenant,
+    CentralMessageStore store,
+    CancellationToken cancellationToken) => Results.Ok(await store.GetSentAsync(
+        tenant.RequireCompanyId(),
+        tenant.RequireSourceUserId(),
+        cancellationToken)));
+
+messages.MapGet("/unread", async (
+    ITenantContext tenant,
+    CentralMessageStore store,
+    CancellationToken cancellationToken) => Results.Ok(await store.GetUnreadAsync(
+        tenant.RequireCompanyId(),
+        tenant.RequireSourceUserId(),
+        cancellationToken)));
+
+messages.MapGet("/unread-count", async (
+    ITenantContext tenant,
+    CentralMessageStore store,
+    CancellationToken cancellationToken) => Results.Ok(new MessageCountDto(await store.GetUnreadCountAsync(
+        tenant.RequireCompanyId(),
+        tenant.RequireSourceUserId(),
+        cancellationToken))));
+
+messages.MapPost("/", async (
+    SendMessageRequest request,
+    ITenantContext tenant,
+    CentralMessageStore store,
+    IHubContext<CompanyHub> hub,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var companyId = tenant.RequireCompanyId();
+        var senderUserId = tenant.RequireSourceUserId();
+        var message = await store.SendAsync(companyId, senderUserId, request, cancellationToken);
+
+        var received = new RealtimeEvent(
+            "message.received",
+            message.Id.ToString(),
+            message.CreatedAtUtc,
+            senderUserId,
+            new[] { "UserMessage" });
+        var sent = new RealtimeEvent(
+            "message.sent",
+            message.Id.ToString(),
+            message.CreatedAtUtc,
+            senderUserId,
+            new[] { "UserMessage" });
+
+        await Task.WhenAll(
+            hub.Clients.Group(CompanyHub.UserGroupName(companyId, message.RecipientUserId))
+                .SendAsync("change", received, cancellationToken),
+            hub.Clients.Group(CompanyHub.UserGroupName(companyId, senderUserId))
+                .SendAsync("change", sent, cancellationToken));
+
+        return Results.Ok(message);
+    }
+    catch (MessageValidationException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+messages.MapPost("/{messageId:int}/acknowledge", async (
+    int messageId,
+    ITenantContext tenant,
+    CentralMessageStore store,
+    IHubContext<CompanyHub> hub,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var companyId = tenant.RequireCompanyId();
+        var recipientUserId = tenant.RequireSourceUserId();
+        var result = await store.AcknowledgeAsync(companyId, recipientUserId, cancellationToken, messageId);
+        if (!result.Found)
+            return Results.NotFound(new { error = "Hinweis wurde nicht gefunden." });
+
+        var realtime = new RealtimeEvent(
+            "message.acknowledged",
+            messageId.ToString(),
+            result.AcknowledgedAtUtc ?? DateTime.UtcNow,
+            recipientUserId,
+            new[] { "UserMessage" });
+
+        await Task.WhenAll(
+            hub.Clients.Group(CompanyHub.UserGroupName(companyId, result.SenderUserId))
+                .SendAsync("change", realtime, cancellationToken),
+            hub.Clients.Group(CompanyHub.UserGroupName(companyId, recipientUserId))
+                .SendAsync("change", realtime, cancellationToken));
+
+        return Results.Ok(result);
+    }
+    catch (MessageValidationException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
 
 app.MapPost("/api/v1/realtime/ping", async (
     ITenantContext tenant,
