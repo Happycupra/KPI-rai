@@ -14,7 +14,11 @@ service cloud.firestore {
 
     function currentUser(companyId) {
       let userId = string(request.auth.token.sourceUserId);
-      let user = get(/databases/$(database)/documents/companies/$(companyId)/authUsers/$(userId)).data;
+      let company = get(/databases/$(database)/documents/companies/$(companyId)).data;
+      let version = company.get('activeUserVersion', '');
+      let user = version == ''
+        ? get(/databases/$(database)/documents/companies/$(companyId)/authUsers/$(userId)).data
+        : get(/databases/$(database)/documents/companies/$(companyId)/authUserSets/$(version)/users/$(userId)).data;
       return user.isActive == true && user.role == request.auth.token.role &&
              user.get('credentialVersion', 'legacy') == request.auth.token.get('credentialVersion', 'legacy');
     }
@@ -70,6 +74,10 @@ service cloud.firestore {
       }
 
       // Password hashes are server-side only. No browser client may read them.
+      match /authUserSets/{versionId}/{document=**} {
+        allow read, write: if false;
+      }
+
       match /authUsers/{userId} {
         allow read, write: if false;
       }

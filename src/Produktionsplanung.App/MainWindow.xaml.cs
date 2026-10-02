@@ -95,7 +95,7 @@ public partial class MainWindow : Window
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        OnlineAccessSyncService.QueueSync();
+        OnlineAccessSyncService.QueueSync(preservePending: true);
 
         var preferences = AppSettingsService.LoadCurrentUserPreferences();
         if (preferences.AppTourLastShownVersion < AppTourCatalog.CurrentVersion)

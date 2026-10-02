@@ -56,6 +56,10 @@ Die vollständige Einrichtung und Testmatrix stehen in [`docs/CENTRAL-SERVER.md`
 - direkte Veröffentlichung aus der Wochenplanung
 - Firebase-basierte Online-Anmeldung und rollenabhängiger Zugriff
 - Online-Korrekturen bleiben vom Desktop-Snapshot getrennt
+- atomar aktivierte Benutzersätze mit persistentem Desktop-Retry
+- versionierte Wochenpläne mit Metadaten und täglicher Snapshot-Aufbewahrung
+
+Einrichtung, Kompatibilität und Aufbewahrung: [`docs/ONLINE-SYNC-RETENTION.md`](docs/ONLINE-SYNC-RETENTION.md).
 
 ### Personal- & Einsatzplanung
 - Outlook-ähnlicher Planungskalender mit Tag-, Woche- und Monatsansicht

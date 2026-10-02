@@ -122,6 +122,7 @@ public partial class App : Application
         MainWindow = main;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         main.Show();
+        OnlineAccessSyncService.StartRetryWorker();
 
         if (CentralModeService.IsEnabled)
         {
@@ -140,6 +141,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        OnlineAccessSyncService.StopRetryWorker();
         try
         {
             if (SessionService.IsAuthenticated)

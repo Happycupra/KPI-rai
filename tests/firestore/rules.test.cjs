@@ -63,3 +63,30 @@ test('current administrator can correct a plan; observer can only read', async (
   await assertSucceeds(getDoc(doc(observer, weekPath)));
   await assertFails(setDoc(doc(observer, `${weekPath}/overrides/1`), { employeeName: 'Forbidden' }));
 });
+
+test('atomic user-version switch immediately replaces legacy authorization', async () => {
+  const db = env.authenticatedContext('admin', claims).firestore();
+  const set = `companies/${company}/authUserSets/new`;
+  await adminWrite(`${set}/users/1`, { isActive: true, role: 'Administrator', credentialVersion: 'v1' });
+  await assertSucceeds(getDoc(doc(db, weekPath))); // Staging does not change access.
+  await adminWrite(`companies/${company}`, { activeUserVersion: 'new' });
+  await assertSucceeds(getDoc(doc(db, weekPath)));
+  await assertFails(getDoc(doc(db, `${set}/users/1`)));
+  await assertFails(getDoc(doc(db, set)));
+  await assertFails(setDoc(doc(db, `${set}/users/2`), { role: 'Administrator' }));
+  await adminWrite(`${set}/users/1`, { isActive: false });
+  await assertFails(getDoc(doc(db, weekPath))); // Legacy active user cannot bypass the version.
+});
+
+test('removed users and changed passwords/roles in a new set revoke existing tokens', async () => {
+  const db = env.authenticatedContext('admin', claims).firestore();
+  await adminWrite(`companies/${company}`, { activeUserVersion: 'removed' });
+  await assertFails(getDoc(doc(db, weekPath)));
+  await adminWrite(`companies/${company}/authUserSets/removed/users/1`, { isActive: true, role: 'Administrator', credentialVersion: 'v2' });
+  await assertFails(getDoc(doc(db, weekPath)));
+  await adminWrite(`companies/${company}/authUserSets/removed/users/1`, { credentialVersion: 'v1', role: 'Beobachter' });
+  await assertFails(getDoc(doc(db, weekPath)));
+  const observer = env.authenticatedContext('observer', { ...claims, role: 'Beobachter' }).firestore();
+  await assertSucceeds(getDoc(doc(observer, weekPath)));
+  await assertFails(setDoc(doc(observer, `${weekPath}/overrides/1`), { employeeName: 'Forbidden' }));
+});
