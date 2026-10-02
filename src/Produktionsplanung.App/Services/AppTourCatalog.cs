@@ -62,6 +62,16 @@ public static class AppTourCatalog
             },
             AreaKey: "planning", NavigationButtonName: "PlanningCalendarButton", Audience: TourAudience.PlannerOrAdmin),
         new AppTourStep(
+            "whatif", "🧪", "What-if-Simulation",
+            "Hier prüfst du Personalengpässe und passende Alternativen, ohne die Planung während der Simulation zu verändern.",
+            new[]
+            {
+                "Wähle Datum, Arbeitsplatz und eine freigegebene Schicht.",
+                "Jeder Vorschlag erklärt Qualifikation, Auslastung und Auswirkung.",
+                "Erst „In Planung übernehmen“ prüft alle Regeln erneut und speichert die Zuweisung."
+            },
+            AreaKey: "whatif", NavigationButtonName: "WhatIfPlanningButton", Audience: TourAudience.PlannerOrAdmin),
+        new AppTourStep(
             "worktime", "🕒", "Arbeitszeit & Betriebskalender",
             "Hier pflegst du Arbeitszeiten und Ausnahmen des Betriebskalenders.",
             new[]
@@ -111,6 +121,16 @@ public static class AppTourCatalog
                 "Bestehende Einträge können über Suche schnell gefunden werden."
             },
             AreaKey: "actual", NavigationButtonName: "ProductionActualButton", Audience: TourAudience.PlannerOrAdmin),
+        new AppTourStep(
+            "handover", "🔁", "Schichtübergabe",
+            "Hier dokumentierst du offene Punkte zwischen Schichten und verfolgst sie bis zum Abschluss.",
+            new[]
+            {
+                "Priorität, Arbeitsplatz und Produktionsauftrag ordnen die Übergabe ein.",
+                "Die übernehmende Schicht bestätigt zuerst den Eingang.",
+                "Eine Übergabe wird erst mit einer Abschlussnotiz erledigt."
+            },
+            AreaKey: "handover", NavigationButtonName: "ShiftHandoverButton", Audience: TourAudience.PlannerOrAdmin),
         new AppTourStep(
             "analytics", "📊", "Auswertungen / KPIs",
             "Dieser Bereich verdichtet Produktions- und Planungsdaten zu Kennzahlen.",

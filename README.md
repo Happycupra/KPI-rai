@@ -2,7 +2,9 @@
 
 **SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten.
 
-> Plattform: **Windows 10/11 · .NET 8 · WPF**  
+> **Aktueller Entwicklungsstand: 02.10.2026**
+>
+> Plattform: **Windows 10/11 · .NET 8 · WPF**
 > Datenbetrieb: **lokal/offline mit SQLite** oder optional **zentraler Mehrbenutzerbetrieb mit PostgreSQL + SignalR**
 
 ## Zentraler Mehrbenutzerbetrieb
@@ -106,10 +108,33 @@ Die vollständige Einrichtung und Testmatrix stehen in [`docs/CENTRAL-SERVER.md`
 - Wochen- und Monatsauswertungen
 
 ### What-if-Planung
-Die technische Grundlage für read-only Planungssimulationen ist vorhanden. Die vollständige Bedienoberfläche ist ein separater Ausbaupunkt.
+Nachvollziehbare Planungssimulationen sind als eigener Bereich in der Anwendung verfügbar.
+
+- read-only Simulation von Personalengpässen
+- Vergleich geplanter Besetzung mit Zielbesetzung
+- Ermittlung qualifizierter und konfliktfreier Alternativen
+- verständliche Begründung und Auswirkung je Vorschlag
+- Simulation verändert keine Produktions- oder Planungsdaten
+- einzelne Übernahme eines Vorschlags erst nach erneuter Prüfung von Abwesenheit, Überschneidung, Qualifikation, Schichtfreigabe und vorhandener Zuweisung
+- semantischer Audit-Eintrag für jede übernommene Alternative
+
+**Status:** Service und Bedienoberfläche sind integriert.
 
 ### Digitale Schichtübergabe
-Datenmodell und Workflow-Service sind vorhanden. Die vollständige sichtbare Oberfläche ist ein separater Ausbaupunkt.
+Die Daten- und Servicebasis für eine strukturierte Schichtübergabe ist implementiert.
+
+- Übergabe von Schicht zu Schicht
+- optionale Zuordnung zu Arbeitsplatz und Produktionsauftrag
+- Prioritäten
+- Betreff und Detailinformation
+- Status Offen / Bestätigt / Erledigt
+- Bestätigung mit Benutzer und Zeitstempel
+- Abschluss mit Lösung und Zeitstempel
+- Einbindung in das bestehende Audit-System
+- Filter nach offen/heute/kritisch sowie Arbeitsplatz und Schicht
+- offene kritische Übergaben in der Dashboard-Konfliktzentrale
+
+**Status:** Datenmodell, Workflow-Service und Bedienoberfläche sind integriert.
 
 ## Sicherheit & Nachvollziehbarkeit
 - Benutzeranmeldung
@@ -181,6 +206,39 @@ dotnet run --project src/Produktionsplanung.App/Produktionsplanung.App.csproj
 ```
 
 Für den Zentralbetrieb siehe `docs/CENTRAL-SERVER.md`.
+
+Die erzeugte Anwendung heißt `SolutionCompakt.exe`.
+
+### Datenpfad
+Für bestehende Installationen bleibt der bisherige lokale Datenpfad erhalten:
+
+```text
+%LOCALAPPDATA%\Produktionsplanung\Data\produktionsplanung.db
+```
+
+Dadurch bleiben vorhandene Daten auch nach der Umbenennung von OpsCompact auf SolutionCompakt erhalten.
+
+Im USB-/Portable-Modus befinden sich Datenbank, Einstellungen, Backups und Exporte beim Programmordner. Die Backup-Endung `.kpibackup` bleibt aus Kompatibilitätsgründen erhalten.
+
+## Build & Release
+Der Windows-Build prüft den Quellcode und führt die vorhandenen Regressionstests aus. Erfolgreiche Builds können folgende Artefakte erzeugen:
+
+- `SolutionCompakt.exe` als self-contained Single-EXE
+- `SolutionCompakt-USB-Portable-<Version>-win-x64`
+- `SolutionCompakt-Windows-<Version>-win-x64`
+- `SolutionCompakt-Setup-<Version>-win-x64.exe`
+
+Tags nach dem Muster `v0.1.0` erzeugen automatisch ein GitHub Release mit Installer, portablem ZIP, Single-EXE und USB-Paket.
+
+## Aktueller Entwicklungsstand
+
+**Produktiv bzw. in der Bedienoberfläche integriert:** Personal- und Schichtplanung, Mitarbeiter/Skills, Abwesenheiten, Betriebskalender, Produktionsaufträge, Fertigungssteuerung, Artikel/Chargen, Ist-Produktion/OEE, KPI-Auswertungen, interne Hinweise mit Popup und Lesebestätigung, Benutzer/Audit, Backup/Restore, CSV- und PDF-Export sowie Portable-Betrieb.
+
+**In der Bedienoberfläche integriert:** What-if-/Neuplanung und digitale Schichtübergabe einschließlich Dashboard-Hinweisen.
+
+**Optional verfügbar:** zentraler Mehrbenutzerbetrieb mit PostgreSQL, SignalR und PC-übergreifenden Nachrichten.
+
+**Noch geplant:** QR-/Barcode-Shopfloor, Qualitätsprüfungen, Wartung/Maschinenzustände, ERP/API-Anbindung und weitergehende automatische Neuplanung.
 
 ## Entwicklungsprinzipien
 - automatische Vorschläge verändern keine Produktionsdaten ohne explizite Benutzeraktion

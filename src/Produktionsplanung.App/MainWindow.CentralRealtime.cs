@@ -130,7 +130,7 @@ public partial class MainWindow
                 await UserMessageService.AcknowledgeAsync(message.Id);
                 deferredMessageIds.Remove(message.Id);
                 await RefreshCentralMessagesAsync(showPopup: false, centralMessagePollingCts?.Token ?? CancellationToken.None);
-                Dispatcher.BeginInvoke(new Action(() => ShowNextCentralMessagePopup(UserMessageService.GetUnread())));
+                _ = Dispatcher.BeginInvoke(new Action(() => ShowNextCentralMessagePopup(UserMessageService.GetUnread())));
             }
             else
             {
