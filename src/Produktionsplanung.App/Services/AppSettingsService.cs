@@ -30,6 +30,7 @@ public sealed class AppSettings
     public string FirebasePublishEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/publishWeekPlan";
     public string FirebaseUserSyncEndpoint { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net/syncOnlineAccess";
     public DateTime? LastOnlineAccessSyncAtUtc { get; set; }
+    public PendingOnlineAccessSync? PendingOnlineAccessSync { get; set; }
     public DateTime? LastOnlineWeekPreparedAtUtc { get; set; }
     public string LastOnlineWeekPreparedId { get; set; } = string.Empty;
 
@@ -88,6 +89,15 @@ public sealed class AppSettings
     public bool CalendarShowWeekends { get; set; } = true;
 
     public Dictionary<string, UserUiPreferences> UserUiPreferences { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+// A durable intent to synchronize the latest database state. No password payload is copied here.
+public sealed class PendingOnlineAccessSync
+{
+    public string PayloadVersion { get; set; } = Guid.NewGuid().ToString("N");
+    public int Attempts { get; set; }
+    public DateTime NextRetryAtUtc { get; set; } = DateTime.UtcNow;
+    public string LastError { get; set; } = string.Empty;
 }
 
 public sealed class UserUiPreferences

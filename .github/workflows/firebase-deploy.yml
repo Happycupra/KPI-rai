@@ -34,11 +34,24 @@ jobs:
           node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs tests/login-signing.test.cjs
           node --check online-weekplan/functions/index.js
           node --check online-weekplan/functions/main.js
+          node --check online-weekplan/functions/snapshot-store.js
+          node --check online-weekplan/functions/retention.js
           node --check online-weekplan/public/app.js
           node --check online-weekplan/public/admin.js
           node --check online-weekplan/functions/bootstrap-owner-admin.js
           node -e "JSON.parse(require('fs').readFileSync('online-weekplan/firebase.json','utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('online-weekplan/public/config.json','utf8'))"
+
+      - name: Setup Java for Firestore rules validation
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate Firestore authorization rules
+        run: |
+          npm ci --prefix tests/firestore --ignore-scripts --no-audit --no-fund
+          npm test --prefix tests/firestore
 
       - name: Install Functions dependencies
         working-directory: online-weekplan/functions

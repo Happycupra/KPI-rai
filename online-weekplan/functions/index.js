@@ -3,6 +3,7 @@ const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const crypto = require("crypto");
+const { userCollection } = require("./snapshot-store");
 
 initializeApp();
 const db = getFirestore();
@@ -89,11 +90,12 @@ async function requireCompanyAdmin(req, res) {
     return null;
   }
   const companyRef = db.collection("companies").doc(claims.companyId);
-  if (!await activeCompany(companyRef)) {
+  const company = await activeCompany(companyRef);
+  if (!company) {
     fail(res, 403, "Online-Zugang ist nicht freigeschaltet.");
     return null;
   }
-  const user = await companyRef.collection("authUsers").doc(String(claims.sourceUserId)).get();
+  const user = await userCollection(companyRef, company).doc(String(claims.sourceUserId)).get();
   const data = user.exists ? user.data() : {};
   if (data.isActive !== true || data.role !== "Administrator" ||
       (data.credentialVersion || "legacy") !== (claims.credentialVersion || "legacy")) {
@@ -136,10 +138,11 @@ exports.login = onRequest({ region: "europe-west1" }, async (req, res) => {
     const companyData = companyDoc.data();
     if (companyData.isActive === false) return fail(res, 401, "Anmeldung nicht möglich.");
 
-    if (!await activeCompany(companyDoc.ref))
+    const currentCompany = await activeCompany(companyDoc.ref);
+    if (!currentCompany)
       return fail(res, 401, "Online-Zugang ist nicht freigeschaltet.");
 
-    const snap = await companyDoc.ref.collection("authUsers")
+    const snap = await userCollection(companyDoc.ref, currentCompany)
       .where("usernameNormalized", "==", username)
       .limit(1)
       .get();
@@ -209,11 +212,16 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
     // A failed/concurrent upload cannot modify the currently published snapshot.
     const version = crypto.randomUUID();
     const versionRef = weekRef.collection("versions").doc(version);
+    await versionRef.set({
+      snapshotKind: "weekPlan", versionId: version, createdAt: FieldValue.serverTimestamp(),
+      createdBy: claims.username || claims.uid, status: "uploading",
+      entryCount: snapshot.entries.length, productionSlotCount: snapshot.productionSlots.length
+    });
     await replaceCollection(versionRef.collection("entries"), snapshot.entries);
     await replaceCollection(versionRef.collection("productionSlots"), snapshot.productionSlots);
     // Recheck authorization after the potentially lengthy upload.
     if (!await requireCompanyAdmin(req, res)) return;
-    const publication = await weekRef.set({
+    const metadata = {
       activeVersion: version,
       schemaVersion: snapshot.schemaVersion,
       companyId: snapshot.companyId,
@@ -231,9 +239,23 @@ exports.publishWeekPlan = onRequest({ region: "europe-west1", timeoutSeconds: 12
       publishedBy: claims.username || claims.uid,
       assignmentCount: snapshot.entries.length,
       productionSlotCount: snapshot.productionSlots.length
-    }, { merge: true });
+    };
+    const publishedAt = FieldValue.serverTimestamp();
+    await db.runTransaction(async transaction => {
+      const current = await transaction.get(weekRef);
+      const staged = await transaction.get(versionRef);
+      if (staged.data()?.status !== "uploading") throw new Error("Snapshot nicht mehr verfügbar.");
+      const previous = current.data()?.activeVersion;
+      if (previous) transaction.set(weekRef.collection("versions").doc(previous), {
+        snapshotKind: "weekPlan", status: "superseded", supersededAt: publishedAt
+      }, { merge: true });
+      transaction.set(versionRef, { status: "active", completedAt: publishedAt }, { merge: true });
+      transaction.set(weekRef, { ...metadata, publishedAt }, { merge: true });
+    });
 
-    res.json({ ok: true, weekId: snapshot.weekId, publishedAtUtc: publication.writeTime.toDate().toISOString() });
+    // Read this immutable version's completion timestamp, not a concurrently replaced week.
+    const committed = await versionRef.get();
+    res.json({ ok: true, weekId: snapshot.weekId, publishedAtUtc: committed.data().completedAt.toDate().toISOString() });
   } catch (error) {
     console.error(error);
     fail(res, 500, "Wochenplan konnte nicht veröffentlicht werden.");
@@ -275,6 +297,7 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
       return fail(res, 403, "Die Lizenz ist für den Online-Zugang nicht aktiv.");
 
     const normalizedSeen = new Set();
+    const sourceIds = new Set();
     const synchronizedUsers = [];
     for (const raw of users) {
       const sourceUserId = Number(raw?.sourceUserId);
@@ -291,6 +314,10 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
           displayName.length < 1 || displayName.length > 160 ||
           !["Administrator", "Planer", "Beobachter"].includes(role))
         return fail(res, 400, "Ungültige Benutzerdaten.");
+
+      if (sourceIds.has(sourceUserId))
+        return fail(res, 400, "Benutzerkennungen müssen eindeutig sein.");
+      sourceIds.add(sourceUserId);
 
       if (normalizedSeen.has(usernameNormalized))
         return fail(res, 400, "Benutzernamen dürfen sich online nicht nur durch Gross-/Kleinschreibung unterscheiden.");
@@ -337,27 +364,44 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
         return fail(res, 409, "Diese Firma ist bereits einer anderen Installation zugeordnet.");
     }
 
-    await companyRef.set({
-      companyId,
-      companyCode,
-      companyName,
-      isActive: true,
-      licenseInstallationId: installationId,
-      lastDesktopAppVersion: appVersion,
-      authUsersUpdatedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
-    }, { merge: true });
+    const version = crypto.randomUUID();
+    const versionRef = companyRef.collection("authUserSets").doc(version);
+    await versionRef.set({
+      snapshotKind: "authUsers", versionId: version, createdAt: FieldValue.serverTimestamp(),
+      createdBy: installationId, status: "uploading", userCount: synchronizedUsers.length
+    });
+    await replaceCollection(versionRef.collection("users"), synchronizedUsers);
+    const uploaded = await versionRef.collection("users").get();
+    if (uploaded.size !== synchronizedUsers.length) throw new Error("Benutzersatz unvollständig.");
 
-    await replaceCollection(companyRef.collection("authUsers"), synchronizedUsers);
-
-    await licenseRef.set({
-      companyId,
-      companyCode,
-      companyName,
-      lastAppVersion: appVersion,
-      onlineAccessLastSyncedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
-    }, { merge: true });
+    // Company, license and pointer become visible together only after a complete upload.
+    await db.runTransaction(async transaction => {
+      const currentCompany = await transaction.get(companyRef);
+      const currentLicense = await transaction.get(licenseRef);
+      const staged = await transaction.get(versionRef);
+      const current = currentLicense.data();
+      if (!current || current.secretHash !== sha256(secret) || current.status !== "active" ||
+          !current.validUntil?.toDate?.() || current.validUntil.toDate() <= new Date())
+        throw new Error("Lizenz während der Synchronisation geändert.");
+      const binding = currentCompany.data()?.licenseInstallationId;
+      if (binding && binding !== installationId) throw new Error("Firmenbindung geändert.");
+      if (staged.data()?.status !== "uploading") throw new Error("Benutzersatz nicht mehr verfügbar.");
+      const previous = currentCompany.data()?.activeUserVersion;
+      if (previous) transaction.set(companyRef.collection("authUserSets").doc(previous), {
+        status: "superseded", supersededAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+      transaction.set(versionRef, { status: "active", completedAt: FieldValue.serverTimestamp() }, { merge: true });
+      transaction.set(companyRef, {
+        companyId, companyCode, companyName, isActive: true,
+        licenseInstallationId: installationId, lastDesktopAppVersion: appVersion,
+        activeUserVersion: version, authUsersUpdatedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+      transaction.set(licenseRef, {
+        companyId, companyCode, companyName, lastAppVersion: appVersion,
+        onlineAccessLastSyncedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+    });
 
     res.json({
       ok: true,

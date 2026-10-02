@@ -15,6 +15,7 @@ internal static partial class Program
     [STAThread]
     private static int Main()
     {
+        OnlineAccessSyncService.BackgroundSyncEnabled = false;
         var app = new Produktionsplanung.App.App();
         app.InitializeComponent();
         var tests = new (string Name, Action Run)[]
@@ -57,6 +58,9 @@ internal static partial class Program
             ("Publication status follows the selected week and respects roles", PublicationWeekStatusAndDialog),
             ("Production Firebase defaults target solution-compact", FirebaseProductionDefaults),
             ("Online access sync preserves desktop credentials and tenant identity", OnlineAccessSyncPayload),
+            ("Online sync retry survives reload and preserves newer edits", OnlineSyncRetryPersistence),
+            ("Online sync persists HTTP failure and clears successful retry", OnlineSyncRetryHttpFailure),
+            ("Concurrent queued syncs skip completed and backed-off revisions", OnlineSyncQueuedWaiters),
             ("User login QR contains only login URL identity data", UserLoginQrCodePayload),
             ("SQLite TimeSpan queries and null shifts", QuerySmoke),
             ("Manufacturing capacity tab renders read-only metrics", ManufacturingCapacityTabRenders),

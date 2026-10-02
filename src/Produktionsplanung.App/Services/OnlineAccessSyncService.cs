@@ -35,36 +35,108 @@ internal sealed class OnlineAccessUser
 
 public static class OnlineAccessSyncService
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    internal static HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(20) };
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly SemaphoreSlim SyncLock = new(1, 1);
 
-    public static void QueueSync()
+    private static CancellationTokenSource? retryCancellation;
+    internal static bool BackgroundSyncEnabled { get; set; } = true;
+
+    public static void QueueSync(bool preservePending = false)
     {
-        _ = SyncIgnoringErrorsAsync();
+        // Persist before scheduling: a crash/offline save must not lose this intent.
+        var settings = AppSettingsService.Update(value =>
+        {
+            if (!preservePending || value.PendingOnlineAccessSync is null)
+                value.PendingOnlineAccessSync = new PendingOnlineAccessSync();
+        });
+        var pending = settings.PendingOnlineAccessSync!;
+        if (BackgroundSyncEnabled && pending.NextRetryAtUtc <= DateTime.UtcNow)
+            _ = Task.Run(() => SyncIgnoringErrorsAsync(pending.PayloadVersion));
     }
 
-    public static async Task<OnlineAccessSyncResult> TrySyncAsync(CancellationToken cancellationToken = default)
+    public static void StartRetryWorker()
     {
-        if (!await SyncLock.WaitAsync(0, cancellationToken))
-            return new OnlineAccessSyncResult(true, "Synchronisation läuft bereits.", 0);
+        if (!BackgroundSyncEnabled || retryCancellation is not null) return;
+        retryCancellation = new CancellationTokenSource();
+        var token = retryCancellation.Token;
+        _ = Task.Run(() => RunRetryWorkerAsync(token));
+    }
+
+    public static void StopRetryWorker()
+    {
+        retryCancellation?.Cancel();
+        retryCancellation?.Dispose();
+        retryCancellation = null;
+    }
+
+    private static async Task RunRetryWorkerAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        try
+        {
+            do
+            {
+                try
+                {
+                    var pending = AppSettingsService.Load().PendingOnlineAccessSync;
+                    if (pending is not null && pending.NextRetryAtUtc <= DateTime.UtcNow)
+                        await TrySyncPendingAsync(pending.PayloadVersion, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+                catch (Exception ex)
+                {
+                    // A temporary settings/disk failure must not permanently stop the worker.
+                    System.Diagnostics.Trace.TraceError("Online sync retry failed: {0}", ex.Message);
+                }
+            } while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+    }
+
+    public static Task<OnlineAccessSyncResult> TrySyncAsync(CancellationToken cancellationToken = default) =>
+        TrySyncCoreAsync(null, cancellationToken);
+
+    internal static Task<OnlineAccessSyncResult> TrySyncPendingAsync(string payloadVersion, CancellationToken cancellationToken = default) =>
+        TrySyncCoreAsync(payloadVersion, cancellationToken);
+
+    private static async Task<OnlineAccessSyncResult> TrySyncCoreAsync(string? queuedVersion, CancellationToken cancellationToken)
+    {
+        await SyncLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        string? payloadVersion = null;
+        OnlineAccessSyncResult? result = null;
+        OnlineAccessSyncResult Finish(bool success, string message, int count)
+        {
+            result = new OnlineAccessSyncResult(success, message, count);
+            return result;
+        }
 
         try
         {
-            var settings = LicenseService.EnsureLocalLicenseIdentity();
+            if (queuedVersion is not null)
+            {
+                var pending = AppSettingsService.Load().PendingOnlineAccessSync;
+                // Another waiter may have completed this revision, or scheduled its retry.
+                if (pending is null || pending.PayloadVersion != queuedVersion || pending.NextRetryAtUtc > DateTime.UtcNow)
+                    return new OnlineAccessSyncResult(true, "Kein fälliger Synchronisationsauftrag.", 0);
+            }
+            LicenseService.EnsureLocalLicenseIdentity();
+            var settings = AppSettingsService.Update(value =>
+                value.PendingOnlineAccessSync ??= new PendingOnlineAccessSync());
+            payloadVersion = settings.PendingOnlineAccessSync!.PayloadVersion;
             var now = DateTime.UtcNow;
             if (!string.Equals(settings.LicenseStatus, "active", StringComparison.OrdinalIgnoreCase) ||
                 settings.LicenseValidUntilUtc is not { } validUntil ||
                 validUntil <= now)
-                return new OnlineAccessSyncResult(false, "Online-Zugang wird nur bei aktiver Lizenz synchronisiert.", 0);
+                return Finish(false, "Online-Zugang wird nur bei aktiver Lizenz synchronisiert.", 0);
 
             if (string.IsNullOrWhiteSpace(settings.CompanyId) ||
                 string.IsNullOrWhiteSpace(settings.CompanyCode))
-                return new OnlineAccessSyncResult(false, "Firma ist lokal noch nicht vollständig eingerichtet.", 0);
+                return Finish(false, "Firma ist lokal noch nicht vollständig eingerichtet.", 0);
 
             if (!Uri.TryCreate(settings.FirebaseUserSyncEndpoint, UriKind.Absolute, out var endpoint) ||
                 endpoint.Scheme != Uri.UriSchemeHttps)
-                return new OnlineAccessSyncResult(false, "Online-Benutzersynchronisation ist nicht gültig konfiguriert.", 0);
+                return Finish(false, "Online-Benutzersynchronisation ist nicht gültig konfiguriert.", 0);
 
             List<UserAccount> users;
             using (var db = new AppDbContext())
@@ -75,29 +147,51 @@ public static class OnlineAccessSyncService
             }
 
             if (users.Count == 0)
-                return new OnlineAccessSyncResult(false, "Es sind keine Benutzer zum Synchronisieren vorhanden.", 0);
+                return Finish(false, "Es sind keine Benutzer zum Synchronisieren vorhanden.", 0);
 
             var request = BuildRequest(settings, users);
-            using var response = await Http.PostAsJsonAsync(endpoint, request, JsonOptions, cancellationToken);
-            var message = await ReadMessageAsync(response, cancellationToken);
+            using var response = await Http.PostAsJsonAsync(endpoint, request, JsonOptions, cancellationToken).ConfigureAwait(false);
+            var message = await ReadMessageAsync(response, cancellationToken).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
-                return new OnlineAccessSyncResult(false, message ?? "Online-Zugang konnte nicht synchronisiert werden.", users.Count);
+                return Finish(false, message ?? "Online-Zugang konnte nicht synchronisiert werden.", users.Count);
 
-            AppSettingsService.Update(value => value.LastOnlineAccessSyncAtUtc = DateTime.UtcNow);
-            return new OnlineAccessSyncResult(
+            return Finish(
                 true,
                 message ?? $"{users.Count} Benutzer für den Online-Wochenplan synchronisiert.",
                 users.Count);
         }
         catch (Exception ex)
         {
-            return new OnlineAccessSyncResult(false, "Online-Zugang konnte nicht synchronisiert werden. " + ex.Message, 0);
+            return Finish(false, "Online-Zugang konnte nicht synchronisiert werden. " + ex.Message, 0);
         }
         finally
         {
-            SyncLock.Release();
+            try
+            {
+                if (payloadVersion is not null && result is not null)
+                    RecordResult(payloadVersion, result, DateTime.UtcNow);
+            }
+            finally { SyncLock.Release(); }
         }
+    }
+
+    internal static void RecordResult(string payloadVersion, OnlineAccessSyncResult result, DateTime now)
+    {
+        AppSettingsService.Update(settings =>
+        {
+            if (result.Success) settings.LastOnlineAccessSyncAtUtc = now;
+            var pending = settings.PendingOnlineAccessSync;
+            // A newer local edit queued while HTTP was in flight must survive this acknowledgement.
+            if (pending?.PayloadVersion != payloadVersion) return;
+            if (result.Success) settings.PendingOnlineAccessSync = null;
+            else
+            {
+                pending.Attempts = Math.Min(pending.Attempts + 1, 1000);
+                pending.LastError = result.Message;
+                pending.NextRetryAtUtc = now.AddSeconds(Math.Min(3600, 30 * Math.Pow(2, Math.Min(pending.Attempts - 1, 7))));
+            }
+        });
     }
 
     internal static OnlineAccessSyncRequest BuildRequest(AppSettings settings, IReadOnlyList<UserAccount> users)
@@ -130,11 +224,11 @@ public static class OnlineAccessSyncService
         };
     }
 
-    private static async Task SyncIgnoringErrorsAsync()
+    private static async Task SyncIgnoringErrorsAsync(string payloadVersion)
     {
         try
         {
-            await TrySyncAsync();
+            await TrySyncPendingAsync(payloadVersion).ConfigureAwait(false);
         }
         catch
         {
@@ -146,7 +240,7 @@ public static class OnlineAccessSyncService
     {
         try
         {
-            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
             var root = doc.RootElement;
             if (root.TryGetProperty("message", out var message) && message.ValueKind == JsonValueKind.String)
                 return message.GetString();
