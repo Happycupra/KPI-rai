@@ -26,6 +26,7 @@ public partial class MessageCenterWindow : Window
     private async Task RefreshAllAsync(int? selectInboxId = null, int? selectSentId = null)
     {
         var generation = ++refreshGeneration;
+        var selectedRecipientId = (RecipientBox.SelectedItem as UserMessageRecipient)?.Id;
         try
         {
             var inboxTask = UserMessageService.GetInboxAsync();
@@ -44,8 +45,10 @@ public partial class MessageCenterWindow : Window
             SentGrid.ItemsSource = sent;
             RecipientBox.ItemsSource = recipients;
 
-            if (RecipientBox.SelectedItem is null && recipients.Count > 0)
-                RecipientBox.SelectedIndex = 0;
+            var selectedRecipient = selectedRecipientId.HasValue
+                ? recipients.FirstOrDefault(x => x.Id == selectedRecipientId.Value)
+                : null;
+            RecipientBox.SelectedItem = selectedRecipient ?? recipients.FirstOrDefault();
 
             InboxGrid.SelectedItem = selectInboxId.HasValue ? inbox.FirstOrDefault(x => x.Id == selectInboxId.Value) : inbox.FirstOrDefault();
             SentGrid.SelectedItem = selectSentId.HasValue ? sent.FirstOrDefault(x => x.Id == selectSentId.Value) : sent.FirstOrDefault();
