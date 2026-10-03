@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../SolutionCompakt.Core/SolutionCompakt.Core.csproj" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" /><PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" /></ItemGroup>
+</Project>

@@ -17,7 +17,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  server-integration:
+    uses: ./.github/workflows/server-integration.yml
+    permissions:
+      contents: read
+
   release:
+    needs: server-integration
     runs-on: windows-latest
 
     steps:

@@ -110,7 +110,7 @@ public sealed class CentralMessageStore
         command.Parameters.AddWithValue("subject", subject);
         command.Parameters.AddWithValue("body", body);
         command.Parameters.AddWithValue("priority", priority);
-        command.Parameters.AddWithValue("createdAt", now);
+        command.Parameters.AddWithValue("createdAt", NpgsqlTypes.NpgsqlDbType.Timestamp, DateTime.SpecifyKind(now, DateTimeKind.Unspecified));
         command.Parameters.AddWithValue("token", Guid.NewGuid());
 
         var id = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
@@ -187,23 +187,29 @@ public sealed class CentralMessageStore
             WHERE "Id" = @messageId AND "RecipientUserId" = @recipientUserId
             RETURNING "SenderUserId", "AcknowledgedAtUtc";
             """;
-        command.Parameters.AddWithValue("now", now);
+        command.Parameters.AddWithValue("now", NpgsqlTypes.NpgsqlDbType.Timestamp, DateTime.SpecifyKind(now, DateTimeKind.Unspecified));
         command.Parameters.AddWithValue("username", recipient.Username);
         command.Parameters.AddWithValue("token", Guid.NewGuid());
         command.Parameters.AddWithValue("messageId", messageId);
         command.Parameters.AddWithValue("recipientUserId", recipientUserId);
 
-        int senderUserId;
-        DateTime acknowledgedAtUtc;
+        int senderUserId = 0;
+        DateTime acknowledgedAtUtc = default;
+        bool found;
         await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
         {
-            if (!await reader.ReadAsync(cancellationToken))
+            found = await reader.ReadAsync(cancellationToken);
+            if (found)
             {
-                await transaction.RollbackAsync(cancellationToken);
-                return new(false, 0, null);
+                senderUserId = reader.GetInt32(0);
+                acknowledgedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(1), DateTimeKind.Utc);
             }
-            senderUserId = reader.GetInt32(0);
-            acknowledgedAtUtc = reader.GetDateTime(1);
+        }
+        // Npgsql requires the reader to be closed before any transaction command.
+        if (!found)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return new(false, 0, null);
         }
 
         await WriteAuditAsync(
@@ -256,8 +262,8 @@ public sealed class CentralMessageStore
                 reader.GetString(7),
                 reader.GetString(8),
                 reader.GetString(9),
-                reader.GetDateTime(10),
-                reader.IsDBNull(11) ? null : reader.GetDateTime(11),
+                DateTime.SpecifyKind(reader.GetDateTime(10), DateTimeKind.Utc),
+                reader.IsDBNull(11) ? null : DateTime.SpecifyKind(reader.GetDateTime(11), DateTimeKind.Utc),
                 reader.IsDBNull(12) ? null : reader.GetString(12)));
         }
         return results;
@@ -318,7 +324,7 @@ public sealed class CentralMessageStore
             VALUES
                 (@timestamp, @username, @action, 'UserMessage', @entityId, @details, @token);
             """;
-        command.Parameters.AddWithValue("timestamp", timestampUtc);
+        command.Parameters.AddWithValue("timestamp", NpgsqlTypes.NpgsqlDbType.Timestamp, DateTime.SpecifyKind(timestampUtc, DateTimeKind.Unspecified));
         command.Parameters.AddWithValue("username", username);
         command.Parameters.AddWithValue("action", action);
         command.Parameters.AddWithValue("entityId", messageId.ToString());

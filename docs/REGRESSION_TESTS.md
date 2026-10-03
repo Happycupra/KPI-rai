@@ -45,3 +45,5 @@ The first Windows run also exposed an invalid DataGrid RowHeight value and a
 pooled SQLite snapshot handle preventing ZIP creation. Both are covered by the
 view-construction and backup round-trip tests. Temporary backup connections now
 disable pooling so Windows file handles are closed before ZIP/copy operations.
+
+Zusätzlich führt `server-integration.yml` neun PostgreSQL/API/SignalR-Integrationsprüfungen mit voneinander getrennten Clients und Firmen aus. Die Windows-Regression enthält eine synthetische Fünf-Jahres-Planung mit 91.300 Zuweisungen. Offizielle Releases müssen außerdem das versionsgebundene manuelle Protokoll gemäß [WINDOWS-ACCEPTANCE.md](WINDOWS-ACCEPTANCE.md) erfüllen.

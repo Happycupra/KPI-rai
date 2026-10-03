@@ -23,6 +23,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  server-integration:
+    uses: ./.github/workflows/server-integration.yml
+    permissions:
+      contents: read
+
   firestore-security:
     runs-on: ubuntu-latest
     permissions:
@@ -42,7 +47,7 @@ jobs:
         run: npm test --prefix tests/firestore
 
   build:
-    needs: firestore-security
+    needs: [firestore-security, server-integration]
     runs-on: windows-latest
 
     steps:

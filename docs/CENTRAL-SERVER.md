@@ -170,3 +170,18 @@ Für den späteren Gesamtfunktionstest mindestens:
 - PostgreSQL ist im Zentralmodus die führende operative Datenbank; es gibt noch keinen Offline-Schreibcache für Arbeiten ohne Datenbankverbindung.
 - Für mehrere parallel laufende `SolutionCompakt.Server`-Instanzen ist eine SignalR-Backplane/Managed-SignalR-Lösung erforderlich. Eine einzelne Serverinstanz ist vollständig unterstützt.
 - Schemaänderungen am operativen Datenmodell benötigen für spätere Releases einen versionierten PostgreSQL-Migrationspfad. Die Erstbereitstellung des aktuellen Schemas ist automatisiert.
+
+## Gemeinsame Modelle und automatisierte Serverprüfung
+
+`SolutionCompakt.Core` enthält die bisherigen Domänenmodelle ohne WPF- oder EF-Abhängigkeit. Ihr Namespace bleibt für bestehenden Code kompatibel. `SolutionCompakt.Data` enthält DbSets und die gemeinsame EF-Konfiguration. Der Desktop nutzt dieselben Beziehungen, Indizes und Filter wie der eigenständig verwendbare `PostgresOperationalDbContext`. Der Context ist an eine unveränderliche Firmen-Guid gebunden; die EF-Modellablage trennt Firmenschemata. Das bestehende operative PostgreSQL-Schema verwendet `timestamp without time zone`; die Konfiguration bewahrt dieses Format ausdrücklich und unterscheidet Kalenderwerte von UTC-Feldern durch Konverter. Ein globaler Desktop-Schalter ist serverseitig nicht mehr erforderlich.
+
+`tests/SolutionCompakt.ServerIntegrationTests` läuft auf Linux mit PostgreSQL 16. Es erzeugt ausschließlich zufällige Test-Firmenschemata, verwendet echte JWT-Authentifizierung, HTTP-Endpunkte, SignalR-Verbindungen und PostgreSQL-Transaktionen. Nur die externe Lizenz-HTTP-Antwort wird durch eine aktive Testlizenz ersetzt. Geprüft werden Schreibkonflikte, Mandantentrennung, private Nachrichtenereignisse, Versand/Lesebestätigung/Audit, deaktivierte Empfänger, bereits ausgestellte Tokens und Login-Rollen. Jeder authentifizierte API-Aufruf prüft den aktuellen Benutzerstatus und die gespeicherte Rolle erneut; abgelaufene SignalR-Sitzungen werden geschlossen. Eine nicht-UTC PostgreSQL-Sitzung prüft zusätzlich Zeitstempel; Kalender- und UTC-Werte werden separat getestet. Die SignalR-Transportprüfung verwendet Long Polling im ASP.NET-Testserver und ersetzt keine WebSocket-/Proxy-Abnahme der Installation.
+
+```sh
+SOLUTIONCOMPAKT_TEST_POSTGRES='Host=localhost;Port=5432;Database=isolated_tests;Username=postgres;Password=TEST_ONLY' \
+  dotnet run --project tests/SolutionCompakt.ServerIntegrationTests -c Release
+```
+
+Nur eine isolierte Testdatenbank verwenden. Der Runner erzeugt und entfernt seine zufällig benannten `company_<Guid>`-Schemata. Das CI verwendet einen kurzlebigen PostgreSQL-Service und blockiert Windows-Builds sowie offizielle Releases bei Testfehlern.
+
+**Weiter offen:** Die gemeinsame Datenschicht ist die Vorbereitung für weitere API-Module. Bestehende operative Desktop-Module erzeugen weiterhin `AppDbContext` und nutzen im Zentralmodus direkt PostgreSQL. Ihre vollständige Umstellung auf authentifizierte Fach-APIs, stabile globale Datensatz-IDs, versionierte Datenbankmigrationen und die praktische Mehr-PC-/Windows-Abnahme sind damit noch nicht abgeschlossen. Der Servertest bestätigt einzelne reale Integrationswege, keine vollständige Produktabnahme.

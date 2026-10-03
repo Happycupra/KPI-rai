@@ -38,4 +38,5 @@
     <PackageReference Include="PDFsharp-WPF" Version="6.2.4" />
     <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
+  <ItemGroup><ProjectReference Include="../SolutionCompakt.Data/SolutionCompakt.Data.csproj" /></ItemGroup>
 </Project>
