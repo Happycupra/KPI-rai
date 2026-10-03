@@ -49,6 +49,7 @@ internal static partial class Program
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
+            ("Five years of synthetic planning, orders and batches remain queryable", LargeSyntheticPlanningHistory),
             ("What-if simulation stays read-only and revalidates before applying", WhatIfSimulationApply),
             ("Shift handovers follow the audited acknowledge and resolve workflow", ShiftHandoverWorkflow),
             ("Weekly and planning calendar PDF exports finalize cleanly", CalendarPdfExports),

@@ -13,6 +13,7 @@
     <Product>SolutionCompakt</Product>
     <Company>SolutionCompakt</Company>
     <Description>Planen · Organisieren · Voranbringen · Einfach effizienter</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\SolutionCompakt.ico</ApplicationIcon>
   </PropertyGroup>
 
