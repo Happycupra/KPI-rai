@@ -48,6 +48,22 @@ builder.Services
 
         options.Events = new JwtBearerEvents
         {
+            OnTokenValidated = async context =>
+            {
+                var principal = context.Principal;
+                if (!Guid.TryParse(principal?.FindFirst("company_id")?.Value, out var companyId) ||
+                    !int.TryParse(principal?.FindFirst("source_user_id")?.Value, out var userId))
+                {
+                    context.Fail("Ungültiger Firmen- oder Benutzerkontext.");
+                    return;
+                }
+                var verifier = context.HttpContext.RequestServices.GetRequiredService<CentralOperationalUserVerifier>();
+                var user = await verifier.VerifyAsync(companyId, userId,
+                    principal?.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? string.Empty,
+                    principal?.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty,
+                    context.HttpContext.RequestAborted);
+                if (!user.Allowed) context.Fail(user.Message);
+            },
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
@@ -263,7 +279,7 @@ app.MapPost("/api/v1/realtime/ping", async (
     return Results.Accepted(value: payload);
 }).RequireAuthorization();
 
-app.MapHub<CompanyHub>("/hubs/company").RequireAuthorization();
+app.MapHub<CompanyHub>("/hubs/company", options => options.CloseOnAuthenticationExpiration = true).RequireAuthorization();
 
 app.Run();
 

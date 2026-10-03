@@ -103,10 +103,19 @@ internal static class IntegrationRunner
             Check(rejected.StatusCode == HttpStatusCode.BadRequest, "Disabled recipient still accepted messages");
             using var disabledLogin = await anonymous.PostAsJsonAsync("/api/v1/auth/desktop", AuthRequest(CompanyA, 2));
             Check(disabledLogin.StatusCode == HttpStatusCode.Forbidden, "Disabled user could log in");
-            Pass("Writes are audited; disabled recipients and logins are rejected");
+            Check((await recipient.GetAsync("/api/v1/messages/inbox")).StatusCode == HttpStatusCode.Unauthorized,
+                "Disabled user could continue reading with an already issued token");
+            Pass("Writes are audited; disabled recipients, logins and existing tokens are rejected");
             var badRole = AuthRequest(CompanyA, 1, "Administrator");
             Check((await anonymous.PostAsJsonAsync("/api/v1/auth/desktop", badRole)).StatusCode == HttpStatusCode.Forbidden, "Client could elevate its role");
-            Pass("Desktop authentication verifies persisted role");
+            await using (var db = Database(CompanyB))
+            {
+                var user = await db.UserAccounts.SingleAsync(x => x.Id == 2);
+                user.Role = UserRoles.Observer; await db.SaveChangesAsync();
+            }
+            Check((await otherCompany.GetAsync("/api/v1/messages/inbox")).StatusCode == HttpStatusCode.Unauthorized,
+                "A token retained a role that was revoked in the database");
+            Pass("Desktop authentication and existing tokens verify persisted roles");
             Console.WriteLine($"{passed} PostgreSQL/API/SignalR integration checks passed.");
             return 0;
         }
