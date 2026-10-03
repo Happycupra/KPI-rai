@@ -32,3 +32,5 @@ jobs:
         env:
           SOLUTIONCOMPAKT_TEST_POSTGRES: Host=localhost;Port=5432;Database=solutioncompakt_tests;Username=postgres;Password=synthetic-test-password
         run: dotnet run --project tests/SolutionCompakt.ServerIntegrationTests --configuration Release
+      - name: Build deployable server container
+        run: docker build --file src/SolutionCompakt.Server/Dockerfile --tag solutioncompakt-server:ci .
