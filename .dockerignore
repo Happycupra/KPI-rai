@@ -1,0 +1,16 @@
+.git
+**/bin
+**/obj
+**/node_modules
+artifacts
+downloads
+.env
+.env.*
+**/.env
+**/.env.*
+**/*.pfx
+**/*.p12
+**/central-mode.json
+**/*.db
+**/*.db-shm
+**/*.db-wal
