@@ -39,11 +39,13 @@ if (-not (Test-Path $CertificatePath)) {
     throw "Signaturzertifikat wurde nicht gefunden: $CertificatePath"
 }
 
-$signTool = Resolve-SignTool
 $existingPaths = @()
 
 foreach ($path in $Paths) {
     $matches = Get-ChildItem -Path $path -File -ErrorAction SilentlyContinue
+    if (@($matches).Count -eq 0) {
+        throw "Erwartetes Artefakt fehlt: $path"
+    }
     foreach ($match in $matches) {
         $existingPaths += $match.FullName
     }
@@ -52,6 +54,8 @@ foreach ($path in $Paths) {
 if ($existingPaths.Count -eq 0) {
     throw "Keine signierbaren Artefakte gefunden."
 }
+
+$signTool = Resolve-SignTool
 
 foreach ($artifact in $existingPaths | Sort-Object -Unique) {
     Write-Host "Signiere $artifact"
@@ -75,3 +79,5 @@ foreach ($artifact in $existingPaths | Sort-Object -Unique) {
         throw "Codesignatur fehlgeschlagen: $artifact"
     }
 }
+
+& (Join-Path $PSScriptRoot "Verify-WindowsArtifacts.ps1") -Paths $existingPaths

@@ -23,6 +23,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require signing certificate
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_PFX_BASE64)) {
+            throw "Official releases require WINDOWS_SIGNING_PFX_BASE64. Unsigned publishing is blocked."
+          }
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate release acceptance
+        run: node scripts/validate-release-acceptance.cjs --tag "${{ github.ref_name }}"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -60,7 +77,6 @@ jobs:
           Copy-Item $source $target -Force
 
       - name: Sign published executables
-        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
         shell: pwsh
         run: |
           $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
@@ -69,7 +85,7 @@ jobs:
             ./scripts/Sign-WindowsArtifacts.ps1 `
               -CertificatePath $certPath `
               -CertificatePassword $env:WINDOWS_SIGNING_PFX_PASSWORD `
-              -Paths @("artifacts/win-x64/SolutionCompakt.exe", "artifacts/SolutionCompakt-*-win-x64-portable.exe")
+              -Paths @("artifacts/win-x64/SolutionCompakt.exe", "artifacts/single-file/SolutionCompakt.exe", "artifacts/SolutionCompakt-*-win-x64-portable.exe")
           }
           finally {
             Remove-Item $certPath -Force -ErrorAction SilentlyContinue
@@ -112,7 +128,6 @@ jobs:
           & $iscc "/DMyAppVersion=$version" "installer\SolutionCompakt.iss"
 
       - name: Sign installer
-        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' }}
         shell: pwsh
         run: |
           $certPath = Join-Path $env:RUNNER_TEMP "solutioncompakt-signing.pfx"
@@ -132,6 +147,17 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.version }}"
           Compress-Archive -Path artifacts/win-x64/* -DestinationPath "artifacts/SolutionCompakt-$version-win-x64-portable.zip" -Force
+
+      - name: Verify every distributed executable
+        shell: pwsh
+        run: |
+          ./scripts/Verify-WindowsArtifacts.ps1 -Paths @(
+            "artifacts/win-x64/SolutionCompakt.exe",
+            "artifacts/single-file/SolutionCompakt.exe",
+            "artifacts/SolutionCompakt-*-win-x64-portable.exe",
+            "artifacts/usb-portable/SolutionCompakt.exe",
+            "artifacts/installer/SolutionCompakt-Setup-*.exe"
+          )
 
       - name: Publish GitHub Release
         shell: pwsh

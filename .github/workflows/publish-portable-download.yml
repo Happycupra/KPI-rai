@@ -29,7 +29,16 @@ jobs:
         with:
           ref: main
 
+      - name: Detect configured signing
+        id: signing
+        shell: pwsh
+        env:
+          SIGNING_CERTIFICATE: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 || secrets.CODE_SIGNING_CERT_BASE64 }}
+        run: |
+          "enabled=$(-not [string]::IsNullOrWhiteSpace($env:SIGNING_CERTIFICATE))" >> $env:GITHUB_OUTPUT
+
       - name: Download portable artifact from Windows Build
+        if: steps.signing.outputs.enabled == 'True'
         uses: actions/download-artifact@v4
         with:
           name: SolutionCompakt-Portable-1.0.${{ github.event.workflow_run.run_number }}-win-x64
@@ -38,7 +47,14 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify portable signature before public download
+        if: steps.signing.outputs.enabled == 'True'
+        shell: pwsh
+        run: |
+          ./scripts/Verify-WindowsArtifacts.ps1 -Paths @("artifacts/portable/SolutionCompakt.exe")
+
       - name: Publish portable ZIP to downloads
+        if: steps.signing.outputs.enabled == 'True'
         shell: pwsh
         run: |
           $exe = Join-Path $PWD "artifacts/portable/SolutionCompakt.exe"

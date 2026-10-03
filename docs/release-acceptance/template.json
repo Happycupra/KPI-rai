@@ -1,0 +1,104 @@
+{
+  "version": "REPLACE",
+  "sourceCommit": "REPLACE_WITH_FULL_REVIEWED_COMMIT",
+  "cases": [
+    {
+      "id": "1366x768-100",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "1920x1080-100",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "1920x1080-125",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "2560x1440-125",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "2560x1440-150",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "3840x2160-150",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "3840x2160-200",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "mixed-dpi-monitors",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "large-synthetic-data",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "two-pc-concurrency",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "two-pc-messages",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "tenant-isolation",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "server-restart",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    },
+    {
+      "id": "offline-recovery",
+      "status": "pending",
+      "reviewer": "",
+      "testedAtUtc": "",
+      "evidence": ""
+    }
+  ]
+}

@@ -8,7 +8,7 @@ SolutionCompakt verwendet Semantic Versioning im Format `MAJOR.MINOR.PATCH`.
 - `MINOR`: neue Funktionen bei grundsätzlich kompatibler Nutzung
 - `PATCH`: Fehlerbehebungen und kleine Verbesserungen
 
-Die aktuelle Basisversion ist `0.1.0`.
+Die Basisversion steht in `src/Produktionsplanung.App/Produktionsplanung.App.csproj`.
 
 ## Normaler Build
 
@@ -48,7 +48,7 @@ Der Build kann die Windows-EXE-Dateien und den Installer mit einem Authenticode-
 - `WINDOWS_SIGNING_PFX_BASE64`: PFX-Datei als Base64-Text
 - `WINDOWS_SIGNING_PFX_PASSWORD`: Passwort der PFX-Datei
 
-Wenn `WINDOWS_SIGNING_PFX_BASE64` nicht gesetzt ist, laufen Build und Release weiterhin ohne Signatur. Sobald das Secret vorhanden ist, werden signiert:
+Offizielle Tag-Releases brechen ohne Zertifikat ab. Jeder Signiervorgang prüft anschließend alle erwarteten Dateien mit `signtool verify /pa /all` und verlangt einen gültigen Authenticode-Zeitstempel. Fehlende Dateien, fehlgeschlagene Signaturen und nicht vertrauenswürdige Zertifikate verhindern die Veröffentlichung. Sobald das Secret vorhanden ist, werden signiert:
 
 - `artifacts/win-x64/SolutionCompakt.exe`
 - `artifacts/single-file/SolutionCompakt.exe`
@@ -77,3 +77,9 @@ Lokale Artefakte können mit demselben Skript signiert werden:
 ```
 
 Für weniger SmartScreen-Warnungen im Firmennetzwerk sollte ein kommerzielles OV- oder EV-Code-Signing-Zertifikat verwendet werden. Eine selbstsignierte Testsignatur eignet sich nur für interne Tests auf Rechnern, auf denen das Zertifikat ausdrücklich vertraut wird.
+
+## Abnahme vor einem offiziellen Release
+
+Vor dem Tag muss `docs/release-acceptance/<Version>.json` nach [WINDOWS-ACCEPTANCE.md](WINDOWS-ACCEPTANCE.md) ausgefüllt und geprüft eingecheckt sein. Die Pipeline verlangt passende Version, vollständige Matrix, benannte Prüfer, Belege und Ergebnisse aus den letzten 30 Tagen. `sourceCommit` bezeichnet den vollständig geprüften Commit. Seitdem dürfen sich Anwendung, Skripte, Installer, Workflows und Tests nicht geändert haben. Der nachfolgende Commit darf das Abnahmeprotokoll ergänzen.
+
+Unsigned Entwicklungs-Builds bleiben als Actions-Artefakte verfügbar. Sie aktualisieren weder den öffentlichen Installer-Updatekanal noch den öffentlichen Portable-Download. Bereits veröffentlichte alte Downloads werden nicht nachträglich entfernt. Die praktische Windows-/Mehr-PC-Abnahme und ein gültiges Zertifikat können durch CI nicht ersetzt werden.
