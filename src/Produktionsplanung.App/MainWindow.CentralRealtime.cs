@@ -9,7 +9,7 @@ public partial class MainWindow
 
     public void EnableCentralMessageMode()
     {
-        if (!CentralModeService.IsEnabled || centralMessagePollingCts is not null)
+        if ((!CentralModeService.IsEnabled && !FirebaseCompanyClient.Enabled) || centralMessagePollingCts is not null)
             return;
 
         messageTimer.Stop();
@@ -28,7 +28,7 @@ public partial class MainWindow
 
     public async void ApplyCentralRealtimeChange(CentralRealtimeNotice notice)
     {
-        if (!CentralModeService.IsEnabled)
+        if ((!CentralModeService.IsEnabled && !FirebaseCompanyClient.Enabled))
             return;
 
         if (notice.Type.StartsWith("message.", StringComparison.OrdinalIgnoreCase))
@@ -76,7 +76,7 @@ public partial class MainWindow
 
     private async Task RefreshCentralMessagesAsync(bool showPopup, CancellationToken cancellationToken)
     {
-        if (!CentralModeService.IsEnabled || !SessionService.IsAuthenticated)
+        if ((!CentralModeService.IsEnabled && !FirebaseCompanyClient.Enabled) || !SessionService.IsAuthenticated)
             return;
 
         try

@@ -198,6 +198,7 @@
                                     Style="{StaticResource SidebarActionButtonStyle}"
                                     Margin="0,8,0,4"
                                     Click="ChangePassword_Click" />
+                            <Button x:Name="CloudSyncButton" Content="Firmenkonto synchronisieren" Click="CloudSync_Click" Visibility="Collapsed" Margin="0,8,0,4" />
                             <TextBlock x:Name="VersionBlock" Foreground="#7F9BB4" FontSize="11" Margin="2,4,0,0" />
                             <TextBlock Text="Windows Desktop · SQLite" Foreground="#7F9BB4" FontSize="11" Margin="2,2,0,0" />
                         </StackPanel>

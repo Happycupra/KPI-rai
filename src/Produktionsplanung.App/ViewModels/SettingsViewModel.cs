@@ -41,11 +41,12 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SaveSettings()
+    private async Task SaveSettings()
     {
         try
         {
             var settings = BuildSettings();
+            if (FirebaseCompanyClient.Enabled) await FirebaseCompanyClient.CallAsync<object>("cloudCompanyUpdate", new { companyName = CompanyName, siteName = SiteName });
             AppSettingsService.Save(settings);
             ApplySettings(settings);
             RefreshRecoveryCodeStatus();

@@ -62,6 +62,7 @@ public static class BackupService
 
     private static void RestoreBackupCore(string backupPath)
     {
+        if (FirebaseCompanyClient.Enabled) throw new InvalidOperationException("Ein lokales Backup darf die gemeinsame Firma nicht zurücksetzen. Bitte die Cloud-Wiederherstellung verwenden.");
         if (CentralModeService.IsEnabled)
             throw new InvalidOperationException("Eine lokale SQLite-Wiederherstellung ist im zentralen Mehrbenutzerbetrieb gesperrt. Deaktivieren Sie den Zentralmodus nur für eine bewusst lokale Wiederherstellung oder stellen Sie PostgreSQL serverseitig wieder her.");
         if (!File.Exists(backupPath)) throw new FileNotFoundException("Die ausgewählte Backup-Datei wurde nicht gefunden.", backupPath);

@@ -14,6 +14,7 @@ public partial class UserAdminViewModel : ObservableObject
     public ObservableCollection<AuditLogRow> AuditRows { get; } = new();
     public IReadOnlyList<string> RoleOptions { get; } = UserRoles.All;
 
+    private string cloudUserSetVersion = FirebaseCompanyClient.Profile?.UserSetVersion ?? "legacy";
     [ObservableProperty] private UserAdminRow? selectedUser;
     [ObservableProperty] private string username = string.Empty;
     [ObservableProperty] private string displayName = string.Empty;
@@ -61,7 +62,7 @@ public partial class UserAdminViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SaveUser()
+    private async Task SaveUser()
     {
         if (!SessionService.IsAdministrator)
         {
@@ -81,6 +82,18 @@ public partial class UserAdminViewModel : ObservableObject
             return;
         }
 
+        if (FirebaseCompanyClient.Enabled)
+        {
+            if (NewPassword != ConfirmNewPassword) { StatusMessage = "Die Passwörter stimmen nicht überein."; return; }
+            try
+            {
+                await FirebaseCloudAdministration.SaveUserAsync(SelectedUser?.Id ?? 0, normalizedUsername, DisplayName, SelectedRole, IsActive, NewPassword, cloudUserSetVersion);
+                cloudUserSetVersion = FirebaseCompanyClient.Profile!.UserSetVersion;
+                Refresh(); NewUser(); StatusMessage = "Benutzer in Firebase gespeichert.";
+            }
+            catch (Exception ex) { StatusMessage = ex.Message; }
+            return;
+        }
         using var db = new AppDbContext();
         var editingId = SelectedUser?.Id;
         var invalidateQuickAccess = editingId.HasValue &&

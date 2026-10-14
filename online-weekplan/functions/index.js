@@ -359,6 +359,8 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
     const companySnap = await companyRef.get();
     if (companySnap.exists) {
       const current = companySnap.data();
+      if (current.cloudDataEnabled === true)
+        return fail(res, 409, "Diese Firma verwaltet Benutzer über die Cloud. Bitte die aktuelle App verwenden.");
       const boundInstallationId = String(current.licenseInstallationId || "").trim();
       if (boundInstallationId && boundInstallationId !== installationId)
         return fail(res, 409, "Diese Firma ist bereits einer anderen Installation zugeordnet.");
@@ -379,6 +381,8 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
       const currentCompany = await transaction.get(companyRef);
       const currentLicense = await transaction.get(licenseRef);
       const staged = await transaction.get(versionRef);
+      if (currentCompany.data()?.cloudDataEnabled === true)
+        throw new Error("Firmenkonto während der Synchronisation auf Cloud-Verwaltung umgestellt.");
       const current = currentLicense.data();
       if (!current || current.secretHash !== sha256(secret) || current.status !== "active" ||
           !current.validUntil?.toDate?.() || current.validUntil.toDate() <= new Date())

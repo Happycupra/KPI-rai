@@ -11,7 +11,7 @@ public partial class ChangePasswordWindow : Window
         Loaded += (_, _) => CurrentPasswordBox.Focus();
     }
 
-    private void Change_Click(object sender, RoutedEventArgs e)
+    private async void Change_Click(object sender, RoutedEventArgs e)
     {
         if (NewPasswordBox.Password != ConfirmPasswordBox.Password)
         {
@@ -19,6 +19,18 @@ public partial class ChangePasswordWindow : Window
             return;
         }
 
+        if (FirebaseCompanyClient.Enabled)
+        {
+            try
+            {
+                var user = SessionService.CurrentUser!;
+                await FirebaseCloudAdministration.SaveUserAsync(user.Id, user.Username, user.DisplayName, user.Role, true,
+                    NewPasswordBox.Password, FirebaseCompanyClient.Profile!.UserSetVersion, true, CurrentPasswordBox.Password);
+                QuickAccessService.Clear(); DialogResult = true; Close();
+            }
+            catch (Exception ex) { StatusBlock.Text = ex.Message; }
+            return;
+        }
         var result = AuthenticationService.ChangeOwnPassword(CurrentPasswordBox.Password, NewPasswordBox.Password);
         if (!result.Success)
         {

@@ -73,6 +73,12 @@ service cloud.firestore {
         }
       }
 
+      // Desktop cloud data/messages are accessed only through validating Cloud Functions.
+      match /dataSets/{dataset}/{document=**} { allow read, write: if false; }
+      match /messages/{message} { allow read, write: if false; }
+      match /privateFeeds/{user}/{document=**} { allow read, write: if false; }
+      match /devices/{device} { allow read, write: if false; }
+
       // Password hashes are server-side only. No browser client may read them.
       match /authUserSets/{versionId}/{document=**} {
         allow read, write: if false;

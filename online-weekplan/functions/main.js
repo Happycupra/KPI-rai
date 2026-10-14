@@ -3,7 +3,7 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 
-Object.assign(exports, existingFunctions, require("./retention"));
+Object.assign(exports, existingFunctions, require("./retention"), require("./company-cloud"));
 
 const db = getFirestore();
 const OWNER_EMAIL = "irajet.ramadani@gmail.com";

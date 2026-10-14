@@ -1,6 +1,7 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { getFirestore } = require("firebase-admin/firestore");
 const { cleanVersions } = require("./snapshot-store");
+const { cleanCloudImports } = require("./cloud-retention");
 
 exports.cleanupSnapshots = onSchedule({
   schedule: "every day 03:00", timeZone: "Etc/UTC", region: "europe-west1",
@@ -16,6 +17,7 @@ exports.cleanupSnapshots = onSchedule({
     if (companies.empty) break;
     for (const company of companies.docs) {
       deleted += await cleanVersions(db, company.ref, "authUserSets", "activeUserVersion");
+      deleted += await cleanCloudImports(db, company.ref);
       const weeks = await company.ref.collection("weekPlans").listDocuments();
       for (const week of weeks)
         deleted += await cleanVersions(db, week, "versions", "activeVersion");

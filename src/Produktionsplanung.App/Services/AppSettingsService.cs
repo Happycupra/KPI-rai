@@ -22,6 +22,8 @@ public sealed class AppSettings
 
     // Firebase-ready online week plan. These values are configuration identifiers/endpoints,
     // never service-account credentials or plaintext user passwords.
+    public bool FirebaseCompanyEnabled { get; set; }
+    public string FirebaseCloudBaseUrl { get; set; } = "https://europe-west1-solution-compact.cloudfunctions.net";
     public bool OnlineWeekPlanEnabled { get; set; }
     public string FirebaseProjectId { get; set; } = "solution-compact";
     public string FirebaseWebApiKey { get; set; } = "AIzaSyDvPkzX6B5vmA2VWjZooDW08Pw17mRA29Y";

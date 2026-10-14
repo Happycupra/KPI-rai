@@ -13,7 +13,11 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         AppPaths.InitializeStorageMode(e.Args);
+        FirebaseCompanyClient.RestoreSession();
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent, new RoutedEventHandler((sender, args) =>
+        { if (sender is Window window && ReferenceEquals(args.OriginalSource, window)) CloudEditBaseline.Attach(window); }));
         CentralModeService.EnsureTemplateExists();
+        if (FirebaseCompanyClient.Enabled && CentralModeService.IsEnabled) { MessageBox.Show("Firebase-Firmenkonto und PostgreSQL-Zentralmodus dürfen nicht gleichzeitig aktiviert sein. Bitte den PostgreSQL-Zentralmodus deaktivieren.", "Betriebsart prüfen"); Shutdown(); return; }
         if (CentralModeService.IsEnabled)
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
@@ -49,7 +53,7 @@ public partial class App : Application
                 using var db = new AppDbContext(AppDatabaseMode.Local);
                 db.Database.EnsureCreated();
                 DatabaseSchemaUpdater.Apply(db);
-                DemoDataSeeder.Seed(db);
+                if (!FirebaseCompanyClient.Enabled) DemoDataSeeder.Seed(db);
                 CompanyIdentityService.EnsureExistingInstallationIdentity();
             }
         }
@@ -79,7 +83,7 @@ public partial class App : Application
             return;
         }
 
-        if (!licenseGate.Allowed)
+        if (!licenseGate.Allowed && (CentralModeService.IsEnabled || (AuthenticationService.HasUsers() && !FirebaseCompanyClient.Enabled)))
         {
             var licenseWindow = new LicenseWindow(licenseGate.Message);
             if (licenseWindow.ShowDialog() != true)
@@ -102,15 +106,6 @@ public partial class App : Application
             }
         }
 
-        if (licenseGate.IsTrial)
-        {
-            MessageBox.Show(
-                $"DEMO-Version · {licenseGate.TrialDaysRemaining} Tag(e) Testphase verbleibend.\n\nEigentum von Irajet Ramadani – nur zu Testzwecken zu verwenden.",
-                "SolutionCompakt – DEMO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-
         var login = new LoginWindow();
         if (login.ShowDialog() != true || !SessionService.IsAuthenticated)
         {
@@ -118,11 +113,19 @@ public partial class App : Application
             return;
         }
 
+        if (licenseGate.IsTrial && !FirebaseCompanyClient.Enabled)
+        {
+            MessageBox.Show(
+                $"DEMO-Version · {licenseGate.TrialDaysRemaining} Tag(e) Testphase verbleibend.\n\nEigentum von Irajet Ramadani – nur zu Testzwecken zu verwenden.",
+                "SolutionCompakt – DEMO",MessageBoxButton.OK,MessageBoxImage.Information);
+        }
+
         var main = new MainWindow();
         MainWindow = main;
         ShutdownMode = ShutdownMode.OnMainWindowClose;
         main.Show();
         OnlineAccessSyncService.StartRetryWorker();
+        if (FirebaseCompanyClient.Enabled) { main.EnableCentralMessageMode(); FirebaseCompanySync.Start(); }
 
         if (CentralModeService.IsEnabled)
         {
@@ -142,6 +145,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         OnlineAccessSyncService.StopRetryWorker();
+        FirebaseCompanySync.Stop();
         try
         {
             if (SessionService.IsAuthenticated)

@@ -44,6 +44,7 @@ public static class OnlineAccessSyncService
 
     public static void QueueSync(bool preservePending = false)
     {
+        if (FirebaseCompanyClient.Enabled) return;
         // Persist before scheduling: a crash/offline save must not lose this intent.
         var settings = AppSettingsService.Update(value =>
         {
@@ -57,7 +58,7 @@ public static class OnlineAccessSyncService
 
     public static void StartRetryWorker()
     {
-        if (!BackgroundSyncEnabled || retryCancellation is not null) return;
+        if (FirebaseCompanyClient.Enabled || !BackgroundSyncEnabled || retryCancellation is not null) return;
         retryCancellation = new CancellationTokenSource();
         var token = retryCancellation.Token;
         _ = Task.Run(() => RunRetryWorkerAsync(token));
@@ -113,6 +114,11 @@ public static class OnlineAccessSyncService
 
         try
         {
+            if (FirebaseCompanyClient.Enabled)
+            {
+                AppSettingsService.Update(value => value.PendingOnlineAccessSync = null);
+                return new OnlineAccessSyncResult(true, "Benutzer werden über das Firmenkonto verwaltet.", FirebaseCompanyClient.Profile?.Users.Count ?? 0);
+            }
             if (queuedVersion is not null)
             {
                 var pending = AppSettingsService.Load().PendingOnlineAccessSync;

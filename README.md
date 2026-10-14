@@ -2,10 +2,16 @@
 
 **SolutionCompakt** ist eine native Windows-Anwendung für Personal-, Arbeits- und Produktionsplanung. Sie verbindet Einsatzplanung, Qualifikationen, Produktionsaufträge, Fertigungssteuerung, Chargen, Ist-Produktion, OEE, Auswertungen und betriebliche Stammdaten.
 
-> **Aktueller Entwicklungsstand: 02.10.2026**
+> **Aktueller Entwicklungsstand: 14.10.2026**
 >
 > Plattform: **Windows 10/11 · .NET 8 · WPF**
-> Datenbetrieb: **lokal/offline mit SQLite** oder optional **zentraler Mehrbenutzerbetrieb mit PostgreSQL + SignalR**
+> Datenbetrieb: **lokal mit SQLite**, **Firmencloud über Firebase mit lokaler Arbeitskopie** oder optional **PostgreSQL + SignalR**
+
+## Firmencloud und Homeoffice
+
+Im Firebase-Modus liegen gemeinsame Firmen- und Betriebsdaten in Firestore. Ein neuer PC meldet sich mit Firmen-Code und eigenem Benutzerkonto an, übernimmt die aktive Firmenlizenz und lädt die Firmendaten. Änderungen und persönliche Nachrichten werden mit einer dauerhaften lokalen Warteschlange übertragen; Versionskonflikte erfordern eine ausdrückliche Entscheidung. Die lokale SQLite-Arbeitskopie ermöglicht bis zu 24 Stunden Offline-Arbeit nach bestätigtem Zugriff, begrenzt durch das Lizenzende.
+
+Die erste Datenübernahme startet der Firmenadministrator in der App. Einrichtung, Sicherheitsgrenzen und praktische Abnahme stehen in [`docs/FIREBASE-COMPANY-CLOUD.md`](docs/FIREBASE-COMPANY-CLOUD.md).
 
 ## Zentraler Mehrbenutzerbetrieb
 
@@ -42,6 +48,7 @@ Die vollständige Einrichtung und Testmatrix stehen in [`docs/CENTRAL-SERVER.md`
 - vollständige Speicherung mit Absender-/Empfänger-Snapshot, Betreff, Inhalt und Zeitstempeln
 - Audit-Einbindung für Senden und Lesebestätigung
 - im Zentralbetrieb PC-übergreifend über die gemeinsame PostgreSQL-Datenbank und SignalR-Aktualisierung
+- im Firebase-Modus PC-übergreifend mit privaten Nachrichtenfeeds, Lesebestätigung und Offline-Warteschlange
 
 ### Firmenregistrierung & Mandantenfähigkeit
 - stabile technische `CompanyId` pro Firma

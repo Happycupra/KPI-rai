@@ -49,6 +49,12 @@ internal static partial class Program
             ("Employee skills are edited inline and grouping is available", EmployeeSkillsAndGrouping),
             ("Planning shows team only on production slots and allows removal", PlanningTeamRemoval),
             ("Employee drag staffing updates production team initials", DragStaffToProduction),
+            ("Cloud bootstrap joins existing company and preserves local credentials", CloudHomeofficeBootstrap),
+            ("Cloud global IDs preserve relations across local integer collisions", CloudIdentityRemapping),
+            ("Cloud outbox survives reconnect and rolls back with business data", CloudOutboxSurvivesReconnectAndRollback),
+            ("Cloud acknowledgement preserves edits queued during the HTTP request", CloudAcknowledgementPreservesFollowup),
+            ("Cloud conflict resolution advances queued followups without duplicate retries", CloudConflictRebasePreservesFollowup),
+            ("Interrupted cloud bootstrap preserves the previous cache", CloudFailedBootstrapPreservesCache),
             ("Five years of synthetic planning, orders and batches remain queryable", LargeSyntheticPlanningHistory),
             ("What-if simulation stays read-only and revalidates before applying", WhatIfSimulationApply),
             ("Shift handovers follow the audited acknowledge and resolve workflow", ShiftHandoverWorkflow),
@@ -120,6 +126,9 @@ internal static partial class Program
                 SessionService.SignOut();
                 SqliteConnection.ClearAllPools();
                 Directory.Delete(path, recursive: true);
+                AppPaths.CloudDatabaseOverride = null;
+                FirebaseCompanyClient.Profile = null;
+                CloudEditBaseline.Clear();
                 AppPaths.RootDirectoryOverride = null;
             }
         }

@@ -1,0 +1,974 @@
+{
+  "Employee": {
+    "fields": {
+      "PersonnelNumber": {
+        "type": "string",
+        "nullable": false
+      },
+      "FirstName": {
+        "type": "string",
+        "nullable": false
+      },
+      "LastName": {
+        "type": "string",
+        "nullable": false
+      },
+      "Role": {
+        "type": "string",
+        "nullable": false
+      },
+      "Department": {
+        "type": "string",
+        "nullable": false
+      },
+      "WorkloadPercent": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "WeeklyTargetHours": {
+        "type": "number",
+        "nullable": false
+      },
+      "IsActive": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "IsDeleted": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "DeletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "DeletedBy": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "Qualification": {
+    "fields": {
+      "Name": {
+        "type": "string",
+        "nullable": false
+      }
+    }
+  },
+  "EmployeeQualification": {
+    "fields": {
+      "EmployeeId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Employee"
+      },
+      "QualificationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Qualification"
+      },
+      "Level": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      }
+    }
+  },
+  "Workstation": {
+    "fields": {
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "Area": {
+        "type": "string",
+        "nullable": false
+      },
+      "MinimumStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "OptimalStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "MaximumStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "RequiredQualificationId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Qualification"
+      },
+      "RequiredQualificationLevel": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "IsActive": {
+        "type": "boolean",
+        "nullable": false
+      }
+    }
+  },
+  "Shift": {
+    "fields": {
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "StartTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "EndTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "BreakMinutes": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      }
+    }
+  },
+  "WorkstationShiftRule": {
+    "fields": {
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Workstation"
+      },
+      "ShiftId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Shift"
+      },
+      "Monday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Tuesday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Wednesday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Thursday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Friday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Saturday": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Sunday": {
+        "type": "boolean",
+        "nullable": false
+      }
+    }
+  },
+  "Absence": {
+    "fields": {
+      "EmployeeId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Employee"
+      },
+      "Type": {
+        "type": "string",
+        "nullable": false
+      },
+      "StartDate": {
+        "type": "date",
+        "nullable": false
+      },
+      "EndDate": {
+        "type": "date",
+        "nullable": false
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "OperatingCalendarDay": {
+    "fields": {
+      "Date": {
+        "type": "date",
+        "nullable": false
+      },
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "IsWorkingDay": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "TargetHoursFactor": {
+        "type": "number",
+        "nullable": false
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "WorkTimeEntry": {
+    "fields": {
+      "EmployeeId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Employee"
+      },
+      "Date": {
+        "type": "date",
+        "nullable": false
+      },
+      "StartTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "EndTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "BreakMinutes": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "PlanningAssignment": {
+    "fields": {
+      "EmployeeId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Employee"
+      },
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Workstation"
+      },
+      "ShiftId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Shift"
+      },
+      "Date": {
+        "type": "date",
+        "nullable": false
+      },
+      "StartTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "EndTime": {
+        "type": "time",
+        "nullable": false
+      },
+      "BreakMinutes": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "ArticleMaster": {
+    "fields": {
+      "DefaultQuantity": {
+        "type": "number",
+        "nullable": true
+      },
+      "DefaultRoutingId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "ManufacturingRouting"
+      },
+      "ArticleNumber": {
+        "type": "string",
+        "nullable": false
+      },
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "Unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "DefaultIdealRatePerHour": {
+        "type": "number",
+        "nullable": false
+      },
+      "IsActive": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "Notes": {
+        "type": "string",
+        "nullable": true
+      },
+      "CreatedAtUtc": {
+        "type": "date",
+        "nullable": false
+      },
+      "UpdatedAtUtc": {
+        "type": "date",
+        "nullable": false
+      }
+    }
+  },
+  "ProductionOrder": {
+    "fields": {
+      "ArticleMasterId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "ArticleMaster"
+      },
+      "ManufacturingRoutingId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "ManufacturingRouting"
+      },
+      "StartedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "CompletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "IdealRatePerHourSnapshot": {
+        "type": "number",
+        "nullable": true
+      },
+      "IsDeleted": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "DeletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "DeletedBy": {
+        "type": "string",
+        "nullable": true
+      },
+      "OrderNumber": {
+        "type": "string",
+        "nullable": false
+      },
+      "Product": {
+        "type": "string",
+        "nullable": false
+      },
+      "ArticleNumber": {
+        "type": "string",
+        "nullable": false
+      },
+      "BatchNumber": {
+        "type": "string",
+        "nullable": false
+      },
+      "Description": {
+        "type": "string",
+        "nullable": true
+      },
+      "Quantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "Unit": {
+        "type": "string",
+        "nullable": false
+      },
+      "Priority": {
+        "type": "string",
+        "nullable": false
+      },
+      "PlannedDate": {
+        "type": "date",
+        "nullable": false
+      },
+      "PlannedStart": {
+        "type": "time",
+        "nullable": true
+      },
+      "PlannedEnd": {
+        "type": "time",
+        "nullable": true
+      },
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Workstation"
+      },
+      "ShiftId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Shift"
+      },
+      "PlannedShiftCount": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "RequiredStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "Status": {
+        "type": "string",
+        "nullable": false
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "ProductionRunSlot": {
+    "fields": {
+      "ProductionOrderId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "ProductionOrder"
+      },
+      "SequenceNumber": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "Date": {
+        "type": "date",
+        "nullable": false
+      },
+      "ShiftId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Shift"
+      }
+    }
+  },
+  "ProductionActual": {
+    "fields": {
+      "IsDeleted": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "DeletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "DeletedBy": {
+        "type": "string",
+        "nullable": true
+      },
+      "ProductionOrderId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "ProductionOrder"
+      },
+      "ArticleNumberSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "BatchNumber": {
+        "type": "string",
+        "nullable": true
+      },
+      "ProductionRunSlotId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "ProductionRunSlot"
+      },
+      "Date": {
+        "type": "date",
+        "nullable": false
+      },
+      "TotalQuantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "GoodQuantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "ScrapQuantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "PlannedProductionMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "RunMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "IdealRatePerHour": {
+        "type": "number",
+        "nullable": false
+      },
+      "ProductSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "UnitSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "WorkstationIdSnapshot": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Workstation"
+      },
+      "WorkstationNameSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "ShiftNameSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "DowntimeEntry": {
+    "fields": {
+      "IsDeleted": {
+        "type": "boolean",
+        "nullable": false
+      },
+      "DeletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "DeletedBy": {
+        "type": "string",
+        "nullable": true
+      },
+      "ProductionActualId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "ProductionActual"
+      },
+      "Reason": {
+        "type": "string",
+        "nullable": false
+      },
+      "Minutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "OperationDefinition": {
+    "fields": {
+      "Code": {
+        "type": "string",
+        "nullable": false
+      },
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "Description": {
+        "type": "string",
+        "nullable": true
+      },
+      "DefaultWorkstationId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Workstation"
+      },
+      "DefaultMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "RequiredStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "RequiredQualificationId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Qualification"
+      },
+      "RequiredQualificationLevel": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "IsActive": {
+        "type": "boolean",
+        "nullable": false
+      }
+    }
+  },
+  "ManufacturingRouting": {
+    "fields": {
+      "Product": {
+        "type": "string",
+        "nullable": false
+      },
+      "Name": {
+        "type": "string",
+        "nullable": false
+      },
+      "IsActive": {
+        "type": "boolean",
+        "nullable": false
+      }
+    }
+  },
+  "RoutingStep": {
+    "fields": {
+      "ManufacturingRoutingId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "ManufacturingRouting"
+      },
+      "OperationDefinitionId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "OperationDefinition"
+      },
+      "SequenceNumber": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Workstation"
+      },
+      "PlannedMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "RequiredStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      }
+    }
+  },
+  "JobCard": {
+    "fields": {
+      "ProductionOrderId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "ProductionOrder"
+      },
+      "RoutingStepId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "RoutingStep"
+      },
+      "SequenceNumber": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "OperationCode": {
+        "type": "string",
+        "nullable": false
+      },
+      "OperationName": {
+        "type": "string",
+        "nullable": false
+      },
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": false,
+        "reference": "Workstation"
+      },
+      "EmployeeId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Employee"
+      },
+      "RequiredQualificationId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Qualification"
+      },
+      "RequiredQualificationNameSnapshot": {
+        "type": "string",
+        "nullable": true
+      },
+      "RequiredQualificationLevel": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "PlannedMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "RequiredStaff": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "Status": {
+        "type": "string",
+        "nullable": false
+      },
+      "StartedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "PauseStartedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "RunMinutes": {
+        "type": "number",
+        "nullable": false
+      },
+      "CompletedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "GoodQuantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "ScrapQuantity": {
+        "type": "number",
+        "nullable": false
+      },
+      "Comment": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "RecycleBinItem": {
+    "fields": {
+      "EntityType": {
+        "type": "string",
+        "nullable": false
+      },
+      "EntityId": {
+        "type": "string",
+        "nullable": false
+      },
+      "DisplayName": {
+        "type": "string",
+        "nullable": false
+      },
+      "DeletedAtUtc": {
+        "type": "date",
+        "nullable": false
+      },
+      "DeletedBy": {
+        "type": "string",
+        "nullable": false
+      },
+      "Reason": {
+        "type": "string",
+        "nullable": true
+      },
+      "SnapshotJson": {
+        "type": "string",
+        "nullable": true
+      },
+      "RestoredAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "RestoredBy": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "ShiftHandover": {
+    "fields": {
+      "HandoverDate": {
+        "type": "date",
+        "nullable": false
+      },
+      "FromShiftId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Shift"
+      },
+      "ToShiftId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Shift"
+      },
+      "WorkstationId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "Workstation"
+      },
+      "ProductionOrderId": {
+        "type": "reference",
+        "nullable": true,
+        "reference": "ProductionOrder"
+      },
+      "Priority": {
+        "type": "string",
+        "nullable": false
+      },
+      "Subject": {
+        "type": "string",
+        "nullable": false
+      },
+      "Details": {
+        "type": "string",
+        "nullable": false
+      },
+      "Status": {
+        "type": "string",
+        "nullable": false
+      },
+      "CreatedBy": {
+        "type": "string",
+        "nullable": false
+      },
+      "CreatedAtUtc": {
+        "type": "date",
+        "nullable": false
+      },
+      "AcknowledgedBy": {
+        "type": "string",
+        "nullable": true
+      },
+      "AcknowledgedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "Resolution": {
+        "type": "string",
+        "nullable": true
+      },
+      "ResolvedAtUtc": {
+        "type": "date",
+        "nullable": true
+      }
+    }
+  },
+  "AuditLog": {
+    "fields": {
+      "TimestampUtc": {
+        "type": "date",
+        "nullable": false
+      },
+      "Username": {
+        "type": "string",
+        "nullable": false
+      },
+      "Action": {
+        "type": "string",
+        "nullable": false
+      },
+      "EntityType": {
+        "type": "string",
+        "nullable": false
+      },
+      "EntityId": {
+        "type": "string",
+        "nullable": true
+      },
+      "Details": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "UserMessage": {
+    "fields": {
+      "SenderUserId": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "SenderUsernameSnapshot": {
+        "type": "string",
+        "nullable": false
+      },
+      "SenderDisplayNameSnapshot": {
+        "type": "string",
+        "nullable": false
+      },
+      "RecipientUserId": {
+        "type": "number",
+        "nullable": false,
+        "integer": true
+      },
+      "RecipientUsernameSnapshot": {
+        "type": "string",
+        "nullable": false
+      },
+      "RecipientDisplayNameSnapshot": {
+        "type": "string",
+        "nullable": false
+      },
+      "Subject": {
+        "type": "string",
+        "nullable": false
+      },
+      "Body": {
+        "type": "string",
+        "nullable": false
+      },
+      "Priority": {
+        "type": "string",
+        "nullable": false
+      },
+      "CreatedAtUtc": {
+        "type": "date",
+        "nullable": false
+      },
+      "AcknowledgedAtUtc": {
+        "type": "date",
+        "nullable": true
+      },
+      "AcknowledgedByUsername": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  }
+}

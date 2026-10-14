@@ -40,6 +40,7 @@ public static class UserMessageService
         var sender = RequireCurrentUser();
         var normalized = NormalizeMessage(subject, body, priority);
 
+        if (FirebaseCompanyClient.Enabled) return await FirebaseMessageService.SendAsync(recipientUserId, normalized.Subject, normalized.Body, normalized.Priority, cancellationToken).ConfigureAwait(false);
         if (!CentralModeService.IsEnabled)
             return SendLocal(sender, recipientUserId, normalized.Subject, normalized.Body, normalized.Priority);
 
@@ -57,6 +58,12 @@ public static class UserMessageService
     public static async Task<IReadOnlyList<UserMessageRow>> GetInboxAsync(CancellationToken cancellationToken = default)
     {
         var current = RequireCurrentUser();
+        if (FirebaseCompanyClient.Enabled)
+        {
+            try { await FirebaseMessageService.RefreshAsync(cancellationToken).ConfigureAwait(false); }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException) { }
+            return GetInboxLocal(current);
+        }
         if (!CentralModeService.IsEnabled)
             return GetInboxLocal(current);
 
@@ -72,6 +79,12 @@ public static class UserMessageService
     public static async Task<IReadOnlyList<UserMessageRow>> GetSentAsync(CancellationToken cancellationToken = default)
     {
         var current = RequireCurrentUser();
+        if (FirebaseCompanyClient.Enabled)
+        {
+            try { await FirebaseMessageService.RefreshAsync(cancellationToken).ConfigureAwait(false); }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException) { }
+            return GetSentLocal(current);
+        }
         if (!CentralModeService.IsEnabled)
             return GetSentLocal(current);
 
@@ -94,6 +107,12 @@ public static class UserMessageService
     public static async Task<IReadOnlyList<UserMessageRow>> GetUnreadAsync(CancellationToken cancellationToken = default)
     {
         var current = RequireCurrentUser();
+        if (FirebaseCompanyClient.Enabled)
+        {
+            try { await FirebaseMessageService.RefreshAsync(cancellationToken).ConfigureAwait(false); }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException) { }
+            return GetUnreadLocal(current);
+        }
         if (!CentralModeService.IsEnabled)
             return GetUnreadLocal(current);
 
@@ -122,6 +141,12 @@ public static class UserMessageService
     public static async Task<int> GetUnreadCountAsync(CancellationToken cancellationToken = default)
     {
         var current = RequireCurrentUser();
+        if (FirebaseCompanyClient.Enabled)
+        {
+            try { await FirebaseMessageService.RefreshAsync(cancellationToken).ConfigureAwait(false); }
+            catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException) { }
+            return GetUnreadCountLocal(current);
+        }
         if (!CentralModeService.IsEnabled)
             return GetUnreadCountLocal(current);
 
@@ -139,6 +164,7 @@ public static class UserMessageService
     public static async Task<bool> AcknowledgeAsync(int messageId, CancellationToken cancellationToken = default)
     {
         var current = RequireCurrentUser();
+        if (FirebaseCompanyClient.Enabled) return await FirebaseMessageService.AcknowledgeAsync(messageId, cancellationToken).ConfigureAwait(false);
         if (!CentralModeService.IsEnabled)
             return AcknowledgeLocal(current, messageId);
 
@@ -167,7 +193,7 @@ public static class UserMessageService
 
     private static IReadOnlyList<UserMessageRecipient> GetRecipientsLocal(UserAccount current)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         return db.UserAccounts.AsNoTracking()
             .Where(x => x.IsActive && x.Id != current.Id)
             .OrderBy(x => x.DisplayName)
@@ -183,7 +209,7 @@ public static class UserMessageService
         string body,
         string priority)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         var recipient = db.UserAccounts.AsNoTracking().SingleOrDefault(x => x.Id == recipientUserId && x.IsActive)
             ?? throw new InvalidOperationException("Der ausgewählte Empfänger ist nicht mehr aktiv.");
 
@@ -211,7 +237,7 @@ public static class UserMessageService
 
     private static IReadOnlyList<UserMessageRow> GetInboxLocal(UserAccount current)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         return db.UserMessages.AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -222,7 +248,7 @@ public static class UserMessageService
 
     private static IReadOnlyList<UserMessageRow> GetSentLocal(UserAccount current)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         return db.UserMessages.AsNoTracking()
             .Where(x => x.SenderUserId == current.Id)
             .OrderByDescending(x => x.CreatedAtUtc)
@@ -233,7 +259,7 @@ public static class UserMessageService
 
     private static IReadOnlyList<UserMessageRow> GetUnreadLocal(UserAccount current)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         return db.UserMessages.AsNoTracking()
             .Where(x => x.RecipientUserId == current.Id && x.AcknowledgedAtUtc == null)
             .OrderBy(x => x.CreatedAtUtc)
@@ -244,14 +270,14 @@ public static class UserMessageService
 
     private static int GetUnreadCountLocal(UserAccount current)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         return db.UserMessages.AsNoTracking()
             .Count(x => x.RecipientUserId == current.Id && x.AcknowledgedAtUtc == null);
     }
 
     private static bool AcknowledgeLocal(UserAccount current, int messageId)
     {
-        using var db = new AppDbContext(AppDatabaseMode.Local);
+        using var db = new AppDbContext();
         var message = db.UserMessages.SingleOrDefault(x => x.Id == messageId && x.RecipientUserId == current.Id);
         if (message is null)
             return false;
@@ -371,7 +397,7 @@ public sealed class UserMessageRow
     public bool IsSent { get; init; }
     public bool IsAcknowledged => AcknowledgedAtUtc.HasValue;
     public string CreatedText => CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
-    public string StatusText => IsSent
+    public string StatusText => FirebaseCompanyClient.Enabled && FirebaseMessageService.DeliveryError(Id) is { Length:>0 } error ? "Nicht übertragen: " + error : IsSent && FirebaseCompanyClient.Enabled && FirebaseMessageService.IsPending(Id) ? "Versand ausstehend" : IsSent
         ? (AcknowledgedAtUtc.HasValue ? $"Gelesen {AcknowledgedAtUtc.Value.ToLocalTime():dd.MM.yyyy HH:mm}" : "Noch nicht bestätigt")
         : (AcknowledgedAtUtc.HasValue ? "Gelesen bestätigt" : "Ungelesen");
 }

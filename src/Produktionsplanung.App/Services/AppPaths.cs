@@ -43,7 +43,9 @@ public static class AppPaths
     public static string BackupsDirectory => Path.Combine(RootDirectory, "Backups");
     public static string ExportsDirectory => Path.Combine(RootDirectory, "Exports");
 
-    public static string DatabasePath => Path.Combine(DataDirectory, "produktionsplanung.db");
+    internal static string? CloudDatabaseOverride { get; set; }
+    public static string LocalDatabasePath => Path.Combine(DataDirectory, "produktionsplanung.db");
+    public static string DatabasePath => CloudDatabaseOverride ?? LocalDatabasePath;
     public static string SettingsPath => Path.Combine(ConfigDirectory, "settings.json");
 
     public static string StorageModeText => IsPortableMode
