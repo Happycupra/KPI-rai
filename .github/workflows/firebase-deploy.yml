@@ -31,7 +31,7 @@ jobs:
 
       - name: Validate Firebase web assets
         run: |
-          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs tests/login-signing.test.cjs
+          node --test tests/online-weekplan.test.cjs tests/online-functions.test.cjs tests/login-signing.test.cjs tests/cloud-schema.test.cjs
           node --check online-weekplan/functions/index.js
           node --check online-weekplan/functions/main.js
           node --check online-weekplan/functions/snapshot-store.js
@@ -81,7 +81,7 @@ jobs:
         working-directory: online-weekplan
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --project solution-compact --only hosting,firestore:rules --non-interactive
+        run: firebase deploy --project solution-compact --only hosting,firestore:rules,firestore:indexes --non-interactive
 
       - name: Configure Functions artifact cleanup
         working-directory: online-weekplan

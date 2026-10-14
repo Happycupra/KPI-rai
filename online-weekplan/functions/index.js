@@ -359,6 +359,8 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
     const companySnap = await companyRef.get();
     if (companySnap.exists) {
       const current = companySnap.data();
+      if (current.cloudDataEnabled === true)
+        return fail(res, 409, "Diese Firma verwaltet Benutzer über die Cloud. Bitte die aktuelle App verwenden.");
       const boundInstallationId = String(current.licenseInstallationId || "").trim();
       if (boundInstallationId && boundInstallationId !== installationId)
         return fail(res, 409, "Diese Firma ist bereits einer anderen Installation zugeordnet.");

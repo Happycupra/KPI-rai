@@ -78,6 +78,12 @@
                     </StackPanel>
 
                     <StackPanel x:Name="StandardLoginPanel">
+                        <CheckBox x:Name="CloudLoginCheckBox" Content="Bei bestehender Firma über Firebase anmelden" Checked="CloudLogin_Changed" Unchecked="CloudLogin_Changed" Margin="0,0,0,12" />
+                        <StackPanel x:Name="CloudCompanyPanel" Visibility="Collapsed">
+                            <TextBlock Text="Firmen-Code" Style="{StaticResource FieldLabelTextStyle}" />
+                            <TextBox x:Name="CloudCompanyCodeBox" Margin="0,0,0,12" />
+                            <TextBlock Text="Dein Firmenkonto lädt die gemeinsamen Daten auf diesen PC." TextWrapping="Wrap" Margin="0,0,0,12" />
+                        </StackPanel>
                         <StackPanel x:Name="CompanyPanel" Visibility="Collapsed">
                             <TextBlock Text="Firmenname" Style="{StaticResource FieldLabelTextStyle}" />
                             <TextBox x:Name="CompanyNameBox" Margin="0,0,0,5" />

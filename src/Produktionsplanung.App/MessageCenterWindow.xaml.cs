@@ -130,7 +130,9 @@ public partial class MessageCenterWindow : Window
             SubjectBox.Clear();
             BodyBox.Clear();
             PriorityBox.SelectedIndex = 0;
-            StatusText.Text = $"Hinweis an {recipient.DisplayName} gesendet.";
+            StatusText.Text = FirebaseCompanyClient.Enabled && FirebaseMessageService.IsPending(sent.Id)
+                ? "Hinweis lokal gespeichert · Versand bei nächster Verbindung"
+                : $"Hinweis an {recipient.DisplayName} gesendet.";
             await RefreshAllAsync(selectSentId: sent.Id);
             MessageTabs.SelectedIndex = 1;
             MessagesChanged?.Invoke(this, EventArgs.Empty);

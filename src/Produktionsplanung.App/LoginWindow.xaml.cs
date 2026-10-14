@@ -1,4 +1,5 @@
 using System.Windows;
+using Produktionsplanung.App.Data;
 using Produktionsplanung.App.Models;
 using Produktionsplanung.App.Services;
 using Produktionsplanung.App.Views;
@@ -18,10 +19,9 @@ public partial class LoginWindow : Window
         _hasUsers = AuthenticationService.HasUsers();
         ModeSwitchContainer.Visibility = _hasUsers ? Visibility.Collapsed : Visibility.Visible;
 
-        if (_hasUsers)
-            ApplyLoginMode(preferQuickAccess: true);
-        else
-            ApplyRegistrationMode();
+        ApplyLoginMode(preferQuickAccess: _hasUsers);
+        CloudCompanyCodeBox.Text = AppSettingsService.Load().CompanyCode;
+        CloudLoginCheckBox.IsChecked = FirebaseCompanyClient.Enabled || !_hasUsers;
 
         Loaded += (_, _) =>
         {
@@ -47,6 +47,7 @@ public partial class LoginWindow : Window
     private void ApplyLoginMode(bool preferQuickAccess)
     {
         _registrationMode = false;
+        CloudLoginCheckBox.Visibility = Visibility.Visible;
         _failedPinAttempts = 0;
         Title = "SolutionCompakt Anmeldung";
         CompanyPanel.Visibility = Visibility.Collapsed;
@@ -97,6 +98,8 @@ public partial class LoginWindow : Window
         }
 
         _registrationMode = true;
+        CloudLoginCheckBox.IsChecked = false;
+        CloudLoginCheckBox.Visibility = Visibility.Collapsed;
         _quickAccessMode = false;
         _failedPinAttempts = 0;
         Title = "SolutionCompakt Registrierung";
@@ -186,6 +189,9 @@ public partial class LoginWindow : Window
 
         if (_quickAccessMode)
         {
+            if (FirebaseCompanyClient.Enabled && AppPaths.CloudDatabaseOverride is null) { ApplyLoginMode(false); SetStatus("Die Firmenarbeitskopie muss neu geladen werden. Bitte mit dem Passwort anmelden."); return; }
+            if (FirebaseCompanyClient.Enabled && !await FirebaseCompanyClient.ValidateCachedAsync())
+            { ApplyLoginMode(preferQuickAccess: false); SetStatus("Bitte erneut mit dem Firmenkonto anmelden."); return; }
             var quick = QuickAccessService.LoginWithPin(QuickPinBox.Password);
             QuickPinBox.Clear();
             if (!quick.Success)
@@ -213,12 +219,19 @@ public partial class LoginWindow : Window
         var username = UsernameBox.Text.Trim();
         var password = PasswordBox.Password;
 
-        if (!_registrationMode && string.Equals(username, ProviderAdminService.OwnerEmail, StringComparison.OrdinalIgnoreCase))
+        if (!_registrationMode && CloudLoginCheckBox.IsChecked != true && string.Equals(username, ProviderAdminService.OwnerEmail, StringComparison.OrdinalIgnoreCase))
         {
             await OpenProviderAdministrationAsync(password);
             return;
         }
 
+        if (!_registrationMode && CloudLoginCheckBox.IsChecked == true)
+        {
+            await LoginCompanyAsync(username, password);
+            return;
+        }
+        var localLicense = await LicenseService.EvaluateStartupAsync();
+        if (!localLicense.Allowed) { SetStatus(localLicense.Message); return; }
         if (!_registrationMode && !_hasUsers)
         {
             SetStatus("Auf dieser Installation ist noch kein Benutzerkonto vorhanden. Bitte zuerst „Registrieren“ wählen.");
@@ -297,6 +310,63 @@ public partial class LoginWindow : Window
         OnlineAccessSyncService.QueueSync(preservePending: true);
         DialogResult = true;
         Close();
+    }
+
+    private void CloudLogin_Changed(object sender, RoutedEventArgs e)
+    {
+        if (CloudCompanyPanel is null) return;
+        CloudCompanyPanel.Visibility = CloudLoginCheckBox.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        ForgotPasswordButton.Visibility = CloudLoginCheckBox.IsChecked == true ? Visibility.Collapsed : Visibility.Visible;
+        if (CloudLoginCheckBox.IsChecked == true) ModeDescription.Text = "Firmen-Code, Benutzername und Passwort verbinden diesen PC mit deiner bestehenden Firma.";
+    }
+    private async Task LoginCompanyAsync(string username, string password)
+    {
+        if (string.IsNullOrWhiteSpace(CloudCompanyCodeBox.Text) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        { SetStatus("Bitte Firmen-Code, Benutzername und Passwort eingeben."); return; }
+        if (CentralModeService.IsEnabled) { SetStatus("Diese Installation verwendet PostgreSQL. Die Übernahme dieses Datenbestands muss vor dem Wechsel zum Firebase-Firmenkonto vorbereitet werden."); return; }
+        SubmitButton.IsEnabled = false;
+        var previousProfile = FirebaseCompanyClient.Profile;
+        void Progress() => Dispatcher.InvokeAsync(() => SetStatus(FirebaseCompanySync.Status, true));
+        FirebaseCompanySync.Changed += Progress;
+        try
+        {
+            SetStatus("Firmenkonto wird angemeldet…", true);
+            var profile = await FirebaseCompanyClient.AuthenticateAsync(CloudCompanyCodeBox.Text.Trim(), username, password);
+            var current = AppSettingsService.Load();
+            if (CompanyIdentityService.IsRegistered() && !string.Equals(current.CompanyId, profile.CompanyId, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Diese Installation gehört bereits zu einer anderen Firma. Ihre Daten werden nicht vermischt.");
+            if (profile.DataSetId is null)
+            {
+                if (!_hasUsers || profile.Role != UserRoles.Administrator)
+                    throw new InvalidOperationException("Die Firma hat ihre Daten noch nicht freigegeben. Bitte den Firmenadministrator um die erste Cloud-Übernahme bitten.");
+                using (var preview = new AppDbContext(AppPaths.LocalDatabasePath))
+                {
+                    var count = FirebaseCloudStorage.Export(preview).Count;
+                    if (MessageBox.Show($"{count} vorhandene Datensätze von {profile.CompanyName} in Firebase übernehmen?\n\nDie lokale Datenbank bleibt als Rückfallkopie erhalten.", "Firmendaten verbinden", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+                }
+                await Task.Run(async () => { using var source = new AppDbContext(AppPaths.LocalDatabasePath); await FirebaseCompanySync.ImportAsync(source); });
+            }
+            await FirebaseCompanySync.ConnectAsync(password);
+            PasswordBox.Clear();
+            if (RememberMeCheckBox.IsChecked == true)
+            {
+                var configured = QuickAccessService.Configure(SessionService.CurrentUser!, AccessPinBox.Password, ConfirmAccessPinBox.Password);
+                if (!configured.Success) throw new InvalidOperationException(configured.Message);
+            }
+            DialogResult = true; Close();
+        }
+        catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException)
+        {
+            FirebaseCompanyClient.Profile = previousProfile;
+            if (FirebaseCompanyClient.OfflineAccessAllowed && previousProfile?.Username.Equals(username, StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var offline = AuthenticationService.Login(username, password);
+                if (offline.Success) { DialogResult = true; Close(); return; }
+            }
+            SetStatus("Keine Verbindung zu Firebase. Die erste Firmenanmeldung benötigt Internet; später ist Offline-Arbeit bis zu 24 Stunden nach der letzten Prüfung möglich.");
+        }
+        catch (Exception ex) { FirebaseCompanyClient.Profile = previousProfile; SetStatus(ex.Message); }
+        finally { FirebaseCompanySync.Changed -= Progress; SubmitButton.IsEnabled = true; }
     }
 
     private async Task OpenProviderAdministrationAsync(string password)

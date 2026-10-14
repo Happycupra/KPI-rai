@@ -44,6 +44,7 @@ public static class OnlineAccessSyncService
 
     public static void QueueSync(bool preservePending = false)
     {
+        if (FirebaseCompanyClient.Enabled) return;
         // Persist before scheduling: a crash/offline save must not lose this intent.
         var settings = AppSettingsService.Update(value =>
         {

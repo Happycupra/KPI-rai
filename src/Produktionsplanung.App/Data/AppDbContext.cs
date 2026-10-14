@@ -17,6 +17,8 @@ public enum AppDatabaseMode
 public class AppDbContext : OperationalDbContext
 {
     private readonly AppDatabaseMode databaseMode;
+    private readonly string? explicitDatabasePath;
+    internal AppDbContext(string path) : this(AppDatabaseMode.Local) => explicitDatabasePath = path;
 
     public AppDbContext() : this(AppDatabaseMode.Automatic) { }
 
@@ -45,7 +47,7 @@ public class AppDbContext : OperationalDbContext
         }
         else
         {
-            builder.UseSqlite($"Data Source={AppPaths.DatabasePath}");
+            builder.UseSqlite(new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = explicitDatabasePath ?? AppPaths.DatabasePath }.ToString());
         }
     }
 
@@ -57,6 +59,10 @@ public class AppDbContext : OperationalDbContext
         if (ChangeTracker.Entries<AuditLog>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Audit-Einträge sind unveränderlich.");
 
+        var captureCloud = explicitDatabasePath is null && !IsCentralMode && !FirebaseCloudStorage.ApplyingRemote && FirebaseCompanyClient.Enabled && SessionService.IsAuthenticated;
+        if (captureCloud && !FirebaseCompanyClient.OfflineAccessAllowed) throw new InvalidOperationException("Die Firmenberechtigung muss online erneut bestätigt werden.");
+        var cloudChanges = captureCloud ? FirebaseCloudStorage.Capture(this) : new List<(EntityEntry Entry, bool Deleted)>();
+        using var cloudTransaction = captureCloud && Database.CurrentTransaction is null ? Database.BeginTransaction() : null;
         var changedTypes = CaptureChangedEntityTypes();
         PrepareCentralConcurrencyTokens();
         var snapshots = CaptureAuditSnapshots();
@@ -64,6 +70,7 @@ public class AppDbContext : OperationalDbContext
         {
             var result = base.SaveChanges();
             WriteAuditSnapshots(snapshots);
+            if (captureCloud) { FirebaseCloudStorage.Queue(this, cloudChanges); cloudTransaction?.Commit(); CloudEditBaseline.Saved(); }
             if (IsCentralMode && changedTypes.Count > 0)
                 CentralRealtimeService.QueueChange(changedTypes);
             return result;
@@ -80,6 +87,10 @@ public class AppDbContext : OperationalDbContext
         if (ChangeTracker.Entries<AuditLog>().Any(x => x.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Audit-Einträge sind unveränderlich.");
 
+        var captureCloud = explicitDatabasePath is null && !IsCentralMode && !FirebaseCloudStorage.ApplyingRemote && FirebaseCompanyClient.Enabled && SessionService.IsAuthenticated;
+        if (captureCloud && !FirebaseCompanyClient.OfflineAccessAllowed) throw new InvalidOperationException("Die Firmenberechtigung muss online erneut bestätigt werden.");
+        var cloudChanges = captureCloud ? FirebaseCloudStorage.Capture(this) : new List<(EntityEntry Entry, bool Deleted)>();
+        using var cloudTransaction = captureCloud && Database.CurrentTransaction is null ? Database.BeginTransaction() : null;
         var changedTypes = CaptureChangedEntityTypes();
         PrepareCentralConcurrencyTokens();
         var snapshots = CaptureAuditSnapshots();
@@ -87,6 +98,7 @@ public class AppDbContext : OperationalDbContext
         {
             var result = await base.SaveChangesAsync(cancellationToken);
             await WriteAuditSnapshotsAsync(snapshots, cancellationToken);
+            if (captureCloud) { FirebaseCloudStorage.Queue(this, cloudChanges); cloudTransaction?.Commit(); CloudEditBaseline.Saved(); }
             if (IsCentralMode && changedTypes.Count > 0)
                 CentralRealtimeService.QueueChange(changedTypes);
             return result;

@@ -66,6 +66,12 @@ public static class LicenseService
 
     public static async Task<LicenseGateResult> EvaluateStartupAsync(CancellationToken cancellationToken = default)
     {
+        if (FirebaseCompanyClient.Enabled)
+        {
+            var allowed = await FirebaseCompanyClient.ValidateCachedAsync(cancellationToken);
+            return new LicenseGateResult(allowed, false, 0, allowed ? "active" : "cloud-login", FirebaseCompanyClient.Profile?.LicenseValidUntilUtc,
+                allowed ? "Firmenlizenz aktiv." : "Bitte mit dem Firmenkonto anmelden.");
+        }
         var settings = EnsureLocalLicenseIdentity();
         _ = TrySyncPendingRecoveryCodeAsync();
         var now = DateTime.UtcNow;
