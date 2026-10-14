@@ -38,4 +38,6 @@ Ein lokales `.kpibackup` darf die Firmencloud nicht zurücksetzen. Wiederherstel
 
 Die bestehende Firebase-Pipeline veröffentlicht die zusätzlichen HTTPS-Funktionen, Regeln und Indizes im Projekt `solution-compact`. Kundendaten werden dadurch nicht automatisch hochgeladen; die erstmalige Datenübernahme wird in der App vom Firmenadministrator gestartet.
 
+Abgebrochene, nicht aktive Erstimporte werden nach 24 Stunden ohne Fortschritt durch die tägliche Bereinigung entfernt. Der aktive Firmenbestand bleibt erhalten. Versionskonflikte und Verbindungsfehler werden getrennt behandelt; nur ein bestätigter Konflikt kann einen neuen Übertragungsauftrag erzeugen.
+
 Automatisierte Prüfungen laufen gegen den Firestore-Emulator und isolierte Windows-/SQLite-Fixtures. Zusätzlich mit zwei echten PCs prüfen: erstmaliger Homeoffice-Login, gemeinsamer Datenstand, Nachrichten und Lesebestätigung, Offline-Wiederanlauf, gleichzeitige Bearbeitung, Rollenänderung, Lizenzsperre, große Datenbestände und PDF-/Windows-/DPI-Verhalten. Code-Signing und die dokumentierte manuelle Release-Abnahme bleiben Voraussetzungen offizieller Releases.

@@ -51,7 +51,7 @@ class CompanyCloudStore {
     if (access.company.activeDataSet) throw new CloudError(409, 'Diese Firma hat bereits gemeinsame Daten.');
     if (!Number.isSafeInteger(input.entryCount) || input.entryCount < 0 || input.entryCount > 1000000) throw new CloudError(400, 'Ungültige Datenmenge.');
     const dataSetId = uuid();
-    await access.ref.collection('dataSets').doc(dataSetId).set({ status: 'uploading', expectedCount: input.entryCount, ownerUserId: claims.sourceUserId, createdAtUtc: new Date().toISOString() });
+    await access.ref.collection('dataSets').doc(dataSetId).set({ status: 'uploading', lastTouchedAtUtc:new Date().toISOString(), expectedCount: input.entryCount, ownerUserId: claims.sourceUserId, createdAtUtc: new Date().toISOString() });
     return { dataSetId };
   }
   async importPage(claims, device, input) {
@@ -63,6 +63,7 @@ class CompanyCloudStore {
       const a = await this.authorize(claims, device, tx); this.admin(a);
       const state = (await tx.get(ds)).data();
       if (!state || state.status !== 'uploading' || state.ownerUserId !== claims.sourceUserId || a.company.activeDataSet) throw new CloudError(409, 'Import ist nicht mehr verfügbar.');
+      tx.set(ds,{lastTouchedAtUtc:new Date().toISOString()},{merge:true});
       for (const r of input.records) tx.set(ds.collection('records').doc(r.kind + '_' + r.id), { ...r, version: 1, updatedAtUtc: new Date().toISOString(), references: this.references(r),dayKeys:this.dayKeys(r) });
     });
     return { ok: true };
@@ -183,11 +184,12 @@ class CompanyCloudStore {
       const state = (await tx.get(ds)).data(); let sequence = state.sequence || 0;
       const changes = new Map(input.records.map(r => [r.kind + '_' + r.id, r]));
       const cascade=new Set(['EmployeeQualification.EmployeeId','EmployeeQualification.QualificationId','WorkstationShiftRule.WorkstationId','Absence.EmployeeId','PlanningAssignment.EmployeeId','PlanningAssignment.WorkstationId','ProductionRunSlot.ProductionOrderId','ProductionActual.ProductionOrderId','DowntimeEntry.ProductionActualId','RoutingStep.ManufacturingRoutingId','JobCard.ProductionOrderId']);
+      const setNull=new Set(['Workstation.RequiredQualificationId','ProductionOrder.ShiftId','OperationDefinition.DefaultWorkstationId','OperationDefinition.RequiredQualificationId','JobCard.RoutingStepId','JobCard.EmployeeId','JobCard.RequiredQualificationId','ShiftHandover.FromShiftId','ShiftHandover.ToShiftId','ShiftHandover.WorkstationId','ShiftHandover.ProductionOrderId']);
       for(const [key,r] of changes)if(r.deleted) {
         const children=await tx.get(ds.collection('records').where('references','array-contains',key).limit(51));
         for(const child of children.docs){if(child.data().deleted||changes.has(child.id))continue;const c=child.data();const fields=Object.entries(schema[c.kind].fields).filter(([name,f])=>f.reference===r.kind&&c.data[name]===r.id);
           if(fields.every(([name])=>cascade.has(c.kind+'.'+name)))changes.set(child.id,{...c,baseVersion:c.version,deleted:true,data:{}});
-          else if(fields.every(([,f])=>f.nullable)) {const data={...c.data};for(const [name]of fields)data[name]=null;changes.set(child.id,{...c,baseVersion:c.version,data});}
+          else if(fields.every(([name])=>setNull.has(c.kind+'.'+name))) {const data={...c.data};for(const [name]of fields)data[name]=null;changes.set(child.id,{...c,baseVersion:c.version,data});}
           else throw new CloudError(422,'Verknüpfte Datensätze verhindern das Entfernen.');
         }
         if(changes.size>50)throw new CloudError(422,'Zu viele verknüpfte Datensätze. Bitte diese zuerst entfernen.');
@@ -205,7 +207,7 @@ class CompanyCloudStore {
         }
         if (r.deleted) {
           const dependents = await tx.get(ds.collection('records').where('references', 'array-contains', key).limit(51));
-          if (dependents.docs.some(d => !d.data().deleted && !changes.get(d.id)?.deleted)) throw new CloudError(422, 'Verknüpfte Datensätze müssen gemeinsam entfernt werden.');
+          if (dependents.docs.some(d => !d.data().deleted && (!changes.has(d.id) || this.references(changes.get(d.id)).includes(key)))) throw new CloudError(422, 'Verknüpfte Datensätze müssen gemeinsam entfernt werden.');
         }
         for (const u of new Set([...uniqueKeys(current.get(key) || { deleted: true }), ...uniqueKeys(r)]))
           if (!locks.has(u)) locks.set(u, (await tx.get(ds.collection('unique').doc(u))).data());

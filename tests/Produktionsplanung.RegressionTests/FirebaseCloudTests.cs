@@ -35,7 +35,7 @@ internal static partial class Program
     }
     private sealed class CloudFakeHandler(List<FirebaseCloudRecord> records) : HttpMessageHandler
     {
-        public bool FailApply;public bool FailBootstrap;private int pages;
+        public bool FailApply;public bool IncompleteAck;public bool FailBootstrap;public Action? BeforeApply;private int pages;
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken cancellationToken)
         {
             Check(request.Headers.Authorization?.Parameter=="synthetic-id-token","Cloud request omitted authenticated user token");
@@ -48,7 +48,15 @@ internal static partial class Program
                 result=new {dataSetId=FirebaseCompanyClient.Profile.DataSetId,records,sequence=0,after=FailBootstrap?"Employee_"+new string('a',32):null,users};
             }
             else if(request.RequestUri.AbsolutePath.EndsWith("cloudPullChanges"))result=new {records=Array.Empty<FirebaseCloudRecord>(),sequence=0,hasMore=false,users,licenseValidUntilUtc=DateTime.UtcNow.AddDays(10)};
-            else if(request.RequestUri.AbsolutePath.EndsWith("cloudApplyChanges")) {if(FailApply)throw new HttpRequestException("Synthetic offline connection"); result=new {records=Array.Empty<FirebaseCloudRecord>()};}
+            else if(request.RequestUri.AbsolutePath.EndsWith("cloudApplyChanges"))
+            {
+                if(FailApply)throw new HttpRequestException("Synthetic offline connection");
+                var payload=JsonSerializer.Deserialize<JsonElement>(request.Content!.ReadAsStringAsync(cancellationToken).GetAwaiter().GetResult());
+                var accepted=payload.GetProperty("records").Deserialize<List<FirebaseCloudRecord>>(FirebaseCompanyClient.Json)!;
+                var callback=BeforeApply;BeforeApply=null;callback?.Invoke();
+                foreach(var r in accepted)r.Version=r.BaseVersion+1;
+                result=new {records=IncompleteAck?new List<FirebaseCloudRecord>():accepted};
+            }
             else throw new InvalidOperationException("Unexpected cloud endpoint: "+request.RequestUri.AbsolutePath);
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent(JsonSerializer.Serialize(result,FirebaseCompanyClient.Json),System.Text.Encoding.UTF8,"application/json")});
         }
@@ -96,6 +104,49 @@ internal static partial class Program
         FirebaseCompanySync.ConnectAsync("Synthetic-Password1").GetAwaiter().GetResult();
         using(var db=new AppDbContext()) {Check(db.Employees.Any(e=>e.LastName=="Offline edited"),"Reconnect overwrote local draft");Check(Convert.ToInt32(FirebaseCloudStorage.Sql(db,"SELECT COUNT(*) FROM CloudOutbox"))>0,"Reconnect erased the persistent outbox");}
     }
+    private static void CloudAcknowledgementPreservesFollowup()
+    {
+        using var fixture=new CloudFixture();fixture.Connect();
+        using(var db=new AppDbContext()){db.Employees.First().LastName="First cloud edit";db.SaveChanges();}
+        fixture.Handler.IncompleteAck=true;
+        var rejected=false;try{FirebaseCompanySync.SynchronizeAsync().GetAwaiter().GetResult();}catch(InvalidOperationException){rejected=true;}
+        using(var db=new AppDbContext())Check(rejected&&Convert.ToInt32(FirebaseCloudStorage.Sql(db,"SELECT COUNT(*) FROM CloudOutbox"))==1,"Incomplete server response erased a pending edit");
+        fixture.Handler.IncompleteAck=false;
+        fixture.Handler.BeforeApply=()=>{using var db=new AppDbContext();db.Employees.First().LastName="Followup during HTTP";db.SaveChanges();};
+        FirebaseCompanySync.SynchronizeAsync().GetAwaiter().GetResult();
+        using(var db=new AppDbContext())
+        {
+            var queued=FirebaseCloudStorage.Query(db,"SELECT Payload FROM CloudOutbox");Check(queued.Count==1,"Acknowledgement dropped or duplicated the followup");
+            var pending=JsonSerializer.Deserialize<List<FirebaseCloudRecord>>((string)queued[0][0],FirebaseCompanyClient.Json)!;
+            Check(pending.Single().BaseVersion==2,"Followup did not advance to our acknowledged version");
+            Check(db.Employees.Any(e=>e.LastName=="Followup during HTTP"),"Older server response overwrote newer local input");
+        }
+        FirebaseCompanySync.SynchronizeAsync().GetAwaiter().GetResult();
+        using var verify=new AppDbContext();Check(Convert.ToInt32(FirebaseCloudStorage.Sql(verify,"SELECT COUNT(*) FROM CloudOutbox"))==0,"Followup was not eventually acknowledged");
+    }
+
+    private static void CloudConflictRebasePreservesFollowup()
+    {
+        using var fixture=new CloudFixture();fixture.Connect();
+        using(var db=new AppDbContext()){db.Employees.First().LastName="Conflicting edit";db.SaveChanges();}
+        using(var db=new AppDbContext()){db.Employees.First().LastName="Later local edit";db.SaveChanges();}
+        using(var db=new AppDbContext())
+        {
+            var rows=FirebaseCloudStorage.Query(db,"SELECT Id,OperationId,Payload FROM CloudOutbox ORDER BY Id");
+            var id=Convert.ToInt64(rows[0][0]);var remote=JsonSerializer.Deserialize<List<FirebaseCloudRecord>>((string)rows[0][2],FirebaseCompanyClient.Json)!;
+            remote.Single().Version=4;
+            var rejected=false;try{FirebaseCompanySync.RebaseConflict(db,id,remote);}catch(InvalidOperationException){rejected=true;}
+            Check(rejected,"A connection failure could create a new operation and duplicate an accepted request");
+            FirebaseCloudStorage.Sql(db,"UPDATE CloudOutbox SET NextRetryAtUtc='9999-12-31',LastError='Synthetic conflict' WHERE Id=@id",("@id",id));
+            FirebaseCompanySync.RebaseConflict(db,id,remote);
+            var rebased=FirebaseCloudStorage.Query(db,"SELECT OperationId,Payload FROM CloudOutbox ORDER BY Id");
+            Check((string)rebased[0][0]!=(string)rows[0][1]&&(string)rebased[1][0]==(string)rows[1][1],"Rebase changed the wrong operation identifiers");
+            Check(rebased.All(r=>JsonSerializer.Deserialize<List<FirebaseCloudRecord>>((string)r[1],FirebaseCompanyClient.Json)!.Single().BaseVersion==4),"Rebase left later drafts on an obsolete server version");
+        }
+        FirebaseCompanySync.SynchronizeAsync().GetAwaiter().GetResult();FirebaseCompanySync.SynchronizeAsync().GetAwaiter().GetResult();
+        using var verify=new AppDbContext();Check(Convert.ToInt32(FirebaseCloudStorage.Sql(verify,"SELECT COUNT(*) FROM CloudOutbox"))==0&&verify.Employees.Any(e=>e.LastName=="Later local edit"),"Conflict resolution lost a later edit");
+    }
+
     private static void CloudFailedBootstrapPreservesCache()
     {
         using var fixture=new CloudFixture();fixture.Connect();

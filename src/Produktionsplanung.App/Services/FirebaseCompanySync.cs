@@ -120,6 +120,27 @@ public static class FirebaseCompanySync
     }
     public static async Task PauseAsync() { Stop(); await Gate.WaitAsync().ConfigureAwait(false); Gate.Release(); }
     public static void Stop() { worker?.Cancel();worker?.Dispose();worker=null; }
+    internal static void RebaseConflict(AppDbContext db,long id,IReadOnlyList<FirebaseCloudRecord> remote)
+    {
+        using var tx=db.Database.BeginTransaction();
+        var queued=FirebaseCloudStorage.Query(db,"SELECT Payload FROM CloudOutbox WHERE Id=@id AND NextRetryAtUtc='9999-12-31'",("@id",id));
+        if(queued.Count!=1)throw new InvalidOperationException("Dieses Änderungspaket hat keinen bestätigten Konflikt mehr. Bitte die Liste aktualisieren.");
+        var local=System.Text.Json.JsonSerializer.Deserialize<List<FirebaseCloudRecord>>((string)queued[0][0],FirebaseCompanyClient.Json)!;
+        foreach(var r in local)
+        {
+            var current=remote.Single(s=>s.Kind==r.Kind&&s.Id==r.Id);
+            foreach(var row in FirebaseCloudStorage.Query(db,"SELECT Id,Payload FROM CloudOutbox WHERE Id>@id",("@id",id)))
+            {
+                var next=System.Text.Json.JsonSerializer.Deserialize<List<FirebaseCloudRecord>>((string)row[1],FirebaseCompanyClient.Json)!;
+                foreach(var n in next)if(n.Kind==r.Kind&&n.Id==r.Id&&n.BaseVersion==r.BaseVersion)n.BaseVersion=current.Version;
+                FirebaseCloudStorage.Sql(db,"UPDATE CloudOutbox SET Payload=@payload WHERE Id=@id",("@payload",System.Text.Json.JsonSerializer.Serialize(next,FirebaseCompanyClient.Json)),("@id",row[0]));
+            }
+            r.BaseVersion=current.Version;
+            FirebaseCloudStorage.Sql(db,"UPDATE CloudRowIds SET Version=@version WHERE Kind=@kind AND GlobalId=@guid",("@version",current.Version),("@kind",r.Kind),("@guid",r.Id));
+        }
+        FirebaseCloudStorage.Sql(db,"UPDATE CloudOutbox SET OperationId=@op,Payload=@payload,Attempts=0,LastError='',NextRetryAtUtc='' WHERE Id=@id",("@op",Guid.NewGuid().ToString("N")),("@payload",System.Text.Json.JsonSerializer.Serialize(local,FirebaseCompanyClient.Json)),("@id",id));
+        tx.Commit();
+    }
     public static async Task SynchronizeAsync(CancellationToken token=default)
     {
         if(!FirebaseCompanyClient.Enabled||!SessionService.IsAuthenticated||FirebaseCompanyClient.Profile is not {} profile)return;
@@ -134,6 +155,7 @@ public static class FirebaseCompanySync
                 try
                 {
                     var result=await FirebaseCompanyClient.CallAsync<CloudApplyResult>("cloudApplyChanges",new { operationId=pending.OperationId,dataSetId=profile.DataSetId,records },token).ConfigureAwait(false);
+                    if(!records.All(r=>result.Records.Any(a=>a.Kind==r.Kind&&a.Id==r.Id&&a.Version==r.BaseVersion+1))) throw new InvalidOperationException("Firebase hat das Änderungspaket nicht vollständig bestätigt. Die lokale Warteschlange bleibt erhalten.");
                     using var tx=db.Database.BeginTransaction();
                     FirebaseCloudStorage.Sql(db,"DELETE FROM CloudOutbox WHERE Id=@id AND OperationId=@operation",("@id",pending.Id),("@operation",pending.OperationId));
                     // Edits queued during this HTTP request must survive and follow our acknowledged version.

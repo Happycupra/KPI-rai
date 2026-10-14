@@ -105,6 +105,20 @@ test('SQL-compatible cascades remove untracked dependants in one cloud transacti
   const result=await store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[{kind:'Employee',id:employee.id,baseVersion:1,deleted:true,data:{}}]});
   assert.equal(result.records.filter(r=>r.deleted).length,2);
 });
+test('deletions set nullable relationships to null only where the SQL model permits it',async()=>{
+  const f=await fixture(),qualification=record('Qualification'),workstation=record('Workstation',guid(),{RequiredQualificationId:qualification.id}),dataSetId=await seed(f,[qualification,workstation]);
+  const result=await store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[{...qualification,baseVersion:1,deleted:true,data:{}}]});
+  assert.equal(result.records.find(r=>r.kind==='Workstation').data.RequiredQualificationId,null);
+  const routing=record('ManufacturingRouting'),article=record('ArticleMaster',guid(),{DefaultRoutingId:routing.id});
+  await store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[routing,article]});
+  await rejected(()=>store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[{...routing,baseVersion:1,deleted:true,data:{}}]}),422);
+});
+test('all business unique indexes retain the same behavior as SQLite',async()=>{
+  const f=await fixture(),employee=record('Employee',guid(),{IsDeleted:true}),operation=record('OperationDefinition'),article=record('ArticleMaster'),workstation=record('Workstation'),order=record('ProductionOrder',guid(),{ArticleMasterId:article.id,WorkstationId:workstation.id,IsDeleted:false});
+  const dataSetId=await seed(f,[employee,operation,article,workstation,order]);
+  for(const duplicate of [record('Employee',guid(),{PersonnelNumber:employee.data.PersonnelNumber}),record('OperationDefinition',guid(),{Code:operation.data.Code}),record('ProductionOrder',guid(),{ArticleMasterId:article.id,WorkstationId:workstation.id,OrderNumber:'ANOTHER-ORDER',BatchNumber:order.data.BatchNumber,IsDeleted:false})])
+    await rejected(()=>store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[duplicate]}),422);
+});
 test('historical private messages are visible only to their participants and can be acknowledged',async()=>{
   const f=await fixture(), historic=record('UserMessage',guid(),{SenderUserId:1,RecipientUserId:2,Priority:'Normal'});await seed(f,[historic]);
   assert.equal((await store.bootstrap(f.user(3,'Beobachter'),f.device,{})).records.length,0);
@@ -117,4 +131,11 @@ test('protocol allowlists reject inherited JavaScript property names',async()=>{
   await rejected(()=>store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[{kind:'constructor',id:guid(),baseVersion:0,deleted:true,data:{}}]}),400);
   const r=record('Employee');Object.defineProperty(r.data,'__proto__',{value:'unexpected',enumerable:true});
   await rejected(()=>store.apply(f.claims,f.device,{dataSetId,operationId:guid(),records:[r]}),400);
+});
+test('abandoned imports are cleaned without deleting the active or recently touched dataset',async()=>{
+  const {cleanCloudImports}=require('../../online-weekplan/functions/cloud-retention');
+  const f=await fixture(),active=await seed(f);await f.ref.collection('dataSets').doc(active).set({status:'uploading',createdAtUtc:'2000-01-01T00:00:00Z'},{merge:true});
+  const abandoned=guid(),recent=guid();await f.ref.collection('dataSets').doc(abandoned).set({status:'validating',createdAtUtc:'2000-01-01T00:00:00Z'});
+  await f.ref.collection('dataSets').doc(recent).set({status:'uploading',createdAtUtc:'2000-01-01T00:00:00Z',lastTouchedAtUtc:new Date().toISOString()});
+  assert.equal(await cleanCloudImports(db,f.ref),1);assert.ok((await f.ref.collection('dataSets').doc(active).get()).exists);assert.ok((await f.ref.collection('dataSets').doc(recent).get()).exists);
 });

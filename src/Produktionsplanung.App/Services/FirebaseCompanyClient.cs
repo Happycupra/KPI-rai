@@ -76,6 +76,7 @@ public static class FirebaseCompanyClient
     }
     public static async Task<FirebaseCompanyProfile> AuthenticateAsync(string companyCode, string username, string password, CancellationToken token = default)
     {
+        using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(30));token=timeout.Token;
         await FirebaseCompanySync.PauseAsync().ConfigureAwait(false);
         var settings = AppSettingsService.Load();
         using var login = await Http.PostAsJsonAsync(RequireHttps(settings.FirebaseAuthEndpoint), new { companyCode, username, password },Json,token).ConfigureAwait(false);
@@ -98,6 +99,7 @@ public static class FirebaseCompanyClient
     public static async Task<bool> ValidateCachedAsync(CancellationToken token=default)
     {
         if (Profile is null) return false;
+        using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(30));token=timeout.Token;
         try
         {
             var settings=AppSettingsService.Load();
@@ -117,7 +119,13 @@ public static class FirebaseCompanyClient
             var tokenProfile=Profile;
             if (tokenProfile.TokenExpiresAtUtc <= DateTime.UtcNow.AddMinutes(2))
             {
-                using var response = await Http.PostAsync("https://securetoken.googleapis.com/v1/token?key="+Uri.EscapeDataString(AppSettingsService.Load().FirebaseWebApiKey), new FormUrlEncodedContent(new Dictionary<string,string> { ["grant_type"]="refresh_token", ["refresh_token"]=tokenProfile.RefreshToken }),token).ConfigureAwait(false);
+                using var timeout=CancellationTokenSource.CreateLinkedTokenSource(token);timeout.CancelAfter(TimeSpan.FromSeconds(30));
+                using var response = await Http.PostAsync("https://securetoken.googleapis.com/v1/token?key="+Uri.EscapeDataString(AppSettingsService.Load().FirebaseWebApiKey), new FormUrlEncodedContent(new Dictionary<string,string> { ["grant_type"]="refresh_token", ["refresh_token"]=tokenProfile.RefreshToken }),timeout.Token).ConfigureAwait(false);
+                if(response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized)
+                {
+                    if(ReferenceEquals(Profile,tokenProfile)){tokenProfile.LastVerifiedAtUtc=DateTime.MinValue;PersistSession();}
+                    throw new FirebaseCloudException(HttpStatusCode.Unauthorized,"Die Anmeldung ist abgelaufen. Bitte erneut mit dem Firmenkonto anmelden.");
+                }
                 var refreshed = await ReadAsync<JsonElement>(response,token).ConfigureAwait(false);
                 tokenProfile.IdToken=refreshed.GetProperty("id_token").GetString()!; tokenProfile.RefreshToken=refreshed.GetProperty("refresh_token").GetString()!;
                 tokenProfile.TokenExpiresAtUtc=DateTime.UtcNow.AddSeconds(double.Parse(refreshed.GetProperty("expires_in").GetString()!,System.Globalization.CultureInfo.InvariantCulture));

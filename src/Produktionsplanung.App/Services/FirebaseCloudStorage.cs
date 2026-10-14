@@ -28,6 +28,35 @@ public static class FirebaseCloudStorage
     private static readonly JsonObject Schema = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"cloud-schema.json")))!.AsObject();
     [ThreadStatic] internal static bool ApplyingRemote;
     public static IReadOnlyCollection<string> SupportedKinds => Schema.Select(x=>x.Key).ToArray();
+    internal static string KindLabel(string kind)=>kind switch
+    {
+        "Employee"=>"Mitarbeiter","Qualification"=>"Qualifikation","EmployeeQualification"=>"Mitarbeiterqualifikation","Workstation"=>"Arbeitsplatz","Shift"=>"Schicht","WorkstationShiftRule"=>"Schichtregel","Absence"=>"Abwesenheit","OperatingCalendarDay"=>"Betriebskalender","WorkTimeEntry"=>"Arbeitszeit","PlanningAssignment"=>"Planung","ArticleMaster"=>"Artikel","ProductionOrder"=>"Produktionsauftrag","ProductionRunSlot"=>"Produktionsschicht","ProductionActual"=>"Ist-Produktion","DowntimeEntry"=>"Stillstand","OperationDefinition"=>"Arbeitsgang","ManufacturingRouting"=>"Arbeitsplan","RoutingStep"=>"Arbeitsplanschritt","JobCard"=>"Chargenkarte","RecycleBinItem"=>"Papierkorb","ShiftHandover"=>"Schichtübergabe",_=>kind
+    };
+    internal static string DisplayTitle(string kind,JsonObject data)
+    {
+        var title=string.Join(" ",new[]{"PersonnelNumber","FirstName","LastName","OrderNumber","ArticleNumber","Name","Subject"}.Select(k=>data[k]?.ToString()).Where(s=>!string.IsNullOrWhiteSpace(s)));
+        return KindLabel(kind)+(title.Length>0?" · "+title:"");
+    }
+    internal static string DisplayField(AppDbContext db,string kind,string field,JsonNode? value)
+    {
+        if(value is null)return "—";
+        var specification=Schema[kind]?["fields"]?[field];
+        if(specification?["reference"] is {} target)
+        {
+            var referencedKind=target.GetValue<string>();var type=db.Model.GetEntityTypes().Single(t=>t.ClrType.Name==referencedKind);
+            var key=Query(db,"SELECT LocalKey FROM CloudRowIds WHERE Kind=@kind AND GlobalId=@id",("@kind",referencedKind),("@id",value.ToString()));
+            var names=new[]{"PersonnelNumber","FirstName","LastName","OrderNumber","ArticleNumber","Name","Subject"}.Where(n=>type.FindProperty(n) is not null).ToArray();
+            if(key.Count>0&&names.Length>0)
+            {
+                var row=Query(db,$"SELECT {string.Join(',',names.Select(n=>$"\"{n}\""))} FROM \"{type.GetTableName()}\" WHERE Id=@id",("@id",key[0][0])).FirstOrDefault();
+                if(row is not null)return string.Join(" ",row.Where(v=>v is not DBNull).Select(v=>v.ToString()));
+            }
+            return KindLabel(referencedKind)+" (nicht mehr vorhanden)";
+        }
+        if(specification?["type"]?.ToString()=="boolean")return value.ToString().Equals("true",StringComparison.OrdinalIgnoreCase)?"Ja":"Nein";
+        if(specification?["type"]?.ToString()=="date"&&DateTime.TryParse(value.ToString(),System.Globalization.CultureInfo.InvariantCulture,System.Globalization.DateTimeStyles.RoundtripKind,out var date))return date.ToString(field.EndsWith("Utc",StringComparison.Ordinal)?"dd.MM.yyyy HH:mm 'UTC'":"dd.MM.yyyy");
+        return value.ToString();
+    }
     internal static object? Sql(AppDbContext db,string sql, params (string Key,object? Value)[] args)
     {
         db.Database.OpenConnection(); using var cmd=db.Database.GetDbConnection().CreateCommand(); cmd.CommandText=sql;

@@ -39,6 +39,7 @@ public static class FirebaseMessageService
     }
     public static async Task<bool> AcknowledgeAsync(int localId,CancellationToken token=default)
     {
+        if(!FirebaseCompanyClient.OfflineAccessAllowed)throw new InvalidOperationException("Bitte erneut mit dem Firmenkonto anmelden.");
         using var db=new AppDbContext();FirebaseCloudStorage.EnsureTables(db);
         var message=db.UserMessages.SingleOrDefault(m=>m.Id==localId&&m.RecipientUserId==SessionService.CurrentUser!.Id);if(message is null)return false;
         var id=Convert.ToString(FirebaseCloudStorage.Sql(db,"SELECT GlobalId FROM CloudMessageIds WHERE LocalId=@id",("@id",localId)))??"";
@@ -48,7 +49,9 @@ public static class FirebaseMessageService
             message.AcknowledgedAtUtc??=DateTime.UtcNow;message.AcknowledgedByUsername=SessionService.CurrentUser!.Username;db.SaveChanges();
             FirebaseCloudStorage.Sql(db,"INSERT OR IGNORE INTO CloudMessageOutbox(OperationId,UserId,Action,Payload,LocalId) VALUES(@op,@user,'ack',@payload,@id)",("@op",id),("@user",SessionService.CurrentUser.Id),("@payload",JsonSerializer.Serialize(new { messageId=id },FirebaseCompanyClient.Json)),("@id",localId));tx.Commit();
         }
-        try{await RefreshAsync(token,true).ConfigureAwait(false);}catch(Exception ex)when(ex is HttpRequestException or TaskCanceledException){ } return true;
+        try{await RefreshAsync(token,true).ConfigureAwait(false);}catch(Exception ex)when(ex is HttpRequestException or TaskCanceledException){ }
+        if(DeliveryError(localId) is {Length:>0} error)throw new InvalidOperationException(error);
+        return true;
     }
     public static async Task RefreshAsync(CancellationToken token=default,bool force=false)
     {
@@ -69,7 +72,12 @@ public static class FirebaseMessageService
                     FirebaseCloudStorage.Sql(db,"DELETE FROM CloudMessageOutbox WHERE OperationId=@id",("@id",row[0]));
                 }
                 catch(FirebaseCloudException ex)when(ex.Status is HttpStatusCode.BadRequest or HttpStatusCode.NotFound or HttpStatusCode.Conflict)
-                { FirebaseCloudStorage.Sql(db,"UPDATE CloudMessageOutbox SET LastError=@error WHERE OperationId=@id",("@error",ex.Message),("@id",row[0])); }
+                {
+                    using var tx=db.Database.BeginTransaction();
+                    FirebaseCloudStorage.Sql(db,"UPDATE CloudMessageOutbox SET LastError=@error WHERE OperationId=@id",("@error",ex.Message),("@id",row[0]));
+                    if((string)row[1]=="ack")FirebaseCloudStorage.Sql(db,"UPDATE UserMessages SET AcknowledgedAtUtc=NULL,AcknowledgedByUsername=NULL WHERE Id=(SELECT LocalId FROM CloudMessageOutbox WHERE OperationId=@id)",("@id",row[0]));
+                    tx.Commit();
+                }
             }
             var sequence=long.TryParse(FirebaseCloudStorage.Metadata(db,"messagesSequence"),out var value)?value:0;FirebaseMessagePage page;
             do

@@ -7,7 +7,7 @@ namespace Produktionsplanung.App;
 
 public sealed class CloudSyncWindow : Window
 {
-    private sealed record QueueRow(long Id,string Summary,string Error,string Payload);
+    private sealed record QueueRow(long Id,string Summary,string Error,string Payload,bool Conflict);
     private readonly ListBox queue=new(){MinHeight=140};private readonly TextBlock status=new(){TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,8,0,8)};
     public CloudSyncWindow()
     {
@@ -24,7 +24,7 @@ public sealed class CloudSyncWindow : Window
     private void Refresh()
     {
         using var db=new AppDbContext();FirebaseCloudStorage.EnsureTables(db);
-        queue.ItemsSource=FirebaseCloudStorage.Query(db,"SELECT Id,Payload,LastError FROM CloudOutbox ORDER BY Id").Select(r=>new QueueRow(Convert.ToInt64(r[0]),$"Änderungspaket {r[0]} · {(((string)r[2]).Length==0?"ausstehend":"Prüfung erforderlich")}",(string)r[2],(string)r[1])).ToList();status.Text=FirebaseCompanySync.Status;
+        queue.ItemsSource=FirebaseCloudStorage.Query(db,"SELECT Id,Payload,LastError,NextRetryAtUtc FROM CloudOutbox ORDER BY Id").Select(r=>new QueueRow(Convert.ToInt64(r[0]),$"Änderungspaket {r[0]} · {((string)r[3]=="9999-12-31"?"Prüfung erforderlich":"ausstehend")}",(string)r[2],(string)r[1],(string)r[3]=="9999-12-31")).ToList();status.Text=FirebaseCompanySync.Status;
     }
     private async void Retry(object sender,RoutedEventArgs e)
     {
@@ -40,7 +40,7 @@ public sealed class CloudSyncWindow : Window
     }
     private async void Compare(object sender,RoutedEventArgs e)
     {
-        if(queue.SelectedItem is not QueueRow selected||selected.Error.Length==0){status.Text="Bitte zuerst ein Änderungspaket mit Konflikt auswählen.";return;}
+        if(queue.SelectedItem is not QueueRow selected||!selected.Conflict){status.Text="Bitte zuerst ein Änderungspaket mit Konflikt auswählen. Bei Verbindungsfehlern genügt „Erneut synchronisieren“.";return;}
         try
         {
             var local=JsonSerializer.Deserialize<List<FirebaseCloudRecord>>(selected.Payload,FirebaseCompanyClient.Json)!;
@@ -49,17 +49,17 @@ public sealed class CloudSyncWindow : Window
             foreach(var r in local)
             {
                 var current=remote.Records.Single(s=>s.Kind==r.Kind&&s.Id==r.Id);
-                rows.Add(new(r.Kind,"Datensatz",r.Deleted?"Entfernen":"Bearbeitet",current.Deleted?"Nicht vorhanden":"Vorhanden"));
-                foreach(var field in r.Data)if(field.Value?.ToJsonString()!=current.Data[field.Key]?.ToJsonString())rows.Add(new(r.Kind,Label(field.Key),field.Value?.ToString()??"—",current.Data[field.Key]?.ToString()??"—"));
+                var title=FirebaseCloudStorage.DisplayTitle(r.Kind,r.Data);
+                rows.Add(new(title,"Datensatz",r.Deleted?"Entfernen":"Bearbeitet",current.Deleted?"Nicht vorhanden":"Vorhanden"));
+                using var displayDb=new AppDbContext();
+                foreach(var field in r.Data)if(field.Value?.ToJsonString()!=current.Data[field.Key]?.ToJsonString())rows.Add(new(title,Label(field.Key),FirebaseCloudStorage.DisplayField(displayDb,r.Kind,field.Key,field.Value),FirebaseCloudStorage.DisplayField(displayDb,r.Kind,field.Key,current.Data[field.Key])));
             }
             var dialog=new Window{Title="Konflikt vergleichen",Width=900,Height=600,Owner=this,WindowStartupLocation=WindowStartupLocation.CenterOwner};
             var panel=new DockPanel{Margin=new Thickness(20)};dialog.Content=panel;
             var accept=new Button{Content="Meine angezeigten Änderungen erneut übernehmen",Padding=new Thickness(10),Margin=new Thickness(0,12,0,0)};DockPanel.SetDock(accept,Dock.Bottom);panel.Children.Add(accept);
             var grid=new DataGrid{ItemsSource=rows,IsReadOnly=true,AutoGenerateColumns=true};panel.Children.Add(grid);var accepted=false;accept.Click+=(_,_)=>{accepted=true;dialog.Close();};dialog.ShowDialog();
             if(!accepted)return;
-            using var db=new AppDbContext();using var tx=db.Database.BeginTransaction();
-            foreach(var r in local)r.BaseVersion=remote.Records.Single(s=>s.Kind==r.Kind&&s.Id==r.Id).Version;
-            FirebaseCloudStorage.Sql(db,"UPDATE CloudOutbox SET OperationId=@op,Payload=@payload,Attempts=0,LastError='',NextRetryAtUtc='' WHERE Id=@id",("@op",Guid.NewGuid().ToString("N")),("@payload",JsonSerializer.Serialize(local,FirebaseCompanyClient.Json)),("@id",selected.Id));tx.Commit();
+            using(var db=new AppDbContext())FirebaseCompanySync.RebaseConflict(db,selected.Id,remote.Records);
             await FirebaseCompanySync.SynchronizeAsync();Refresh();
         }
         catch(Exception ex){status.Text=ex.Message;}

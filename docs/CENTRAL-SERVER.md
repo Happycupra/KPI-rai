@@ -2,6 +2,8 @@
 
 SolutionCompakt unterstützt neben dem bisherigen lokalen SQLite-Modus einen optionalen zentralen Mehrbenutzerbetrieb mit PostgreSQL und SignalR.
 
+Für den Firmenzugang über Firebase mit Homeoffice-Download und Offline-Arbeitskopie gilt [`FIREBASE-COMPANY-CLOUD.md`](FIREBASE-COMPANY-CLOUD.md). Diese Anleitung beschreibt den getrennten PostgreSQL-Modus.
+
 ## Architektur
 
 ```text

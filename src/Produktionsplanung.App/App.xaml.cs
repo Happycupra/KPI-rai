@@ -106,20 +106,18 @@ public partial class App : Application
             }
         }
 
-        if (licenseGate.IsTrial)
-        {
-            MessageBox.Show(
-                $"DEMO-Version · {licenseGate.TrialDaysRemaining} Tag(e) Testphase verbleibend.\n\nEigentum von Irajet Ramadani – nur zu Testzwecken zu verwenden.",
-                "SolutionCompakt – DEMO",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-        }
-
         var login = new LoginWindow();
         if (login.ShowDialog() != true || !SessionService.IsAuthenticated)
         {
             Shutdown();
             return;
+        }
+
+        if (licenseGate.IsTrial && !FirebaseCompanyClient.Enabled)
+        {
+            MessageBox.Show(
+                $"DEMO-Version · {licenseGate.TrialDaysRemaining} Tag(e) Testphase verbleibend.\n\nEigentum von Irajet Ramadani – nur zu Testzwecken zu verwenden.",
+                "SolutionCompakt – DEMO",MessageBoxButton.OK,MessageBoxImage.Information);
         }
 
         var main = new MainWindow();

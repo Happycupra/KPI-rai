@@ -32,9 +32,10 @@ function validateRecord(record) {
 function uniqueKeys(record) {
   if (record.deleted) return [];
   const d = record.data, kind = record.kind;
-  const keys = { Employee: ['PersonnelNumber'], ArticleMaster: ['ArticleNumber'], ProductionOrder: ['OrderNumber'], EmployeeQualification: ['EmployeeId','QualificationId'], WorkstationShiftRule: ['WorkstationId','ShiftId'], OperatingCalendarDay: ['Date'], ProductionRunSlot: ['ProductionOrderId','SequenceNumber'], RoutingStep: ['ManufacturingRoutingId','SequenceNumber'], JobCard: ['ProductionOrderId','SequenceNumber'] }[kind];
-  if (!keys || d.IsDeleted) return [];
-  return [kind + '-' + crypto.createHash('sha256').update(JSON.stringify(keys.map(k => d[k]))).digest('hex')];
+  const keys = { Employee: ['PersonnelNumber'], ArticleMaster: ['ArticleNumber'], ProductionOrder: ['OrderNumber'], OperationDefinition:['Code'], EmployeeQualification: ['EmployeeId','QualificationId'], WorkstationShiftRule: ['WorkstationId','ShiftId'], OperatingCalendarDay: ['Date'], ProductionRunSlot: ['ProductionOrderId','SequenceNumber'], RoutingStep: ['ManufacturingRoutingId','SequenceNumber'], JobCard: ['ProductionOrderId','SequenceNumber'] }[kind];
+  if (!keys || (kind==='ProductionOrder' && d.IsDeleted)) return [];
+  const groups=[keys];if(kind==='ProductionOrder'&&d.ArticleMasterId!==null)groups.push(['ArticleMasterId','BatchNumber']);
+  return groups.map(group=>kind+'-'+group.join('_')+'-'+crypto.createHash('sha256').update(JSON.stringify(group.map(k=>d[k]))).digest('hex'));
 }
 function messageInput(request) {
   if (!id(request.operationId) || !Number.isSafeInteger(request.recipientUserId) || request.recipientUserId < 1 || typeof request.body !== 'string' || !request.body.trim() || request.body.trim().length > 4000 || typeof request.subject !== 'string' || request.subject.trim().length > 120) throw new CloudError(400, 'Ungültiger Hinweis.');
