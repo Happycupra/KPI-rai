@@ -289,6 +289,13 @@ class CompanyCloudStore {
     const page = await a.ref.collection('privateFeeds').doc(String(claims.sourceUserId)).collection('events').where('sequence','>',input.after).orderBy('sequence').limit(200).get();
     return { messages:page.docs.map(d => d.data().message), sequence:page.docs.at(-1)?.data().sequence || input.after, hasMore:page.size === 200 };
   }
+  async messageAuditState(tx,access) {
+    if(!access.company.activeDataSet)return null;const ref=this.dataset(access),state=(await tx.get(ref)).data();return {ref,sequence:(state.sequence||0)+1};
+  }
+  writeMessageAudit(tx,state,access,messageId,action) {
+    if(!state)return;const now=new Date().toISOString(),record={kind:'AuditLog',id:uuid(),version:1,sequence:state.sequence,operationId:messageId,deleted:false,updatedAtUtc:now,data:{TimestampUtc:now,Username:access.user.username,Action:action,EntityType:'UserMessage',EntityId:messageId,Details:'Persönlicher Hinweis'}};
+    tx.set(state.ref,{sequence:state.sequence},{merge:true});tx.set(state.ref.collection('changes').doc(String(state.sequence).padStart(16,'0')),record);tx.set(state.ref.collection('records').doc('AuditLog_'+record.id),record);
+  }
   async feedStates(tx, access, ids) {
     const states=[];
     for (const uid of new Set(ids)) { const ref=access.ref.collection('privateFeeds').doc(String(uid));states.push({ ref, sequence:((await tx.get(ref)).data()?.sequence || 0) + 1 }); }
@@ -311,7 +318,8 @@ class CompanyCloudStore {
       }
       const value = { ...input, senderUserId: claims.sourceUserId, senderUsernameSnapshot: a.user.username, senderDisplayNameSnapshot: a.user.displayName || a.user.username, recipientUserId: request.recipientUserId, recipientUsernameSnapshot: recipient.username, recipientDisplayNameSnapshot: recipient.displayName || recipient.username, participantUserIds: [claims.sourceUserId, request.recipientUserId], createdAtUtc: new Date().toISOString(), acknowledgedAtUtc: null, acknowledgedByUsername: null };
       const feeds=await this.feedStates(tx,a,[claims.sourceUserId,request.recipientUserId]);
-      tx.set(ref, value); const message={ id:ref.id,...value };this.writeFeeds(tx,feeds,message);return message;
+      const audit=await this.messageAuditState(tx,a);
+      tx.set(ref, value);this.writeMessageAudit(tx,audit,a,ref.id,'Hinweis gesendet'); const message={ id:ref.id,...value };this.writeFeeds(tx,feeds,message);return message;
     });
   }
   async acknowledge(claims, input) {
@@ -324,7 +332,7 @@ class CompanyCloudStore {
       }
       if (!message || message.recipientUserId !== claims.sourceUserId) throw new CloudError(404, 'Hinweis nicht gefunden.');
       const value = { acknowledgedAtUtc: message.acknowledgedAtUtc || new Date().toISOString(), acknowledgedByUsername: message.acknowledgedByUsername || a.user.username };
-      if (!message.acknowledgedAtUtc) { const feeds=await this.feedStates(tx,a,[message.senderUserId,message.recipientUserId]);tx.set(ref,{ ...message,...value });this.writeFeeds(tx,feeds,{ id:ref.id,...message,...value }); }
+      if (!message.acknowledgedAtUtc) { const feeds=await this.feedStates(tx,a,[message.senderUserId,message.recipientUserId]);const audit=await this.messageAuditState(tx,a);tx.set(ref,{ ...message,...value });this.writeFeeds(tx,feeds,{ id:ref.id,...message,...value });this.writeMessageAudit(tx,audit,a,ref.id,'Gelesen bestätigt'); }
       return { found: true, ...value };
     });
   }

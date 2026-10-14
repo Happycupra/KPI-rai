@@ -56,6 +56,7 @@ internal static partial class Program
     private static void CloudHomeofficeBootstrap()
     {
         using var fixture=new CloudFixture();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         var original=File.ReadAllBytes(AppPaths.LocalDatabasePath);fixture.Connect();
         Check(AppSettingsService.Load().CompanyId==FirebaseCompanyClient.Profile!.CompanyId,"Homeoffice installer created a different tenant");
         Check(SessionService.CurrentUser?.Username=="homeoffice","Cloud user was not logged in");
@@ -64,6 +65,7 @@ internal static partial class Program
         Check(FirebaseCloudStorage.Query(db,"PRAGMA foreign_key_check").Count==0,"Bootstrap broke foreign keys");
         Check(db.UserAccounts.Single(u=>u.Id==2).PasswordHash=="","Another user's password verifier was distributed");
         Check(PasswordService.Verify("Synthetic-Password1",db.UserAccounts.Single(u=>u.Id==1).PasswordHash,db.UserAccounts.Single(u=>u.Id==1).PasswordSalt),"Current user offline credential was not created");
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         Check(original.SequenceEqual(File.ReadAllBytes(AppPaths.LocalDatabasePath)),"Cloud bootstrap modified the original local database");
     }
     private static void CloudIdentityRemapping()

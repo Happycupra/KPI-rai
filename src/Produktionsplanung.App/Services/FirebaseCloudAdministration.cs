@@ -14,6 +14,7 @@ public static class FirebaseCloudAdministration
             newProfile.UserSetVersion=result.UserSetVersion;FirebaseCompanySync.ApplyUsers(db,result.Users,newProfile,password);FirebaseCompanyClient.PersistSession();FirebaseCompanySync.Start();
         }
         else if(id==profile.SourceUserId && (role!=profile.Role||!active))
-        { profile.LastVerifiedAtUtc=DateTime.MinValue;FirebaseCompanyClient.PersistSession(); }
+        { profile.LastVerifiedAtUtc=DateTime.MinValue;FirebaseCompanyClient.PersistSession();
+            if (System.Windows.Application.Current?.MainWindow is Produktionsplanung.App.MainWindow main) await main.Dispatcher.InvokeAsync(() => main.ApplyRuntimeLicenseGate(new(false, false, 0, "cloud-login", profile.LicenseValidUntilUtc, "Deine Berechtigung wurde geändert. Bitte erneut anmelden."))); }
     }
 }

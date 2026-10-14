@@ -103,7 +103,7 @@ public static class FirebaseCompanyClient
             var settings=AppSettingsService.Load();
             var validated=await CallAsync<FirebaseCompanyProfile>("cloudCompanyJoin",new { installationId=settings.LicenseInstallationId, secret=settings.LicenseSecret },token).ConfigureAwait(false);
             if(validated.CompanyId!=Profile.CompanyId||validated.SourceUserId!=Profile.SourceUserId||validated.Role!=Profile.Role)return false;
-            Profile.LastVerifiedAtUtc=DateTime.UtcNow;Profile.CompanyName=validated.CompanyName;Profile.SiteName=validated.SiteName;Profile.LicenseValidUntilUtc=validated.LicenseValidUntilUtc;PersistSession();return true;
+            Profile.LastVerifiedAtUtc=DateTime.UtcNow;Profile.CompanyName=validated.CompanyName;Profile.Username=validated.Username;Profile.DisplayName=validated.DisplayName;Profile.SiteName=validated.SiteName;Profile.LicenseValidUntilUtc=validated.LicenseValidUntilUtc;PersistSession();return true;
         }
         catch(Exception ex)when(ex is HttpRequestException or TaskCanceledException) { return OfflineAccessAllowed; }
         catch(FirebaseCloudException) { Profile.LastVerifiedAtUtc=DateTime.MinValue;PersistSession();return false; }
@@ -114,22 +114,24 @@ public static class FirebaseCompanyClient
         await TokenGate.WaitAsync(token).ConfigureAwait(false);
         try
         {
-            if (Profile.TokenExpiresAtUtc <= DateTime.UtcNow.AddMinutes(2))
+            var tokenProfile=Profile;
+            if (tokenProfile.TokenExpiresAtUtc <= DateTime.UtcNow.AddMinutes(2))
             {
-                using var response = await Http.PostAsync("https://securetoken.googleapis.com/v1/token?key="+Uri.EscapeDataString(AppSettingsService.Load().FirebaseWebApiKey), new FormUrlEncodedContent(new Dictionary<string,string> { ["grant_type"]="refresh_token", ["refresh_token"]=Profile.RefreshToken }),token).ConfigureAwait(false);
+                using var response = await Http.PostAsync("https://securetoken.googleapis.com/v1/token?key="+Uri.EscapeDataString(AppSettingsService.Load().FirebaseWebApiKey), new FormUrlEncodedContent(new Dictionary<string,string> { ["grant_type"]="refresh_token", ["refresh_token"]=tokenProfile.RefreshToken }),token).ConfigureAwait(false);
                 var refreshed = await ReadAsync<JsonElement>(response,token).ConfigureAwait(false);
-                Profile.IdToken=refreshed.GetProperty("id_token").GetString()!; Profile.RefreshToken=refreshed.GetProperty("refresh_token").GetString()!;
-                Profile.TokenExpiresAtUtc=DateTime.UtcNow.AddSeconds(double.Parse(refreshed.GetProperty("expires_in").GetString()!,System.Globalization.CultureInfo.InvariantCulture));
+                tokenProfile.IdToken=refreshed.GetProperty("id_token").GetString()!; tokenProfile.RefreshToken=refreshed.GetProperty("refresh_token").GetString()!;
+                tokenProfile.TokenExpiresAtUtc=DateTime.UtcNow.AddSeconds(double.Parse(refreshed.GetProperty("expires_in").GetString()!,System.Globalization.CultureInfo.InvariantCulture));
             }
         }
         finally { TokenGate.Release(); }
+        var requestSession=Profile;
         var settings=AppSettingsService.Load();
         using var request = new HttpRequestMessage(HttpMethod.Post,RequireHttps(settings.FirebaseCloudBaseUrl.TrimEnd('/')+"/"+endpoint));
-        request.Headers.Authorization=new AuthenticationHeaderValue("Bearer",Profile.IdToken);
+        request.Headers.Authorization=new AuthenticationHeaderValue("Bearer",requestSession.IdToken);
         request.Headers.Add("X-SolutionCompakt-Device",settings.LicenseInstallationId); request.Headers.Add("X-SolutionCompakt-Secret",settings.LicenseSecret);
         request.Content=JsonContent.Create(payload, options:Json);
         using var result=await Http.SendAsync(request,token).ConfigureAwait(false);
-        if(result.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden && Guid.TryParse(Profile.CompanyId,out _))
+        if(result.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden && ReferenceEquals(Profile,requestSession) && Guid.TryParse(Profile.CompanyId,out _))
         { Profile.LastVerifiedAtUtc=DateTime.MinValue;PersistSession(); }
         return await ReadAsync<T>(result,token).ConfigureAwait(false);
     }

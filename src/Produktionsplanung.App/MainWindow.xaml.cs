@@ -65,9 +65,12 @@ public partial class MainWindow : Window
             void RefreshCloudStatus() => Dispatcher.InvokeAsync(() => { CloudSyncButton.Content = FirebaseCompanySync.Status; CloudSyncButton.ToolTip = "Synchronisation und Konflikte öffnen"; });
             void ReloadCloudData() => Dispatcher.InvokeAsync(() =>
             { if (!CloudEditBaseline.HasDrafts && !(ContentHost.Content is IUnsavedChangesAware aware && aware.HasUnsavedChanges)) ReloadFirebaseViews(); });
+            void RevokeCloudAccess() => Dispatcher.InvokeAsync(() =>
+            { if (!IsLoaded) return; ApplyRuntimeLicenseGate(new(false, false, 0, "cloud-login", FirebaseCompanyClient.Profile?.LicenseValidUntilUtc, "Der Firmenzugang wurde geändert oder gesperrt. Bitte erneut anmelden. Offene Eingaben bleiben erhalten.")); });
+            FirebaseCompanySync.AccessRevoked += RevokeCloudAccess;
             FirebaseCompanySync.DataApplied += ReloadCloudData;
             FirebaseCompanySync.Changed += RefreshCloudStatus;
-            Closed += (_, _) => { FirebaseCompanySync.Changed -= RefreshCloudStatus; FirebaseCompanySync.DataApplied -= ReloadCloudData; };
+            Closed += (_, _) => { FirebaseCompanySync.Changed -= RefreshCloudStatus; FirebaseCompanySync.DataApplied -= ReloadCloudData; FirebaseCompanySync.AccessRevoked -= RevokeCloudAccess; };
         }
         Closed += MainWindow_Closed;
         Loaded += MainWindow_Loaded;

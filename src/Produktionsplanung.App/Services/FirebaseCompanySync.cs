@@ -25,6 +25,7 @@ public static class FirebaseCompanySync
     public static string Status { get; private set; } = "Noch nicht synchronisiert";
     public static event Action? Changed;
     public static event Action? DataApplied;
+    public static event Action? AccessRevoked;
     public static async Task ImportAsync(AppDbContext source,CancellationToken token=default)
     {
         var records=FirebaseCloudStorage.Export(source);
@@ -93,7 +94,8 @@ public static class FirebaseCompanySync
             AppSettingsService.Update(s=> { s.FirebaseCompanyEnabled=true;s.CompanyId=profile.CompanyId;s.CompanyCode=profile.CompanyCode;s.CompanyName=profile.CompanyName;s.SiteName=profile.SiteName;s.CompanyRegistrationMode="firebase";s.LicenseStatus="active";s.LicenseValidUntilUtc=profile.LicenseValidUntilUtc; });
             FirebaseCompanyClient.PersistSession();
             using var loginDb=new AppDbContext();SessionService.SignIn(loginDb.UserAccounts.Single(u=>u.Id==profile.SourceUserId));Status="Firmenkonto synchronisiert";
-            if (System.Windows.Application.Current?.MainWindow is Produktionsplanung.App.MainWindow main) await main.Dispatcher.InvokeAsync(main.ReloadFirebaseViews);
+            if (System.Windows.Application.Current?.MainWindow is Produktionsplanung.App.MainWindow { IsLoaded: true } main)
+            { if(main.Dispatcher.CheckAccess())main.ReloadFirebaseViews();else await main.Dispatcher.InvokeAsync(main.ReloadFirebaseViews); }
         }
         finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();if(File.Exists(temporary))File.Delete(temporary); }
     }
@@ -173,7 +175,7 @@ public static class FirebaseCompanySync
         }
         catch(FirebaseCloudException ex)when(ex.Status is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
-            profile.LastVerifiedAtUtc=DateTime.MinValue;FirebaseCompanyClient.PersistSession();Status="Firmenkonto gesperrt oder Anmeldung abgelaufen";Changed?.Invoke();throw;
+            profile.LastVerifiedAtUtc=DateTime.MinValue;FirebaseCompanyClient.PersistSession();AccessRevoked?.Invoke();Status="Firmenkonto gesperrt oder Anmeldung abgelaufen";Changed?.Invoke();throw;
         }
         finally { Gate.Release(); }
     }
