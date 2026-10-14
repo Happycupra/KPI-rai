@@ -168,7 +168,7 @@ class CompanyCloudStore {
       const tail = await ds.collection('changes').where('sequence','>',entries.at(-1).sequence).orderBy('sequence').limit(100).get();
       for (const doc of tail.docs) { if (doc.data().operationId !== entries.at(-1).operationId) break; entries.push(doc.data()); }
     }
-    return { records: entries.filter(x => x.kind !== 'AuditLog' || a.user.role === 'Administrator'), sequence: entries.at(-1)?.sequence || input.after, hasMore: page.size === 200, users: input.userSetVersion === (a.company.activeUserVersion || 'legacy') ? [] : await this.profiles(a), userSetVersion: a.company.activeUserVersion || 'legacy', licenseValidUntilUtc: a.licenseUntil };
+    return { records: entries.filter(x => x.kind !== 'AuditLog' || a.user.role === 'Administrator'), sequence: entries.at(-1)?.sequence || input.after, hasMore: page.size === 200, users: input.userSetVersion === (a.company.activeUserVersion || 'legacy') ? [] : await this.profiles(a), userSetVersion: a.company.activeUserVersion || 'legacy', licenseValidUntilUtc: a.licenseUntil,companyName:a.company.companyName,siteName:a.company.siteName||'' };
   }
   async apply(claims, device, input) {
     if (!id(input.operationId) || !Array.isArray(input.records) || !input.records.length || input.records.length > 50) throw new CloudError(400, 'Ungültiger Änderungsauftrag.');

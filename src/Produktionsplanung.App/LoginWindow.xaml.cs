@@ -324,6 +324,8 @@ public partial class LoginWindow : Window
         if (string.IsNullOrWhiteSpace(CloudCompanyCodeBox.Text) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         { SetStatus("Bitte Firmen-Code, Benutzername und Passwort eingeben."); return; }
         if (CentralModeService.IsEnabled) { SetStatus("Diese Installation verwendet PostgreSQL. Die Übernahme dieses Datenbestands muss vor dem Wechsel zum Firebase-Firmenkonto vorbereitet werden."); return; }
+        if (RememberMeCheckBox.IsChecked == true && QuickAccessService.ValidatePinPair(AccessPinBox.Password, ConfirmAccessPinBox.Password) is {} pinError)
+        { SetStatus(pinError); return; }
         SubmitButton.IsEnabled = false;
         var previousProfile = FirebaseCompanyClient.Profile;
         void Progress() => Dispatcher.InvokeAsync(() => SetStatus(FirebaseCompanySync.Status, true));

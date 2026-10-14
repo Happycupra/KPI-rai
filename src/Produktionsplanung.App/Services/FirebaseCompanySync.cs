@@ -15,6 +15,8 @@ internal sealed class CloudDataPage
     public bool HasMore { get; set; }
     public List<FirebasePublicUser> Users { get; set; } = new();
     public DateTime LicenseValidUntilUtc { get; set; }
+    public string? CompanyName { get; set; }
+    public string? SiteName { get; set; }
 }
 internal sealed class CloudApplyResult { public List<FirebaseCloudRecord> Records { get; set; }=new(); }
 internal sealed record CloudImportResult(string DataSetId);
@@ -43,7 +45,7 @@ public static class FirebaseCompanySync
             if(FirebaseCloudStorage.Metadata(db,"dataSetId")==profile.DataSetId)
             {
                 ApplyUsers(db,profile.Users,profile,password);AppPaths.CloudDatabaseOverride=destination;
-                AppSettingsService.Update(s=>{s.FirebaseCompanyEnabled=true;s.CompanyId=profile.CompanyId;s.CompanyCode=profile.CompanyCode;s.CompanyName=profile.CompanyName;s.SiteName=profile.SiteName;s.CompanyRegistrationMode="firebase";});
+                AppSettingsService.Update(s=>{s.FirebaseCompanyEnabled=true;s.CompanyId=profile.CompanyId;s.CompanyCode=profile.CompanyCode;s.CompanyName=profile.CompanyName;s.SiteName=profile.SiteName;s.CompanyRegistrationMode="firebase";s.LicenseStatus="active";s.LicenseValidUntilUtc=profile.LicenseValidUntilUtc;});
                 SessionService.SignIn(db.UserAccounts.AsNoTracking().Single(u=>u.Id==profile.SourceUserId));FirebaseCompanyClient.PersistSession();return;
             }
             if(Convert.ToInt32(FirebaseCloudStorage.Sql(db,"SELECT COUNT(*) FROM CloudOutbox"))>0)throw new InvalidOperationException("Ein neuer Firmenstand ist verfügbar, aber lokale Änderungen sind noch ausstehend. Bitte diese zuerst klären.");
@@ -157,6 +159,7 @@ public static class FirebaseCompanySync
                     var result=await FirebaseCompanyClient.CallAsync<CloudApplyResult>("cloudApplyChanges",new { operationId=pending.OperationId,dataSetId=profile.DataSetId,records },token).ConfigureAwait(false);
                     if(!records.All(r=>result.Records.Any(a=>a.Kind==r.Kind&&a.Id==r.Id&&a.Version==r.BaseVersion+1))) throw new InvalidOperationException("Firebase hat das Änderungspaket nicht vollständig bestätigt. Die lokale Warteschlange bleibt erhalten.");
                     using var tx=db.Database.BeginTransaction();
+                    FirebaseCloudStorage.Sql(db,"PRAGMA defer_foreign_keys=ON");
                     FirebaseCloudStorage.Sql(db,"DELETE FROM CloudOutbox WHERE Id=@id AND OperationId=@operation",("@id",pending.Id),("@operation",pending.OperationId));
                     // Edits queued during this HTTP request must survive and follow our acknowledged version.
                     foreach(var row in FirebaseCloudStorage.Query(db,"SELECT Id,Payload FROM CloudOutbox WHERE Id>@id",("@id",pending.Id)))
@@ -190,7 +193,12 @@ public static class FirebaseCompanySync
                 FirebaseCloudStorage.Apply(db,page.Records);ApplyUsers(db,page.Users,profile);if(page.Users.Count>0)profile.UserSetVersion=page.UserSetVersion;seq=page.Sequence;FirebaseCloudStorage.Metadata(db,"sequence",seq.ToString(System.Globalization.CultureInfo.InvariantCulture));tx.Commit();
                 if(page.Records.Count>0)DataApplied?.Invoke();
                 if(page.LicenseValidUntilUtc!=default)profile.LicenseValidUntilUtc=page.LicenseValidUntilUtc;
+                if(page.CompanyName is not null)profile.CompanyName=page.CompanyName;
+                if(page.SiteName is not null)profile.SiteName=page.SiteName;
             }while(page.HasMore);
+            var settings=AppSettingsService.Load();
+            if(settings.CompanyName!=profile.CompanyName||settings.SiteName!=profile.SiteName||settings.LicenseValidUntilUtc!=profile.LicenseValidUntilUtc||settings.LicenseStatus!="active")
+                AppSettingsService.Update(s=>{s.CompanyName=profile.CompanyName;s.SiteName=profile.SiteName;s.LicenseStatus="active";s.LicenseValidUntilUtc=profile.LicenseValidUntilUtc;});
             profile.LastVerifiedAtUtc=DateTime.UtcNow;FirebaseCompanyClient.PersistSession();
             var remaining=Convert.ToInt32(FirebaseCloudStorage.Sql(db,"SELECT COUNT(*) FROM CloudOutbox"));var unresolved=FirebaseCloudStorage.Query(db,"SELECT LastError FROM CloudOutbox WHERE NextRetryAtUtc='9999-12-31' ORDER BY Id LIMIT 1");
             Status=unresolved.Count>0?"Konflikt · "+unresolved[0][0]:remaining>0?$"{remaining} Änderungspakete ausstehend":"Firmenkonto synchronisiert · "+DateTime.Now.ToString("HH:mm");Changed?.Invoke();

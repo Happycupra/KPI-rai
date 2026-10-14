@@ -381,6 +381,8 @@ exports.syncOnlineAccess = onRequest({ region: "europe-west1", timeoutSeconds: 6
       const currentCompany = await transaction.get(companyRef);
       const currentLicense = await transaction.get(licenseRef);
       const staged = await transaction.get(versionRef);
+      if (currentCompany.data()?.cloudDataEnabled === true)
+        throw new Error("Firmenkonto während der Synchronisation auf Cloud-Verwaltung umgestellt.");
       const current = currentLicense.data();
       if (!current || current.secretHash !== sha256(secret) || current.status !== "active" ||
           !current.validUntil?.toDate?.() || current.validUntil.toDate() <= new Date())
