@@ -360,7 +360,7 @@ public partial class LoginWindow : Window
         catch (Exception ex) when (ex is System.Net.Http.HttpRequestException or TaskCanceledException)
         {
             FirebaseCompanyClient.Profile = previousProfile;
-            if (FirebaseCompanyClient.OfflineAccessAllowed && previousProfile?.Username.Equals(username, StringComparison.OrdinalIgnoreCase) == true)
+            if (FirebaseCompanyClient.OfflineAccessAllowed && previousProfile?.Username.Equals(username, StringComparison.OrdinalIgnoreCase) == true && previousProfile.CompanyCode.Equals(CloudCompanyCodeBox.Text.Trim(), StringComparison.OrdinalIgnoreCase))
             {
                 var offline = AuthenticationService.Login(username, password);
                 if (offline.Success) { DialogResult = true; Close(); return; }

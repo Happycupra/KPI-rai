@@ -47,6 +47,7 @@ public static class FirebaseCompanyClient
     internal static HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(10) };
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private static readonly SemaphoreSlim TokenGate = new(1,1);
+    private static readonly object SessionFileGate = new();
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SolutionCompakt.Firebase.Company.v1");
     public static FirebaseCompanyProfile? Profile { get; internal set; }
     public static bool Enabled => AppSettingsService.Load().FirebaseCompanyEnabled;
@@ -68,11 +69,14 @@ public static class FirebaseCompanyClient
     }
     public static void PersistSession()
     {
-        if (Profile is null) return;
-        Directory.CreateDirectory(AppPaths.ConfigDirectory);
-        var path = SessionPath + ".tmp";
-        File.WriteAllBytes(path, ProtectedData.Protect(JsonSerializer.SerializeToUtf8Bytes(Profile,Json),Entropy,DataProtectionScope.CurrentUser));
-        File.Move(path,SessionPath,true);
+        lock(SessionFileGate)
+        {
+            if (Profile is null) return;
+            Directory.CreateDirectory(AppPaths.ConfigDirectory);
+            var path = SessionPath + ".tmp";
+            File.WriteAllBytes(path, ProtectedData.Protect(JsonSerializer.SerializeToUtf8Bytes(Profile,Json),Entropy,DataProtectionScope.CurrentUser));
+            File.Move(path,SessionPath,true);
+        }
     }
     public static async Task<FirebaseCompanyProfile> AuthenticateAsync(string companyCode, string username, string password, CancellationToken token = default)
     {
